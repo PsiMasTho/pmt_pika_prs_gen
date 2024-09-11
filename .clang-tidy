@@ -1,0 +1,13 @@
+CheckOptions:
+     readability-identifier-naming.PrivateMemberCase: lower_case
+     readability-identifier-naming.MemberCase: lower_case
+     readability-identifier-naming.MemberPrefix: _
+     readability-identifier-naming.PublicMemberPrefix: _
+     readability-identifier-naming.ProtectedMemberPrefix: _
+     readability-identifier-naming.PrivateMemberPrefix: _
+     readability-identifier-naming.ParameterSuffix: _
+     readability-identifier-naming.ParameterPackSuffix: _
+     readability-identifier-naming.ClassCase: lower_case
+     readability-identifier-naming.TypeTemplateParameterCase: UPPER_CASE
+     readability-identifier-naming.ValueTemplateParameterCase: lower_case
+     readability-identifier-naming.ValueTemplateParameterSuffix: _

@@ -1,0 +1,15 @@
+%lib
+  pmt
+  pmt_base
+  pmt_base_test
+
+%exe
+  pmt_pwgen
+  pmt_base_test_exe
+
+%deps
+  pmt_base:  pmt
+  pmt_pwgen: pmt_base
+
+%custom
+  pmt_pwgen
