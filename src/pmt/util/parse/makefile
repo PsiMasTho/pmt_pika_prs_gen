@@ -5,7 +5,7 @@ CXX_HDR = $(wildcard *.hpp)
 
 OBJ = ${C_SRC:.c=.o} ${CXX_SRC:.cpp=.o}
 
-NAME = libpmt.a
+NAME = libpmt_util_parse.a
 
 .PHONY: all clean format
 

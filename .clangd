@@ -1,5 +1,21 @@
 CompileFlags:
-     Add: [-D__INTELLISENSE__]
-
+  Add:
+    - -D__INTELLISENSE__
 Diagnostics:
-     Suppress: "pp_including_mainfile_in_preamble"
+  Suppress: pp_including_mainfile_in_preamble
+  ClangTidy:
+    Add:
+      - modernize-use-trailing-return-type
+      - cert-dcl58-cpp
+      - cert-err58-cpp
+      - cert-err60-cpp
+      - cert-oop57-cpp
+      - modernize-use-override
+      - modernize-pass-by-value
+      - performance*
+      - readability-convert-member-functions-to-static
+      - readability-use-anyofallof
+      - misc-static-assert
+      - cppcoreguidelines-avoid-non-const-global-variables
+      - cppcoreguidelines-init-variables
+      - readability-identifier-naming*

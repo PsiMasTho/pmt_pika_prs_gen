@@ -1,0 +1,26 @@
+// clang-format off
+#ifdef __INTELLISENSE__
+    #include "pmt/base/singleton.hpp"
+#endif
+// clang-format on
+
+#include <mutex>
+
+namespace pmt::base {
+
+template <std::default_initializable T_, uint64_t ID_>
+auto singleton<T_, ID_>::instance() -> shared_handle {
+  static std::weak_ptr<T_> instance;
+  static std::mutex mutex;
+
+  std::scoped_lock l(mutex);
+
+  if (!instance.expired())
+    return instance.lock();
+
+  shared_handle ret = std::make_shared<T_>();
+  instance = ret;
+  return ret;
+}
+
+}  // namespace pmt::base

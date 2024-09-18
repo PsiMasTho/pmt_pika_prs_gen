@@ -27,12 +27,11 @@
       Display the help message.
 */
 
-#include "pmt/base/args.h"
-
 #include <stdio.h>
 
-int
-main(int argc, char const* const* argv) {
+#include "pmt/base/args.h"
+
+int main(int argc, char const* const* argv) {
 #if 0
  args_parser* parser = args_parser_create();
 
@@ -64,5 +63,5 @@ main(int argc, char const* const* argv) {
 
  args_parser_destroy(parser);
 #endif
- return 0;
+  return 0;
 }

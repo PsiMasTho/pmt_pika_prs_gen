@@ -1,11 +1,9 @@
 %lib
   pmt
   pmt_base
-  pmt_base_test
 
 %exe
-  pmt_pwgen
-  pmt_base_test_exe
+  pmt_generator
 
 %deps
   pmt_base:  pmt

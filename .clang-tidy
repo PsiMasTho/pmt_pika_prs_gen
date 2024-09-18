@@ -1,3 +1,19 @@
+Checks: >
+     modernize-use-trailing-return-type,
+     cert-dcl58-cpp,
+     cert-err58-cpp,
+     cert-err60-cpp,
+     cert-oop57-cpp,
+     modernize-use-override,
+     performance*,
+     readability-convert-member-functions-to-static,
+     readability-use-anyofallof,
+     misc-const-correctness,
+     misc-static-assert,
+     cppcoreguidelines-avoid-non-const-global-variables,
+     cppcoreguidelines-init-variables,
+     cppcoreguidelines-prefer-member-initializer,
+          
 CheckOptions:
      readability-identifier-naming.PrivateMemberCase: lower_case
      readability-identifier-naming.MemberCase: lower_case
@@ -9,5 +25,6 @@ CheckOptions:
      readability-identifier-naming.ParameterPackSuffix: _
      readability-identifier-naming.ClassCase: lower_case
      readability-identifier-naming.TypeTemplateParameterCase: UPPER_CASE
-     readability-identifier-naming.ValueTemplateParameterCase: lower_case
+     readability-identifier-naming.TypeTemplateParameterSuffix: _
+     readability-identifier-naming.ValueTemplateParameterCase: UPPER_CASE
      readability-identifier-naming.ValueTemplateParameterSuffix: _
