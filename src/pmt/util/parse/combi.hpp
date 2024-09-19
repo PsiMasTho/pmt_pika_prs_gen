@@ -1,78 +1,123 @@
 #pragma once
 
-#include "pmt/base/string_literal.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
 
 namespace pmt::util::parse {
 
 template <typename CHAR_TYPE_>
-class combi{
-public:
- using generic_ast = generic_ast<CHAR_TYPE_>;
+class combi {
+ public:
+  using generic_ast = generic_ast<CHAR_TYPE_>;
 
- class context {
-  public:
-  CHAR_TYPE_ const* _begin;
-  CHAR_TYPE_ const* _end;
-  CHAR_TYPE_ const* _cursor;
- };
+  class context {
+   public:
+    CHAR_TYPE_ const* _begin;
+    CHAR_TYPE_ const* _end;
+    CHAR_TYPE_ const* _cursor;
+  };
 
-//-- Combinators ---------------------------------------------------------------
- template <generic_ast_base::id_type ID_, typename... TS_>
- class seq{
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  //-- Combinators -------------------------------------------------------------
+  template <generic_ast_base::id_type ID_, typename... TS_>
+  class seq {
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- template <generic_ast_base::id_type ID_, typename... TS_>
- class sor {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  template <generic_ast_base::id_type ID_, typename... TS_>
+  class sor {
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- template <generic_ast_base::id_type ID_, typename T_>
- class plus {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  template <generic_ast_base::id_type ID_, typename T_>
+  class star {
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- template <generic_ast_base::id_type ID_, typename T_>
- class star {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  template <generic_ast_base::id_type ID_, typename T_>
+  class plus {
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- template <generic_ast_base::id_type ID_, typename T_>
- class opt {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  template <generic_ast_base::id_type ID_, typename T_>
+  class opt {
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- //-- Character parsers --------------------------------------------------------
- template <generic_ast_base::id_type ID_, CHAR_TYPE_ C_>
- class ch {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  //-- Character parsers -------------------------------------------------------
+  template <generic_ast_base::id_type ID_, CHAR_TYPE_ C_>
+  class ch {
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- template <generic_ast_base::id_type ID_, CHAR_TYPE_ MIN_, CHAR_TYPE_ MAX_>
- class ch_range {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  template <generic_ast_base::id_type ID_, CHAR_TYPE_ MIN_, CHAR_TYPE_ MAX_>
+  class ch_range {
+    static_assert(MIN_ <= MAX_);
 
- template <generic_ast_base::id_type ID_, base::is_string_literal L_>
- class ch_group {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+   public:
+    static const auto _id = ID_;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
 
- template <generic_ast_base::id_type ID_, base::is_string_literal L_>
- class ch_literal {
-  public:
-   static auto exec(context& ctx_) -> generic_ast*;
- };
+  //-- Ast shaping -------------------------------------------------------------
 
+  /// The return value of @tparam T_, if it is children, is recursively
+  /// transformed into a single token.
+  template <typename T_>
+  class merge {
+   public:
+    static const auto _id = T_::_id;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
+
+  /// The return value of @tparam T_ is not added to the result of
+  /// any combinator that has this as a child.
+  template <typename T_>
+  class hide {
+   public:
+    static const auto _id = T_::_id;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
+
+  /// The return value of @tparam T_, if it is children, is added
+  /// directly to the result of the combinator that has this as a child.
+  template <typename T_>
+  class unpack {
+   public:
+    static const auto _id = generic_ast_base::ANONYMOUS_ID;
+    static auto exec(context& ctx_) -> generic_ast*;
+  };
+
+  //-- Type traits -------------------------------------------------------------
+  template <typename T_>
+  class is_hide : public std::false_type {};
+
+  template <typename T_>
+  class is_hide<hide<T_>> : public std::true_type {};
+
+  template <typename T_>
+  class is_unpack : public std::false_type {};
+
+  template <typename T_>
+  class is_unpack<unpack<T_>> : public std::true_type {};
 };
 
+template <typename CHAR_TYPE_, typename T_>
+concept is_combi_hide = combi<CHAR_TYPE_>::template is_hide<T_>::value;
+
+template <typename CHAR_TYPE_, typename T_>
+concept is_combi_unpack = combi<CHAR_TYPE_>::template is_unpack<T_>::value;
+
 }  // namespace pmt::util::parse
+
+#include "pmt/util/parse/combi-inl.hpp"

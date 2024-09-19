@@ -17,9 +17,8 @@ auto generic_ast<CHAR_TYPE_>::construct() -> generic_ast* {
 
 template <typename CHAR_TYPE_>
 void generic_ast<CHAR_TYPE_>::destruct(generic_ast* self_) {
-  std::stack<generic_ast*> stack;
+  std::stack<generic_ast*> stack{self_};
 
-  stack.push(self_);
   while (!stack.empty()) {
     auto* node = stack.top();
     stack.pop();
@@ -44,7 +43,7 @@ auto generic_ast<CHAR_TYPE_>::is_children() const -> bool {
 }
 
 template <typename CHAR_TYPE_>
-auto generic_ast<CHAR_TYPE_>::get_token() const -> std::basic_string_view<CHAR_TYPE_> {
+auto generic_ast<CHAR_TYPE_>::get_token() const -> token_type {
   assert(is_token());
   return *std::get_if<token_type>(&_data);
 }
@@ -70,26 +69,27 @@ auto generic_ast<CHAR_TYPE_>::get_children_size() const -> std::size_t {
 template <typename CHAR_TYPE_>
 auto generic_ast<CHAR_TYPE_>::get_child_at(std::size_t index_) -> generic_ast* {
   assert(is_children());
-  return std::get_if<children_type>(&_data)[index_];
+  return (*std::get_if<children_type>(&_data))[index_];
 }
 
 template <typename CHAR_TYPE_>
 auto generic_ast<CHAR_TYPE_>::get_child_at(std::size_t index_) const -> generic_ast const* {
   assert(is_children());
-  return std::get_if<children_type>(&_data)[index_];
+  return (*std::get_if<children_type>(&_data))[index_];
 }
-
 template <typename CHAR_TYPE_>
-void generic_ast<CHAR_TYPE_>::erase_child_at(std::size_t index_) {
+auto generic_ast<CHAR_TYPE_>::take_child_at(std::size_t index_) -> unique_handle {
   assert(is_children());
-  children_type& children = std::get_if<children_type>(&_data);
+  children_type& children = *std::get_if<children_type>(&_data);
+  unique_handle result{children[index_], destruct};
   children.erase(std::next(children.begin(), index_));
+  return result;
 }
 
 template <typename CHAR_TYPE_>
-void generic_ast<CHAR_TYPE_>::clear_children() {
+void generic_ast<CHAR_TYPE_>::delete_child_at(std::size_t index_) {
   assert(is_children());
-  std::get_if<children_type>(&_data)->clear();
+  unique_handle tmp = take_child_at(index_);
 }
 
 template <typename CHAR_TYPE_>
@@ -97,16 +97,41 @@ void generic_ast<CHAR_TYPE_>::insert_child_at(std::size_t index_, generic_ast* c
   if (!is_children())
     _data.template emplace<children_type>();
 
-  children_type& children = std::get_if<children_type>(&_data);
+  children_type& children = *std::get_if<children_type>(&_data);
   children.insert(std::next(children.begin(), index_), child_);
 }
 
 template <typename CHAR_TYPE_>
-void generic_ast<CHAR_TYPE_>::set_token(std::basic_string_view<CHAR_TYPE_> token_) {
+void generic_ast<CHAR_TYPE_>::set_token(token_type token_) {
   if (!is_token())
     _data.template emplace<token_type>();
 
   _data = token_;
+}
+
+template <typename CHAR_TYPE_>
+void generic_ast<CHAR_TYPE_>::merge() {
+  token_type result;
+
+  std::stack<generic_ast*> stack{this};
+  while (!stack.empty()) {
+    auto* node = stack.top();
+    stack.pop();
+    if (node->is_token()) {
+      result += node->get_token();
+    } else if (node->is_children()) {
+      for (auto* child : node->get_children())
+        stack.push(child);
+    }
+  }
+
+  if (is_children()) {
+    for (auto* child : get_children()) {
+      destruct(child);
+    }
+  }
+
+  set_token(std::move(result));
 }
 
 }  // namespace pmt::util::parse
