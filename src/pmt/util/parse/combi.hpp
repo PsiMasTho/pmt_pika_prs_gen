@@ -4,6 +4,21 @@
 
 namespace pmt::util::parse {
 
+template <generic_ast_base::id_type ID_>
+class with_id {
+ public:
+  static const auto _id = ID_;
+};
+
+template <typename T_>
+class is_with_id : public std::false_type {};
+
+template <generic_ast_base::id_type ID_>
+class is_with_id<with_id<ID_>> : public std::true_type {};
+
+template <typename T_>
+concept is_with_id_ccpt = is_with_id<T_>::value;
+
 template <typename CHAR_TYPE_>
 class combi {
  public:
@@ -18,11 +33,20 @@ class combi {
 
   //-- Combinators -------------------------------------------------------------
   template <generic_ast_base::id_type ID_, typename... TS_>
-  class seq {
+  class seq_impl {
    public:
     static const auto _id = ID_;
     static auto exec(context& ctx_) -> generic_ast*;
   };
+
+  template <typename... TS_>
+  class seq;
+
+  template <typename... TS_>
+  class seq : public seq_impl<generic_ast_base::DEFAULT_ID, TS_...> {};
+
+  template <is_with_id_ccpt T_, typename... TS_>
+  class seq<T_, TS_...> : public seq_impl<T_::_id, TS_...> {};
 
   template <generic_ast_base::id_type ID_, typename... TS_>
   class sor {
@@ -94,7 +118,7 @@ class combi {
   template <typename T_>
   class unpack {
    public:
-    static const auto _id = generic_ast_base::ANONYMOUS_ID;
+    static const auto _id = generic_ast_base::DEFAULT_ID;
     static auto exec(context& ctx_) -> generic_ast*;
   };
 

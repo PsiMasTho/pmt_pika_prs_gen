@@ -1,6 +1,7 @@
-#include <iostream>
+#include "pmt/util/parse/test/combi_test.hpp"
+
+using namespace pmt::util::parse::test;
 
 auto main() -> int {
-  std::cout << "Hello, World!" << std::endl;
-  return 0;
+  combi_test::run();
 }

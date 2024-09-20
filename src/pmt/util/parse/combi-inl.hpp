@@ -1,4 +1,5 @@
 // clang-format off
+#include "pmt/util/parse/generic_ast.hpp"
 #ifdef __INTELLISENSE__
     #include "pmt/util/parse/combi.hpp"
 #endif
@@ -8,8 +9,8 @@ namespace pmt::util::parse {
 
 template <typename CHAR_TYPE_>
 template <generic_ast_base::id_type ID_, typename... TS_>
-auto combi<CHAR_TYPE_>::seq<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
-  typename generic_ast::unique_handle result{generic_ast::construct(), generic_ast::destruct};
+auto combi<CHAR_TYPE_>::seq_impl<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
+  typename generic_ast::unique_handle result = generic_ast::construct(generic_ast_base::TAG_CHILDREN);
   result->set_id(ID_);
   CHAR_TYPE_ const* backtrack = ctx_._cursor;
 
@@ -23,16 +24,16 @@ auto combi<CHAR_TYPE_>::seq<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
 
     if constexpr (is_combi_unpack<CHAR_TYPE_, T_>) {
       // Unpack the children OR just insert the token
-      if (child->is_token()) {
+      if (child->get_tag() == generic_ast_base::TAG_TOKEN) {
         result->set_token(child->get_token());
       } else {
-        for (size_t i = 0; i < child->get_children_size(); ++i)
-          result->insert_child_at(result->get_children_size(), child->take_child_at(i).release());
+        while (child->get_children_size() > 0)
+          result->give_child_at(result->get_children_size(), child->take_child_at(0));
       }
     } else if constexpr (is_combi_hide<CHAR_TYPE_, T_>) {
       // Do nothing
     } else {
-      result->insert_child_at(result->get_children_size(), child.release());
+      result->give_child_at(result->get_children_size(), std::move(child));
     }
 
     return true;
@@ -51,7 +52,7 @@ auto combi<CHAR_TYPE_>::seq<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
 template <typename CHAR_TYPE_>
 template <generic_ast_base::id_type ID_, typename... TS_>
 auto combi<CHAR_TYPE_>::sor<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
-  typename generic_ast::unique_handle result{generic_ast::construct(), generic_ast::destruct};
+  typename generic_ast::unique_handle result = generic_ast::construct(generic_ast_base::TAG_CHILDREN);
   result->set_id(ID_);
   CHAR_TYPE_ const* backtrack = ctx_._cursor;
 
@@ -65,16 +66,16 @@ auto combi<CHAR_TYPE_>::sor<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
 
     if constexpr (is_combi_unpack<CHAR_TYPE_, T_>) {
       // Unpack the children OR just insert the token
-      if (child->is_token()) {
+      if (child->get_tag() == generic_ast_base::TAG_TOKEN) {
         result->set_token(child->get_token());
       } else {
-        for (size_t i = 0; i < child->get_children_size(); ++i)
-          result->insert_child_at(result->get_children_size(), child->take_child_at(i).release());
+        while (child->get_children_size() > 0)
+          result->give_child_at(result->get_children_size(), child->take_child_at(0));
       }
     } else if constexpr (is_combi_hide<CHAR_TYPE_, T_>) {
       // Do nothing
     } else {
-      result->insert_child_at(result->get_children_size(), child.release());
+      result->give_child_at(result->get_children_size(), std::move(child));
     }
 
     return success = true;
@@ -93,7 +94,7 @@ auto combi<CHAR_TYPE_>::sor<ID_, TS_...>::exec(context& ctx_) -> generic_ast* {
 template <typename CHAR_TYPE_>
 template <generic_ast_base::id_type ID_, typename T_>
 auto combi<CHAR_TYPE_>::star<ID_, T_>::exec(context& ctx_) -> generic_ast* {
-  typename generic_ast::unique_handle result{generic_ast::construct(), generic_ast::destruct};
+  typename generic_ast::unique_handle result = generic_ast::construct(generic_ast_base::TAG_CHILDREN);
   result->set_id(ID_);
   CHAR_TYPE_ const* backtrack = ctx_._cursor;
 
@@ -106,16 +107,16 @@ auto combi<CHAR_TYPE_>::star<ID_, T_>::exec(context& ctx_) -> generic_ast* {
 
     if constexpr (is_combi_unpack<CHAR_TYPE_, T_>) {
       // Unpack the children OR just insert the token
-      if (child->is_token()) {
+      if (child->get_tag() == generic_ast_base::TAG_TOKEN) {
         result->set_token(child->get_token());
       } else {
-        for (size_t i = 0; i < child->get_children_size(); ++i)
-          result->insert_child_at(result->get_children_size(), child->take_child_at(i).release());
+        while (child->get_children_size() > 0)
+          result->give_child_at(result->get_children_size(), child->take_child_at(0));
       }
     } else if constexpr (is_combi_hide<CHAR_TYPE_, T_>) {
       // Do nothing
     } else {
-      result->insert_child_at(result->get_children_size(), child.release());
+      result->give_child_at(result->get_children_size(), std::move(child));
     }
 
     backtrack = ctx_._cursor;
@@ -134,13 +135,13 @@ auto combi<CHAR_TYPE_>::star<ID_, T_>::exec(context& ctx_) -> generic_ast* {
 template <typename CHAR_TYPE_>
 template <generic_ast_base::id_type ID_, typename T_>
 auto combi<CHAR_TYPE_>::plus<ID_, T_>::exec(context& ctx_) -> generic_ast* {
-  return seq<ID_, T_, unpack<star<T_::_id, T_>>>(ctx_);
+  return seq<with_id<ID_>, T_, unpack<star<T_::_id, T_>>>::exec(ctx_);
 }
 
 template <typename CHAR_TYPE_>
 template <generic_ast_base::id_type ID_, typename T_>
 auto combi<CHAR_TYPE_>::opt<ID_, T_>::exec(context& ctx_) -> generic_ast* {
-  typename generic_ast::unique_handle result{generic_ast::construct(), generic_ast::destruct};
+  typename generic_ast::unique_handle result = generic_ast::construct(generic_ast_base::TAG_CHILDREN);
   result->set_id(ID_);
   CHAR_TYPE_ const* backtrack = ctx_._cursor;
 
@@ -153,16 +154,16 @@ auto combi<CHAR_TYPE_>::opt<ID_, T_>::exec(context& ctx_) -> generic_ast* {
 
   if constexpr (is_combi_unpack<CHAR_TYPE_, T_>) {
     // Unpack the children OR just insert the token
-    if (child->is_token()) {
+    if (child->get_tag() == generic_ast_base::TAG_TOKEN) {
       result->set_token(child->get_token());
     } else {
       for (size_t i = 0; i < child->get_children_size(); ++i)
-        result->insert_child_at(result->get_children_size(), child->take_child_at(i).release());
+        result->give_child_at(result->get_children_size(), child->take_child_at(i));
     }
   } else if constexpr (is_combi_hide<CHAR_TYPE_, T_>) {
     // Do nothing
   } else {
-    result->insert_child_at(result->get_children_size(), child.release());
+    result->give_child_at(result->get_children_size(), std::move(child));
   }
 
   return result.release();
@@ -174,7 +175,7 @@ auto combi<CHAR_TYPE_>::ch<ID_, C_>::exec(context& ctx_) -> generic_ast* {
   if (ctx_._cursor == ctx_._end || *ctx_._cursor != C_)
     return nullptr;
 
-  typename generic_ast::unique_handle result{generic_ast::construct(), generic_ast::destruct};
+  typename generic_ast::unique_handle result = generic_ast::construct(generic_ast_base::TAG_TOKEN);
   result->set_id(ID_);
   result->set_token({C_});
 
@@ -189,7 +190,7 @@ auto combi<CHAR_TYPE_>::ch_range<ID_, MIN_, MAX_>::exec(context& ctx_) -> generi
   if (ctx_._cursor == ctx_._end || *ctx_._cursor < MIN_ || *ctx_._cursor > MAX_)
     return nullptr;
 
-  typename generic_ast::unique_handle result{generic_ast::construct(), generic_ast::destruct};
+  typename generic_ast::unique_handle result = generic_ast::construct(generic_ast_base::TAG_TOKEN);
   result->set_id(ID_);
   result->set_token({*ctx_._cursor});
 

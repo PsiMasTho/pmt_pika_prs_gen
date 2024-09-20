@@ -15,7 +15,12 @@ class generic_ast_base {
 
   enum : id_type {
     UNINITIALIZED_ID = -1ULL,
-    ANONYMOUS_ID = -2ULL,
+    DEFAULT_ID = -2ULL,
+  };
+
+  enum tag {
+    TAG_TOKEN,
+    TAG_CHILDREN,
   };
 
   auto get_id() const -> id_type;
@@ -31,37 +36,32 @@ class generic_ast : public generic_ast_base {
   using token_type = std::basic_string<CHAR_TYPE_>;
   using children_type = std::vector<generic_ast*>;
 
-  static auto construct() -> generic_ast*;
   static void destruct(generic_ast* self_);
-
   using unique_handle = std::unique_ptr<generic_ast, decltype(&destruct)>;
+  static auto construct(tag tag_) -> unique_handle;
 
-  auto is_token() const -> bool;
-  auto is_children() const -> bool;
+  static void swap(generic_ast& lhs_, generic_ast& rhs_);
 
-  auto get_token() const -> token_type;
-  auto get_children() -> std::span<generic_ast*>;
-  auto get_children() const -> std::span<generic_ast const*>;
+  auto get_tag() const -> tag;
+
+  auto get_token() -> token_type&;
+  auto get_token() const -> token_type const&;
+  void set_token(token_type token_);
 
   auto get_children_size() const -> std::size_t;
   auto get_child_at(std::size_t index_) -> generic_ast*;
   auto get_child_at(std::size_t index_) const -> generic_ast const*;
 
-  //-- Child ownership ---------------------------------------------------------
   auto take_child_at(std::size_t index_) -> unique_handle;
-  void delete_child_at(std::size_t index_);
-
-  //-- Lifetime init -----------------------------------------------------------
-  void insert_child_at(std::size_t index_, generic_ast* child_);
-  void set_token(token_type token_);
+  void give_child_at(std::size_t index_, unique_handle child_);
 
   // Merge the children into a token
   void merge();
 
  private:
-  generic_ast() = default;
+  explicit generic_ast(tag tag_);
 
-  std::variant<std::monostate, children_type, token_type> _data;
+  std::variant<token_type, children_type> _data;
 };
 
 }  // namespace pmt::util::parse
