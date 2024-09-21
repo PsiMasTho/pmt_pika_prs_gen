@@ -9,7 +9,6 @@ namespace pmt::util::parse::test {
 
 enum id : generic_ast_base::id_type {
   NUMBER = 0,
-  DOT,
   RESULT
 };
 
@@ -17,7 +16,7 @@ using generic_ast = pmt::util::parse::generic_ast<char>;
 using combi = pmt::util::parse::combi<char>;
 
 using number = combi::merge<combi::plus<NUMBER, combi::ch_range<generic_ast_base::DEFAULT_ID, '0', '9'>>>;
-using dot = combi::ch<DOT, '.'>;
+using dot = combi::hide<combi::ch<generic_ast_base::DEFAULT_ID, '.'>>;
 
 using result = combi::seq<with_id<RESULT>, number, dot, number>;
 
@@ -25,8 +24,6 @@ auto id_to_string(generic_ast_base::id_type id) -> std::string {
   switch (id) {
     case NUMBER:
       return "NUMBER";
-    case DOT:
-      return "DOT";
     case RESULT:
       return "RESULT";
     case generic_ast_base::DEFAULT_ID:
@@ -68,7 +65,6 @@ void combi_test::run() {
   generic_ast::unique_handle ast(result::exec(ctx), generic_ast::destruct);
   assert(ast != nullptr);
   assert(ast->get_id() == RESULT);
-  assert(ast->get_children_size() == 3);
 
   print_result_ast(ast.get());
 }

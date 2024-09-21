@@ -1,6 +1,8 @@
 #pragma once
 
-#include "pmt/util/parse/generic_ast.hpp"
+#include "pmt/util/generic_ast.hpp"
+
+#include <string_view>
 
 namespace pmt::util::parse {
 
@@ -10,28 +12,28 @@ class with_id {
   static const auto _id = ID_;
 };
 
+namespace detail {
+namespace trait {
 template <typename T_>
 class is_with_id : public std::false_type {};
 
 template <generic_ast_base::id_type ID_>
 class is_with_id<with_id<ID_>> : public std::true_type {};
-
+}  // namespace trait
+namespace ccpt {
 template <typename T_>
-concept is_with_id_ccpt = is_with_id<T_>::value;
+concept is_with_id = trait::is_with_id<T_>::value;
+}
+
+}  // namespace detail
 
 template <typename CHAR_TYPE_>
 class combi {
  public:
   using generic_ast = generic_ast<CHAR_TYPE_>;
-
-  class context {
-   public:
-    CHAR_TYPE_ const* _begin;
-    CHAR_TYPE_ const* _end;
-    CHAR_TYPE_ const* _cursor;
-  };
-
-  //-- Combinators -------------------------------------------------------------
+  class context;
+  //-- Implementations ----------------------------------------------------------
+ private:
   template <generic_ast_base::id_type ID_, typename... TS_>
   class seq_impl {
    public:
@@ -39,15 +41,19 @@ class combi {
     static auto exec(context& ctx_) -> generic_ast*;
   };
 
+  //-- Combinators -------------------------------------------------------------
+ public:
+ // -- Sequence --
   template <typename... TS_>
   class seq;
 
   template <typename... TS_>
   class seq : public seq_impl<generic_ast_base::DEFAULT_ID, TS_...> {};
 
-  template <is_with_id_ccpt T_, typename... TS_>
+  template <detail::ccpt::is_with_id T_, typename... TS_>
   class seq<T_, TS_...> : public seq_impl<T_::_id, TS_...> {};
 
+  // -- Ordered choice --
   template <generic_ast_base::id_type ID_, typename... TS_>
   class sor {
    public:
