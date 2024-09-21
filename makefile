@@ -1,58 +1,92 @@
 include config.mk
 
-.PHONY: all clean format pmt pmt_base pmt_generator pmt_util pmt_util_parse pmt_util_parse_test pmt_util_parse_test_exe
+SRC_DIR  := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))src
 
-all:                     pmt pmt_base pmt_generator pmt_util pmt_util_parse pmt_util_parse_test pmt_util_parse_test_exe
+.PHONY: all clean format default
+default: all
 
+#-- Libs -----------------------------------------------------------------------
+#-- pmt --
+PMT_DIR	= ${SRC_DIR}/pmt
+PMT_SRC	= $(wildcard ${PMT_DIR}/*.cpp)
+PMT_HDR = $(wildcard ${PMT_DIR}/*.hpp)
+PMT_OBJ	= $(patsubst %.cpp, %.o, ${PMT_SRC})
+PMT_LIB	= ${PMT_DIR}/libpmt.a
+ALL_OBJ += ${PMT_OBJ}
+ALL_LIBS	+= ${PMT_LIB}
+ALL_SRC += ${PMT_SRC}
+ALL_HDR	+= ${PMT_HDR}
+${PMT_LIB}: ${PMT_OBJ}
+pmt: ${PMT_LIB}
+
+#-- pmt_base --
+PMT_BASE_DIR	= ${SRC_DIR}/pmt/base
+PMT_BASE_SRC	= $(wildcard ${PMT_BASE_DIR}/*.cpp)
+PMT_BASE_HDR	= $(wildcard ${PMT_BASE_DIR}/*.hpp)
+PMT_BASE_OBJ	= $(patsubst %.cpp, %.o, ${PMT_BASE_SRC})
+PMT_BASE_LIB	= ${PMT_BASE_DIR}/libpmt_base.a
+ALL_OBJ	+= ${PMT_BASE_OBJ}
+ALL_LIBS	+= ${PMT_BASE_LIB}
+ALL_SRC	+= ${PMT_BASE_SRC}
+ALL_HDR	+= ${PMT_BASE_HDR}
+${PMT_BASE_LIB}: ${PMT_BASE_OBJ}
+pmt_base: ${PMT_BASE_LIB}
+
+#-- pmt_util --
+PMT_UTIL_DIR	= ${SRC_DIR}/pmt/util
+PMT_UTIL_SRC	= $(wildcard ${PMT_UTIL_DIR}/*.cpp)
+PMT_UTIL_HDR	= $(wildcard ${PMT_UTIL_DIR}/*.hpp)
+PMT_UTIL_OBJ	= $(patsubst %.cpp, %.o, ${PMT_UTIL_SRC})
+PMT_UTIL_LIB	= ${PMT_UTIL_DIR}/libpmt_util.a
+ALL_OBJ	+= ${PMT_UTIL_OBJ}
+ALL_LIBS	+= ${PMT_UTIL_LIB}
+ALL_SRC	+= ${PMT_UTIL_SRC}
+ALL_HDR	+= ${PMT_UTIL_HDR}
+${PMT_UTIL_LIB}: ${PMT_UTIL_OBJ}
+pmt_util: ${PMT_UTIL_LIB}
+
+#-- pmt_util_test --
+PMT_UTIL_TEST_DIR	= ${SRC_DIR}/pmt/util/test
+PMT_UTIL_TEST_SRC	= $(wildcard ${PMT_UTIL_TEST_DIR}/*.cpp)
+PMT_UTIL_TEST_HDR	= $(wildcard ${PMT_UTIL_TEST_DIR}/*.hpp)
+PMT_UTIL_TEST_OBJ	= $(patsubst %.cpp, %.o, ${PMT_UTIL_TEST_SRC})
+PMT_UTIL_TEST_LIB	= ${PMT_UTIL_TEST_DIR}/libpmt_util_test.a
+ALL_OBJ	+= ${PMT_UTIL_TEST_OBJ}
+ALL_LIBS	+= ${PMT_UTIL_TEST_LIB}
+ALL_SRC	+= ${PMT_UTIL_TEST_SRC}
+ALL_HDR	+= ${PMT_UTIL_TEST_HDR}
+${PMT_UTIL_TEST_LIB}: ${PMT_UTIL_TEST_OBJ}
+pmt_util_test: ${PMT_UTIL_TEST_LIB}
+
+#-- Exes	-----------------------------------------------------------------------
+#-- pmt_util_test_exe --
+PMT_UTIL_TEST_EXE_DIR	= ${SRC_DIR}/pmt/util/test/exe
+PMT_UTIL_TEST_EXE_SRC	= $(wildcard ${PMT_UTIL_TEST_EXE_DIR}/*.cpp)
+PMT_UTIL_TEST_EXE_HDR	= $(wildcard ${PMT_UTIL_TEST_EXE_DIR}/*.hpp)
+PMT_UTIL_TEST_EXE_OBJ	= $(patsubst %.cpp, %.o, ${PMT_UTIL_TEST_EXE_SRC})
+PMT_UTIL_TEST_EXE_BIN	= ${PMT_UTIL_TEST_EXE_DIR}/pmt_util_test_exe
+ALL_OBJ	+= ${PMT_UTIL_TEST_EXE_OBJ}
+ALL_BIN	+= ${PMT_UTIL_TEST_EXE_BIN}
+ALL_SRC	+= ${PMT_UTIL_TEST_EXE_SRC}
+ALL_HDR	+= ${PMT_UTIL_TEST_EXE_HDR}
+${PMT_UTIL_TEST_EXE_BIN}: ${PMT_UTIL_TEST_EXE_OBJ} ${PMT_UTIL_TEST_LIB} ${PMT_UTIL_LIB} ${PMT_BASE_LIB} ${PMT_LIB}
+	${CXX} ${CXXFLAGS} ${INCS} -o $@ $^
+pmt_util_test_exe: ${PMT_UTIL_TEST_EXE_BIN}
+
+#-- Generic --------------------------------------------------------------------
+%.a: 
+	${AR} rcs $@ $^
+
+%.o: %.cpp
+	${CXX} -c ${CXXFLAGS} -I${SRC_DIR} -o $@ $<
+
+#-- Clean ----------------------------------------------------------------------
 clean:
-	cd src/pmt                     && ${MAKE} $@
-	cd src/pmt/base                && ${MAKE} $@
-	cd src/pmt/generator           && ${MAKE} $@
-	cd src/pmt/util                && ${MAKE} $@
-	cd src/pmt/util/parse          && ${MAKE} $@
-	cd src/pmt/util/parse/test     && ${MAKE} $@
-	cd src/pmt/util/parse/test/exe && ${MAKE} $@
+	rm -f ${ALL_BIN} ${ALL_LIBS} ${ALL_OBJ}
 
+#-- Format ---------------------------------------------------------------------
 format:
-	cd src/pmt                     && ${MAKE} $@
-	cd src/pmt/base                && ${MAKE} $@
-	cd src/pmt/generator           && ${MAKE} $@
-	cd src/pmt/util                && ${MAKE} $@
-	cd src/pmt/util/parse          && ${MAKE} $@
-	cd src/pmt/util/parse/test     && ${MAKE} $@
-	cd src/pmt/util/parse/test/exe && ${MAKE} $@
+	${FORMATTER} -i	${ALL_SRC} ${ALL_HDR}
 
-# Phony projects
-# - Libs
-pmt:                 pmt/libpmt.a
-pmt_base:            pmt/base/libpmt_base.a
-pmt_util:            pmt/util/libpmt_util.a
-pmt_util_parse:      pmt/util/parse/libpmt_util_parse.a
-pmt_util_parse_test: pmt/util/parse/libpmt_util_parse_test.a
-# - Exes
-pmt_generator:           pmt/generator/pmt_generator
-pmt_util_parse_test_exe: pmt/util/parse/test/exe/pmt_util_parse_test_exe
-
-# Actual targets
-# - Libs
-pmt/libpmt.a:
-	cd src/pmt && ${MAKE}
-
-pmt/base/libpmt_base.a:
-	cd src/pmt/base && ${MAKE}
-
-pmt/util/libpmt_util.a: pmt pmt_base
-	cd src/pmt/util && ${MAKE}
-
-pmt/util/parse/libpmt_util_parse.a: pmt_util
-	cd src/pmt/util/parse && ${MAKE}
-
-pmt/util/parse/libpmt_util_parse_test.a: pmt_util_parse
-	cd src/pmt/util/parse/test && ${MAKE}
-
-# - Exes
-pmt/generator/pmt_generator: pmt_base
-	cd src/pmt/generator && ${MAKE}
-
-pmt/util/parse/test/exe/pmt_util_parse_test_exe: pmt_util_parse_test 
-	cd	src/pmt/util/parse/test/exe && ${MAKE}
+#-- All ------------------------------------------------------------------------
+all: ${ALL_BIN} ${ALL_LIBS}
