@@ -1,9 +1,10 @@
-#include "pmt/util/parse/test/combi_test.hpp"
+#include "pmt/util/parse/combi/test/combi_test.hpp"
+
+#include "pmt/util/parse/combi/combi.hpp"
+#include "pmt/util/parse/generic_ast.hpp"
+#include "pmt/util/text_encoding.hpp"
 
 #include <iostream>
-
-#include "pmt/util/parse/combi.hpp"
-#include "pmt/util/parse/generic_ast.hpp"
 
 namespace pmt::util::parse::test {
 
@@ -12,13 +13,13 @@ enum id : generic_ast_base::id_type {
   RESULT
 };
 
-using generic_ast = pmt::util::parse::generic_ast<char>;
-using combi = pmt::util::parse::combi<char>;
+using combi = pmt::util::parse::combi::combi<ENCODING_UTF8>;
+using generic_ast = combi::generic_ast;
 
-using number = combi::merge<combi::plus<NUMBER, combi::ch_range<generic_ast_base::DEFAULT_ID, '0', '9'>>>;
-using dot = combi::hide<combi::ch<generic_ast_base::DEFAULT_ID, '.'>>;
+using number = combi::merge<combi::plus<NUMBER, combi::ch_range<'0', '9'>>>;
+using dot = combi::hide<combi::ch<'.'>>;
 
-using result = combi::seq<with_id<RESULT>, number, dot, number>;
+using result = combi::seq<RESULT, number, dot, number>;
 
 auto id_to_string(generic_ast_base::id_type id) -> std::string {
   switch (id) {

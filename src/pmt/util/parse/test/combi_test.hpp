@@ -6,4 +6,4 @@ class combi_test {
  public:
   static void run();
 };
-}  // namespace pmt::util::parse::test
+}  // namespace pmt::util::parse::combi::test

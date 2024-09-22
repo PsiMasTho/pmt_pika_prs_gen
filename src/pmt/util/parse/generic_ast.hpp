@@ -2,10 +2,11 @@
 
 #include <cstdint>
 #include <memory>
-#include <span>
 #include <string>
 #include <variant>
 #include <vector>
+
+#include "pmt/util/text_encoding.hpp"
 
 namespace pmt::util::parse {
 
@@ -30,10 +31,11 @@ class generic_ast_base {
   id_type _id = UNINITIALIZED_ID;
 };
 
-template <typename CHAR_TYPE_>
+template <text_encoding ENCODING_>
 class generic_ast : public generic_ast_base {
  public:
-  using token_type = std::basic_string<CHAR_TYPE_>;
+  using char_type = typename text_encoding_traits<ENCODING_>::code_unit_type;
+  using token_type = std::basic_string<char_type>;
   using children_type = std::vector<generic_ast*>;
 
   static void destruct(generic_ast* self_);

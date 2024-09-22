@@ -2,12 +2,11 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
-#include <string_view>
 
 #include "pmt/util/text_encoding.hpp"
-#include "pmt/util/text_view.hpp"
+#include "pmt/util/text_stream.hpp"
 
-auto read_file_into_string(std::string path_) -> std::string {
+auto read_file_into_string(std::string const& path_) -> std::u8string {
   std::ifstream file{path_, std::ios::binary};
 
   if (!file.is_open())
@@ -28,14 +27,14 @@ auto main(int argc, char const* const* argv) -> int {
     return 1;
   }
 
-  pmt::util::text_view text_view{std::string_view{file_contents}, pmt::util::UTF8};
+  auto text_stream = pmt::util::text_stream::construct<pmt::util::ENCODING_UTF8>(file_contents);
 
   auto const start = std::chrono::high_resolution_clock::now();
   size_t count = 0;
-  while (!text_view.is_at_end()) {
-    pmt::util::text_view::codepoint_type const cp = text_view.read();
+  while (!text_stream.is_at_end()) {
+    pmt::util::codepoint_type const cp = text_stream.read();
 
-    if (cp == pmt::util::text_view::INVALID_CODEPOINT) {
+    if (cp == pmt::util::INVALID_CODEPOINT) {
       std::cerr << "Invalid codepoint" << std::endl;
       return 1;
     } else {

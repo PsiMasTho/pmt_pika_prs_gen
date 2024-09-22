@@ -1,25 +1,19 @@
 #pragma once
 
 #include <cstddef>
-#include <string_view>
 
 #include "pmt/util/text_encoding.hpp"
 
 namespace pmt::util {
 
-class text_view {
+class text_stream {
  public:
-  using codepoint_type = char32_t;
   using unsigned_codepoint_type = std::make_unsigned_t<codepoint_type>;
   using fat_codepoint_type = std::pair<codepoint_type, uint32_t>;
   using fat_unsigned_codepoint_type = std::pair<unsigned_codepoint_type, uint32_t>;
 
-  static const codepoint_type INVALID_CODEPOINT;
-
-  template <typename CHAR_TYPE_>
-  text_view(std::basic_string_view<CHAR_TYPE_> str_, text_encoding encoding_);
-
-  text_view(unsigned char const* begin_, unsigned char const* end_, text_encoding encoding_);
+  template <text_encoding ENCODING_>
+  static auto construct(typename text_encoding_traits<ENCODING_>::string_view_type str_) -> text_stream;
 
   auto get_position() const -> ptrdiff_t;
   auto set_position(ptrdiff_t position_) -> void;
@@ -35,6 +29,8 @@ class text_view {
   auto get_encoding() const -> text_encoding;
 
  private:
+  text_stream(unsigned char const* begin_, unsigned char const* end_, text_encoding encoding_);
+
   unsigned char const* _begin;
   unsigned char const* _cursor;
   unsigned char const* _end;
@@ -47,4 +43,4 @@ class text_view {
 
 }  // namespace pmt::util
 
-#include "pmt/util/text_view-inl.hpp"
+#include "pmt/util/text_stream-inl.hpp"
