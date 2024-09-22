@@ -38,11 +38,19 @@ auto read_codepoint(size_t& read_, std::span<std::byte const> subspan_) -> buffe
   return buffer;
 }
 
+// There are neater ways to do this, but this is the fastest i found
 auto calculate_utf8_length(std::byte lsb_) -> size_t {
   auto lsb = std::to_integer<uint8_t>(lsb_);
-  if (lsb < 0x80)
+
+  if ((lsb & 0x80) == 0) [[likely]]  // tuned for ASCII
     return 1;
-  return std::countl_one(lsb);
+
+  size_t const countl = std::countl_one(lsb);
+
+  if (countl < 5) [[likely]]
+    return countl;
+
+  return 0;
 }
 
 auto convert_utf8(buffer_type& buffer_, size_t bytes_read_) -> size_t {
@@ -81,35 +89,23 @@ auto convert_utf8(buffer_type& buffer_, size_t bytes_read_) -> size_t {
 }
 
 auto convert_utf16(buffer_type& buffer_, size_t bytes_read_) -> size_t {
-  static unsigned_codepoint_type const high_surrogate_mask = 0x3FF;
-  static unsigned_codepoint_type const low_surrogate_mask = 0x3FF;
-  static unsigned_codepoint_type const high_surrogate_offset = 0xD800;
-  static unsigned_codepoint_type const low_surrogate_offset = 0xDC00;
-  static unsigned_codepoint_type const surrogate_offset = 0x10000;
-
-  unsigned_codepoint_type const high_surrogate = unsigned_from_buffer(buffer_);
-  unsigned_codepoint_type const low_surrogate = unsigned_from_buffer(buffer_);
-
-  if (high_surrogate < high_surrogate_offset || high_surrogate >= high_surrogate_offset + high_surrogate_mask || low_surrogate < low_surrogate_offset || low_surrogate >= low_surrogate_offset + low_surrogate_mask) {
-    buffer_ = to_buffer(text_view::INVALID_CODEPOINT);
-    return 0;
-  }
-
-  unsigned_codepoint_type const result = (high_surrogate - high_surrogate_offset) * surrogate_offset + (low_surrogate - low_surrogate_offset) + surrogate_offset;
-
-  buffer_ = to_buffer(result);
-  return 2;
+  return 0;
 }
 
 auto convert(buffer_type& buffer_, text_encoding encoding_, size_t bytes_read_) -> size_t {
-  if (encoding_._is_ascii || encoding_._byte_count == 4)
-    return encoding_._byte_count;
-
   switch (encoding_._byte_count) {
     case 1:
       return convert_utf8(buffer_, bytes_read_);
     case 2:
+      if (encoding_._endian != endianness::NATIVE) {
+        std::swap(buffer_[0], buffer_[1]);
+        std::swap(buffer_[2], buffer_[3]);
+      }
       return convert_utf16(buffer_, bytes_read_);
+    case 4:
+      if (encoding_._endian != endianness::NATIVE)
+        std::ranges::reverse(buffer_);
+      return 4;
     default:
       pmt_unreachable();
   }
@@ -140,18 +136,9 @@ auto text_view::read() -> codepoint_type {
   size_t bytes_read = 0;
   buffer_type buffer = read_codepoint(bytes_read, _data.subspan(_position));
 
-  if (bytes_read == 0 || bytes_read < _encoding._byte_count) {
+  if (bytes_read < _encoding._byte_count) {
     set_position(_data.size());
     return INVALID_CODEPOINT;
-  }
-
-  if (_encoding._endian != endianness::NATIVE) {
-    if (_encoding._byte_count == 4) {
-      std::reverse(buffer.begin(), buffer.end());
-    } else if (_encoding._byte_count == 2) {
-      std::swap(buffer[0], buffer[1]);
-      std::swap(buffer[2], buffer[3]);
-    }
   }
 
   _position += convert(buffer, _encoding, bytes_read);
