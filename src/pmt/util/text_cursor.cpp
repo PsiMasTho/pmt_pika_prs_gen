@@ -1,4 +1,7 @@
-#include "pmt/util/text_stream.hpp"
+#include "pmt/util/text_cursor.hpp"
+
+#include "pmt/asserts.hpp"
+#include "pmt/util/text_encoding.hpp"
 
 #include <algorithm>
 #include <array>
@@ -8,25 +11,22 @@
 #include <cstdint>
 #include <cstring>
 
-#include "pmt/asserts.hpp"
-#include "pmt/util/text_encoding.hpp"
-
 namespace pmt::util {
 namespace {
-using buffer_type = std::array<unsigned char, 4>;
-const text_stream::fat_codepoint_type INVALID_FAT_CODEPOINT = {INVALID_CODEPOINT, 0};
+using BufferType = std::array<unsigned char, 4>;
+const TextCursor::FatCodepointType INVALID_FAT_CODEPOINT = {INVALID_CODEPOINT, 0};
 
 using buffer16_type = std::array<uint16_t, 2>;
 
-auto to_buffer(codepoint_type codepoint_) -> buffer_type {
-  return std::bit_cast<buffer_type>(codepoint_);
+auto to_buffer(CodepointType codepoint_) -> BufferType {
+  return std::bit_cast<BufferType>(codepoint_);
 }
 
-auto from_buffer(buffer_type buffer_) -> codepoint_type {
-  return std::bit_cast<codepoint_type>(buffer_);
+auto from_buffer(BufferType buffer_) -> CodepointType {
+  return std::bit_cast<CodepointType>(buffer_);
 }
 
-auto to_buffer16(codepoint_type codepoint_) -> buffer16_type {
+auto to_buffer16(CodepointType codepoint_) -> buffer16_type {
   return std::bit_cast<buffer16_type>(codepoint_);
 }
 
@@ -43,28 +43,28 @@ auto calculate_utf8_length(unsigned char lsb_) -> size_t {
   return 0;
 }
 
-auto convert_utf8(text_stream::fat_codepoint_type codepoint_) -> text_stream::fat_codepoint_type {
-  static std::array<text_stream::unsigned_codepoint_type, 4> const first_masks = {0x7F, 0x1F, 0x0F, 0x07};
-  static text_stream::unsigned_codepoint_type const continuation_mask = 0x3F;
+auto convert_utf8(TextCursor::FatCodepointType codepoint_) -> TextCursor::FatCodepointType {
+  static std::array<UnsignedCodepointType, 4> const first_masks = {0x7F, 0x1F, 0x0F, 0x07};
+  static UnsignedCodepointType const continuation_mask = 0x3F;
 
   static size_t const continuation_shift = 6;
   static std::array<size_t, 4> const first_shifts = {0, 6, 12, 18};
 
-  buffer_type const buffer = to_buffer(codepoint_.first);
+  BufferType const buffer = to_buffer(codepoint_.first);
   size_t const length = calculate_utf8_length(buffer[0]);
 
   if (length > codepoint_.second) [[unlikely]]
     return INVALID_FAT_CODEPOINT;
 
   // set the first
-  text_stream::unsigned_codepoint_type result = 0ULL | ((buffer.front() & first_masks[length - 1]) << first_shifts[length - 1]);
+  UnsignedCodepointType result = 0ULL | ((buffer.front() & first_masks[length - 1]) << first_shifts[length - 1]);
 
   // set the rest
   for (size_t i = 1; i < length; ++i) {
     if ((buffer[i] & 0xC0) != 0x80) [[unlikely]]
       return INVALID_FAT_CODEPOINT;
 
-    text_stream::unsigned_codepoint_type continuation = buffer[i] & continuation_mask;
+    UnsignedCodepointType continuation = buffer[i] & continuation_mask;
     size_t const shift = first_shifts[length - 1] - continuation_shift * i;
 
     result |= continuation << shift;
@@ -73,7 +73,7 @@ auto convert_utf8(text_stream::fat_codepoint_type codepoint_) -> text_stream::fa
   return {result, length};
 }
 
-auto convert_utf16(text_stream::fat_codepoint_type codepoint_) -> text_stream::fat_codepoint_type {
+auto convert_utf16(TextCursor::FatCodepointType codepoint_) -> TextCursor::FatCodepointType {
   buffer16_type const buffer = to_buffer16(codepoint_.first);
   uint32_t c1 = buffer[0];
   if (c1 >= 0xD800 && c1 <= 0xDBFF) {
@@ -93,18 +93,18 @@ auto convert_utf16(text_stream::fat_codepoint_type codepoint_) -> text_stream::f
 }
 
 template <size_t WIDTH_, bool IS_NATIVE_ENDIAN_>
-auto read_fn(unsigned char const* cursor_, unsigned char const* end_) -> text_stream::fat_codepoint_type {
+auto read_fn(unsigned char const* cursor_, unsigned char const* end_) -> TextCursor::FatCodepointType {
   static_assert(WIDTH_ == 1 || WIDTH_ == 2 || WIDTH_ == 4);
 
   size_t const remaining = std::distance(cursor_, end_);
   if (remaining < WIDTH_ || remaining % WIDTH_ != 0) [[unlikely]]
     return INVALID_FAT_CODEPOINT;
 
-  text_stream::fat_codepoint_type result{0, std::min(4UL, remaining)};
+  TextCursor::FatCodepointType result{0, std::min(4UL, remaining)};
   std::memcpy(&result.first, cursor_, result.second);
 
   if constexpr (!IS_NATIVE_ENDIAN_ && WIDTH_ != 1) {
-    buffer_type buffer = to_buffer(result.first);
+    BufferType buffer = to_buffer(result.first);
     if constexpr (WIDTH_ == 4) {
       std::ranges::reverse(buffer);
     } else if constexpr (WIDTH_ == 2) {
@@ -118,7 +118,7 @@ auto read_fn(unsigned char const* cursor_, unsigned char const* end_) -> text_st
 }
 
 template <size_t WIDTH_>
-auto conversion_fn(text_stream::fat_codepoint_type codepoint_) -> text_stream::fat_codepoint_type {
+auto conversion_fn(TextCursor::FatCodepointType codepoint_) -> TextCursor::FatCodepointType {
   static_assert(WIDTH_ == 1 || WIDTH_ == 2 || WIDTH_ == 4);
 
   if constexpr (WIDTH_ == 1)
@@ -133,41 +133,10 @@ auto conversion_fn(text_stream::fat_codepoint_type codepoint_) -> text_stream::f
 
 }  // namespace
 
-auto text_stream::get_position() const -> ptrdiff_t {
-  return std::distance(_begin, _cursor);
-}
-
-auto text_stream::set_position(ptrdiff_t position_) -> void {
-  assert(position_ <= std::distance(_begin, _end));
-  _cursor = std::next(_begin, position_);
-}
-
-auto text_stream::get_max_remaining() const -> ptrdiff_t {
-  return get_bytes_remaining() / (_encoding & MASK_CODE_UNIT_SIZE);
-}
-
-auto text_stream::get_bytes_remaining() const -> ptrdiff_t {
-  return std::distance(_cursor, _end);
-}
-
-auto text_stream::read() -> codepoint_type {
-  fat_codepoint_type const result = _conversion_fn(_read_fn(_cursor, _end));
-  _cursor = (result.first == INVALID_CODEPOINT) ? _end : std::next(_cursor, result.second);
-  return result.first;
-}
-
-auto text_stream::is_at_end() const -> bool {
-  return get_bytes_remaining() == 0;
-}
-
-auto text_stream::get_encoding() const -> text_encoding {
-  return _encoding;
-}
-
-text_stream::text_stream(unsigned char const* begin_, unsigned char const* end_, text_encoding encoding_)
- : _begin(begin_)
- , _cursor(begin_)
- , _end(end_)
+TextCursor::TextCursor(std::string_view str_, TextEncoding encoding_)
+ : _begin(reinterpret_cast<unsigned char const*>(str_.data()))
+ , _cursor(_begin)
+ , _end(_begin + str_.size())
  , _read_fn(nullptr)
  , _conversion_fn(nullptr)
  , _encoding(encoding_) {
@@ -190,6 +159,37 @@ text_stream::text_stream(unsigned char const* begin_, unsigned char const* end_,
     default:
       pmt_unreachable();
   }
+}
+
+auto TextCursor::get_position() const -> ptrdiff_t {
+  return std::distance(_begin, _cursor);
+}
+
+auto TextCursor::set_position(ptrdiff_t position_) -> void {
+  assert(position_ <= std::distance(_begin, _end));
+  _cursor = std::next(_begin, position_);
+}
+
+auto TextCursor::get_max_remaining() const -> ptrdiff_t {
+  return get_bytes_remaining() / (_encoding & MASK_CODE_UNIT_SIZE);
+}
+
+auto TextCursor::get_bytes_remaining() const -> ptrdiff_t {
+  return std::distance(_cursor, _end);
+}
+
+auto TextCursor::read() -> CodepointType {
+  FatCodepointType const result = _conversion_fn(_read_fn(_cursor, _end));
+  _cursor = (result.first == INVALID_CODEPOINT) ? _end : std::next(_cursor, result.second);
+  return result.first;
+}
+
+auto TextCursor::is_at_end() const -> bool {
+  return get_bytes_remaining() == 0;
+}
+
+auto TextCursor::get_encoding() const -> TextEncoding {
+  return _encoding;
 }
 
 }  // namespace pmt::util

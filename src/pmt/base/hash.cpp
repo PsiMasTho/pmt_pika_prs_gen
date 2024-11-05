@@ -11,7 +11,7 @@ enum : size_t {
 
 }  // namespace
 
-auto hash::fnv1a(unsigned char const* data_, size_t size_) -> size_t {
+auto Hash::fnv1a(unsigned char const* data_, size_t size_) -> size_t {
   size_t hash = FNV_OFFSET;
 
   unsigned char const* const end = data_ + size_;
@@ -21,7 +21,7 @@ auto hash::fnv1a(unsigned char const* data_, size_t size_) -> size_t {
   return hash;
 }
 
-void hash::combine(size_t hash_, size_t& seed_) {
+void Hash::combine(size_t hash_, size_t& seed_) {
   seed_ ^= (hash_ + COMBINE_CONSTANT + (seed_ << 6) + (seed_ >> 2));
 }
 

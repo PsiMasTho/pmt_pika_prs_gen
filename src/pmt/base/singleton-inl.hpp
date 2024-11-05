@@ -9,7 +9,7 @@
 namespace pmt::base {
 
 template <std::default_initializable T_, uint64_t ID_, uint64_t EXTRA_>
-auto singleton<T_, ID_, EXTRA_>::instance() -> shared_handle {
+auto Singleton<T_, ID_, EXTRA_>::instance() -> shared_handle {
   static std::weak_ptr<T_> instance;
   static std::mutex mutex;
 

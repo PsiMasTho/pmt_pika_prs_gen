@@ -4,3 +4,5 @@
   namespace ns_name_ {                              \
   class class_name_;                                \
   }
+
+#define PMT_FW_DECL_CLASS(class_name_) class class_name_

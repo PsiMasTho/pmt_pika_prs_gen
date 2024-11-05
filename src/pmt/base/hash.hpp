@@ -4,7 +4,7 @@
 
 namespace pmt::base {
 
-class hash {
+class Hash {
  public:
   static auto fnv1a(unsigned char const* data_, size_t size_) -> size_t;
 

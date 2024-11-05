@@ -3,12 +3,12 @@
 namespace pmt::base {
 
 template <typename... TS_>
-class overloaded : TS_... {
+class Overloaded : TS_... {
  public:
   using TS_::operator()...;
 };
 
 template <typename... TS_>
-overloaded(TS_...) -> overloaded<TS_...>;
+Overloaded(TS_...) -> Overloaded<TS_...>;
 
 }  // namespace pmt::base

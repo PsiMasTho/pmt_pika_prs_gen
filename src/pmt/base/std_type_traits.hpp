@@ -9,36 +9,36 @@
 
 namespace pmt::base {
 
-class std_type_traits {
+class StdTypeTraits {
   template <typename... T_>
-  struct is_vector : std::false_type {};
+  struct IsVector : std::false_type {};
 
   template <typename... T_>
-  struct is_vector<std::vector<T_...>> : std::true_type {};
+  struct IsVector<std::vector<T_...>> : std::true_type {};
 
   template <typename... T_>
-  struct is_tuple : std::false_type {};
+  struct IsTuple : std::false_type {};
 
   template <typename... T_>
-  struct is_tuple<std::tuple<T_...>> : std::true_type {};
+  struct IsTuple<std::tuple<T_...>> : std::true_type {};
 
   template <typename T_>
-  struct is_optional : std::false_type {};
+  struct IsOptional : std::false_type {};
 
   template <typename T_>
-  struct is_optional<std::optional<T_>> : std::true_type {};
+  struct IsOptional<std::optional<T_>> : std::true_type {};
 
   template <typename T_>
-  struct is_variant : std::false_type {};
+  struct IsVariant : std::false_type {};
 
   template <typename... TS_>
-  struct is_variant<std::variant<TS_...>> : std::true_type {};
+  struct IsVariant<std::variant<TS_...>> : std::true_type {};
 
   template <typename T_>
-  struct is_duration : std::false_type {};
+  struct IsDuration : std::false_type {};
 
   template <typename REP_, typename PERIOD_>
-  struct is_duration<std::chrono::duration<REP_, PERIOD_>> : std::true_type {};
+  struct IsDuration<std::chrono::duration<REP_, PERIOD_>> : std::true_type {};
 };
 
 }  // namespace pmt::base

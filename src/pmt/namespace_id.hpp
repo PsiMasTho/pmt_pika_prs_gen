@@ -5,10 +5,10 @@
 
 namespace pmt {
 
-using namespace_id_type = uint64_t;
+using NamespaceIdType = uint64_t;
 
-enum namespace_id : namespace_id_type {
-  OFFSET = std::numeric_limits<namespace_id_type>::max() / 0x100000000ULL,
+enum NamespaceId : NamespaceIdType {
+  OFFSET = std::numeric_limits<NamespaceIdType>::max() / 0x100000000ULL,
 
   // clang-format off
  SHARED_NAMESPACE_ID =  0 * OFFSET,

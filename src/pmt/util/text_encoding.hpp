@@ -4,13 +4,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <string>
-#include <string_view>
 #include <type_traits>
 
 namespace pmt::util {
 
-enum text_encoding : std::uint8_t {
+enum TextEncoding : std::uint8_t {
   //-- Masks --
   MASK_CODE_UNIT_SIZE = 0b0000'0111,
   MASK_ENDIAN = 0b0000'1000,
@@ -35,27 +33,19 @@ enum text_encoding : std::uint8_t {
 };
 
 //-- Types ---------------------------------------------------------------------
-using utf32_type = char32_t;
-using utf16_type = char16_t;
-using utf8_type = char8_t;
-
-using codepoint_type = utf32_type;
+using CodepointType = char32_t;
+using UnsignedCodepointType = std::make_unsigned_t<CodepointType>;
 
 //-- Traits --------------------------------------------------------------------
-template <text_encoding ENCODING_>
-struct text_encoding_traits {
+template <TextEncoding ENCODING_>
+struct TextEncodingTraits {
   static constexpr bool IS_NATIVE_ENDIAN = (ENCODING_ & MASK_ENDIAN) == VALUE_NATIVE_ENDIAN;
   static constexpr bool IS_LITTLE_ENDIAN = (ENCODING_ & MASK_ENDIAN) == VALUE_LITTLE_ENDIAN;
   static constexpr bool IS_BIG_ENDIAN = (ENCODING_ & MASK_ENDIAN) == VALUE_BIG_ENDIAN;
-
   static constexpr size_t CODE_UNIT_SIZE = (ENCODING_ & MASK_CODE_UNIT_SIZE) == VALUE_CODE_UNIT_SIZE_1 ? 1 : (ENCODING_ & MASK_CODE_UNIT_SIZE) == VALUE_CODE_UNIT_SIZE_2 ? 2 : 4;
-
-  using code_unit_type = std::conditional_t<CODE_UNIT_SIZE == 1, utf8_type, std::conditional_t<CODE_UNIT_SIZE == 2, utf16_type, utf32_type>>;
-  using string_view_type = std::basic_string_view<code_unit_type>;
-  using string_type = std::basic_string<code_unit_type>;
 };
 
 //-- Special codepoints --------------------------------------------------------
-const codepoint_type INVALID_CODEPOINT = std::numeric_limits<codepoint_type>::max();
+const CodepointType INVALID_CODEPOINT = std::numeric_limits<CodepointType>::max();
 
 }  // namespace pmt::util

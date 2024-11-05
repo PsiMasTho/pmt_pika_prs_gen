@@ -6,66 +6,61 @@
 #include <variant>
 #include <vector>
 
-#include "pmt/util/text_encoding.hpp"
-
 namespace pmt::util::parse {
 
-class generic_ast_base {
+class GenericAst {
  public:
-  using id_type = std::uint64_t;
+  using IdType = std::uint64_t;
+  using TokenType = std::string;
+  using ChildrenType = std::vector<GenericAst*>;
 
-  enum : id_type {
-    UNINITIALIZED_ID = -1ULL,
-    DEFAULT_ID = -2ULL,
+  enum IdConstants : IdType {
+    UninitializedId = -1ULL,
+    DefaultId = -2ULL,
   };
 
-  enum tag {
-    TAG_TOKEN,
-    TAG_CHILDREN,
+  enum class Tag {
+    Token,
+    Children,
   };
 
-  auto get_id() const -> id_type;
-  void set_id(id_type id_);
+  class UniqueHandleDeleter {
+   public:
+    void operator()(GenericAst* self_) const;
+  };
 
- private:
-  id_type _id = UNINITIALIZED_ID;
-};
+  static void destruct(GenericAst* self_);
+  using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
+  static auto construct(Tag tag_) -> UniqueHandle;
 
-template <text_encoding ENCODING_>
-class generic_ast : public generic_ast_base {
- public:
-  using char_type = typename text_encoding_traits<ENCODING_>::code_unit_type;
-  using token_type = std::basic_string<char_type>;
-  using children_type = std::vector<generic_ast*>;
+  static void swap(GenericAst& lhs_, GenericAst& rhs_);
 
-  static void destruct(generic_ast* self_);
-  using unique_handle = std::unique_ptr<generic_ast, decltype(&destruct)>;
-  static auto construct(tag tag_) -> unique_handle;
+  auto get_id() const -> IdType;
+  void set_id(IdType id_);
 
-  static void swap(generic_ast& lhs_, generic_ast& rhs_);
+  auto get_tag() const -> Tag;
 
-  auto get_tag() const -> tag;
+  auto get_token() -> TokenType&;
+  auto get_token() const -> TokenType const&;
+  void set_token(TokenType token_);
 
-  auto get_token() -> token_type&;
-  auto get_token() const -> token_type const&;
-  void set_token(token_type token_);
+  auto get_children_size() const -> size_t;
+  auto get_child_at(size_t index_) -> GenericAst*;
+  auto get_child_at(size_t index_) const -> GenericAst const*;
 
-  auto get_children_size() const -> std::size_t;
-  auto get_child_at(std::size_t index_) -> generic_ast*;
-  auto get_child_at(std::size_t index_) const -> generic_ast const*;
-
-  auto take_child_at(std::size_t index_) -> unique_handle;
-  void give_child_at(std::size_t index_, unique_handle child_);
+  auto take_child_at(size_t index_) -> UniqueHandle;
+  void give_child_at(size_t index_, UniqueHandle child_);
 
   // Merge the children into a token
   void merge();
+  // Unpack the child's children into this node
+  void unpack(size_t index_);
 
  private:
-  explicit generic_ast(tag tag_);
+  explicit GenericAst(Tag tag_);
 
-  std::variant<token_type, children_type> _data;
+  std::variant<TokenType, ChildrenType> _data;
+  IdType _id = IdConstants::UninitializedId;
 };
 
 }  // namespace pmt::util::parse
-
-#include "pmt/util/parse/generic_ast-inl.hpp"

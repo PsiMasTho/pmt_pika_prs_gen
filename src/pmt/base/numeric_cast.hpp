@@ -5,7 +5,7 @@
 
 namespace pmt::base {
 
-class numeric_cast {
+class NumericCast {
   /// \brief Casts a value from one integral type to another, ensuring that the
   /// value is preserved. Check is only performed in debug mode.
   template <std::integral TO_, std::integral FROM_>
