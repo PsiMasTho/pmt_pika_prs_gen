@@ -1,8 +1,9 @@
 include config.mk
 
-SRC_DIR  := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))src
+SRC_DIR     := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))src
+GRAMMAR_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))grammars
 
-.PHONY: all clean format default
+.PHONY: all clean format rl default
 default: all
 
 #-- Libs -----------------------------------------------------------------------
@@ -32,6 +33,19 @@ ALL_HDR	+= ${PMT_BASE_HDR}
 ${PMT_BASE_LIB}: ${PMT_BASE_OBJ}
 pmt_base: ${PMT_BASE_LIB}
 
+#-- pmt_parserbuilder --
+PMT_PARSERBUILDER_DIR	= ${SRC_DIR}/pmt/parserbuilder
+PMT_PARSERBUILDER_SRC	= $(wildcard ${PMT_PARSERBUILDER_DIR}/*.cpp)
+PMT_PARSERBUILDER_HDR	= $(wildcard ${PMT_PARSERBUILDER_DIR}/*.hpp)
+PMT_PARSERBUILDER_OBJ	= $(patsubst %.cpp, %.o, ${PMT_PARSERBUILDER_SRC})
+PMT_PARSERBUILDER_LIB	= ${PMT_PARSERBUILDER_DIR}/libpmt_parserbuilder.a
+ALL_OBJ	+= ${PMT_PARSERBUILDER_OBJ}
+ALL_LIBS	+= ${PMT_PARSERBUILDER_LIB}
+ALL_SRC	+= ${PMT_PARSERBUILDER_SRC}
+ALL_HDR	+= ${PMT_PARSERBUILDER_HDR}
+${PMT_PARSERBUILDER_LIB}: ${PMT_PARSERBUILDER_OBJ}
+pmt_parserbuilder: ${PMT_PARSERBUILDER_LIB}
+
 #-- pmt_util --
 PMT_UTIL_DIR	= ${SRC_DIR}/pmt/util
 PMT_UTIL_SRC	= $(wildcard ${PMT_UTIL_DIR}/*.cpp)
@@ -58,7 +72,34 @@ ALL_HDR	+= ${PMT_UTIL_TEST_HDR}
 ${PMT_UTIL_TEST_LIB}: ${PMT_UTIL_TEST_OBJ}
 pmt_util_test: ${PMT_UTIL_TEST_LIB}
 
+#-- pmt_util_parse --
+PMT_UTIL_PARSE_DIR	= ${SRC_DIR}/pmt/util/parse
+PMT_UTIL_PARSE_SRC	= $(wildcard ${PMT_UTIL_PARSE_DIR}/*.cpp)
+PMT_UTIL_PARSE_HDR	= $(wildcard ${PMT_UTIL_PARSE_DIR}/*.hpp)
+PMT_UTIL_PARSE_OBJ	= $(patsubst %.cpp, %.o, ${PMT_UTIL_PARSE_SRC})
+PMT_UTIL_PARSE_LIB	= ${PMT_UTIL_PARSE_DIR}/libpmt_util_parse.a
+ALL_OBJ	+= ${PMT_UTIL_PARSE_OBJ}
+ALL_LIBS	+= ${PMT_UTIL_PARSE_LIB}
+ALL_SRC	+= ${PMT_UTIL_PARSE_SRC}
+ALL_HDR	+= ${PMT_UTIL_PARSE_HDR}
+${PMT_UTIL_PARSE_LIB}: ${PMT_UTIL_PARSE_OBJ}
+pmt_util_parse: ${PMT_UTIL_PARSE_LIB}
+
 #-- Exes	-----------------------------------------------------------------------
+#-- pmt_parserbuilder_exe --
+PMT_PARSERBUILDER_EXE_DIR	= ${SRC_DIR}/pmt/parserbuilder/exe
+PMT_PARSERBUILDER_EXE_SRC	= $(wildcard ${PMT_PARSERBUILDER_EXE_DIR}/*.cpp)
+PMT_PARSERBUILDER_EXE_HDR	= $(wildcard ${PMT_PARSERBUILDER_EXE_DIR}/*.hpp)
+PMT_PARSERBUILDER_EXE_OBJ	= $(patsubst %.cpp, %.o, ${PMT_PARSERBUILDER_EXE_SRC})
+PMT_PARSERBUILDER_EXE_BIN	= ${PMT_PARSERBUILDER_EXE_DIR}/pmt_parserbuilder_exe
+ALL_OBJ	+= ${PMT_PARSERBUILDER_EXE_OBJ}
+ALL_BIN	+= ${PMT_PARSERBUILDER_EXE_BIN}
+ALL_SRC	+= ${PMT_PARSERBUILDER_EXE_SRC}
+ALL_HDR	+= ${PMT_PARSERBUILDER_EXE_HDR}
+${PMT_PARSERBUILDER_EXE_BIN}: ${PMT_PARSERBUILDER_EXE_OBJ} ${PMT_PARSERBUILDER_LIB} ${PMT_UTIL_PARSE_LIB} ${PMT_UTIL_LIB} ${PMT_BASE_LIB} ${PMT_LIB}
+	${CXX} ${CXXFLAGS} ${INCS} -o $@ $^
+pmt_parserbuilder_exe: ${PMT_PARSERBUILDER_EXE_BIN}
+
 #-- pmt_util_test_exe --
 PMT_UTIL_TEST_EXE_DIR	= ${SRC_DIR}/pmt/util/test/exe
 PMT_UTIL_TEST_EXE_SRC	= $(wildcard ${PMT_UTIL_TEST_EXE_DIR}/*.cpp)
@@ -72,6 +113,17 @@ ALL_HDR	+= ${PMT_UTIL_TEST_EXE_HDR}
 ${PMT_UTIL_TEST_EXE_BIN}: ${PMT_UTIL_TEST_EXE_OBJ} ${PMT_UTIL_TEST_LIB} ${PMT_UTIL_LIB} ${PMT_BASE_LIB} ${PMT_LIB}
 	${CXX} ${CXXFLAGS} ${INCS} -o $@ $^
 pmt_util_test_exe: ${PMT_UTIL_TEST_EXE_BIN}
+
+#-- Grammars -------------------------------------------------------------------
+#-- grm_lexer	--
+${PMT_UTIL_PARSE_DIR}/grm_lexer.cpp: ${GRAMMAR_DIR}/grm_lexer.rl
+	${RAGEL} -G2 -o $@ $<
+
+#-- grm_parser	--
+${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp: ${GRAMMAR_DIR}/grm_parser.y
+	${LEMON} -q -T${GRAMMAR_DIR}/lempar.cpp $<
+	mv ${GRAMMAR_DIR}/grm_parser.cpp ${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp
+	mv ${GRAMMAR_DIR}/grm_parser.h   ${PMT_UTIL_PARSE_DIR}/grm_id-inl.hpp
 
 #-- Generic --------------------------------------------------------------------
 %.a: 
@@ -90,3 +142,9 @@ format:
 
 #-- All ------------------------------------------------------------------------
 all: ${ALL_BIN} ${ALL_LIBS}
+
+#-- Rl	-------------------------------------------------------------------------
+rl: ${PMT_UTIL_PARSE_DIR}/grm_lexer.cpp
+
+#-- y --------------------------------------------------------------------------
+y: ${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp
