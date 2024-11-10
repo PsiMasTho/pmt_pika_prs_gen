@@ -123,15 +123,16 @@ void GenericAst::unpack(size_t index_) {
   }
 
   ChildrenType& children = *std::get_if<ChildrenType>(&_data);
-  GenericAst& child = *children[index_];
 
-  if (child.get_tag() != Tag::Children) {
+  if (children[index_]->get_tag() != Tag::Children) {
     return;
   }
 
-  ChildrenType& child_children = *std::get_if<ChildrenType>(&child._data);
-  children.erase(std::next(children.begin(), index_));
-  children.insert(std::next(children.begin(), index_), child_children.begin(), child_children.end());
+  GenericAst::UniqueHandle child = take_child_at(index_);
+
+  while (child->get_children_size() != 0) {
+    give_child_at(index_++, child->take_child_at(0));
+  }
 }
 
 GenericAst::GenericAst(Tag tag_)

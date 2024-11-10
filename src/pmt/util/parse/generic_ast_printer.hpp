@@ -3,7 +3,7 @@
 #include "pmt/util/parse/generic_ast.hpp"
 
 #include <functional>
-#include <ostream>
+#include <iosfwd>
 #include <string>
 
 namespace pmt::util::parse {

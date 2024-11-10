@@ -17,7 +17,7 @@ class Terminal {
  public:
   std::optional<CommentInfo> _comment_info;
   std::string _name;
-  GenericAst::id_type _id;
+  GenericAst::IdType _id;
 };
 
 }  // namespace pmt::util::parse

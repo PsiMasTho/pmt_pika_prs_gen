@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/util/text_encoding.hpp"
 
 #include <unordered_map>
@@ -15,7 +16,7 @@ class FaTransitions {
 class FaState {
  public:
   FaTransitions _transitions;
-  std::unordered_set<size_t> _accepts;
+  pmt::base::DynamicBitset _accepts;
 };
 
 class Fa {

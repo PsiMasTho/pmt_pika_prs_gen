@@ -5,18 +5,21 @@
 namespace pmt::base {
 
 template <typename T_>
-concept IsStdVector = std_type_traits::is_vector<T_>::value;
+concept IsStdVector = StdTypeTraits::IsVector<T_>::value;
 
 template <typename T_>
-concept IsStdTuple = std_type_traits::is_tuple<T_>::value;
+concept IsStdTuple = StdTypeTraits::IsTuple<T_>::value;
 
 template <typename T_>
-concept IsStdOptional = std_type_traits::is_optional<T_>::value;
+concept IsStdOptional = StdTypeTraits::IsOptional<T_>::value;
 
 template <typename T_>
-concept IsStdVariant = std_type_traits::is_variant<T_>::value;
+concept IsStdVariant = StdTypeTraits::IsVariant<T_>::value;
 
 template <typename T_>
-concept IsStdDuration = std_type_traits::is_duration<T_>::value;
+concept IsStdDuration = StdTypeTraits::IsDuration<T_>::value;
+
+template <typename T_>
+concept IsStdRatio = StdTypeTraits::IsRatio<T_>::value;
 
 }  // namespace pmt::base

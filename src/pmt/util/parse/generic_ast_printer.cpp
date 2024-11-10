@@ -2,6 +2,7 @@
 
 #include "pmt/asserts.hpp"
 
+#include <ostream>
 #include <stack>
 
 namespace pmt::util::parse {
@@ -42,7 +43,7 @@ void GenericAstPrinter::print(GenericAst const& ast_, std::ostream& out_) {
       default:
         pmt_unreachable();
     }
-    
+
     out_ << '\n';
   }
 }

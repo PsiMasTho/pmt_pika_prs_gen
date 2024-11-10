@@ -39,6 +39,12 @@ class StdTypeTraits {
 
   template <typename REP_, typename PERIOD_>
   struct IsDuration<std::chrono::duration<REP_, PERIOD_>> : std::true_type {};
+
+  template <typename T_>
+  struct IsRatio : std::false_type {};
+
+  template <std::intmax_t NUM_, std::intmax_t DEN_>
+  struct IsRatio<std::ratio<NUM_, DEN_>> : std::true_type {};
 };
 
 }  // namespace pmt::base

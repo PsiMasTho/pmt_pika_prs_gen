@@ -11,6 +11,11 @@ auto GrmParser::parse(GrmLexer& lexer_) -> GenericAst::UniqueHandle {
   ParseInit(parser);
   while (!lexer_.is_eof()) {
     GenericAst::UniqueHandle token = lexer_.next_token();
+
+    if (!token) {
+      break;
+    }
+    // ParseTrace(stderr, "");
     Parse(parser, token->get_id(), std::move(token), &ret);
   }
   Parse(parser, 0, GenericAst::UniqueHandle(), &ret);
