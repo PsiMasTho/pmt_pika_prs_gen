@@ -3,7 +3,7 @@ FORMATTER	= clang-format-16
 RAGEL = ragel
 LEMON = lemon--
 CXX	  = clang++-16
-#CXX         = g++-14
+#CXX   = g++-14
 
 #	Debug
 CXXFLAGS = -std=c++20 -Wall -Wextra -pedantic -O0 -ggdb3 -fsanitize=address,undefined

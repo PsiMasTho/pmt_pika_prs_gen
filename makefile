@@ -33,6 +33,19 @@ ALL_HDR	+= ${PMT_BASE_HDR}
 ${PMT_BASE_LIB}: ${PMT_BASE_OBJ}
 pmt_base: ${PMT_BASE_LIB}
 
+#--	pmt_base_test --
+PMT_BASE_TEST_DIR	= ${SRC_DIR}/pmt/base/test
+PMT_BASE_TEST_SRC	= $(wildcard ${PMT_BASE_TEST_DIR}/*.cpp)
+PMT_BASE_TEST_HDR	= $(wildcard ${PMT_BASE_TEST_DIR}/*.hpp)
+PMT_BASE_TEST_OBJ	= $(patsubst %.cpp, %.o, ${PMT_BASE_TEST_SRC})
+PMT_BASE_TEST_LIB	= ${PMT_BASE_TEST_DIR}/libpmt_base_test.a
+ALL_OBJ	+= ${PMT_BASE_TEST_OBJ}
+ALL_LIBS	+= ${PMT_BASE_TEST_LIB}
+ALL_SRC	+= ${PMT_BASE_TEST_SRC}
+ALL_HDR	+= ${PMT_BASE_TEST_HDR}
+${PMT_BASE_TEST_LIB}: ${PMT_BASE_TEST_OBJ}
+pmt_base_test: ${PMT_BASE_TEST_LIB}
+
 #-- pmt_parserbuilder --
 PMT_PARSERBUILDER_DIR	= ${SRC_DIR}/pmt/parserbuilder
 PMT_PARSERBUILDER_SRC	= $(wildcard ${PMT_PARSERBUILDER_DIR}/*.cpp)
@@ -100,6 +113,20 @@ ${PMT_PARSERBUILDER_EXE_BIN}: ${PMT_PARSERBUILDER_EXE_OBJ} ${PMT_PARSERBUILDER_L
 	${CXX} ${CXXFLAGS} ${INCS} -o $@ $^
 pmt_parserbuilder_exe: ${PMT_PARSERBUILDER_EXE_BIN}
 
+#-- pmt_base_test_exe --
+PMT_BASE_TEST_EXE_DIR	= ${SRC_DIR}/pmt/base/test/exe
+PMT_BASE_TEST_EXE_SRC	= $(wildcard ${PMT_BASE_TEST_EXE_DIR}/*.cpp)
+PMT_BASE_TEST_EXE_HDR	= $(wildcard ${PMT_BASE_TEST_EXE_DIR}/*.hpp)
+PMT_BASE_TEST_EXE_OBJ	= $(patsubst %.cpp, %.o, ${PMT_BASE_TEST_EXE_SRC})
+PMT_BASE_TEST_EXE_BIN	= ${PMT_BASE_TEST_EXE_DIR}/pmt_base_test_exe
+ALL_OBJ	+= ${PMT_BASE_TEST_EXE_OBJ}
+ALL_BIN	+= ${PMT_BASE_TEST_EXE_BIN}
+ALL_SRC	+= ${PMT_BASE_TEST_EXE_SRC}
+ALL_HDR	+= ${PMT_BASE_TEST_EXE_HDR}
+${PMT_BASE_TEST_EXE_BIN}: ${PMT_BASE_TEST_EXE_OBJ} ${PMT_BASE_TEST_LIB} ${PMT_BASE_LIB} ${PMT_LIB}
+	${CXX} ${CXXFLAGS} ${INCS} -o $@ $^
+pmt_base_test_exe: ${PMT_BASE_TEST_EXE_BIN}
+
 #-- pmt_util_test_exe --
 PMT_UTIL_TEST_EXE_DIR	= ${SRC_DIR}/pmt/util/test/exe
 PMT_UTIL_TEST_EXE_SRC	= $(wildcard ${PMT_UTIL_TEST_EXE_DIR}/*.cpp)
@@ -121,9 +148,9 @@ ${PMT_UTIL_PARSE_DIR}/grm_lexer.cpp: ${GRAMMAR_DIR}/grm_lexer.rl
 
 #-- grm_parser	--
 ${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp: ${GRAMMAR_DIR}/grm_parser.y
-	${LEMON} -q -T${GRAMMAR_DIR}/lempar.cpp $<
+	-${LEMON} -T${GRAMMAR_DIR}/lempar.cpp $<
 	mv ${GRAMMAR_DIR}/grm_parser.cpp ${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp
-	mv ${GRAMMAR_DIR}/grm_parser.h   ${PMT_UTIL_PARSE_DIR}/grm_id-inl.hpp
+	mv ${GRAMMAR_DIR}/grm_parser.h   ${PMT_UTIL_PARSE_DIR}/grm_ast-inl.hpp
 
 #-- Generic --------------------------------------------------------------------
 %.a: 
