@@ -9,7 +9,13 @@
   char const*  &ts = _ts;         \
   char const*  &te = _te;         \
   int          &act = _act;       \
-  int          &cs = _cs; 
+  int          &cs = _cs;
+
+ #define ACCEPT_TOKEN(id)                                    \
+  do {                                                       \
+   accepted = GenericAst::construct(GenericAst::Tag::Token); \
+   accepted->set_id(id);                                     \
+  } while (0)
 
 %%{
  machine GrmLexer;
@@ -17,7 +23,7 @@
  StringLiteral                = '"' (print - ['"])* '"';
  IntegerLiteral               = [0-9]+ '#' [0-9a-zA-Z]+;
  BooleanLiteral               = 'true' | 'false';
- TerminalIdentifier              = '$' [a-zA-Z][a-zA-Z0-9_]+;
+ TerminalIdentifier              = '$' [_a-zA-Z][a-zA-Z0-9_]+;
  RuleIdentifier               = '%' [a-zA-Z][a-zA-Z0-9_]+;
  Epsilon                      = 'epsilon';
  Pipe                         = '|';
@@ -46,117 +52,112 @@
   StringLiteral => { 
    ++ts;
    --te;
-   accepted->set_id(GrmAst::TkStringLiteral);
+   ACCEPT_TOKEN(GrmAst::TkStringLiteral);
    fbreak;
   };
 
   IntegerLiteral => {
-   accepted->set_id(GrmAst::TkIntegerLiteral);
+   ACCEPT_TOKEN(GrmAst::TkIntegerLiteral);
    fbreak;
   };
 
   BooleanLiteral => {
-   accepted->set_id(GrmAst::TkBooleanLiteral);
+   ACCEPT_TOKEN(GrmAst::TkBooleanLiteral);
    fbreak;
   };
   
   TerminalIdentifier => {
-   accepted->set_id(GrmAst::TkTerminalIdentifier);
-   fbreak;
-  };
-
-  RuleIdentifier => {
-   accepted->set_id(GrmAst::TkRuleIdentifier);
+   ACCEPT_TOKEN(GrmAst::TkTerminalIdentifier);
    fbreak;
   };
 
   Epsilon => {
-   accepted->set_id(GrmAst::TkEpsilon);
+   ACCEPT_TOKEN(GrmAst::TkEpsilon);
    fbreak;
   };
   
   Pipe => {
-   accepted->set_id(GrmAst::TkPipe);
+   ACCEPT_TOKEN(GrmAst::TkPipe);
    fbreak;
   };
   
   SemiColon => {
-   accepted->set_id(GrmAst::TkSemiColon);
+   ACCEPT_TOKEN(GrmAst::TkSemiColon);
    fbreak;
   };
   
   Equals => {
-   accepted->set_id(GrmAst::TkEquals);
+   ACCEPT_TOKEN(GrmAst::TkEquals);
    fbreak;
   };
 
   Comma => {
-   accepted->set_id(GrmAst::TkComma);
+   ACCEPT_TOKEN(GrmAst::TkComma);
    fbreak;
   };
 
   DoubleDot => {
-   accepted->set_id(GrmAst::TkDoubleDot);
+   ACCEPT_TOKEN(GrmAst::TkDoubleDot);
    fbreak;
   };
 
   OpenParen => {
-   accepted->set_id(GrmAst::TkOpenParen);
+   ACCEPT_TOKEN(GrmAst::TkOpenParen);
    fbreak;
   };
 
   CloseParen => {
-   accepted->set_id(GrmAst::TkCloseParen);
+   ACCEPT_TOKEN(GrmAst::TkCloseParen);
    fbreak;
   };
 
   OpenBrace => {
-   accepted->set_id(GrmAst::TkOpenBrace);
+   ACCEPT_TOKEN(GrmAst::TkOpenBrace);
    fbreak;
   };
 
   CloseBrace => {
-   accepted->set_id(GrmAst::TkCloseBrace);
+   ACCEPT_TOKEN(GrmAst::TkCloseBrace);
    fbreak;
   };
 
   OpenSquare => {
-   accepted->set_id(GrmAst::TkOpenSquare);
+   ACCEPT_TOKEN(GrmAst::TkOpenSquare);
    fbreak;
   };
 
   CloseSquare => {
-   accepted->set_id(GrmAst::TkCloseSquare);
+   ACCEPT_TOKEN(GrmAst::TkCloseSquare);
    fbreak;
   };
 
   Plus => {
-   accepted->set_id(GrmAst::TkPlus);
+   ACCEPT_TOKEN(GrmAst::TkPlus);
    fbreak;
   };
 
   Star => {
-   accepted->set_id(GrmAst::TkStar);
+   ACCEPT_TOKEN(GrmAst::TkStar);
    fbreak;
   };
 
   Question => {
-   accepted->set_id(GrmAst::TkQuestion);
+   ACCEPT_TOKEN(GrmAst::TkQuestion);
    fbreak;
   };
 
   KwParameterUnpack => {
-   accepted->set_id(GrmAst::TkKwParameterUnpack);
+   ACCEPT_TOKEN(GrmAst::TkKwParameterUnpack);
    fbreak;
   };
 
   KwParameterHide => {
-   accepted->set_id(GrmAst::TkKwParameterHide);
+   ACCEPT_TOKEN(GrmAst::TkKwParameterHide);
    fbreak;
   };
 
   KwParameterMerge => {
-   accepted->set_id(GrmAst::TkKwParameterMerge);
+   ACCEPT_TOKEN(GrmAst::TkKwParameterMerge);
    fbreak;
   };
         
@@ -194,11 +195,11 @@ GrmLexer::GrmLexer(std::string_view input_)
 auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
  MAKE_RL_CONTEXT_AVAILABLE;
 
- GenericAst::UniqueHandle accepted = GenericAst::construct(GenericAst::Tag::Token);
+ GenericAst::UniqueHandle accepted;
 
  %% write exec;
 
- if (_p == _pe) {
+ if (_p == _pe && accepted.get() == nullptr) {
   return nullptr;
  }
 

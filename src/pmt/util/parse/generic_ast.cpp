@@ -33,16 +33,42 @@ auto GenericAst::construct(Tag tag_) -> UniqueHandle {
   return UniqueHandle{new GenericAst{tag_}};
 }
 
+auto GenericAst::clone(GenericAst const& other_) -> UniqueHandle {
+  UniqueHandle result = construct(other_.get_tag());
+
+  std::stack<std::pair<GenericAst const*, GenericAst*>> stack;
+  stack.push({&other_, result.get()});
+
+  while (!stack.empty()) {
+    auto [src, dst] = stack.top();
+    stack.pop();
+
+    dst->set_id(src->get_id());
+
+    if (src->get_tag() == Tag::Token) {
+      dst->set_token(src->get_token());
+    } else {
+      for (size_t i = 0; i < src->get_children_size(); ++i) {
+        UniqueHandle child = construct(src->get_child_at(i)->get_tag());
+        dst->give_child_at(i, std::move(child));
+        stack.push({src->get_child_at(i), dst->get_child_at(i)});
+      }
+    }
+  }
+
+  return result;
+}
+
+void GenericAst::swap(GenericAst& lhs_, GenericAst& rhs_) {
+  std::swap(lhs_._data, rhs_._data);
+}
+
 auto GenericAst::get_id() const -> IdType {
   return _id;
 }
 
 void GenericAst::set_id(IdType id_) {
   _id = id_;
-}
-
-void GenericAst::swap(GenericAst& lhs_, GenericAst& rhs_) {
-  std::swap(lhs_._data, rhs_._data);
 }
 
 auto GenericAst::get_tag() const -> Tag {

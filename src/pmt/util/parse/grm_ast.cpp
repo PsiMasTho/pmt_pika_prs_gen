@@ -11,8 +11,6 @@ auto GrmAst::to_string(GenericAst::IdType id_) -> std::string {
       return "TkBooleanLiteral";
     case TkTerminalIdentifier:
       return "TkTerminalIdentifier";
-    case TkRuleIdentifier:
-      return "TkRuleIdentifier";
     case TkEpsilon:
       return "TkEpsilon";
     case TkPipe:

@@ -33,6 +33,8 @@ class GenericAst {
   using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
   static auto construct(Tag tag_) -> UniqueHandle;
 
+  static auto clone(GenericAst const& other_) -> UniqueHandle;
+
   static void swap(GenericAst& lhs_, GenericAst& rhs_);
 
   auto get_id() const -> IdType;
