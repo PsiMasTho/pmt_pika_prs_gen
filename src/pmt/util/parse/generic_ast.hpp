@@ -31,7 +31,7 @@ class GenericAst {
 
   static void destruct(GenericAst* self_);
   using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
-  static auto construct(Tag tag_) -> UniqueHandle;
+  static auto construct(Tag tag_, IdType id_ = IdConstants::UninitializedId) -> UniqueHandle;
 
   static auto clone(GenericAst const& other_) -> UniqueHandle;
 
@@ -50,8 +50,20 @@ class GenericAst {
   auto get_child_at(size_t index_) -> GenericAst*;
   auto get_child_at(size_t index_) const -> GenericAst const*;
 
+  auto get_child_at_front() -> GenericAst*;
+  auto get_child_at_front() const -> GenericAst const*;
+
+  auto get_child_at_back() -> GenericAst*;
+  auto get_child_at_back() const -> GenericAst const*;
+
   auto take_child_at(size_t index_) -> UniqueHandle;
   void give_child_at(size_t index_, UniqueHandle child_);
+
+  auto take_child_at_front() -> UniqueHandle;
+  void give_child_at_front(UniqueHandle child_);
+
+  auto take_child_at_back() -> UniqueHandle;
+  void give_child_at_back(UniqueHandle child_);
 
   // Merge the children into a token
   void merge();
@@ -59,10 +71,10 @@ class GenericAst {
   void unpack(size_t index_);
 
  private:
-  explicit GenericAst(Tag tag_);
+  explicit GenericAst(Tag tag_, IdType id_ = IdConstants::UninitializedId);
 
   std::variant<TokenType, ChildrenType> _data;
-  IdType _id = IdConstants::UninitializedId;
+  IdType _id;
 };
 
 }  // namespace pmt::util::parse

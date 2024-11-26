@@ -1,6 +1,7 @@
 #include "pmt/parserbuilder/parserbuilder.hpp"
 
 #include "pmt/util/parse/generic_ast_printer.hpp"
+#include "pmt/util/parse/graph_writer.hpp"
 #include "pmt/util/parse/grm_ast.hpp"
 #include "pmt/util/parse/grm_ast_transformations.hpp"
 #include "pmt/util/parse/grm_lexer.hpp"
@@ -22,11 +23,16 @@ void ParserBuilder::build() {
   pmt::util::parse::GrmLexer lexer(_input);
   auto ast = pmt::util::parse::GrmParser::parse(lexer);
 
-  pmt::util::parse::LexerBuilder(*ast, {});
+  pmt::util::parse::LexerBuilder lexer_builder(*ast, {"$t001", "$t002"});
+  pmt::util::parse::Fa fa = lexer_builder.build();
 
+  std::ofstream dot_file("lexer.dot");
+  pmt::util::parse::GraphWriter::write_dot(dot_file, fa);
+
+  std::cout << "------------------------ AST ------------------------\n";
   pmt::util::parse::GrmAstTransformations::emit_grammar(std::cerr, *ast);
-  // std::cout << "------------------------ AST ------------------------\n";
-  // printer.print(*ast, std::cerr);
+
+  //  printer.print(*ast, std::cerr);
 }
 
 }  // namespace pmt::parserbuilder

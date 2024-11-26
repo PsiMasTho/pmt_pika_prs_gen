@@ -29,8 +29,8 @@ void GenericAst::destruct(GenericAst* self_) {
   }
 }
 
-auto GenericAst::construct(Tag tag_) -> UniqueHandle {
-  return UniqueHandle{new GenericAst{tag_}};
+auto GenericAst::construct(Tag tag_, IdType id_) -> UniqueHandle {
+  return UniqueHandle{new GenericAst{tag_, id_}};
 }
 
 auto GenericAst::clone(GenericAst const& other_) -> UniqueHandle {
@@ -102,15 +102,35 @@ auto GenericAst::get_children_size() const -> std::size_t {
 
 auto GenericAst::get_child_at(std::size_t index_) -> GenericAst* {
   assert(get_tag() == Tag::Children);
+  assert(index_ < get_children_size());
   return (*std::get_if<ChildrenType>(&_data))[index_];
 }
 
 auto GenericAst::get_child_at(std::size_t index_) const -> GenericAst const* {
   assert(get_tag() == Tag::Children);
+  assert(index_ < get_children_size());
   return (*std::get_if<ChildrenType>(&_data))[index_];
 }
+
+auto GenericAst::get_child_at_front() -> GenericAst* {
+  return get_child_at(0);
+}
+
+auto GenericAst::get_child_at_front() const -> GenericAst const* {
+  return get_child_at(0);
+}
+
+auto GenericAst::get_child_at_back() -> GenericAst* {
+  return get_child_at(get_children_size() - 1);
+}
+
+auto GenericAst::get_child_at_back() const -> GenericAst const* {
+  return get_child_at(get_children_size() - 1);
+}
+
 auto GenericAst::take_child_at(std::size_t index_) -> UniqueHandle {
   assert(get_tag() == Tag::Children);
+  assert(index_ < get_children_size());
   ChildrenType& children = *std::get_if<ChildrenType>(&_data);
   UniqueHandle result{children[index_]};
   children.erase(std::next(children.begin(), index_));
@@ -119,8 +139,25 @@ auto GenericAst::take_child_at(std::size_t index_) -> UniqueHandle {
 
 void GenericAst::give_child_at(std::size_t index_, UniqueHandle child_) {
   assert(get_tag() == Tag::Children);
+  assert(index_ <= get_children_size());
   ChildrenType& children = *std::get_if<ChildrenType>(&_data);
   children.insert(std::next(children.begin(), index_), child_.release());
+}
+
+auto GenericAst::take_child_at_front() -> UniqueHandle {
+  return take_child_at(0);
+}
+
+void GenericAst::give_child_at_front(UniqueHandle child_) {
+  give_child_at(0, std::move(child_));
+}
+
+auto GenericAst::take_child_at_back() -> UniqueHandle {
+  return take_child_at(get_children_size() - 1);
+}
+
+void GenericAst::give_child_at_back(UniqueHandle child_) {
+  give_child_at(get_children_size(), std::move(child_));
 }
 
 void GenericAst::merge() {
@@ -161,7 +198,7 @@ void GenericAst::unpack(size_t index_) {
   }
 }
 
-GenericAst::GenericAst(Tag tag_)
+GenericAst::GenericAst(Tag tag_, IdType id_)
  : _data{[tag_]() -> std::variant<TokenType, ChildrenType> {
    switch (tag_) {
      case Tag::Token:
@@ -171,7 +208,8 @@ GenericAst::GenericAst(Tag tag_)
      default:
        pmt_unreachable();
    }
- }()} {
+ }()}
+ , _id(id_) {
 }
 
 }  // namespace pmt::util::parse

@@ -3,6 +3,7 @@
 #include "pmt/util/parse/generic_ast.hpp"
 
 #include <deque>
+#include <optional>
 #include <string>
 
 namespace pmt::util::parse {
@@ -23,17 +24,23 @@ class GrmAstTransformations {
   using AstPosition = std::pair<GenericAst *, size_t>;
   using AstPositionConst = std::pair<GenericAst const *, size_t>;
 
+  using RepetitionNumber = std::optional<size_t>;
+  using RepetitionRange = std::pair<RepetitionNumber, RepetitionNumber>;
+
   // - Transformations -
   void expand_repetitions();
   void flatten();
   void check_ordering();
 
   // - Helpers -
-  auto make_anonymous_zero_or_more(AstPosition ast_position_) -> size_t;
-  auto get_next_anonymous_definition_name() -> std::string;
+  auto get_repetition_number(GenericAst const &token_) -> RepetitionNumber;
+  auto get_repetition_range(GenericAst const &repetition_) -> RepetitionRange;
   void expand_repetition(AstPosition ast_position_);
-  static auto make_exact_repetition_sequence(AstPosition ast_position_, size_t count_) -> GenericAst::UniqueHandle;
-  static auto make_exact_repetition_range_choices(AstPosition ast_position_, size_t min_count_, size_t max_count_) -> GenericAst::UniqueHandle;
+  auto get_next_anonymous_definition_name() -> std::string;
+  auto make_epsilon() -> GenericAst::UniqueHandle;
+  auto make_exact_repetition(GenericAst::UniqueHandle item_, size_t count_) -> GenericAst::UniqueHandle;
+  auto make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumber min_count_, RepetitionNumber max_count_) -> GenericAst::UniqueHandle;
+  auto make_anonymous_definition(GenericAst::UniqueHandle production_) -> GenericAst::UniqueHandle;
 
   // - Data -
   GenericAst &_ast;

@@ -1,6 +1,5 @@
 #include "pmt/util/parse/grm_ast_transformations.hpp"
 
-#include "pmt/asserts.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
 #include "pmt/util/parse/grm_ast.hpp"
 
@@ -11,13 +10,9 @@
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
-#include <variant>
 
 namespace pmt::util::parse {
 namespace {
-using RepetitionNumber = std::variant<std::monostate, size_t>;
-using RepetitionRange = std::pair<RepetitionNumber, RepetitionNumber>;
-
 auto split_number(std::string_view str_) -> std::pair<std::string_view, std::string_view> {
   size_t const pos = str_.find('#');
   if (pos == std::string_view::npos) {
@@ -84,42 +79,6 @@ auto single_char_as_value(GenericAst const& ast_) -> size_t {
   throw std::runtime_error("Invalid single character value");
 }
 
-auto get_repetition_number(GenericAst const& token_) -> RepetitionNumber {
-  if (token_.get_id() == GrmAst::TkComma) {
-    return std::monostate{};
-  }
-
-  assert(token_.get_id() == GrmAst::TkIntegerLiteral);
-  auto const [base_str, number_str] = split_number(token_.get_token());
-  size_t const base = number_convert(base_str, 10);
-  size_t const number = number_convert(number_str, base);
-
-  return number;
-}
-
-auto get_repetition_range(GenericAst const& repetition_) -> RepetitionRange {
-  assert(repetition_.get_id() == GrmAst::NtRepetitionRange);
-
-  switch (repetition_.get_children_size()) {
-    case 1: {
-      RepetitionNumber const mid = get_repetition_number(*repetition_.get_child_at(0));
-      return {mid, mid};
-    }
-    case 2: {
-      RepetitionNumber const lhs = get_repetition_number(*repetition_.get_child_at(0));
-      RepetitionNumber const rhs = get_repetition_number(*repetition_.get_child_at(1));
-      return {lhs, rhs};
-    }
-    case 3: {
-      RepetitionNumber const lhs = get_repetition_number(*repetition_.get_child_at(0));
-      RepetitionNumber const rhs = get_repetition_number(*repetition_.get_child_at(2));
-      return {lhs, rhs};
-    }
-    default:
-      throw std::runtime_error("Invalid repetition range");
-  }
-}
-
 }  // namespace
 
 GrmAstTransformations::GrmAstTransformations(GenericAst& ast_)
@@ -127,6 +86,7 @@ GrmAstTransformations::GrmAstTransformations(GenericAst& ast_)
 }
 
 void GrmAstTransformations::transform() {
+  flatten();
   expand_repetitions();
   flatten();
   check_ordering();
@@ -348,16 +308,19 @@ void GrmAstTransformations::flatten() {
               repeat = true;
               j = 0;
             }
-            // Merge neighboring epsilon tokens
-            for (size_t j = 0; j < child->get_children_size() - 1; ++j) {
-              GenericAst* const lhs = child->get_child_at(j);
-              GenericAst* const rhs = child->get_child_at(j + 1);
-              if (lhs->get_id() != GrmAst::TkEpsilon || rhs->get_id() != GrmAst::TkEpsilon) {
+            // Remove any epsilon tokens that are not the first
+            for (size_t j = 1; j < child->get_children_size();) {
+              GenericAst* const grandchild = child->get_child_at(j);
+              if (grandchild->get_id() != GrmAst::TkEpsilon) {
+                ++j;
                 continue;
               }
-              child->take_child_at(j + 1);
+              child->take_child_at(j);
+            }
+            // If the first child is an epsilon, but there are more children, remove it
+            if (child->get_children_size() > 1 && child->get_child_at(0)->get_id() == GrmAst::TkEpsilon) {
+              child->take_child_at(0);
               repeat = true;
-              j = 0;
             }
             if (child->get_children_size() == 1) {
               GenericAst::UniqueHandle grandchild = child->take_child_at(0);
@@ -456,30 +419,51 @@ void GrmAstTransformations::check_ordering() {
   }
 }
 
-auto GrmAstTransformations::make_anonymous_zero_or_more(AstPosition ast_position_) -> size_t {
-  std::string const anon_name = get_next_anonymous_definition_name();
-  GenericAst::UniqueHandle anon_production = GenericAst::construct(GenericAst::Tag::Children);
-  anon_production->set_id(GrmAst::NtTerminalProduction);
-  GenericAst::UniqueHandle anon_name_token = GenericAst::construct(GenericAst::Tag::Token);
-  anon_name_token->set_id(GrmAst::TkTerminalIdentifier);
-  anon_name_token->set_token(anon_name);
-  anon_production->give_child_at(0, std::move(anon_name_token));
-  GenericAst::UniqueHandle anon_choices = GenericAst::construct(GenericAst::Tag::Children);
-  anon_choices->set_id(GrmAst::NtChoices);
-  GenericAst::UniqueHandle anon_epsilon = GenericAst::construct(GenericAst::Tag::Token);
-  anon_epsilon->set_id(GrmAst::TkEpsilon);
-  anon_choices->give_child_at(0, std::move(anon_epsilon));
-  GenericAst::UniqueHandle anon_sequence = GenericAst::construct(GenericAst::Tag::Children);
-  anon_sequence->set_id(GrmAst::NtSequence);
-  anon_sequence->give_child_at(0, GenericAst::clone(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(0)));
-  GenericAst::UniqueHandle anon_reference = GenericAst::construct(GenericAst::Tag::Token);
-  anon_reference->set_id(GrmAst::TkTerminalIdentifier);
-  anon_reference->set_token(anon_name);
-  anon_sequence->give_child_at(1, std::move(anon_reference));
-  anon_choices->give_child_at(1, std::move(anon_sequence));
-  anon_production->give_child_at(1, std::move(anon_choices));
-  _new_productions.emplace_back(std::move(anon_production));
-  return _new_productions.size() - 1;
+auto GrmAstTransformations::get_repetition_number(GenericAst const& token_) -> RepetitionNumber {
+  if (token_.get_id() == GrmAst::TkComma) {
+    return std::nullopt;
+  }
+
+  assert(token_.get_id() == GrmAst::TkIntegerLiteral);
+  auto const [base_str, number_str] = split_number(token_.get_token());
+  size_t const base = number_convert(base_str, 10);
+  size_t const number = number_convert(number_str, base);
+
+  return number;
+}
+
+auto GrmAstTransformations::get_repetition_range(GenericAst const& repetition_) -> RepetitionRange {
+  assert(repetition_.get_id() == GrmAst::NtRepetitionRange);
+
+  switch (repetition_.get_children_size()) {
+    case 1: {
+      RepetitionNumber const mid = get_repetition_number(*repetition_.get_child_at(0));
+      return {mid, mid};
+    }
+    case 2: {
+      RepetitionNumber const lhs = get_repetition_number(*repetition_.get_child_at(0));
+      RepetitionNumber const rhs = get_repetition_number(*repetition_.get_child_at(1));
+      return {lhs, rhs};
+    }
+    case 3: {
+      RepetitionNumber const lhs = get_repetition_number(*repetition_.get_child_at(0));
+      RepetitionNumber const rhs = get_repetition_number(*repetition_.get_child_at(2));
+      return {lhs, rhs};
+    }
+    default:
+      throw std::runtime_error("Invalid repetition range");
+  }
+}
+
+void GrmAstTransformations::expand_repetition(AstPosition ast_position_) {
+  GenericAst& child = *ast_position_.first->get_child_at(ast_position_.second);
+
+  assert(child.get_id() == GrmAst::NtRepetition);
+
+  auto const [lower, upper] = get_repetition_range(*child.get_child_at(1));
+  auto replacement = make_repetition_range(child.take_child_at_front(), lower, upper);
+  ast_position_.first->take_child_at(ast_position_.second);
+  ast_position_.first->give_child_at(ast_position_.second, std::move(replacement));
 }
 
 auto GrmAstTransformations::get_next_anonymous_definition_name() -> std::string {
@@ -488,63 +472,103 @@ auto GrmAstTransformations::get_next_anonymous_definition_name() -> std::string 
   return ret;
 }
 
-void GrmAstTransformations::expand_repetition(AstPosition ast_position_) {
-  assert(ast_position_.first->get_child_at(ast_position_.second)->get_id() == GrmAst::NtRepetition);
+auto GrmAstTransformations::make_epsilon() -> GenericAst::UniqueHandle {
+  GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, GrmAst::TkEpsilon);
+  ret->set_token("epsilon");
+  return ret;
+}
 
-  GenericAst::UniqueHandle replacement = GenericAst::construct(GenericAst::Tag::Children);
-  replacement->set_id(GrmAst::NtChoices);
+auto GrmAstTransformations::make_exact_repetition(GenericAst::UniqueHandle item_, size_t count_) -> GenericAst::UniqueHandle {
+  switch (count_) {
+    case 0:
+      return make_epsilon();
+    case 1:
+      return item_;
+    default: {
+      GenericAst::UniqueHandle sequence = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtSequence);
+      for (size_t i = 0; i < count_; ++i) {
+        sequence->give_child_at(i, GenericAst::clone(*item_));
+      }
+      return sequence;
+    }
+  }
+}
 
-  RepetitionRange const range = get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1));
+auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumber min_count_, RepetitionNumber max_count_) -> GenericAst::UniqueHandle {
+  GenericAst::UniqueHandle anon_item_definition;
+  GenericAst::UniqueHandle item_reference;
 
-  bool const is_bounded[2] = {std::holds_alternative<size_t>(range.first), std::holds_alternative<size_t>(range.second)};
-
-  if (is_bounded[0] && is_bounded[1]) {
-    replacement->give_child_at(0, make_exact_repetition_range_choices(ast_position_, std::get<size_t>(range.first), std::get<size_t>(range.second)));
-  } else if (is_bounded[0] && !is_bounded[1]) {
-    GenericAst::UniqueHandle sequence = make_exact_repetition_sequence(ast_position_, std::get<size_t>(range.first));
-    size_t const new_production_idx = make_anonymous_zero_or_more(ast_position_);
-    GenericAst::UniqueHandle anon_reference = GenericAst::construct(GenericAst::Tag::Token);
-    anon_reference->set_id(GrmAst::TkTerminalIdentifier);
-    anon_reference->set_token(_new_productions[new_production_idx]->get_child_at(0)->get_token());
-    sequence->give_child_at(sequence->get_children_size(), std::move(anon_reference));
-    replacement->give_child_at(replacement->get_children_size(), std::move(sequence));
-  } else if (!is_bounded[0] && is_bounded[1]) {
-    replacement->give_child_at(0, make_exact_repetition_range_choices(ast_position_, 0, std::get<size_t>(range.second)));
+  if (max_count_ == 0) {
+    return make_epsilon();
+  } else if (max_count_ == 1) {
+    item_reference = std::move(item_);
+    if (min_count_ == 1) {
+      return item_reference;
+    }
   } else {
-    size_t const new_production_idx = make_anonymous_zero_or_more(ast_position_);
-    GenericAst::UniqueHandle anon_reference = GenericAst::construct(GenericAst::Tag::Token);
-    anon_reference->set_id(GrmAst::TkTerminalIdentifier);
-    anon_reference->set_token(_new_productions[new_production_idx]->get_child_at(0)->get_token());
-    replacement->give_child_at(0, std::move(anon_reference));
+    switch (item_->get_id()) {
+      case GrmAst::TkIntegerLiteral:
+      case GrmAst::TkStringLiteral:
+      case GrmAst::TkTerminalIdentifier:
+      case GrmAst::NtRange:
+      case GrmAst::TkEpsilon:
+        item_reference = std::move(item_);
+        break;
+      default:
+        anon_item_definition = make_anonymous_definition(std::move(item_));
+        item_reference = GenericAst::construct(GenericAst::Tag::Token, GrmAst::TkTerminalIdentifier);
+        item_reference->set_token(anon_item_definition->get_child_at_front()->get_token());
+    }
   }
 
-  ast_position_.first->take_child_at(ast_position_.second);
-  ast_position_.first->give_child_at(ast_position_.second, std::move(replacement));
+  min_count_ = min_count_.value_or(0);
+
+  if (max_count_.has_value()) {
+    GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtChoices);
+    for (size_t i = *min_count_; i <= *max_count_; i++) {
+      ret->give_child_at_back(make_exact_repetition(GenericAst::clone(*item_reference), i));
+    }
+
+    if (anon_item_definition.get() != nullptr) {
+      _new_productions.push_back(std::move(anon_item_definition));
+    }
+
+    return ret;
+  }
+
+  GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtSequence);
+  ret->give_child_at_front(make_exact_repetition(GenericAst::clone(*item_reference), *min_count_));
+
+  GenericAst::UniqueHandle tmp_body = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtChoices);
+  tmp_body->give_child_at_back(make_epsilon());
+  tmp_body->give_child_at_back(std::move(item_reference));
+
+  GenericAst::UniqueHandle tmp = make_anonymous_definition(std::move(tmp_body));
+
+  GenericAst::UniqueHandle tmp_ref = GenericAst::construct(GenericAst::Tag::Token, GrmAst::TkTerminalIdentifier);
+  tmp_ref->set_token(tmp->get_child_at_front()->get_token());
+
+  ret->give_child_at_back(std::move(tmp_ref));
+
+  _new_productions.push_back(std::move(tmp));
+
+  if (anon_item_definition.get() != nullptr) {
+    _new_productions.push_back(std::move(anon_item_definition));
+  }
+
+  return ret;
 }
 
-auto GrmAstTransformations::make_exact_repetition_sequence(AstPosition ast_position_, size_t count_) -> GenericAst::UniqueHandle {
-  GenericAst::UniqueHandle sequence = GenericAst::construct(GenericAst::Tag::Children);
-  sequence->set_id(GrmAst::NtSequence);
-  for (size_t i = 0; i < count_; ++i) {
-    sequence->give_child_at(i, GenericAst::clone(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(0)));
-  }
-  return sequence;
-}
-
-auto GrmAstTransformations::make_exact_repetition_range_choices(AstPosition ast_position_, size_t min_count_, size_t max_count_) -> GenericAst::UniqueHandle {
-  GenericAst::UniqueHandle choices = GenericAst::construct(GenericAst::Tag::Children);
-  choices->set_id(GrmAst::NtChoices);
-  if (min_count_ == 0) {
-    GenericAst::UniqueHandle epsilon = GenericAst::construct(GenericAst::Tag::Token);
-    epsilon->set_id(GrmAst::TkEpsilon);
-    epsilon->set_token("epsilon");
-    choices->give_child_at(0, std::move(epsilon));
-    ++min_count_;
-  }
-  for (size_t i = min_count_; i <= max_count_; ++i) {
-    choices->give_child_at(i - min_count_, make_exact_repetition_sequence(ast_position_, i));
-  }
-  return choices;
+auto GrmAstTransformations::make_anonymous_definition(GenericAst::UniqueHandle production_) -> GenericAst::UniqueHandle {
+  std::string const anon_name = get_next_anonymous_definition_name();
+  GenericAst::UniqueHandle anon_definition = GenericAst::construct(GenericAst::Tag::Children);
+  anon_definition->set_id(GrmAst::NtTerminalProduction);
+  GenericAst::UniqueHandle anon_name_token = GenericAst::construct(GenericAst::Tag::Token);
+  anon_name_token->set_id(GrmAst::TkTerminalIdentifier);
+  anon_name_token->set_token(anon_name);
+  anon_definition->give_child_at_back(std::move(anon_name_token));
+  anon_definition->give_child_at_back(std::move(production_));
+  return anon_definition;
 }
 
 }  // namespace pmt::util::parse
