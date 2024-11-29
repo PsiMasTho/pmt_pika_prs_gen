@@ -8,6 +8,7 @@
 #include "pmt/util/parse/grm_parser.hpp"
 #include "pmt/util/parse/lexer_builder.hpp"
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 
@@ -23,16 +24,20 @@ void ParserBuilder::build() {
   pmt::util::parse::GrmLexer lexer(_input);
   auto ast = pmt::util::parse::GrmParser::parse(lexer);
 
-  pmt::util::parse::LexerBuilder lexer_builder(*ast, {"$t001", "$t002"});
+  auto const start = std::chrono::high_resolution_clock::now();
+  pmt::util::parse::LexerBuilder lexer_builder(*ast, {"$t001", "$t002", "$t003"});
   pmt::util::parse::Fa fa = lexer_builder.build();
+  auto const end = std::chrono::high_resolution_clock::now();
+  std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
+  std::cout << "State count: " << fa._states.size() << std::endl;
 
   std::ofstream dot_file("lexer.dot");
   pmt::util::parse::GraphWriter::write_dot(dot_file, fa);
 
   std::cout << "------------------------ AST ------------------------\n";
-  pmt::util::parse::GrmAstTransformations::emit_grammar(std::cerr, *ast);
+  // pmt::util::parse::GrmAstTransformations::emit_grammar(std::cerr, *ast);
 
-  //  printer.print(*ast, std::cerr);
+  printer.print(*ast, std::cerr);
 }
 
 }  // namespace pmt::parserbuilder

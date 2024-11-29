@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pmt/util/parse/ast_position.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
 
 #include <deque>
@@ -19,11 +20,10 @@ class GrmAstTransformations {
 
   static void emit_grammar(std::ostream &os_, GenericAst const &ast_);
 
+  static auto single_char_as_value(GenericAst const &ast_) -> size_t;
+
  private:
   // - Types / Private Constants -
-  using AstPosition = std::pair<GenericAst *, size_t>;
-  using AstPositionConst = std::pair<GenericAst const *, size_t>;
-
   using RepetitionNumber = std::optional<size_t>;
   using RepetitionRange = std::pair<RepetitionNumber, RepetitionNumber>;
 
@@ -41,7 +41,6 @@ class GrmAstTransformations {
   auto make_exact_repetition(GenericAst::UniqueHandle item_, size_t count_) -> GenericAst::UniqueHandle;
   auto make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumber min_count_, RepetitionNumber max_count_) -> GenericAst::UniqueHandle;
   auto make_anonymous_definition(GenericAst::UniqueHandle production_) -> GenericAst::UniqueHandle;
-
   // - Data -
   GenericAst &_ast;
   size_t _anonymous_definition_counter = 0;

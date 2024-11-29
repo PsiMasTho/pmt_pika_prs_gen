@@ -31,9 +31,14 @@ void FaPart::clear_outgoing_transitions() {
   _outgoing_epsilon_transitions.clear();
 }
 
-void FaPart::merge_outgoing_transitions(FaPart other_) {
-  _outgoing_symbol_transitions.merge(other_._outgoing_symbol_transitions);
+void FaPart::merge_outgoing_transitions(FaPart& other_) {
+  for (auto& [state_nr_from, symbols] : other_._outgoing_symbol_transitions) {
+    _outgoing_symbol_transitions[state_nr_from].merge(symbols);
+  }
+
   _outgoing_epsilon_transitions.merge(other_._outgoing_epsilon_transitions);
+
+  other_.clear_outgoing_transitions();
 }
 
 void FaPart::connect_outgoing_transitions_to(Fa::StateNrType state_nr_to_, Fa& fa_) {

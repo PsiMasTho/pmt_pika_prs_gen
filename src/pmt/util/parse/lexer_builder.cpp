@@ -2,15 +2,17 @@
 
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/util/parse/choices_expression_frame.hpp"
+#include "pmt/util/parse/expression_frame_factory.hpp"
 #include "pmt/util/parse/fa_part.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
 #include "pmt/util/parse/grm_ast.hpp"
 #include "pmt/util/parse/grm_ast_transformations.hpp"
+#include "pmt/util/parse/range_expression_frame.hpp"
+#include "pmt/util/parse/sequence_expression_frame.hpp"
+#include "pmt/util/parse/string_literal_expression_frame.hpp"
 
 #include <iostream>
-#include <limits>
-#include <memory>
-#include <stack>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -77,126 +79,30 @@ auto LexerBuilder::build() -> Fa {
   Fa::State& state_start = ret._states[state_nr_start];
 
   for (auto const& [terminal, terminal_def] : _terminal_definitions) {
-    struct StackItemBody {
-      std::vector<FaPart> _sub_parts;
-      AstPositionConst _ast_position;
-      // FaPart _state_nr_local;
-      size_t _stage;
-    };
-
-    using StackItem = std::shared_ptr<StackItemBody>;
-
     FaPart ret_part;
 
-    std::stack<StackItem> stack;
+    ExpressionFrameBase::CallstackType callstack;
+    ExpressionFrameBase::Captures captures{ret_part, ret};
 
-    auto take = [&stack]() -> StackItem {
-      StackItem ret = stack.top();
-      stack.pop();
-      return ret;
-    };
+    callstack.push(ExpressionFrameFactory::construct({terminal_def, 1}));
 
-    {
-      StackItemBody body;
-      body._ast_position = {terminal_def, 1};
-      // body._state_nr_local = state_nr_start;
-      body._stage = 0;
-      stack.push(std::make_shared<StackItemBody>(std::move(body)));
-    }
+    while (!callstack.empty()) {
+      ExpressionFrameBase::FrameHandle cur = callstack.top();
+      callstack.pop();
 
-    while (!stack.empty()) {
-      StackItem cur = take();
-      GenericAst const& expr = *cur->_ast_position.first->get_child_at(cur->_ast_position.second);
-
-      switch (expr.get_id()) {
-        case GrmAst::NtSequence: {
-          switch (cur->_stage) {
-            case 0: {
-              ++cur->_stage;
-              stack.push(cur);
-              StackItem next = std::make_shared<StackItemBody>();
-              next->_ast_position = {&expr, cur->_sub_parts.size()};
-              next->_stage = 0;
-              stack.push(next);
-            } break;
-            case 1: {
-              if (cur->_sub_parts.size() < expr.get_children_size() - 1) {
-                cur->_sub_parts.push_back(ret_part);
-                cur->_stage = 0;
-                stack.push(cur);
-              } else {
-                cur->_sub_parts.push_back(ret_part);
-                cur->_stage = 2;
-                stack.push(cur);
-              }
-            } break;
-            case 2: {
-              ret_part.set_incoming_state_nr(*cur->_sub_parts.front().get_incoming_state_nr());
-              ret_part.merge_outgoing_transitions(cur->_sub_parts.back());
-
-              // Concatenate sub-parts into the return part
-              FaPart* prev = &cur->_sub_parts.front();
-              for (size_t i = 1; i < cur->_sub_parts.size(); ++i) {
-                FaPart* cur_part = &cur->_sub_parts[i];
-                prev->connect_outgoing_transitions_to(*cur_part->get_incoming_state_nr(), ret);
-              }
-            }
-          }
+      switch (cur->get_id()) {
+        case GrmAst::NtSequence:
+          static_cast<SequenceExpressionFrame&>(*cur).process(callstack, captures);
           break;
-          case GrmAst::NtChoices: {
-            switch (cur->_stage) {
-              case 0: {
-                ++cur->_stage;
-                stack.push(cur);
-                StackItem next = std::make_shared<StackItemBody>();
-                next->_ast_position = {&expr, cur->_sub_parts.size()};
-                next->_stage = 0;
-                stack.push(next);
-              } break;
-              case 1: {
-                if (cur->_sub_parts.size() < expr.get_children_size() - 1) {
-                  cur->_sub_parts.push_back(ret_part);
-                  cur->_stage = 0;
-                  stack.push(cur);
-                } else {
-                  cur->_sub_parts.push_back(ret_part);
-                  cur->_stage = 2;
-                  stack.push(cur);
-                }
-              } break;
-              case 2: {
-                // Create a new incoming state
-                Fa::StateNrType state_nr_incoming = ret.get_unused_state_nr();
-                Fa::State& state_incoming = ret._states[state_nr_incoming];
-                ret_part.set_incoming_state_nr(state_nr_incoming);
-
-                // Connect with epsilon transitions to the sub-parts
-                for (FaPart& part : cur->_sub_parts) {
-                  state_incoming._transitions._epsilon_transitions.insert(*part.get_incoming_state_nr());
-                  ret_part.merge_outgoing_transitions(part);
-                }
-              }
-            }
-          } break;
-          case GrmAst::TkStringLiteral: {
-            // Create a new incoming state
-            Fa::StateNrType state_nr_prev = ret.get_unused_state_nr();
-            Fa::State* state_prev = &ret._states[state_nr_prev];
-            ret_part.set_incoming_state_nr(state_nr_prev);
-
-            for (size_t i = 1; i < expr.get_token().size(); ++i) {
-              Fa::StateNrType state_nr_cur = ret.get_unused_state_nr();
-              Fa::State* state_cur = &ret._states[state_nr_cur];
-
-              state_prev->_transitions._symbol_transitions[expr.get_token()[i - 1]] = state_nr_cur;
-              state_prev = state_cur;
-              state_nr_prev = state_nr_cur;
-            }
-
-            ret_part.add_outgoing_symbol_transition(state_nr_prev, expr.get_token().back());
-
-          } break;
-        }
+        case GrmAst::NtChoices:
+          static_cast<ChoicesExpressionFrame&>(*cur).process(callstack, captures);
+          break;
+        case GrmAst::TkStringLiteral:
+          static_cast<StringLiteralExpressionFrame&>(*cur).process(callstack, captures);
+          break;
+        case GrmAst::NtRange:
+          static_cast<RangeExpressionFrame&>(*cur).process(callstack, captures);
+          break;
       }
     }
 
@@ -205,7 +111,7 @@ auto LexerBuilder::build() -> Fa {
     Fa::StateNrType state_nr_end = ret.get_unused_state_nr();
     Fa::State& state_end = ret._states[state_nr_end];
     state_end._accepts.resize(_accepting_terminals.size(), false);
-    state_end._accepts.set(find_accepting_terminal_nr(terminal).value(), true);
+    state_end._accepts.set(*find_accepting_terminal_nr(terminal), true);
     ret_part.connect_outgoing_transitions_to(state_nr_end, ret);
   }
 

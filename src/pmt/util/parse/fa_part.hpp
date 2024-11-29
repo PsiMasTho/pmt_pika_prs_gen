@@ -19,7 +19,7 @@ class FaPart {
   void add_outgoing_epsilon_transition(Fa::StateNrType state_nr_from_);
 
   void clear_outgoing_transitions();
-  void merge_outgoing_transitions(FaPart other_);
+  void merge_outgoing_transitions(FaPart& other_);
 
   void connect_outgoing_transitions_to(Fa::StateNrType state_nr_to_, Fa& fa_);
 

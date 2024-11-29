@@ -62,23 +62,6 @@ auto number_convert(std::string_view str_, size_t base_) -> size_t {
   return ret;
 }
 
-auto single_char_as_value(GenericAst const& ast_) -> size_t {
-  if (ast_.get_id() == GrmAst::TkStringLiteral) {
-    std::string const& token = ast_.get_token();
-    assert(token.size() == 1);
-    return token[0];
-  }
-
-  if (ast_.get_id() == GrmAst::TkIntegerLiteral) {
-    auto const [base_str, number_str] = split_number(ast_.get_token());
-    size_t const base = number_convert(base_str, 10);
-    size_t const number = number_convert(number_str, base);
-    return number;
-  }
-
-  throw std::runtime_error("Invalid single character value");
-}
-
 }  // namespace
 
 GrmAstTransformations::GrmAstTransformations(GenericAst& ast_)
@@ -569,6 +552,23 @@ auto GrmAstTransformations::make_anonymous_definition(GenericAst::UniqueHandle p
   anon_definition->give_child_at_back(std::move(anon_name_token));
   anon_definition->give_child_at_back(std::move(production_));
   return anon_definition;
+}
+
+auto GrmAstTransformations::single_char_as_value(GenericAst const& ast_) -> size_t {
+  if (ast_.get_id() == GrmAst::TkStringLiteral) {
+    std::string const& token = ast_.get_token();
+    assert(token.size() == 1);
+    return token[0];
+  }
+
+  if (ast_.get_id() == GrmAst::TkIntegerLiteral) {
+    auto const [base_str, number_str] = split_number(ast_.get_token());
+    size_t const base = number_convert(base_str, 10);
+    size_t const number = number_convert(number_str, base);
+    return number;
+  }
+
+  throw std::runtime_error("Invalid single character value");
 }
 
 }  // namespace pmt::util::parse
