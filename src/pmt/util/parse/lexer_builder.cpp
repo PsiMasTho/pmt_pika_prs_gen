@@ -251,7 +251,6 @@ void EpsilonExpressionFrame::process(CallstackType&, Captures& captures_) {
 
 // -- TerminalIdentifierExpressionFrame --
 void TerminalIdentifierExpressionFrame::process(CallstackType&, Captures& captures_) {
-
 }
 
 // -- ExpressionFrameFactory --
