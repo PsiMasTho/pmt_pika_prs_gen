@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pmt/fw_decl.hpp"
+#include "pmt/util/parse/ast_position.hpp"
 #include "pmt/util/parse/fa.hpp"
 
 #include <optional>
@@ -23,7 +24,7 @@ class LexerBuilder {
   auto find_accepting_terminal_nr(std::string const& terminal_) -> std::optional<size_t>;
 
   GenericAst& _ast;
-  std::unordered_map<std::string, GenericAst const*> _terminal_definitions;
+  std::unordered_map<std::string, AstPositionConst> _terminal_definitions;
   std::vector<std::string> _accepting_terminals;
 };
 
