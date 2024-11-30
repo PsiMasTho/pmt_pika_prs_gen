@@ -12,57 +12,7 @@
 #include <unordered_set>
 
 namespace pmt::util::parse {
-namespace {
-auto split_number(std::string_view str_) -> std::pair<std::string_view, std::string_view> {
-  size_t const pos = str_.find('#');
-  if (pos == std::string_view::npos) {
-    return {str_, {}};
-  }
-
-  return {str_.substr(0, pos), str_.substr(pos + 1)};
-}
-
-auto number_convert(std::string_view str_, size_t base_) -> size_t {
-  // clang-format off
-  static std::unordered_map<char, size_t> const CHAR_TO_NUM{
-   {'0',  0}, {'1',  1}, {'2',  2}, {'3',  3}, {'4',  4}, {'5',  5},
-   {'6',  6}, {'7',  7}, {'8',  8}, {'9',  9}, {'a', 10}, {'b', 11},
-   {'c', 12}, {'d', 13}, {'e', 14}, {'f', 15}, {'g', 16}, {'h', 17},
-   {'i', 18}, {'j', 19}, {'k', 20}, {'l', 21}, {'m', 22}, {'n', 23},
-   {'o', 24}, {'p', 25}, {'q', 26}, {'r', 27}, {'s', 28}, {'t', 29},
-   {'u', 30}, {'v', 31}, {'w', 32}, {'x', 33}, {'y', 34}, {'z', 35}};
-  // clang-format on
-
-  if (base_ < 2 || base_ > CHAR_TO_NUM.size()) {
-    throw std::runtime_error("Invalid base: " + std::to_string(base_));
-  }
-
-  // Skip leading zeros
-  while (!str_.empty() && str_.starts_with('0')) {
-    str_.remove_prefix(1);
-  }
-
-  size_t ret = 0;
-  for (size_t i = str_.size(); i-- > 0;) {
-    auto const itr = CHAR_TO_NUM.find(str_[i]);
-    if (itr == CHAR_TO_NUM.end() || itr->second >= base_) {
-      throw std::runtime_error("Invalid number: " + std::string(str_));
-    }
-
-    size_t const step = itr->second * std::pow(base_, str_.size() - i - 1);
-
-    // Check for overflow
-    if (std::numeric_limits<size_t>::max() - step < ret) {
-      throw std::runtime_error("Number too large: " + std::string(str_));
-    }
-
-    ret += step;
-  }
-
-  return ret;
-}
-
-}  // namespace
+namespace {}  // namespace
 
 GrmAstTransformations::GrmAstTransformations(GenericAst& ast_)
  : _ast(ast_) {
@@ -170,6 +120,108 @@ void GrmAstTransformations::emit_grammar(std::ostream& os_, GenericAst const& as
     }
 
     os_ << ";\n\n";
+  }
+}
+
+auto GrmAstTransformations::single_char_as_value(GenericAst const& ast_) -> NumberType {
+  if (ast_.get_id() == GrmAst::TkStringLiteral) {
+    std::string const& token = ast_.get_token();
+    assert(token.size() == 1);
+    return token[0];
+  }
+
+  if (ast_.get_id() == GrmAst::TkIntegerLiteral) {
+    auto const [base_str, number_str] = split_number(ast_.get_token());
+    NumberType const base = number_convert(base_str, 10);
+    NumberType const number = number_convert(number_str, base);
+    return number;
+  }
+
+  throw std::runtime_error("Invalid single character value");
+}
+
+auto GrmAstTransformations::split_number(std::string_view str_) -> std::pair<std::string_view, std::string_view> {
+  size_t const pos = str_.find('#');
+  if (pos == std::string_view::npos) {
+    return {str_, {}};
+  }
+
+  return {str_.substr(0, pos), str_.substr(pos + 1)};
+}
+
+auto GrmAstTransformations::number_convert(std::string_view str_, NumberType base_) -> NumberType {
+  // clang-format off
+  static std::unordered_map<char, NumberType> const CHAR_TO_NUM{
+   {'0',  0}, {'1',  1}, {'2',  2}, {'3',  3}, {'4',  4}, {'5',  5},
+   {'6',  6}, {'7',  7}, {'8',  8}, {'9',  9}, {'a', 10}, {'b', 11},
+   {'c', 12}, {'d', 13}, {'e', 14}, {'f', 15}, {'g', 16}, {'h', 17},
+   {'i', 18}, {'j', 19}, {'k', 20}, {'l', 21}, {'m', 22}, {'n', 23},
+   {'o', 24}, {'p', 25}, {'q', 26}, {'r', 27}, {'s', 28}, {'t', 29},
+   {'u', 30}, {'v', 31}, {'w', 32}, {'x', 33}, {'y', 34}, {'z', 35}};
+  // clang-format on
+
+  if (base_ < 2 || base_ > CHAR_TO_NUM.size()) {
+    throw std::runtime_error("Invalid base: " + std::to_string(base_));
+  }
+
+  // Skip leading zeros
+  while (!str_.empty() && str_.starts_with('0')) {
+    str_.remove_prefix(1);
+  }
+
+  NumberType ret = 0;
+  for (NumberType i = str_.size(); i-- > 0;) {
+    auto const itr = CHAR_TO_NUM.find(str_[i]);
+    if (itr == CHAR_TO_NUM.end() || itr->second >= base_) {
+      throw std::runtime_error("Invalid number: " + std::string(str_));
+    }
+
+    NumberType const step = itr->second * std::pow(base_, str_.size() - i - 1);
+
+    // Check for overflow
+    if (std::numeric_limits<NumberType>::max() - step < ret) {
+      throw std::runtime_error("Number too large: " + std::string(str_));
+    }
+
+    ret += step;
+  }
+
+  return ret;
+}
+
+auto GrmAstTransformations::get_repetition_number(GenericAst const& token_) -> RepetitionNumberType {
+  if (token_.get_id() == GrmAst::TkComma) {
+    return std::nullopt;
+  }
+
+  assert(token_.get_id() == GrmAst::TkIntegerLiteral);
+  auto const [base_str, number_str] = split_number(token_.get_token());
+  NumberType const base = number_convert(base_str, 10);
+  NumberType const number = number_convert(number_str, base);
+
+  return number;
+}
+
+auto GrmAstTransformations::get_repetition_range(GenericAst const& repetition_) -> RepetitionRangeType {
+  assert(repetition_.get_id() == GrmAst::NtRepetitionRange);
+
+  switch (repetition_.get_children_size()) {
+    case 1: {
+      RepetitionNumberType const mid = get_repetition_number(*repetition_.get_child_at(0));
+      return {mid, mid};
+    }
+    case 2: {
+      RepetitionNumberType const lhs = get_repetition_number(*repetition_.get_child_at(0));
+      RepetitionNumberType const rhs = get_repetition_number(*repetition_.get_child_at(1));
+      return {lhs, rhs};
+    }
+    case 3: {
+      RepetitionNumberType const lhs = get_repetition_number(*repetition_.get_child_at(0));
+      RepetitionNumberType const rhs = get_repetition_number(*repetition_.get_child_at(2));
+      return {lhs, rhs};
+    }
+    default:
+      throw std::runtime_error("Invalid repetition range");
   }
 }
 
@@ -402,42 +454,6 @@ void GrmAstTransformations::check_ordering() {
   }
 }
 
-auto GrmAstTransformations::get_repetition_number(GenericAst const& token_) -> RepetitionNumber {
-  if (token_.get_id() == GrmAst::TkComma) {
-    return std::nullopt;
-  }
-
-  assert(token_.get_id() == GrmAst::TkIntegerLiteral);
-  auto const [base_str, number_str] = split_number(token_.get_token());
-  size_t const base = number_convert(base_str, 10);
-  size_t const number = number_convert(number_str, base);
-
-  return number;
-}
-
-auto GrmAstTransformations::get_repetition_range(GenericAst const& repetition_) -> RepetitionRange {
-  assert(repetition_.get_id() == GrmAst::NtRepetitionRange);
-
-  switch (repetition_.get_children_size()) {
-    case 1: {
-      RepetitionNumber const mid = get_repetition_number(*repetition_.get_child_at(0));
-      return {mid, mid};
-    }
-    case 2: {
-      RepetitionNumber const lhs = get_repetition_number(*repetition_.get_child_at(0));
-      RepetitionNumber const rhs = get_repetition_number(*repetition_.get_child_at(1));
-      return {lhs, rhs};
-    }
-    case 3: {
-      RepetitionNumber const lhs = get_repetition_number(*repetition_.get_child_at(0));
-      RepetitionNumber const rhs = get_repetition_number(*repetition_.get_child_at(2));
-      return {lhs, rhs};
-    }
-    default:
-      throw std::runtime_error("Invalid repetition range");
-  }
-}
-
 void GrmAstTransformations::expand_repetition(AstPosition ast_position_) {
   GenericAst& child = *ast_position_.first->get_child_at(ast_position_.second);
 
@@ -477,7 +493,7 @@ auto GrmAstTransformations::make_exact_repetition(GenericAst::UniqueHandle item_
   }
 }
 
-auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumber min_count_, RepetitionNumber max_count_) -> GenericAst::UniqueHandle {
+auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumberType min_count_, RepetitionNumberType max_count_) -> GenericAst::UniqueHandle {
   GenericAst::UniqueHandle anon_item_definition;
   GenericAst::UniqueHandle item_reference;
 
@@ -552,23 +568,6 @@ auto GrmAstTransformations::make_anonymous_definition(GenericAst::UniqueHandle p
   anon_definition->give_child_at_back(std::move(anon_name_token));
   anon_definition->give_child_at_back(std::move(production_));
   return anon_definition;
-}
-
-auto GrmAstTransformations::single_char_as_value(GenericAst const& ast_) -> size_t {
-  if (ast_.get_id() == GrmAst::TkStringLiteral) {
-    std::string const& token = ast_.get_token();
-    assert(token.size() == 1);
-    return token[0];
-  }
-
-  if (ast_.get_id() == GrmAst::TkIntegerLiteral) {
-    auto const [base_str, number_str] = split_number(ast_.get_token());
-    size_t const base = number_convert(base_str, 10);
-    size_t const number = number_convert(number_str, base);
-    return number;
-  }
-
-  throw std::runtime_error("Invalid single character value");
 }
 
 }  // namespace pmt::util::parse

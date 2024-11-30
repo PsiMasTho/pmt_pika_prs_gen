@@ -14,7 +14,9 @@ auto main(int argc, char const* const* argv) -> int {
     builder.build();
   } catch (std::exception const& e) {
     std::cerr << "Unhandled exception: " + std::string(e.what()) << '\n';
+    return 1;
   } catch (...) {
     std::cerr << "Unhandled exception!\n";
+    return 1;
   }
 }

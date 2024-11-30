@@ -8,6 +8,8 @@
 #include "pmt/util/parse/grm_ast.hpp"
 #include "pmt/util/parse/grm_ast_transformations.hpp"
 
+#include <cassert>
+#include <cmath>
 #include <iostream>
 #include <stack>
 #include <unordered_set>
@@ -42,6 +44,7 @@ class ExpressionFrameBase : public std::enable_shared_from_this<ExpressionFrameB
 // -- SequenceExpressionFrame --
 class SequenceExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:
@@ -56,6 +59,7 @@ class SequenceExpressionFrame : public ExpressionFrameBase {
 // -- ChoicesExpressionFrame --
 class ChoicesExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:
@@ -66,32 +70,54 @@ class ChoicesExpressionFrame : public ExpressionFrameBase {
   size_t _stage = 0;
 };
 
+// -- RepetitionExpressionFrame --
+class RepetitionExpressionFrame : public ExpressionFrameBase {
+ public:
+  RepetitionExpressionFrame(AstPositionConst ast_position_);
+  void process(CallstackType& callstack_, Captures& captures_) final;
+
+ private:
+  void process_stage_0(CallstackType& callstack_, Captures& captures_);
+  void process_stage_1(CallstackType& callstack_, Captures& captures_);
+  void process_stage_2(CallstackType& callstack_, Captures& captures_);
+
+  FaPart _sub_part;
+  size_t _idx = 0;
+  size_t _stage = 0;
+  GrmAstTransformations::RepetitionRangeType _range;
+};
+
 // -- StringLiteralExpressionFrame --
 class StringLiteralExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 };
 
 // -- RangeExpressionFrame --
 class RangeExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 };
 
 // -- IntegerLiteralExpressionFrame --
 class IntegerLiteralExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 };
 
 // -- EpsilonExpressionFrame --
 class EpsilonExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 };
 
 class TerminalIdentifierExpressionFrame : public ExpressionFrameBase {
  public:
+  using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
 };
 
@@ -194,6 +220,47 @@ void ChoicesExpressionFrame::process_stage_1(CallstackType& callstack_, Captures
   }
 }
 
+// -- RepetitionExpressionFrame --
+RepetitionExpressionFrame::RepetitionExpressionFrame(AstPositionConst ast_position_)
+ : ExpressionFrameBase(std::move(ast_position_))
+ , _range(GrmAstTransformations::get_repetition_range(*_ast_position.first->get_child_at(_ast_position.second))) {
+}
+
+void RepetitionExpressionFrame::process(CallstackType& callstack_, Captures& captures_) {
+  switch (_stage) {
+    case 0:
+      process_stage_0(callstack_, captures_);
+      break;
+    case 1:
+      process_stage_1(callstack_, captures_);
+      break;
+    case 2:
+      process_stage_2(callstack_, captures_);
+      break;
+  }
+}
+
+void RepetitionExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
+  Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
+  captures_._result._states[state_nr_incoming];
+  captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
+
+  if (_range.second == 0) {
+    captures_._ret_part.add_outgoing_epsilon_transition(state_nr_incoming);
+    return;
+  }
+
+  callstack_.push(shared_from_this());
+  ++_stage;
+}
+
+void RepetitionExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
+ 
+}
+
+void RepetitionExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
+}
+
 // -- StringLiteralExpressionFrame --
 void StringLiteralExpressionFrame::process(CallstackType&, Captures& captures_) {
   // Create a new incoming state
@@ -222,10 +289,11 @@ void RangeExpressionFrame::process(CallstackType&, Captures& captures_) {
   captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  size_t const min = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(0));
-  size_t const max = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(1));
 
-  for (size_t i = min; i <= max; ++i) {
+  Fa::SymbolType min = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(0));
+  Fa::SymbolType max = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(1));
+
+  for (Fa::SymbolType i = min; i <= max; ++i) {
     Fa::StateNrType state_nr_next = captures_._result.get_unused_state_nr();
     captures_._result._states[state_nr_next];
     captures_._ret_part.add_outgoing_symbol_transition(state_nr_next, i);
@@ -255,11 +323,14 @@ void TerminalIdentifierExpressionFrame::process(CallstackType&, Captures& captur
 
 // -- ExpressionFrameFactory --
 auto ExpressionFrameFactory::construct(AstPositionConst position_) -> ExpressionFrameBase::FrameHandle {
-  switch (position_.first->get_child_at(position_.second)->get_id()) {
+  GenericAst::IdType const id = position_.first->get_child_at(position_.second)->get_id();
+  switch (id) {
     case GrmAst::NtSequence:
       return std::make_shared<SequenceExpressionFrame>(position_);
     case GrmAst::NtChoices:
       return std::make_shared<ChoicesExpressionFrame>(position_);
+    case GrmAst::NtRepetition:
+      return std::make_shared<RepetitionExpressionFrame>(position_);
     case GrmAst::TkStringLiteral:
       return std::make_shared<StringLiteralExpressionFrame>(position_);
     case GrmAst::NtRange:
@@ -269,7 +340,7 @@ auto ExpressionFrameFactory::construct(AstPositionConst position_) -> Expression
     case GrmAst::TkEpsilon:
       return std::make_shared<EpsilonExpressionFrame>(position_);
     default:
-      throw std::runtime_error("Unknown expression frame id");
+      throw std::runtime_error("Unknown expression frame id: " + GrmAst::to_string(id));
   }
 }
 
@@ -279,7 +350,7 @@ LexerBuilder::LexerBuilder(GenericAst& ast_, std::set<std::string> const& accept
  : _ast(ast_) {
   // Preprocessing
   try {
-    GrmAstTransformations(_ast).transform();
+    // GrmAstTransformations(_ast).transform();
   } catch (std::exception const& e) {
     // clang-format off
     std::cerr 
@@ -302,7 +373,7 @@ LexerBuilder::LexerBuilder(GenericAst& ast_, std::set<std::string> const& accept
       std::string const& terminal = child.get_child_at(0)->get_token();
 
       if (auto const itr = _terminal_definitions.find(terminal); itr == _terminal_definitions.end()) {
-        _terminal_definitions.insert_or_assign(terminal, AstPositionConst{&ast_, i});
+        _terminal_definitions.insert_or_assign(terminal, AstPositionConst{&child, 1});
 
         if (auto const terminal_nr = find_accepting_terminal_nr(terminal); terminal_nr.has_value()) {
           found_accepting_terminals.set(*terminal_nr, true);
