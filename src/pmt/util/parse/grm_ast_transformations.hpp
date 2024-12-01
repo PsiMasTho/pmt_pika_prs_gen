@@ -12,8 +12,7 @@ namespace pmt::util::parse {
 class GrmAstTransformations {
  public:
   using NumberType = std::uint64_t;
-  using RepetitionNumberType = std::optional<NumberType>;
-  using RepetitionRangeType = std::pair<RepetitionNumberType, RepetitionNumberType>;
+  using RepetitionRangeType = std::pair<NumberType, std::optional<NumberType>>;
 
   static inline size_t const ANONYMOUS_DEFINITION_DIGIT_COUNT = 4;
   static inline char const *const ANONYMOUS_DEFINITION_PREFIX = "$__anon_";
@@ -26,7 +25,7 @@ class GrmAstTransformations {
   static auto single_char_as_value(GenericAst const &ast_) -> NumberType;
   static auto split_number(std::string_view str_) -> std::pair<std::string_view, std::string_view>;
   static auto number_convert(std::string_view str_, NumberType base_) -> NumberType;
-  static auto get_repetition_number(GenericAst const &token_) -> RepetitionNumberType;
+  static auto get_repetition_number(GenericAst const &token_) -> std::optional<NumberType>;
   static auto get_repetition_range(GenericAst const &repetition_) -> RepetitionRangeType;
 
  private:
@@ -40,7 +39,7 @@ class GrmAstTransformations {
   auto get_next_anonymous_definition_name() -> std::string;
   auto make_epsilon() -> GenericAst::UniqueHandle;
   auto make_exact_repetition(GenericAst::UniqueHandle item_, size_t count_) -> GenericAst::UniqueHandle;
-  auto make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumberType min_count_, RepetitionNumberType max_count_) -> GenericAst::UniqueHandle;
+  auto make_repetition_range(GenericAst::UniqueHandle item_, RepetitionRangeType range_) -> GenericAst::UniqueHandle;
   auto make_anonymous_definition(GenericAst::UniqueHandle production_) -> GenericAst::UniqueHandle;
   // - Data -
   GenericAst &_ast;

@@ -63,11 +63,14 @@ class ChoicesExpressionFrame : public ExpressionFrameBase {
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:
-  void process_stage_0(CallstackType& callstack_);
-  void process_stage_1(CallstackType& callstack_, Captures& captures_);
+  void process_stage_0(CallstackType& callstack_, Captures& captures_);
+  void process_stage_1(CallstackType& callstack_);
+  void process_stage_2(CallstackType& callstack_, Captures& captures_);
 
-  std::vector<FaPart> _sub_parts;
+  FaPart _sub_part;
+  Fa::Transitions* _transitions = nullptr;
   size_t _stage = 0;
+  size_t _idx = 0;
 };
 
 // -- RepetitionExpressionFrame --
@@ -82,9 +85,11 @@ class RepetitionExpressionFrame : public ExpressionFrameBase {
   void process_stage_2(CallstackType& callstack_, Captures& captures_);
 
   FaPart _sub_part;
-  size_t _idx = 0;
-  size_t _stage = 0;
   GrmAstTransformations::RepetitionRangeType _range;
+  Fa::Transitions* _transitions = nullptr;
+  size_t _stage = 0;
+  size_t _outer = 0;
+  size_t _inner = 0;
 };
 
 // -- StringLiteralExpressionFrame --
@@ -159,7 +164,8 @@ void SequenceExpressionFrame::process_stage_1(CallstackType& callstack_, Capture
     ++_idx;
   }
 
-  if (_idx > 0 && _idx < _ast_position.first->get_child_at(_ast_position.second)->get_children_size() - 1) {
+  GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
+  if (_idx > 0 && _idx < cur_expr.get_children_size() - 1) {
     _sub_part.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
     _sub_part.merge_outgoing_transitions(captures_._ret_part);
     callstack_.push(shared_from_this());
@@ -168,7 +174,7 @@ void SequenceExpressionFrame::process_stage_1(CallstackType& callstack_, Capture
     return;
   }
 
-  if (_idx == _ast_position.first->get_child_at(_ast_position.second)->get_children_size() - 1) {
+  if (_idx == cur_expr.get_children_size() - 1) {
     _sub_part.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
     _sub_part.merge_outgoing_transitions(captures_._ret_part);
   }
@@ -180,50 +186,55 @@ void SequenceExpressionFrame::process_stage_1(CallstackType& callstack_, Capture
 void ChoicesExpressionFrame::process(CallstackType& callstack_, Captures& captures_) {
   switch (_stage) {
     case 0:
-      process_stage_0(callstack_);
+      process_stage_0(callstack_, captures_);
       break;
     case 1:
-      process_stage_1(callstack_, captures_);
+      process_stage_1(callstack_);
+      break;
+    case 2:
+      process_stage_2(callstack_, captures_);
       break;
   }
 }
 
-void ChoicesExpressionFrame::process_stage_0(CallstackType& callstack_) {
+void ChoicesExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
+  Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
+  _transitions = &captures_._result._states[state_nr_incoming]._transitions;
+  _sub_part.set_incoming_state_nr(state_nr_incoming);
+
+  callstack_.push(shared_from_this());
+  ++_stage;
+}
+
+void ChoicesExpressionFrame::process_stage_1(CallstackType& callstack_) {
   callstack_.push(shared_from_this());
   ++_stage;
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  callstack_.push(ExpressionFrameFactory::construct(AstPositionConst{&cur_expr, _sub_parts.size()}));
+  callstack_.push(ExpressionFrameFactory::construct(AstPositionConst{&cur_expr, _idx}));
 }
 
-void ChoicesExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
+void ChoicesExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
 
-  if (_sub_parts.size() < cur_expr.get_children_size() - 1) {
-    _sub_parts.push_back(captures_._ret_part);
-    callstack_.push(shared_from_this());
-    _stage = 0;
-    return;
+  if (_idx <= cur_expr.get_children_size() - 1) {
+    _transitions->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
+    _sub_part.merge_outgoing_transitions(captures_._ret_part);
+    if (_idx < cur_expr.get_children_size() - 1) {
+      callstack_.push(shared_from_this());
+      --_stage;
+      ++_idx;
+      return;
+    }
   }
 
-  _sub_parts.push_back(captures_._ret_part);
-
-  // Create a new incoming state
-  Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
-  Fa::State& state_incoming = captures_._result._states[state_nr_incoming];
-  captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
-
-  // Connect with epsilon transitions to the sub-parts
-  for (FaPart& part : _sub_parts) {
-    state_incoming._transitions._epsilon_transitions.insert(*part.get_incoming_state_nr());
-    captures_._ret_part.merge_outgoing_transitions(part);
-  }
+  captures_._ret_part = _sub_part;
 }
 
 // -- RepetitionExpressionFrame --
 RepetitionExpressionFrame::RepetitionExpressionFrame(AstPositionConst ast_position_)
- : ExpressionFrameBase(std::move(ast_position_))
- , _range(GrmAstTransformations::get_repetition_range(*_ast_position.first->get_child_at(_ast_position.second))) {
+ : ExpressionFrameBase({ast_position_.first->get_child_at(ast_position_.second), 0})
+ , _range(GrmAstTransformations::get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1))) {
 }
 
 void RepetitionExpressionFrame::process(CallstackType& callstack_, Captures& captures_) {
@@ -242,7 +253,7 @@ void RepetitionExpressionFrame::process(CallstackType& callstack_, Captures& cap
 
 void RepetitionExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
   Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
-  captures_._result._states[state_nr_incoming];
+  _transitions = &captures_._result._states[state_nr_incoming]._transitions;
   captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
 
   if (_range.second == 0) {
@@ -255,7 +266,7 @@ void RepetitionExpressionFrame::process_stage_0(CallstackType& callstack_, Captu
 }
 
 void RepetitionExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
- 
+
 }
 
 void RepetitionExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
@@ -401,7 +412,8 @@ auto LexerBuilder::build() -> Fa {
 
   Fa::State& state_start = ret._states[ret.get_unused_state_nr()];
 
-  for (auto const& [terminal, terminal_def] : _terminal_definitions) {
+  for (std::string const& terminal_name : _accepting_terminals) {
+    AstPositionConst terminal_def = _terminal_definitions.find(terminal_name)->second;
     FaPart ret_part;
 
     ExpressionFrameBase::CallstackType callstack;
@@ -420,7 +432,7 @@ auto LexerBuilder::build() -> Fa {
     Fa::StateNrType state_nr_end = ret.get_unused_state_nr();
     Fa::State& state_end = ret._states[state_nr_end];
     state_end._accepts.resize(_accepting_terminals.size(), false);
-    state_end._accepts.set(*find_accepting_terminal_nr(terminal), true);
+    state_end._accepts.set(*find_accepting_terminal_nr(terminal_name), true);
     ret_part.connect_outgoing_transitions_to(state_nr_end, ret);
   }
 

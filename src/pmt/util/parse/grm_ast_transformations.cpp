@@ -189,7 +189,7 @@ auto GrmAstTransformations::number_convert(std::string_view str_, NumberType bas
   return ret;
 }
 
-auto GrmAstTransformations::get_repetition_number(GenericAst const& token_) -> RepetitionNumberType {
+auto GrmAstTransformations::get_repetition_number(GenericAst const& token_) -> std::optional<NumberType> {
   if (token_.get_id() == GrmAst::TkComma) {
     return std::nullopt;
   }
@@ -207,18 +207,18 @@ auto GrmAstTransformations::get_repetition_range(GenericAst const& repetition_) 
 
   switch (repetition_.get_children_size()) {
     case 1: {
-      RepetitionNumberType const mid = get_repetition_number(*repetition_.get_child_at(0));
-      return {mid, mid};
+      std::optional<NumberType> const mid = get_repetition_number(*repetition_.get_child_at(0));
+      return {mid.value_or(0), mid};
     }
     case 2: {
-      RepetitionNumberType const lhs = get_repetition_number(*repetition_.get_child_at(0));
-      RepetitionNumberType const rhs = get_repetition_number(*repetition_.get_child_at(1));
-      return {lhs, rhs};
+      std::optional<NumberType> const lhs = get_repetition_number(*repetition_.get_child_at(0));
+      std::optional<NumberType> const rhs = get_repetition_number(*repetition_.get_child_at(1));
+      return {lhs.value_or(0), rhs};
     }
     case 3: {
-      RepetitionNumberType const lhs = get_repetition_number(*repetition_.get_child_at(0));
-      RepetitionNumberType const rhs = get_repetition_number(*repetition_.get_child_at(2));
-      return {lhs, rhs};
+      std::optional<NumberType> const lhs = get_repetition_number(*repetition_.get_child_at(0));
+      std::optional<NumberType> const rhs = get_repetition_number(*repetition_.get_child_at(2));
+      return {lhs.value_or(0), rhs};
     }
     default:
       throw std::runtime_error("Invalid repetition range");
@@ -459,8 +459,8 @@ void GrmAstTransformations::expand_repetition(AstPosition ast_position_) {
 
   assert(child.get_id() == GrmAst::NtRepetition);
 
-  auto const [lower, upper] = get_repetition_range(*child.get_child_at(1));
-  auto replacement = make_repetition_range(child.take_child_at_front(), lower, upper);
+  RepetitionRangeType const range  = get_repetition_range(*child.get_child_at(1));
+  auto replacement = make_repetition_range(child.take_child_at_front(), range);
   ast_position_.first->take_child_at(ast_position_.second);
   ast_position_.first->give_child_at(ast_position_.second, std::move(replacement));
 }
@@ -493,15 +493,15 @@ auto GrmAstTransformations::make_exact_repetition(GenericAst::UniqueHandle item_
   }
 }
 
-auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_, RepetitionNumberType min_count_, RepetitionNumberType max_count_) -> GenericAst::UniqueHandle {
+auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_, RepetitionRangeType range_) -> GenericAst::UniqueHandle {
   GenericAst::UniqueHandle anon_item_definition;
   GenericAst::UniqueHandle item_reference;
 
-  if (max_count_ == 0) {
+  if (range_.second == 0) {
     return make_epsilon();
-  } else if (max_count_ == 1) {
+  } else if (range_.second == 1) {
     item_reference = std::move(item_);
-    if (min_count_ == 1) {
+    if (range_.first == 1) {
       return item_reference;
     }
   } else {
@@ -520,11 +520,9 @@ auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_
     }
   }
 
-  min_count_ = min_count_.value_or(0);
-
-  if (max_count_.has_value()) {
+  if (range_.second.has_value()) {
     GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtChoices);
-    for (size_t i = *min_count_; i <= *max_count_; i++) {
+    for (size_t i = range_.first; i <= *range_.second; i++) {
       ret->give_child_at_back(make_exact_repetition(GenericAst::clone(*item_reference), i));
     }
 
@@ -536,7 +534,7 @@ auto GrmAstTransformations::make_repetition_range(GenericAst::UniqueHandle item_
   }
 
   GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtSequence);
-  ret->give_child_at_front(make_exact_repetition(GenericAst::clone(*item_reference), *min_count_));
+  ret->give_child_at_front(make_exact_repetition(GenericAst::clone(*item_reference), range_.first));
 
   GenericAst::UniqueHandle tmp_body = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtChoices);
   tmp_body->give_child_at_back(make_epsilon());
