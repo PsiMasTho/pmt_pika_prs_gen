@@ -79,17 +79,16 @@ class RepetitionExpressionFrame : public ExpressionFrameBase {
   RepetitionExpressionFrame(AstPositionConst ast_position_);
   void process(CallstackType& callstack_, Captures& captures_) final;
 
+  static auto make_exact_repetition(Fa& fa_, FaPart const& part_, size_t count_) -> FaPart;
+
  private:
   void process_stage_0(CallstackType& callstack_, Captures& captures_);
   void process_stage_1(CallstackType& callstack_, Captures& captures_);
-  void process_stage_2(CallstackType& callstack_, Captures& captures_);
 
   FaPart _sub_part;
   GrmAstTransformations::RepetitionRangeType _range;
   Fa::Transitions* _transitions = nullptr;
   size_t _stage = 0;
-  size_t _outer = 0;
-  size_t _inner = 0;
 };
 
 // -- StringLiteralExpressionFrame --
@@ -118,6 +117,8 @@ class EpsilonExpressionFrame : public ExpressionFrameBase {
  public:
   using ExpressionFrameBase::ExpressionFrameBase;
   void process(CallstackType& callstack_, Captures& captures_) final;
+
+  static auto make_epsilon(Fa& fa_) -> FaPart;
 };
 
 class TerminalIdentifierExpressionFrame : public ExpressionFrameBase {
@@ -159,27 +160,23 @@ void SequenceExpressionFrame::process_stage_0(CallstackType& callstack_) {
 }
 
 void SequenceExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
-  if (_idx == 0) {
-    _sub_part = captures_._ret_part;
-    ++_idx;
-  }
+  _stage = 0;
+  ++_idx;
 
-  GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  if (_idx > 0 && _idx < cur_expr.get_children_size() - 1) {
+  // If is first
+  if (_idx == 1) {
+    _sub_part = captures_._ret_part.take();
+  } else {
     _sub_part.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
     _sub_part.merge_outgoing_transitions(captures_._ret_part);
+  }
+
+  // If is last
+  if (_idx == _ast_position.first->get_child_at(_ast_position.second)->get_children_size()) {
+    captures_._ret_part = _sub_part;
+  } else {
     callstack_.push(shared_from_this());
-    _stage = 0;
-    ++_idx;
-    return;
   }
-
-  if (_idx == cur_expr.get_children_size() - 1) {
-    _sub_part.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
-    _sub_part.merge_outgoing_transitions(captures_._ret_part);
-  }
-
-  captures_._ret_part = _sub_part;
 }
 
 // -- ChoicesExpressionFrame --
@@ -215,17 +212,16 @@ void ChoicesExpressionFrame::process_stage_1(CallstackType& callstack_) {
 }
 
 void ChoicesExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
-  GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
+  --_stage;
+  ++_idx;
 
-  if (_idx <= cur_expr.get_children_size() - 1) {
-    _transitions->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
-    _sub_part.merge_outgoing_transitions(captures_._ret_part);
-    if (_idx < cur_expr.get_children_size() - 1) {
-      callstack_.push(shared_from_this());
-      --_stage;
-      ++_idx;
-      return;
-    }
+  _transitions->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
+  _sub_part.merge_outgoing_transitions(captures_._ret_part);
+
+  GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
+  if (_idx < cur_expr.get_children_size()) {
+    callstack_.push(shared_from_this());
+    return;
   }
 
   captures_._ret_part = _sub_part;
@@ -245,31 +241,66 @@ void RepetitionExpressionFrame::process(CallstackType& callstack_, Captures& cap
     case 1:
       process_stage_1(callstack_, captures_);
       break;
-    case 2:
-      process_stage_2(callstack_, captures_);
-      break;
+  }
+}
+
+auto RepetitionExpressionFrame::make_exact_repetition(Fa& fa_, FaPart const& part_, size_t count_) -> FaPart {
+  switch (count_) {
+    case 0:
+      return EpsilonExpressionFrame::make_epsilon(fa_);
+    case 1:
+      return part_.clone(fa_);
+    default: {
+      FaPart ret = part_.clone(fa_);
+      ;
+      for (size_t i = 1; i < count_; ++i) {
+        FaPart next = part_.clone(fa_);
+        ret.connect_outgoing_transitions_to(*next.get_incoming_state_nr(), fa_);
+        ret.merge_outgoing_transitions(next);
+      }
+      return ret;
+    }
   }
 }
 
 void RepetitionExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
   Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
   _transitions = &captures_._result._states[state_nr_incoming]._transitions;
-  captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
-
-  if (_range.second == 0) {
-    captures_._ret_part.add_outgoing_epsilon_transition(state_nr_incoming);
-    return;
-  }
+  _sub_part.set_incoming_state_nr(state_nr_incoming);
 
   callstack_.push(shared_from_this());
   ++_stage;
+
+  callstack_.push(ExpressionFrameFactory::construct(_ast_position));
 }
 
 void RepetitionExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
+  if (_range.second.has_value()) {
+    for (size_t i = _range.first; i < *_range.second; ++i) {
+      FaPart next = make_exact_repetition(captures_._result, captures_._ret_part, i);
+      _transitions->_epsilon_transitions.insert(*next.get_incoming_state_nr());
+      _sub_part.merge_outgoing_transitions(next);
+    }
 
-}
+    FaPart next = make_exact_repetition(captures_._result, captures_._ret_part, *_range.second - 1);
+    next.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
+    _transitions->_epsilon_transitions.insert(*next.get_incoming_state_nr());
+    _sub_part.merge_outgoing_transitions(captures_._ret_part);
 
-void RepetitionExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
+    captures_._ret_part = _sub_part;
+    return;
+  }
+
+  FaPart rep = make_exact_repetition(captures_._result, captures_._ret_part, _range.first - 1);
+  rep.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
+  rep.merge_outgoing_transitions(captures_._ret_part);
+  _transitions->_epsilon_transitions.insert(*rep.get_incoming_state_nr());
+  Fa::StateNrType state_nr_epsilon = captures_._result.get_unused_state_nr();
+  Fa::Transitions& transitions_epsilon = captures_._result._states[state_nr_epsilon]._transitions;
+  transitions_epsilon._epsilon_transitions.insert(*_sub_part.get_incoming_state_nr());
+  rep.connect_outgoing_transitions_to(state_nr_epsilon, captures_._result);
+  captures_._ret_part = _sub_part;
+  captures_._ret_part.add_outgoing_epsilon_transition(state_nr_epsilon);
 }
 
 // -- StringLiteralExpressionFrame --
@@ -322,10 +353,15 @@ void IntegerLiteralExpressionFrame::process(CallstackType&, Captures& captures_)
 
 // -- EpsilonExpressionFrame --
 void EpsilonExpressionFrame::process(CallstackType&, Captures& captures_) {
-  Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
-  captures_._result._states[state_nr_incoming];
-  captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
-  captures_._ret_part.add_outgoing_epsilon_transition(state_nr_incoming);
+  captures_._ret_part = make_epsilon(captures_._result);
+}
+
+auto EpsilonExpressionFrame::make_epsilon(Fa& fa_) -> FaPart {
+  Fa::StateNrType state_nr_incoming = fa_.get_unused_state_nr();
+  fa_._states[state_nr_incoming];
+  FaPart ret(state_nr_incoming);
+  ret.add_outgoing_epsilon_transition(state_nr_incoming);
+  return ret;
 }
 
 // -- TerminalIdentifierExpressionFrame --

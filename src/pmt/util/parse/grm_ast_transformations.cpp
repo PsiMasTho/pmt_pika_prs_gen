@@ -459,7 +459,7 @@ void GrmAstTransformations::expand_repetition(AstPosition ast_position_) {
 
   assert(child.get_id() == GrmAst::NtRepetition);
 
-  RepetitionRangeType const range  = get_repetition_range(*child.get_child_at(1));
+  RepetitionRangeType const range = get_repetition_range(*child.get_child_at(1));
   auto replacement = make_repetition_range(child.take_child_at_front(), range);
   ast_position_.first->take_child_at(ast_position_.second);
   ast_position_.first->give_child_at(ast_position_.second, std::move(replacement));

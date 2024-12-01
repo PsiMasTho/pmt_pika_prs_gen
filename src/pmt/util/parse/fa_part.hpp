@@ -11,6 +11,9 @@ class FaPart {
   FaPart() = default;
   FaPart(Fa::StateNrType incoming_state_nr_);
 
+  auto take() -> FaPart;
+  auto clone(Fa& fa_) const -> FaPart;
+
   void set_incoming_state_nr(Fa::StateNrType incoming_state_nr_);
   auto get_incoming_state_nr() const -> std::optional<Fa::StateNrType>;
   void clear_incoming_state_nr();
