@@ -131,7 +131,7 @@ class TerminalIdentifierExpressionFrame : public ExpressionFrameBase {
 
  private:
   void process_stage_0(CallstackType& callstack_, Captures& captures_);
-  void process_stage_1(CallstackType& callstack_, Captures& captures_);
+  void process_stage_1(Captures& captures_);
 
   std::string const* _terminal_name = nullptr;
   Fa::Transitions* _transitions_terminal_start = nullptr;
@@ -352,8 +352,8 @@ void RangeExpressionFrame::process(CallstackType&, Captures& captures_) {
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
 
-  Fa::SymbolType min = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(0));
-  Fa::SymbolType max = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(1));
+  Fa::SymbolType const min = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(0));
+  Fa::SymbolType const max = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(1));
 
   for (Fa::SymbolType i = min; i <= max; ++i) {
     captures_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, i);
@@ -388,7 +388,7 @@ void TerminalIdentifierExpressionFrame::process(CallstackType& callstack_, Captu
       process_stage_0(callstack_, captures_);
       break;
     case 1:
-      process_stage_1(callstack_, captures_);
+      process_stage_1(captures_);
       break;
   }
 }
@@ -422,7 +422,7 @@ void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack
   callstack_.push(ExpressionFrameFactory::construct(_ast_position));
 }
 
-void TerminalIdentifierExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
+void TerminalIdentifierExpressionFrame::process_stage_1(Captures& captures_) {
   _transitions_terminal_start->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
   captures_._ret_part.set_incoming_state_nr(_state_nr_terminal_start);
 
