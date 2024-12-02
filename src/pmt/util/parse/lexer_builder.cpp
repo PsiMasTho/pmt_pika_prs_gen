@@ -543,6 +543,8 @@ auto LexerBuilder::build() -> Fa {
     ret_part.connect_outgoing_transitions_to(state_nr_end, ret);
   }
 
+  ret.determinize();
+
   return ret;
 }
 

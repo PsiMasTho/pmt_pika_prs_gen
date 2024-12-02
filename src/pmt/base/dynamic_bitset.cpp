@@ -347,7 +347,7 @@ auto DynamicBitset::get_next_capacity(size_t capacity_) -> size_t {
 namespace std {
 auto hash<pmt::base::DynamicBitset>::operator()(const pmt::base::DynamicBitset& bitset_) const -> size_t {
   size_t seed = 0;
-  for (size_t i = 0; i < bitset_._size; ++i) {
+  for (size_t i = 0; i < bitset_.get_required_chunks(bitset_.size()); ++i) {
     pmt::base::Hash::combine(bitset_._data.get()[i], seed);
   }
   return seed;

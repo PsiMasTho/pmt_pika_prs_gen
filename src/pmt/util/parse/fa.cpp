@@ -64,24 +64,10 @@ auto Fa::get_unused_state_nr() const -> StateNrType {
 
 void Fa::subset() {
   std::unordered_map<StateNrType, std::unordered_set<StateNrType>> e_closure_cache;
-  std::unordered_map<StateNrType, std::unordered_set<StateNrType>> state_nr_set_map;
+  std::unordered_map<StateNrType, std::unordered_set<StateNrType>> old_to_new;
+  std::unordered_map<DynamicBitset, StateNrType> new_to_old;
   std::stack<StateNrType> stack;
   Fa result;
-
-  auto const add = [&state_nr_set_map, &result](StateNrType item_, std::unordered_set<StateNrType> state_nr_set_) {
-    if (state_nr_set_map.contains(item_)) {
-      return;
-    }
-
-    StateNrType const state_nr_new = result.get_unused_state_nr();
-    result._states[state_nr_new];
-    state_nr_set_map.insert_or_assign(state_nr_new, std::move(state_nr_set_));
-  };
-
-  auto const push_and_visit = [&stack, &add](StateNrType item_, std::unordered_set<StateNrType> state_nr_set_) {
-    add(item_, state_nr_set_);
-    stack.push(item_);
-  };
 
   auto const take = [&stack]() {
     StateNrType ret = stack.top();
@@ -89,16 +75,36 @@ void Fa::subset() {
     return ret;
   };
 
-  push_and_visit(0, get_e_closure(0, e_closure_cache));
+  {
+    std::unordered_set<StateNrType> state_nr_set_initial = get_e_closure(0, e_closure_cache);
+    StateNrType const state_nr_initial = result.get_unused_state_nr();
+    result._states[state_nr_initial];
+    old_to_new.insert_or_assign(state_nr_initial, state_nr_set_initial);
+    new_to_old.insert_or_assign(DynamicBitsetConverter::from_unordered_set(state_nr_set_initial, _states.size()), state_nr_initial);
+    stack.push(state_nr_initial);
+  }
 
   while (!stack.empty()) {
     StateNrType const state_nr_cur = take();
-    std::unordered_set<SymbolType> const symbols = get_symbols(state_nr_cur);
+    std::unordered_set<StateNrType> const state_nr_set_cur = old_to_new.find(state_nr_cur)->second;
+    std::unordered_set<SymbolType> const symbols = get_symbols(state_nr_set_cur);
 
     for (SymbolType symbol : symbols) {
-      std::unordered_set<StateNrType> U = get_e_closure(get_moves(state_nr_set_map[state_nr_cur], symbol), e_closure_cache);
+      std::unordered_set<StateNrType> U = get_e_closure(get_moves(state_nr_set_cur, symbol), e_closure_cache);
+      DynamicBitset const U_bitset = DynamicBitsetConverter::from_unordered_set(U, _states.size());
+      if (!new_to_old.contains(U_bitset)) {
+        StateNrType const state_nr_U = result.get_unused_state_nr();
+        result._states[state_nr_U];
+        old_to_new.insert_or_assign(state_nr_U, U);
+        new_to_old.insert_or_assign(U_bitset, state_nr_U);
+        stack.push(state_nr_U);
+      }
+      StateNrType const state_nr_U = new_to_old.find(U_bitset)->second;
+      result._states[state_nr_cur]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_U);
     }
   }
+
+  *this = std::move(result);
 }
 
 auto Fa::get_e_closure(StateNrType state_nr_from_, std::unordered_map<StateNrType, std::unordered_set<StateNrType>>& cache_) const -> std::unordered_set<StateNrType> {
@@ -154,12 +160,14 @@ auto Fa::get_moves(std::unordered_set<StateNrType> const& state_nrs_from_, Symbo
   return ret;
 }
 
-auto Fa::get_symbols(StateNrType state_nr_from_) const -> std::unordered_set<SymbolType> {
+auto Fa::get_symbols(std::unordered_set<StateNrType> const& state_nrs_from_) const -> std::unordered_set<SymbolType> {
   std::unordered_set<SymbolType> ret;
 
-  State const& state_from = _states.find(state_nr_from_)->second;
-  for (auto const& [symbol, state_nr_next] : state_from._transitions._symbol_transitions) {
-    ret.insert(symbol);
+  for (StateNrType const state_nr_from : state_nrs_from_) {
+    State const& state_from = _states.find(state_nr_from)->second;
+    for (auto const& [symbol, state_nr_next] : state_from._transitions._symbol_transitions) {
+      ret.insert(symbol);
+    }
   }
 
   return ret;
