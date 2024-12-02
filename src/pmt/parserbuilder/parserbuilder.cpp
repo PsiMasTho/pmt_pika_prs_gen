@@ -32,11 +32,15 @@ void ParserBuilder::build() {
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
   std::cout << "State count: " << fa._states.size() << std::endl;
 
-  std::ofstream dot_file("lexer.dot");
-  pmt::util::parse::GraphWriter::write_dot(dot_file, fa);
+  if (fa._states.size() < 500) {
+    std::ofstream dot_file("lexer.dot");
+    pmt::util::parse::GraphWriter::write_dot(dot_file, fa);
+  } else {
+    std::cout << "State count too high to generate dot file\n";
+  }
 
-  std::cout << "------------------------ AST ------------------------\n";
-  // pmt::util::parse::GrmAstTransformations::emit_grammar(std::cerr, *ast);
+  // std::cout << "------------------------ AST ------------------------\n";
+  //  pmt::util::parse::GrmAstTransformations::emit_grammar(std::cerr, *ast);
 
   printer.print(*ast, std::cerr);
 }

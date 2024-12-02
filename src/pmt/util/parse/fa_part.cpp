@@ -26,6 +26,7 @@ auto FaPart::clone(Fa& fa_) const -> FaPart {
     }
 
     Fa::StateNrType const state_nr_new = fa_.get_unused_state_nr();
+    fa_._states[state_nr_new];  // Create the state
     visited.insert_or_assign(item_, state_nr_new);
     stack.push(item_);
 
@@ -58,15 +59,18 @@ auto FaPart::clone(Fa& fa_) const -> FaPart {
       Fa::StateNrType const state_nr_next_new = push_and_visit(state_nr_next_old);
       state_new._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_next_new);
     }
+  }
 
-    if (_outgoing_epsilon_transitions.contains(state_nr_old)) {
-      ret.add_outgoing_epsilon_transition(state_nr_new);
-    }
+  // Add outgoing transitions
+  for (Fa::StateNrType const state_nr_old : _outgoing_epsilon_transitions) {
+    Fa::StateNrType const state_nr_new = visited.find(state_nr_old)->second;
+    ret.add_outgoing_epsilon_transition(state_nr_new);
+  }
 
-    if (auto const itr = _outgoing_symbol_transitions.find(state_nr_old); itr != _outgoing_symbol_transitions.end()) {
-      for (Fa::SymbolType const symbol : itr->second) {
-        ret.add_outgoing_symbol_transition(state_nr_new, symbol);
-      }
+  for (auto const& [state_nr_old, symbols] : _outgoing_symbol_transitions) {
+    Fa::StateNrType const state_nr_new = visited.find(state_nr_old)->second;
+    for (auto const symbol : symbols) {
+      ret.add_outgoing_symbol_transition(state_nr_new, symbol);
     }
   }
 

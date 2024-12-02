@@ -397,29 +397,26 @@ void TerminalIdentifierExpressionFrame::process(CallstackType& callstack_, Captu
 }
 
 void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
+  _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_token();
+
+  if (auto const itr = captures_._state_nrs_terminal_starts.find(*_terminal_name); itr != captures_._state_nrs_terminal_starts.end()) {
+    // Point to the existing terminal start state
+    _state_nr_terminal_start = captures_._result.get_unused_state_nr();
+    Fa::State& state_terminal_start = captures_._result._states[_state_nr_terminal_start];
+    state_terminal_start._transitions._epsilon_transitions.insert(itr->second);
+    captures_._ret_part.set_incoming_state_nr(_state_nr_terminal_start);
+    captures_._ret_part.add_outgoing_epsilon_transition(_state_nr_terminal_start);
+    return;
+  }
+
   ++_stage;
   callstack_.push(shared_from_this());
 
-  _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_token();
-
-  auto const itr = captures_._terminal_definitions.find(*_terminal_name);
-  if (itr == captures_._terminal_definitions.end()) {
+  if (auto const itr = captures_._terminal_definitions.find(*_terminal_name); itr != captures_._terminal_definitions.end()) {
+    _ast_position = itr->second;
+  } else {
     throw std::runtime_error("Terminal '" + *_terminal_name + "' not defined");
   }
-  _ast_position = itr->second;
-
-  if (captures_._state_nrs_terminal_starts.contains(*_terminal_name)) {
-    std::string msg;
-    std::string delim;
-    for (std::string const& terminal : captures_._terminal_stack) {
-      msg += std::exchange(delim, " -> ") + terminal;
-    }
-
-    msg += " -> " + *_terminal_name;
-
-    throw std::runtime_error("Terminal '" + *_terminal_name + "' is self recursive: " + msg);
-  }
-
   _state_nr_terminal_start = captures_._result.get_unused_state_nr();
   _transitions_terminal_start = &captures_._result._states[_state_nr_terminal_start]._transitions;
   captures_._state_nrs_terminal_starts.insert_or_assign(*_terminal_name, _state_nr_terminal_start);
