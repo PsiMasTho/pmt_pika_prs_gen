@@ -1,9 +1,7 @@
 #include "pmt/parserbuilder/parserbuilder.hpp"
 
 #include "pmt/util/parse/generic_ast_printer.hpp"
-#include "pmt/util/parse/graph_writer.hpp"
 #include "pmt/util/parse/grm_ast.hpp"
-#include "pmt/util/parse/grm_ast_transformations.hpp"
 #include "pmt/util/parse/grm_lexer.hpp"
 #include "pmt/util/parse/grm_parser.hpp"
 #include "pmt/util/parse/lexer_builder.hpp"
@@ -27,20 +25,10 @@ void ParserBuilder::build() {
 
   auto const start = std::chrono::high_resolution_clock::now();
   pmt::util::parse::LexerBuilder lexer_builder(*ast, _terminals);
-  pmt::util::parse::Fa fa = lexer_builder.build();
+  pmt::util::parse::GenericLexerTables tables = lexer_builder.build();
   auto const end = std::chrono::high_resolution_clock::now();
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
-  std::cout << "State count: " << fa._states.size() << std::endl;
-
-  if (fa._states.size() < 500) {
-    std::ofstream dot_file("lexer.dot");
-    pmt::util::parse::GraphWriter::write_dot(dot_file, fa);
-  } else {
-    std::cout << "State count too high to generate dot file\n";
-  }
-
-  // std::cout << "------------------------ AST ------------------------\n";
-  //  pmt::util::parse::GrmAstTransformations::emit_grammar(std::cerr, *ast);
+  std::cout << "State count: " << tables._transitions.size() << std::endl;
 
   printer.print(*ast, std::cerr);
 }

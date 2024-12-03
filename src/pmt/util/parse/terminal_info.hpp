@@ -13,7 +13,7 @@ class CommentInfo {
   std::string _literal_end;
 };
 
-class Terminal {
+class TerminalInfo {
  public:
   std::optional<CommentInfo> _comment_info;
   std::string _name;

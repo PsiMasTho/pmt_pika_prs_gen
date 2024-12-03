@@ -76,7 +76,8 @@ void GraphWriter::write_dot(std::ostream& os_, Fa const& fa_, AcceptsToLabel acc
   // Symbol transitions
   os_ << " edge [color=black];\n";
   for (auto const& [state_nr, symbol_arrows_state] : symbol_arrows) {
-    for (auto const& [state_nr_next, label] : symbol_arrows_state) {
+    for (auto [state_nr_next, label] : symbol_arrows_state) {
+      std::sort(label.begin(), label.end());
       os_ << " " << state_nr << " -> " << state_nr_next << " [label=\"" << label << "\"]\n";
     }
   }

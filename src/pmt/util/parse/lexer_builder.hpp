@@ -3,6 +3,8 @@
 #include "pmt/fw_decl.hpp"
 #include "pmt/util/parse/ast_position.hpp"
 #include "pmt/util/parse/fa.hpp"
+#include "pmt/util/parse/lexer_tables.hpp"
+#include "pmt/util/parse/terminal_info.hpp"
 
 #include <optional>
 #include <set>
@@ -16,16 +18,23 @@ namespace pmt::util::parse {
 
 class LexerBuilder {
  public:
-  LexerBuilder(GenericAst& ast_, std::set<std::string> const& accepting_terminals_);
+  LexerBuilder(GenericAst const& ast_, std::set<std::string> const& accepting_terminals_);
 
-  auto build() -> Fa;
+  auto build() -> GenericLexerTables;
 
  private:
-  auto find_accepting_terminal_nr(std::string const& terminal_) -> std::optional<size_t>;
+  auto build_initial_fa() -> Fa;
+  auto fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables;
 
-  GenericAst& _ast;
+  auto find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t>;
+
+  void write_dot(Fa const& fa_);
+
+  static inline const char* const DOT_FILE_PREFIX = "lexer_";
+  static inline size_t const DOT_FILE_MAX_STATES = 500;
   std::unordered_map<std::string, AstPositionConst> _terminal_definitions;
-  std::vector<std::string> _accepting_terminals;
+  std::vector<TerminalInfo> _accepting_terminals;
+  size_t _dot_file_count = 0;
 };
 
 }  // namespace pmt::util::parse

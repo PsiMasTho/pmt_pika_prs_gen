@@ -1,17 +1,19 @@
 #include "pmt/util/parse/lexer_builder.hpp"
 
 #include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/base/dynamic_bitset_converter.hpp"
 #include "pmt/util/parse/ast_position.hpp"
 #include "pmt/util/parse/fa.hpp"
 #include "pmt/util/parse/fa_part.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
+#include "pmt/util/parse/graph_writer.hpp"
 #include "pmt/util/parse/grm_ast.hpp"
 #include "pmt/util/parse/grm_ast_transformations.hpp"
 
+#include <algorithm>
 #include <cassert>
-#include <cmath>
+#include <fstream>
 #include <iostream>
+#include <limits>
 #include <stack>
 #include <unordered_set>
 #include <utility>
@@ -457,62 +459,64 @@ auto ExpressionFrameFactory::construct(AstPositionConst position_) -> Expression
 
 }  // namespace
 
-LexerBuilder::LexerBuilder(GenericAst& ast_, std::set<std::string> const& accepting_terminals_)
- : _ast(ast_) {
-  // Preprocessing
-  try {
-    // GrmAstTransformations(_ast).transform();
-  } catch (std::exception const& e) {
-    // clang-format off
-    std::cerr 
-    << "Exception encountered during preprocessing..\n"
-       "Dumping grammar:\n"
-       "------------\n";
-    // clang-format on
-    GrmAstTransformations::emit_grammar(std::cerr, _ast);
-    throw;
-  }
-
-  // Store accepting terminals
-  std::ranges::copy(accepting_terminals_, std::back_inserter(_accepting_terminals));
-
-  pmt::base::DynamicBitset found_accepting_terminals(accepting_terminals_.size());
+LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& accepting_terminals_) {
   // Find terminal definitions
   for (size_t i = 0; i < ast_.get_children_size(); ++i) {
     GenericAst const& child = *ast_.get_child_at(i);
     if (child.get_id() == GrmAst::NtTerminalProduction) {
-      std::string const& terminal = child.get_child_at(0)->get_token();
+      std::string const& terminal_name = child.get_child_at(0)->get_token();
 
-      if (auto const itr = _terminal_definitions.find(terminal); itr == _terminal_definitions.end()) {
-        _terminal_definitions.insert_or_assign(terminal, AstPositionConst{&child, 1});
+      if (accepting_terminals_.contains(terminal_name)) {
+        _accepting_terminals.emplace_back();
+        _accepting_terminals.back()._name = terminal_name;
+        _accepting_terminals.back()._id = GenericAst::DefaultId;
+      }
 
-        if (auto const terminal_nr = find_accepting_terminal_nr(terminal); terminal_nr.has_value()) {
-          found_accepting_terminals.set(*terminal_nr, true);
-        }
+      if (auto const itr = _terminal_definitions.find(terminal_name); itr == _terminal_definitions.end()) {
+        _terminal_definitions.insert_or_assign(terminal_name, AstPositionConst{&child, 1});
       } else {
-        throw std::runtime_error("Terminal '" + terminal + "' defined multiple times");
+        throw std::runtime_error("Terminal '" + terminal_name + "' defined multiple times");
       }
     }
   }
 
+  std::ranges::sort(_accepting_terminals, [](TerminalInfo const& a_, TerminalInfo const& b_) { return a_._name < b_._name; });
+
   // Check if all accepting terminals are defined
-  std::set<size_t> const missing_terminals = pmt::base::DynamicBitsetConverter::to_set(found_accepting_terminals.clone_not());
+  std::unordered_set<std::string const*> missing_terminals;
+  for (TerminalInfo const& terminal : _accepting_terminals) {
+    if (!_terminal_definitions.contains(terminal._name)) {
+      missing_terminals.insert(&terminal._name);
+    }
+  }
+
   if (!missing_terminals.empty()) {
     std::string text = "Missing terminal definitions for: ";
     std::string delim;
-    for (size_t terminal_nr : missing_terminals) {
-      text += std::exchange(delim, ", ") + _accepting_terminals[terminal_nr];
+    for (std::string const* terminal_name : missing_terminals) {
+      text += std::exchange(delim, ", ") + *terminal_name;
     }
     throw std::runtime_error(text);
   }
 }
 
-auto LexerBuilder::build() -> Fa {
+auto LexerBuilder::build() -> GenericLexerTables {
+  Fa fa = build_initial_fa();
+  write_dot(fa);
+  fa.determinize();
+  write_dot(fa);
+  fa.minimize();
+
+  return fa_to_lexer_tables(fa);
+}
+
+auto LexerBuilder::build_initial_fa() -> Fa {
   Fa ret;
 
   Fa::State& state_start = ret._states[ret.get_unused_state_nr()];
 
-  for (std::string const& terminal_name : _accepting_terminals) {
+  for (TerminalInfo const& terminal_info : _accepting_terminals) {
+    std::string const& terminal_name = terminal_info._name;
     AstPositionConst terminal_def = _terminal_definitions.find(terminal_name)->second;
 
     FaPart ret_part;
@@ -543,19 +547,43 @@ auto LexerBuilder::build() -> Fa {
     ret_part.connect_outgoing_transitions_to(state_nr_end, ret);
   }
 
-  ret.determinize();
-
   return ret;
 }
 
-auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_) -> std::optional<size_t> {
-  auto const itr = std::lower_bound(_accepting_terminals.begin(), _accepting_terminals.end(), terminal_);
+auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
+  GenericLexerTables ret;
+  ret._state_nr_start = 0;
 
-  if (itr == _accepting_terminals.end() || *itr != terminal_) {
+  for (auto const& [state_nr, state] : fa_._states) {
+    std::array<Fa::StateNrType, 256> transitions;
+    transitions.fill(GenericLexerTables::INVALID_STATE_NR);
+
+    for (auto const& [symbol, state_nr_next] : state._transitions._symbol_transitions) {
+      transitions[symbol] = state_nr_next;
+    }
+
+    ret._accepts.push_back(state._accepts);
+  }
+  return ret;
+}
+
+auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t> {
+  auto const itr = std::lower_bound(_accepting_terminals.begin(), _accepting_terminals.end(), terminal_name_, [](TerminalInfo const& a_, std::string const& b_) { return a_._name < b_; });
+
+  if (itr == _accepting_terminals.end() || itr->_name != terminal_name_) {
     return std::nullopt;
   }
 
   return std::distance(_accepting_terminals.begin(), itr);
+}
+
+void LexerBuilder::write_dot(Fa const& fa_) {
+  if (fa_._states.size() > DOT_FILE_MAX_STATES) {
+    std::cerr << "Skipping dot file write, too many states\n";
+  }
+
+  std::ofstream file(DOT_FILE_PREFIX + std::to_string(_dot_file_count++) + ".dot");
+  GraphWriter::write_dot(file, fa_);
 }
 
 }  // namespace pmt::util::parse
