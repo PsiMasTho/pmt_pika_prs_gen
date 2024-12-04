@@ -399,6 +399,16 @@ void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack
   _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_token();
 
   if (auto const itr = captures_._state_nrs_terminal_starts.find(*_terminal_name); itr != captures_._state_nrs_terminal_starts.end()) {
+   if (captures_._terminal_stack.back() != *_terminal_name) {
+     std::string msg = "Terminal '" + *_terminal_name + "' is indirectly recursive: ";
+     std::string delim;
+     for (std::string const& terminal : captures_._terminal_stack) {
+       msg += std::exchange(delim, " -> ") + terminal;
+     }
+     msg += delim + *_terminal_name;
+     throw std::runtime_error(msg);
+   }
+
     // Point to the existing terminal start state
     _state_nr_terminal_start = captures_._result.get_unused_state_nr();
     Fa::State& state_terminal_start = captures_._result._states[_state_nr_terminal_start];
@@ -480,18 +490,18 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
     }
   }
 
-  std::ranges::sort(_accepting_terminals, [](TerminalInfo const& a_, TerminalInfo const& b_) { return a_._name < b_._name; });
+  std::ranges::sort(_accepting_terminals, [](TerminalInfo const& lhs_, TerminalInfo const& rhs_) { return lhs_._name < rhs_._name; });
 
   // Check if all accepting terminals are defined
   std::unordered_set<std::string const*> missing_terminals;
-  for (TerminalInfo const& terminal : _accepting_terminals) {
-    if (!_terminal_definitions.contains(terminal._name)) {
-      missing_terminals.insert(&terminal._name);
+  for (std::string const& terminal_name : accepting_terminals_) {
+    if (!_terminal_definitions.contains(terminal_name)) {
+      missing_terminals.insert(&terminal_name);
     }
   }
 
   if (!missing_terminals.empty()) {
-    std::string text = "Missing terminal definitions for: ";
+    std::string text = "Missing terminal definition(s) for: ";
     std::string delim;
     for (std::string const* terminal_name : missing_terminals) {
       text += std::exchange(delim, ", ") + *terminal_name;
@@ -563,6 +573,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     }
 
     ret._accepts.push_back(state._accepts);
+    ret._transitions.push_back(transitions);
   }
   return ret;
 }

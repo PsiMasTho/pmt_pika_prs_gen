@@ -40,7 +40,9 @@ void GraphWriter::write_dot(std::ostream& os_, Fa const& fa_, AcceptsToLabel acc
   std::string delim;
   os_ << "digraph finite_state_machine {\n"
          " rankdir=LR;\n"
-         " node [shape=doublecircle, color=blue]; ";
+         " subgraph cluster_states {\n"
+         " peripheries=0;\n"
+         "  node [shape=doublecircle, color=blue]; ";
   for (auto const& [state_nr, state] : fa_._states) {
     if (state._accepts.popcnt() != 0) {
       os_ << std::exchange(delim, " ") << state_nr;
@@ -49,23 +51,25 @@ void GraphWriter::write_dot(std::ostream& os_, Fa const& fa_, AcceptsToLabel acc
   if (!delim.empty()) {
     os_ << ";\n";
   }
-  os_ << " node [shape=circle, color=black];\n";
+  os_ << "  node [shape=circle, color=black];\n";
 
   // Epsilon transitions
-  os_ << " edge [color=green];\n";
+  os_ << "  edge [color=green];\n";
   for (auto const& [state_nr, state] : fa_._states) {
     for (Fa::StateNrType state_nr_next : state._transitions._epsilon_transitions) {
-      os_ << " " << state_nr << " -> " << state_nr_next << "\n";
+      os_ << "  " << state_nr << " -> " << state_nr_next << "\n";
     }
   }
 
   // Symbol transitions
-  os_ << " edge [color=black];\n";
+  os_ << "  edge [color=black];\n";
   for (auto const& [state_nr, state_nr_next_and_label] : symbol_arrow_labels) {
     for (auto const& [state_nr_next, label] : state_nr_next_and_label) {
-      os_ << " " << state_nr << " -> " << state_nr_next << " [label=\"" << label << "\"]\n";
+      os_ << "  " << state_nr << " -> " << state_nr_next << " [label=\"" << label << "\"]\n";
     }
   }
+
+  os_ << " }\n";
 
   // Accepts
   std::unordered_map<size_t, std::set<Fa::StateNrType>> accepts;
@@ -78,12 +82,12 @@ void GraphWriter::write_dot(std::ostream& os_, Fa const& fa_, AcceptsToLabel acc
 
   os_ << "\n"
          " subgraph cluster_accepts {\n"
-         " label=\"Accepts\";\n"
-         " color=gray;\n"
-         " style=filled;\n\n"
-         " node [shape=record;style=filled;fillcolor=white];\n\n";
+         "  label=\"Accepts\";\n"
+         "  color=gray;\n"
+         "  style=filled;\n\n"
+         "  node [shape=record;style=filled;fillcolor=white];\n\n";
 
-  os_ << " node_accepts [label=\"";
+  os_ << "  node_accepts [label=\"";
   delim.clear();
   for (auto const& [accept, state_nrs] : accepts) {
     std::string const lhs = accepts_to_label_(accept);
