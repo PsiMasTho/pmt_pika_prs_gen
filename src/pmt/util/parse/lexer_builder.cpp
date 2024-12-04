@@ -580,10 +580,15 @@ auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_name_)
 void LexerBuilder::write_dot(Fa const& fa_) {
   if (fa_._states.size() > DOT_FILE_MAX_STATES) {
     std::cerr << "Skipping dot file write, too many states\n";
+    return;
   }
 
   std::ofstream file(DOT_FILE_PREFIX + std::to_string(_dot_file_count++) + ".dot");
-  GraphWriter::write_dot(file, fa_);
+  GraphWriter::write_dot(file, fa_, [this](size_t accepts_) { return accepts_to_label(accepts_); });
+}
+
+auto LexerBuilder::accepts_to_label(size_t accepts_) -> std::string {
+  return _accepting_terminals[accepts_]._name;
 }
 
 }  // namespace pmt::util::parse
