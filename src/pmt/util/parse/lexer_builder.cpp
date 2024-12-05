@@ -84,16 +84,23 @@ class RepetitionExpressionFrame : public ExpressionFrameBase {
   explicit RepetitionExpressionFrame(AstPositionConst ast_position_);
   void process(CallstackType& callstack_, Captures& captures_) final;
 
-  static auto make_exact_repetition(Fa& fa_, FaPart& part_, size_t count_, bool clone_last_) -> FaPart;
-
  private:
   void process_stage_0(CallstackType& callstack_, Captures& captures_);
-  void process_stage_1(Captures& captures_);
+  void process_stage_1(CallstackType& callstack_);
+  void process_stage_2(CallstackType& callstack_, Captures& captures_);
 
-  FaPart _sub_part;
+  auto is_last() const -> bool;
+  auto is_chunk_first() const -> bool;
+  auto is_chunk_last() const -> bool;
+
+  FaPart _choices;
+  FaPart _chunk;
   GrmAstTransformations::RepetitionRangeType _range;
-  Fa::Transitions* _transitions = nullptr;
+  Fa::Transitions* _transitions_choices = nullptr;
   size_t _stage = 0;
+  size_t _idx = 0;
+  size_t _idx_max = 0;
+  size_t _idx_chunk = 0;
 };
 
 // -- StringLiteralExpressionFrame --
@@ -136,8 +143,8 @@ class TerminalIdentifierExpressionFrame : public ExpressionFrameBase {
   void process_stage_1(Captures& captures_);
 
   std::string const* _terminal_name = nullptr;
-  Fa::Transitions* _transitions_terminal_start = nullptr;
-  Fa::StateNrType _state_nr_terminal_start = std::numeric_limits<Fa::StateNrType>::max();
+  Fa::Transitions* _transitions_reference = nullptr;
+  Fa::StateNrType _state_nr_reference = std::numeric_limits<Fa::StateNrType>::max();
   size_t _stage = 0;
 };
 
@@ -253,32 +260,11 @@ void RepetitionExpressionFrame::process(CallstackType& callstack_, Captures& cap
       process_stage_0(callstack_, captures_);
       break;
     case 1:
-      process_stage_1(captures_);
+      process_stage_1(callstack_);
       break;
-  }
-}
-
-auto RepetitionExpressionFrame::make_exact_repetition(Fa& fa_, FaPart& part_, size_t count_, bool clone_last_) -> FaPart {
-  switch (count_) {
-    case 0:
-      return EpsilonExpressionFrame::make_epsilon(fa_);
-    case 1:
-      return clone_last_ ? part_.clone(fa_) : part_.take();
-    default: {
-      FaPart ret = part_.clone(fa_);
-
-      for (size_t i = 1; i < count_ - 1; ++i) {
-        FaPart next = part_.clone(fa_);
-        ret.connect_outgoing_transitions_to(*next.get_incoming_state_nr(), fa_);
-        ret.merge_outgoing_transitions(next);
-      }
-
-      FaPart last = clone_last_ ? part_.clone(fa_) : part_.take();
-      ret.connect_outgoing_transitions_to(*last.get_incoming_state_nr(), fa_);
-      ret.merge_outgoing_transitions(last);
-
-      return ret;
-    }
+    case 2:
+      process_stage_2(callstack_, captures_);
+      break;
   }
 }
 
@@ -288,41 +274,75 @@ void RepetitionExpressionFrame::process_stage_0(CallstackType& callstack_, Captu
     return;
   }
 
-  Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
-  _transitions = &captures_._result._states[state_nr_incoming]._transitions;
-  _sub_part.set_incoming_state_nr(state_nr_incoming);
+  Fa::StateNrType const state_nr_choices = captures_._result.get_unused_state_nr();
+  _transitions_choices = &captures_._result._states[state_nr_choices]._transitions;
+  _choices.set_incoming_state_nr(state_nr_choices);
 
+  if (_range.first == 0) {
+    FaPart tmp = EpsilonExpressionFrame::make_epsilon(captures_._result);
+    _transitions_choices->_epsilon_transitions.insert(*tmp.get_incoming_state_nr());
+    _choices.merge_outgoing_transitions(tmp);
+    _range.first = 1;
+  }
+
+  _idx_max = ((_range.second.value_or(_range.first) - _range.first + 1) * (_range.second.value_or(_range.first) + _range.first)) / 2;
+
+  callstack_.push(shared_from_this());
+  ++_stage;
+}
+
+void RepetitionExpressionFrame::process_stage_1(CallstackType& callstack_) {
   callstack_.push(shared_from_this());
   ++_stage;
 
   callstack_.push(ExpressionFrameFactory::construct(_ast_position));
 }
 
-void RepetitionExpressionFrame::process_stage_1(Captures& captures_) {
-  if (_range.second.has_value()) {
-    for (size_t i = _range.first; i <= *_range.second; ++i) {
-      FaPart next = make_exact_repetition(captures_._result, captures_._ret_part, i, i != *_range.second);
-      _transitions->_epsilon_transitions.insert(*next.get_incoming_state_nr());
-      _sub_part.merge_outgoing_transitions(next);
+void RepetitionExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
+  --_stage;
+
+  if (is_chunk_first()) {
+    _chunk = captures_._ret_part.take();
+  } else {
+    _chunk.connect_outgoing_transitions_to(*captures_._ret_part.get_incoming_state_nr(), captures_._result);
+    _chunk.merge_outgoing_transitions(captures_._ret_part);
+  }
+
+  if (is_chunk_last()) {
+    _transitions_choices->_epsilon_transitions.insert(*_chunk.get_incoming_state_nr());
+    _choices.merge_outgoing_transitions(_chunk);
+    ++_idx_chunk;
+  }
+
+  if (!is_last()) {
+    callstack_.push(shared_from_this());
+  } else {
+    if (!_range.second.has_value()) {
+      Fa::StateNrType state_nr_loop_back = captures_._result.get_unused_state_nr();
+      Fa::State& state_loop_back = captures_._result._states[state_nr_loop_back];
+      state_loop_back._transitions._epsilon_transitions.insert(*_choices.get_incoming_state_nr());
+      _choices.connect_outgoing_transitions_to(state_nr_loop_back, captures_._result);
+      _choices.add_outgoing_epsilon_transition(state_nr_loop_back);
     }
 
-    captures_._ret_part = _sub_part;
-    return;
+    captures_._ret_part = _choices;
   }
 
-  FaPart rep = make_exact_repetition(captures_._result, captures_._ret_part, _range.first, false);
-  _transitions->_epsilon_transitions.insert(*rep.get_incoming_state_nr());
-  Fa::StateNrType const state_nr_back = captures_._result.get_unused_state_nr();
-  captures_._result._states[state_nr_back]._transitions._epsilon_transitions.insert(*_sub_part.get_incoming_state_nr());
-  rep.connect_outgoing_transitions_to(state_nr_back, captures_._result);
+  ++_idx;
+}
 
-  if (_range.first == 0) {
-    _transitions->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
-    captures_._ret_part.connect_outgoing_transitions_to(state_nr_back, captures_._result);
-  }
+auto RepetitionExpressionFrame::is_last() const -> bool {
+  return _idx == _idx_max - 1;
+}
 
-  captures_._ret_part = _sub_part;
-  captures_._ret_part.add_outgoing_epsilon_transition(state_nr_back);
+auto RepetitionExpressionFrame::is_chunk_first() const -> bool {
+  size_t const idx_chunk_start = (_idx_chunk == 0) ? 0 : _idx_chunk * _range.first + ((_idx_chunk - 1) * _idx_chunk) / 2;
+  return _idx == idx_chunk_start;
+}
+
+auto RepetitionExpressionFrame::is_chunk_last() const -> bool {
+  size_t const idx_chunk_end = (_idx_chunk + 1) * _range.first + (_idx_chunk * (_idx_chunk + 1)) / 2;
+  return _idx == idx_chunk_end - 1;
 }
 
 // -- StringLiteralExpressionFrame --
@@ -398,6 +418,7 @@ void TerminalIdentifierExpressionFrame::process(CallstackType& callstack_, Captu
 void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
   _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_token();
 
+  // If it is already defined and on top of the stack, then point to it
   if (auto const itr = captures_._state_nrs_terminal_starts.find(*_terminal_name); itr != captures_._state_nrs_terminal_starts.end()) {
     if (captures_._terminal_stack.back() != *_terminal_name) {
       std::string msg = "Terminal '" + *_terminal_name + "' is indirectly recursive: ";
@@ -409,12 +430,11 @@ void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack
       throw std::runtime_error(msg);
     }
 
-    // Point to the existing terminal start state
-    _state_nr_terminal_start = captures_._result.get_unused_state_nr();
-    Fa::State& state_terminal_start = captures_._result._states[_state_nr_terminal_start];
-    state_terminal_start._transitions._epsilon_transitions.insert(itr->second);
-    captures_._ret_part.set_incoming_state_nr(_state_nr_terminal_start);
-    captures_._ret_part.add_outgoing_epsilon_transition(_state_nr_terminal_start);
+    _state_nr_reference = captures_._result.get_unused_state_nr();
+    Fa::State& state_reference = captures_._result._states[_state_nr_reference];
+    state_reference._transitions._epsilon_transitions.insert(itr->second);
+    captures_._ret_part.set_incoming_state_nr(_state_nr_reference);
+    // captures_._ret_part.add_outgoing_epsilon_transition(_state_nr_reference);
     return;
   }
 
@@ -427,17 +447,17 @@ void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack
     throw std::runtime_error("Terminal '" + *_terminal_name + "' not defined");
   }
 
-  _state_nr_terminal_start = captures_._result.get_unused_state_nr();
-  _transitions_terminal_start = &captures_._result._states[_state_nr_terminal_start]._transitions;
-  captures_._state_nrs_terminal_starts.insert_or_assign(*_terminal_name, _state_nr_terminal_start);
+  _state_nr_reference = captures_._result.get_unused_state_nr();
+  _transitions_reference = &captures_._result._states[_state_nr_reference]._transitions;
+  captures_._state_nrs_terminal_starts.insert_or_assign(*_terminal_name, _state_nr_reference);
   captures_._terminal_stack.push_back(*_terminal_name);
 
   callstack_.push(ExpressionFrameFactory::construct(_ast_position));
 }
 
 void TerminalIdentifierExpressionFrame::process_stage_1(Captures& captures_) {
-  _transitions_terminal_start->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
-  captures_._ret_part.set_incoming_state_nr(_state_nr_terminal_start);
+  _transitions_reference->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
+  captures_._ret_part.set_incoming_state_nr(_state_nr_reference);
 
   captures_._state_nrs_terminal_starts.erase(*_terminal_name);
   captures_._terminal_stack.pop_back();

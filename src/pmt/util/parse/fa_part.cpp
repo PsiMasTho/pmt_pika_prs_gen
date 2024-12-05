@@ -16,67 +16,6 @@ auto FaPart::take() -> FaPart {
   return ret;
 }
 
-auto FaPart::clone(Fa& fa_) const -> FaPart {
-  std::unordered_map<Fa::StateNrType, Fa::StateNrType> visited;  // old -> new
-  std::stack<Fa::StateNrType> stack;
-
-  auto const push_and_visit = [&](Fa::StateNrType item_) -> Fa::StateNrType {
-    if (auto const itr = visited.find(item_); itr != visited.end()) {
-      return itr->second;
-    }
-
-    Fa::StateNrType const state_nr_new = fa_.get_unused_state_nr();
-    fa_._states[state_nr_new];  // Create the state
-    visited.insert_or_assign(item_, state_nr_new);
-    stack.push(item_);
-
-    return state_nr_new;
-  };
-
-  auto const take = [&]() {
-    Fa::StateNrType const item = stack.top();
-    stack.pop();
-    return item;
-  };
-
-  FaPart ret(push_and_visit(*_incoming_state_nr));
-
-  while (!stack.empty()) {
-    Fa::StateNrType const state_nr_old = take();
-    Fa::StateNrType const state_nr_new = visited.find(state_nr_old)->second;
-
-    Fa::State const& state_old = fa_._states.find(state_nr_old)->second;
-    Fa::State& state_new = fa_._states[state_nr_new];
-
-    state_new._accepts = state_old._accepts;
-
-    for (Fa::StateNrType const state_nr_next_old : state_old._transitions._epsilon_transitions) {
-      Fa::StateNrType const state_nr_next_new = push_and_visit(state_nr_next_old);
-      state_new._transitions._epsilon_transitions.insert(state_nr_next_new);
-    }
-
-    for (auto const& [symbol, state_nr_next_old] : state_old._transitions._symbol_transitions) {
-      Fa::StateNrType const state_nr_next_new = push_and_visit(state_nr_next_old);
-      state_new._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_next_new);
-    }
-  }
-
-  // Add outgoing transitions
-  for (Fa::StateNrType const state_nr_old : _outgoing_epsilon_transitions) {
-    Fa::StateNrType const state_nr_new = visited.find(state_nr_old)->second;
-    ret.add_outgoing_epsilon_transition(state_nr_new);
-  }
-
-  for (auto const& [state_nr_old, symbols] : _outgoing_symbol_transitions) {
-    Fa::StateNrType const state_nr_new = visited.find(state_nr_old)->second;
-    for (auto const symbol : symbols) {
-      ret.add_outgoing_symbol_transition(state_nr_new, symbol);
-    }
-  }
-
-  return ret;
-}
-
 void FaPart::set_incoming_state_nr(Fa::StateNrType incoming_state_nr_) {
   _incoming_state_nr = incoming_state_nr_;
 }
