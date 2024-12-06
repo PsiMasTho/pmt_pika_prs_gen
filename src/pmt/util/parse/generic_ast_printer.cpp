@@ -50,10 +50,12 @@ void GenericAstPrinter::print(GenericAst const& ast_, std::ostream& out_) {
 
 auto GenericAstPrinter::get_name(GenericAst::IdType id_) -> std::string {
   switch (id_) {
-    case GenericAst::IdConstants::UninitializedId:
+    case GenericAst::IdConstants::IdUninitialized:
       return "Uninitialized";
-    case GenericAst::IdConstants::DefaultId:
+    case GenericAst::IdConstants::IdDefault:
       return "Default";
+    case GenericAst::IdConstants::IdEoi:
+      return "Eoi";
     default:
       return _id_name_function(id_);
   }

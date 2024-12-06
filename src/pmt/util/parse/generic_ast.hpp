@@ -15,8 +15,9 @@ class GenericAst {
   using ChildrenType = std::vector<GenericAst*>;
 
   enum IdConstants : IdType {
-    UninitializedId = -1ULL,
-    DefaultId = -2ULL,
+    IdUninitialized = -1ULL,
+    IdDefault = -2ULL,
+    IdEoi = -3ULL,
   };
 
   enum class Tag {
@@ -31,7 +32,7 @@ class GenericAst {
 
   static void destruct(GenericAst* self_);
   using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
-  static auto construct(Tag tag_, IdType id_ = IdConstants::UninitializedId) -> UniqueHandle;
+  static auto construct(Tag tag_, IdType id_ = IdConstants::IdUninitialized) -> UniqueHandle;
 
   static auto clone(GenericAst const& other_) -> UniqueHandle;
 
@@ -71,7 +72,7 @@ class GenericAst {
   void unpack(size_t index_);
 
  private:
-  explicit GenericAst(Tag tag_, IdType id_ = IdConstants::UninitializedId);
+  explicit GenericAst(Tag tag_, IdType id_ = IdConstants::IdUninitialized);
 
   std::variant<TokenType, ChildrenType> _data;
   IdType _id;

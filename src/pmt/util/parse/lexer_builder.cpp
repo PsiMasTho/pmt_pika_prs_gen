@@ -33,7 +33,7 @@ class ExpressionFrameBase : public std::enable_shared_from_this<ExpressionFrameB
     FaPart& _ret_part;
     Fa& _result;
     std::unordered_map<std::string, AstPositionConst> const& _terminal_definitions;
-    std::unordered_map<std::string, Fa::StateNrType>& _state_nrs_terminal_starts;
+    std::unordered_set<std::string>& _terminal_stack_contents;
     std::vector<std::string>& _terminal_stack;
   };
 
@@ -418,24 +418,14 @@ void TerminalIdentifierExpressionFrame::process(CallstackType& callstack_, Captu
 void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
   _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_token();
 
-  // If it is already defined and on top of the stack, then point to it
-  if (auto const itr = captures_._state_nrs_terminal_starts.find(*_terminal_name); itr != captures_._state_nrs_terminal_starts.end()) {
-    if (captures_._terminal_stack.back() != *_terminal_name) {
-      std::string msg = "Terminal '" + *_terminal_name + "' is indirectly recursive: ";
-      std::string delim;
-      for (std::string const& terminal : captures_._terminal_stack) {
-        msg += std::exchange(delim, " -> ") + terminal;
-      }
-      msg += delim + *_terminal_name;
-      throw std::runtime_error(msg);
+  captures_._terminal_stack.push_back(*_terminal_name);
+  if (!captures_._terminal_stack_contents.insert(*_terminal_name).second) {
+    std::string msg = "Terminal '" + *_terminal_name + "' is recursive: ";
+    std::string delim;
+    for (std::string const& terminal : captures_._terminal_stack) {
+      msg += std::exchange(delim, " -> ") + terminal;
     }
-
-    _state_nr_reference = captures_._result.get_unused_state_nr();
-    Fa::State& state_reference = captures_._result._states[_state_nr_reference];
-    state_reference._transitions._epsilon_transitions.insert(itr->second);
-    captures_._ret_part.set_incoming_state_nr(_state_nr_reference);
-    // captures_._ret_part.add_outgoing_epsilon_transition(_state_nr_reference);
-    return;
+    throw std::runtime_error(msg);
   }
 
   ++_stage;
@@ -449,8 +439,6 @@ void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack
 
   _state_nr_reference = captures_._result.get_unused_state_nr();
   _transitions_reference = &captures_._result._states[_state_nr_reference]._transitions;
-  captures_._state_nrs_terminal_starts.insert_or_assign(*_terminal_name, _state_nr_reference);
-  captures_._terminal_stack.push_back(*_terminal_name);
 
   callstack_.push(ExpressionFrameFactory::construct(_ast_position));
 }
@@ -459,7 +447,7 @@ void TerminalIdentifierExpressionFrame::process_stage_1(Captures& captures_) {
   _transitions_reference->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
   captures_._ret_part.set_incoming_state_nr(_state_nr_reference);
 
-  captures_._state_nrs_terminal_starts.erase(*_terminal_name);
+  captures_._terminal_stack_contents.erase(*_terminal_name);
   captures_._terminal_stack.pop_back();
 }
 
@@ -552,13 +540,13 @@ auto LexerBuilder::build_initial_fa() -> Fa {
 
     FaPart ret_part;
     ExpressionFrameBase::CallstackType callstack;
-    std::unordered_map<std::string, Fa::StateNrType> state_nrs_terminal_starts;
+    std::unordered_set<std::string> terminal_stack_contents;
     std::vector<std::string> terminal_stack;
-    ExpressionFrameBase::Captures captures{ret_part, ret, _terminal_definitions, state_nrs_terminal_starts, terminal_stack};
+    ExpressionFrameBase::Captures captures{ret_part, ret, _terminal_definitions, terminal_stack_contents, terminal_stack};
 
     Fa::StateNrType state_nr_terminal_start = ret.get_unused_state_nr();
     Fa::State& state_terminal_start = ret._states[state_nr_terminal_start];
-    state_nrs_terminal_starts.insert_or_assign(terminal_name, state_nr_terminal_start);
+    terminal_stack_contents.insert(terminal_name);
     terminal_stack.push_back(terminal_name);
     state_start._transitions._epsilon_transitions.insert(state_nr_terminal_start);
     callstack.push(ExpressionFrameFactory::construct(terminal_def));

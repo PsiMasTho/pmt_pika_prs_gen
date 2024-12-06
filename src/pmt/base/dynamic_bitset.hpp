@@ -40,6 +40,8 @@ class DynamicBitset {
 
   // - Bitwise operations -
   auto popcnt() const -> size_t;
+  auto countl(bool value_) const -> size_t;
+  auto countr(bool value_) const -> size_t;
 
   // -- Inplace --
   void inplace_not();

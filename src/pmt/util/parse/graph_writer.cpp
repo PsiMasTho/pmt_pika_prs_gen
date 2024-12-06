@@ -162,7 +162,7 @@ auto GraphWriter::to_displayable(Fa::SymbolType sym_) -> std::string {
   std::stringstream ss;
   ss << std::hex << sym_;
   std::string ret = ss.str();
-  std::transform(ret.begin(), ret.end(), ret.begin(), [](auto const c) { return std::toupper(c); });
+  std::transform(ret.begin(), ret.end(), ret.begin(), [](auto const c_) { return std::toupper(c_); });
   return "0x" + ret;
 }
 

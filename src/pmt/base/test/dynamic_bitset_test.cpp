@@ -13,6 +13,8 @@ void DynamicBitsetTest::run() {
   test_single_bit_access_functions();
   test_equality();
   test_bitwise_operations();
+  test_countl();
+  test_countr();
 }
 
 void DynamicBitsetTest::test_lifetime_functions() {
@@ -155,6 +157,54 @@ void DynamicBitsetTest::test_bitwise_operations() {
 
   DynamicBitset b8 = b1.clone_asymmetric_difference(b2);
   assert(b8 == DynamicBitsetConverter::from_string("10000"));
+}
+
+void DynamicBitsetTest::test_countl() {
+  static size_t const SIZE = 1234;
+
+  // Test countl true
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    for (size_t j = 0; j < i; ++j) {
+      b1.set(j, true);
+    }
+
+    assert(b1.countl(true) == i);
+  }
+
+  // Test countl false
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    for (size_t j = 0; j < i; ++j) {
+      b1.set(j, false);
+    }
+
+    assert(b1.countl(false) == i);
+  }
+}
+
+void DynamicBitsetTest::test_countr() {
+  static size_t const SIZE = 1234;
+
+  // Test countr true
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    for (size_t j = 0; j < i; ++j) {
+      b1.set(SIZE - 1 - j, true);
+    }
+
+    assert(b1.countr(true) == i);
+  }
+
+  // Test countr false
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    for (size_t j = 0; j < i; ++j) {
+      b1.set(SIZE - 1 - j, false);
+    }
+
+    assert(b1.countr(false) == i);
+  }
 }
 
 }  // namespace pmt::base::test

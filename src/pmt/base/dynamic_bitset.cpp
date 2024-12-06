@@ -168,6 +168,52 @@ auto DynamicBitset::popcnt() const -> size_t {
   return std::accumulate(_data.get(), _data.get() + get_required_chunks(_size), 0, [](size_t acc_, ChunkType chunk_) { return acc_ + std::popcount(chunk_); });
 }
 
+auto DynamicBitset::countl(bool value_) const -> size_t {
+  size_t const count = get_required_chunks(_size) - 1;
+  size_t i = 0;
+  for (; i < count; ++i) {
+    if (_data[i] != ALL_SET_MASKS[value_]) {
+      break;
+    }
+  }
+
+  ChunkType last = _data[i];
+  if (i == count && _size % CHUNK_TYPE_SIZE != 0) {
+    set_mask(last, get_trailing_mask(_size), !value_);
+  }
+
+  return i * CHUNK_TYPE_SIZE + (value_ ? std::countr_one(last) : std::countr_zero(last));
+}
+
+auto DynamicBitset::countr(bool value_) const -> size_t {
+  size_t i = get_required_chunks(_size) - 1;
+  ChunkType last = _data[i];
+
+  if (_size % CHUNK_TYPE_SIZE != 0) {
+    set_mask(last, get_trailing_mask(_size), !value_);
+  }
+
+  size_t const bit_index = get_bit_index(_size);
+  last = std::rotl(last, CHUNK_TYPE_SIZE - bit_index);
+
+  auto const fn = value_ ? &std::countl_one<ChunkType> : &std::countl_zero<ChunkType>;
+  size_t total = fn(last);
+
+  if (total < bit_index) {
+    return total;
+  }
+
+  --i;
+  for (; i != 0; --i) {
+    if (_data[i] != ALL_SET_MASKS[value_]) {
+      break;
+    }
+    total += CHUNK_TYPE_SIZE;
+  }
+
+  return total + fn(_data[i]);
+}
+
 void DynamicBitset::inplace_not() {
   for (size_t i = 0; i < get_required_chunks(_size); ++i) {
     _data[i] = ~_data[i];
@@ -287,11 +333,11 @@ auto DynamicBitset::clone_asymmetric_difference(const DynamicBitset& other_) con
 }
 
 void DynamicBitset::set_trailing_chunk(bool value_) {
-  size_t const trailing_mask = get_trailing_mask(_size);
-
-  if (trailing_mask == ALL_SET_MASKS[1]) {
+  if (_size % CHUNK_TYPE_SIZE == 0) {
     return;
   }
+
+  size_t const trailing_mask = get_trailing_mask(_size);
 
   set_mask(_data[get_chunk_index(_size)], trailing_mask, value_);
 }
