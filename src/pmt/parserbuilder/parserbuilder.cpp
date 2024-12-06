@@ -1,6 +1,7 @@
 #include "pmt/parserbuilder/parserbuilder.hpp"
 
 #include "pmt/util/parse/generic_ast_printer.hpp"
+#include "pmt/util/parse/generic_lexer.hpp"
 #include "pmt/util/parse/grm_ast.hpp"
 #include "pmt/util/parse/grm_lexer.hpp"
 #include "pmt/util/parse/grm_parser.hpp"
@@ -12,15 +13,17 @@
 
 namespace pmt::parserbuilder {
 
-ParserBuilder::ParserBuilder(std::string_view input_path_, std::set<std::string> const& terminals_)
+ParserBuilder::ParserBuilder(std::string_view input_path_, std::string_view input_sample_path_, std::set<std::string> const& terminals_)
  : _terminals(terminals_) {
-  std::ifstream input_file(input_path_.data());
-  _input = std::string(std::istreambuf_iterator<char>(input_file), std::istreambuf_iterator<char>());
+  std::ifstream input_grammar(input_path_.data());
+  _input_grammar = std::string(std::istreambuf_iterator<char>(input_grammar), std::istreambuf_iterator<char>());
+  std::ifstream input_sample(input_sample_path_.data());
+  _input_sample = std::string(std::istreambuf_iterator<char>(input_sample), std::istreambuf_iterator<char>());
 }
 
 void ParserBuilder::build() {
   pmt::util::parse::GenericAstPrinter printer(&pmt::util::parse::GrmAst::to_string);
-  pmt::util::parse::GrmLexer lexer(_input);
+  pmt::util::parse::GrmLexer lexer(_input_grammar);
   auto ast = pmt::util::parse::GrmParser::parse(lexer);
 
   auto const start = std::chrono::high_resolution_clock::now();
@@ -30,7 +33,17 @@ void ParserBuilder::build() {
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
   std::cout << "State count: " << tables._transitions.size() << std::endl;
 
-  printer.print(*ast, std::cerr);
+  pmt::util::parse::GenericLexer generic_lexer(_input_sample, tables);
+
+  pmt::base::DynamicBitset const accepts_all(tables._terminals.size(), true);
+
+  while (true) {
+    pmt::util::parse::GenericAst::UniqueHandle token = generic_lexer.next_token(accepts_all);
+    printer.print(*token, std::cerr);
+    if (token->get_id() == pmt::util::parse::GenericAst::IdEoi) {
+      break;
+    }
+  }
 }
 
 }  // namespace pmt::parserbuilder

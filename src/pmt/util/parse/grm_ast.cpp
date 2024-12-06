@@ -63,10 +63,12 @@ auto GrmAst::to_string(GenericAst::IdType id_) -> std::string {
     case NtRange:
       return "NtRange";
       // --
-    case GenericAst::DefaultId:
+    case GenericAst::IdDefault:
       return "Default";
-    case GenericAst::UninitializedId:
+    case GenericAst::IdUninitialized:
       return "Uninitialized";
+    case GenericAst::IdEoi:
+      return "Eoi";
     default:
       return "Unknown token: " + std::to_string(id_);
   }

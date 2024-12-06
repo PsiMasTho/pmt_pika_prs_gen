@@ -10,7 +10,8 @@ class Args {
   Args(int argc_, char const* const* argv_);
 
   std::set<std::string> _terminals;
-  std::string _input_file;
+  std::string _input_grammar_file;
+  std::string _input_sample_file;
 };
 
 }  // namespace pmt::parserbuilder::exe

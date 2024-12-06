@@ -17,60 +17,69 @@ auto make_eoi_token() -> GenericAst::UniqueHandle {
 }  // namespace
 
 GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables const& tables_)
- : _input(input_)
+ : _begin(input_.data())
+ , _cursor(input_.data())
+ , _end(input_.data() + input_.size())
  , _tables(tables_) {
 }
 
 auto GenericLexer::next_token(pmt::base::DynamicBitset const& accepts_) -> GenericAst::UniqueHandle {
-  // Skip whitespace
-  while (!_input.empty() && (std::strchr(" \t\r\n", _input.front()) != nullptr)) {
-    _input.remove_prefix(1);
+  while (_cursor != _end && (std::strchr(" \t\r\n", *_cursor) != nullptr)) {
+    ++_cursor;
   }
 
-  if (_input.empty()) {
+  if (_cursor == _end) {
     return make_eoi_token();
   }
 
-  GenericAst::IdType id_longest = GenericAst::IdConstants::IdUninitialized;
-  std::optional<size_t> size_longest = 0;
+  GenericAst::IdType id = GenericAst::IdConstants::IdUninitialized;
+  char const* te = nullptr;  // Token end
 
   Fa::StateNrType state_nr_cur = _tables._state_nr_start;
 
-  for (size_t i = 0; i < _input.size(); ++i) {
-    char const c = _input[i];
+  for (char const* p = _cursor; _cursor <= _end; ++p) {
+    if (state_nr_cur == GenericLexerTables::INVALID_STATE_NR) {
+      if (te != nullptr) {
+        GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
+        ret->set_token(std::string(_cursor, te));
+        _cursor = te;
+        return ret;
+      } else {
+        throw std::runtime_error("Unexpected character: " + std::string(1, *_cursor));
+      }
+    }
 
     pmt::base::DynamicBitset const accepts_valid = accepts_.clone_and(_tables._accepts[state_nr_cur]);
     assert(accepts_valid.popcnt() <= 1);
     size_t const countl = accepts_valid.countl(false);
 
-    if (countl == accepts_.size()) {
-      state_nr_cur = _tables._transitions[state_nr_cur][c];
-      if (state_nr_cur == GenericLexerTables::INVALID_STATE_NR) {
-        if (size_longest.has_value()) {
-          _input.remove_prefix(*size_longest);
-          GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id_longest);
-          ret->set_token(std::string(_input.data(), *size_longest));
-          return ret;
-        } else {
-          throw std::runtime_error("Unexpected character: " + std::string(1, c));
-        }
-      }
-    } else {
-      size_longest = i + 1;
-      id_longest = _tables._terminals[countl]._id;
+    if (countl != accepts_.size()) {
+      te = p;
+      id = _tables._terminals[countl]._id;
 
-      state_nr_cur = _tables._transitions[state_nr_cur][c];
       if (state_nr_cur == GenericLexerTables::INVALID_STATE_NR) {
-        _input.remove_prefix(i);
-        GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id_longest);
-        ret->set_token(std::string(_input.data(), i));
+        GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
+        ret->set_token(std::string(_cursor, te));
+        _cursor = te;
         return ret;
       }
     }
+
+    if (p == _end) {
+      break;
+    }
+
+    state_nr_cur = _tables._transitions[state_nr_cur][*p];
   }
 
-  _input.remove_prefix(_input.size());
-  return make_eoi_token();
+  if (te != nullptr) {
+    GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
+    ret->set_token(std::string(_cursor, te));
+    _cursor = te;
+    return ret;
+  } else {
+    throw std::runtime_error("Unexpected character: " + std::string(1, *_cursor));
+  }
 }
 
 }  // namespace pmt::util::parse

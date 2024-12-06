@@ -488,7 +488,7 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
       if (accepting_terminals_.contains(terminal_name)) {
         _accepting_terminals.emplace_back();
         _accepting_terminals.back()._name = terminal_name;
-        _accepting_terminals.back()._id = GenericAst::DefaultId;
+        _accepting_terminals.back()._id = GenericAst::IdDefault;
       }
 
       if (auto const itr = _terminal_definitions.find(terminal_name); itr == _terminal_definitions.end()) {
@@ -573,7 +573,15 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   GenericLexerTables ret;
   ret._state_nr_start = 0;
 
-  for (auto const& [state_nr, state] : fa_._states) {
+  // We need to traverse the states in order
+  std::set<Fa::StateNrType> state_nrs_sorted;
+  for (auto const& [state_nr, _] : fa_._states) {
+    state_nrs_sorted.insert(state_nr);
+  }
+
+  for (Fa::StateNrType const state_nr : state_nrs_sorted) {
+    assert(ret._transitions.size() == state_nr && ret._accepts.size() == state_nr);
+    Fa::State const& state = fa_._states.find(state_nr)->second;
     std::array<Fa::StateNrType, 256> transitions;
     transitions.fill(GenericLexerTables::INVALID_STATE_NR);
 
@@ -581,9 +589,19 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
       transitions[symbol] = state_nr_next;
     }
 
-    ret._accepts.push_back(state._accepts);
+    pmt::base::DynamicBitset accepts = state._accepts;
+    if (accepts.popcnt() == 0) {
+      accepts.resize(_accepting_terminals.size(), false);
+    }
+
+    ret._accepts.push_back(std::move(accepts));
     ret._transitions.push_back(transitions);
   }
+
+  for (TerminalInfo const& terminal_info : _accepting_terminals) {
+    ret._terminals.push_back(terminal_info);
+  }
+
   return ret;
 }
 

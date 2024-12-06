@@ -5,15 +5,21 @@
 namespace pmt::parserbuilder::exe {
 
 Args::Args(int argc_, char const* const* argv_) {
-  // -i <input file>
+  // -g <input grammar>
+  // -s <input sample>
   // -t <terminals>...
   for (int i = 1; i < argc_; ++i) {
     std::string const arg = argv_[i];
-    if (arg == "-i") {
+    if (arg == "-g") {
       if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -i");
+        throw std::runtime_error("Missing argument for -g");
       }
-      _input_file = argv_[++i];
+      _input_grammar_file = argv_[++i];
+    } else if (arg == "-s") {
+      if (i + 1 >= argc_) {
+        throw std::runtime_error("Missing argument for -s");
+      }
+      _input_sample_file = argv_[++i];
     } else if (arg == "-t") {
       while (++i < argc_) {
         std::string const terminal = argv_[i];
@@ -28,8 +34,12 @@ Args::Args(int argc_, char const* const* argv_) {
     }
   }
 
-  if (_input_file.empty()) {
+  if (_input_grammar_file.empty()) {
     throw std::runtime_error("Missing input file");
+  }
+
+  if (_input_sample_file.empty()) {
+    throw std::runtime_error("Missing input sample file");
   }
 
   if (_terminals.empty()) {

@@ -17,7 +17,9 @@ class GenericLexer {
   auto next_token(pmt::base::DynamicBitset const& accepts_) -> GenericAst::UniqueHandle;
 
  private:
-  std::string_view _input;
+  char const* _begin = nullptr;
+  char const* _cursor = nullptr;
+  char const* _end = nullptr;
   GenericLexerTables const& _tables;
 };
 

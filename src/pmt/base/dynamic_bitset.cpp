@@ -169,49 +169,50 @@ auto DynamicBitset::popcnt() const -> size_t {
 }
 
 auto DynamicBitset::countl(bool value_) const -> size_t {
-  size_t const count = get_required_chunks(_size) - 1;
-  size_t i = 0;
-  for (; i < count; ++i) {
-    if (_data[i] != ALL_SET_MASKS[value_]) {
+  size_t const max = get_required_chunks(_size);
+  auto const fn = value_ ? &std::countr_one<ChunkType> : &std::countr_zero<ChunkType>;
+
+  size_t total = 0;
+  for (size_t i = 0; i < max; ++i) {
+    ChunkType chunk = _data[i];
+
+    if (i == max - 1 && _size % CHUNK_TYPE_SIZE != 0) {
+      set_mask(chunk, get_trailing_mask(_size), !value_);
+    }
+
+    size_t const incr = fn(chunk);
+    total += incr;
+    if (incr != CHUNK_TYPE_SIZE) {
       break;
     }
   }
 
-  ChunkType last = _data[i];
-  if (i == count && _size % CHUNK_TYPE_SIZE != 0) {
-    set_mask(last, get_trailing_mask(_size), !value_);
-  }
-
-  return i * CHUNK_TYPE_SIZE + (value_ ? std::countr_one(last) : std::countr_zero(last));
+  return total;
 }
 
 auto DynamicBitset::countr(bool value_) const -> size_t {
-  size_t i = get_required_chunks(_size) - 1;
-  ChunkType last = _data[i];
-
-  if (_size % CHUNK_TYPE_SIZE != 0) {
-    set_mask(last, get_trailing_mask(_size), !value_);
-  }
-
-  size_t const bit_index = get_bit_index(_size);
-  last = std::rotl(last, CHUNK_TYPE_SIZE - bit_index);
-
+  size_t const max = get_required_chunks(_size) - 1;
   auto const fn = value_ ? &std::countl_one<ChunkType> : &std::countl_zero<ChunkType>;
-  size_t total = fn(last);
 
-  if (total < bit_index) {
-    return total;
-  }
+  size_t total = 0;
+  size_t i = max;
+  while (true) {
+    ChunkType chunk = _data[i];
+    size_t breakout = CHUNK_TYPE_SIZE;
+    if (i == max) {
+      breakout = get_bit_index(_size);
+      chunk <<= CHUNK_TYPE_SIZE - breakout;
+    }
 
-  --i;
-  for (; i != 0; --i) {
-    if (_data[i] != ALL_SET_MASKS[value_]) {
+    size_t const incr = std::min(breakout, static_cast<size_t>(fn(chunk)));
+    total += incr;
+    if (i == 0 || incr != breakout) {
       break;
     }
-    total += CHUNK_TYPE_SIZE;
+    --i;
   }
 
-  return total + fn(_data[i]);
+  return total;
 }
 
 void DynamicBitset::inplace_not() {
