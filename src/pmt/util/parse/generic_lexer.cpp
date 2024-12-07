@@ -1,11 +1,9 @@
 #include "pmt/util/parse/generic_lexer.hpp"
 
-#include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/util/parse/generic_ast.hpp"
-#include "pmt/util/parse/generic_lexer_tables.hpp"
-
 #include <cassert>
 #include <cstring>
+#include <numeric>
+#include <span>
 
 namespace pmt::util::parse {
 namespace {
@@ -14,6 +12,33 @@ auto make_eoi_token() -> GenericAst::UniqueHandle {
   ret->set_token("EOI");
   return ret;
 }
+
+auto raw_bitset_and(std::span<GenericLexerTables::RawBitsetChunkType const> lhs_, std::span<GenericLexerTables::RawBitsetChunkType const> rhs_, std::span<GenericLexerTables::RawBitsetChunkType> out_) {
+  assert(lhs_.size() == rhs_.size());
+  assert(lhs_.size() == out_.size());
+
+  for (size_t i = 0; i < lhs_.size(); ++i) {
+    out_[i] = lhs_[i] & rhs_[i];
+  }
+}
+
+auto raw_bitset_find_first_bit(std::span<GenericLexerTables::RawBitsetChunkType const> chunks_) -> size_t {
+  size_t total = 0;
+  for (GenericLexerTables::RawBitsetChunkType chunk : chunks_) {
+    size_t const incr = std::countr_zero(chunk);
+    total += incr;
+    if (incr != sizeof(chunk) * CHAR_BIT) {
+      break;
+    }
+  }
+
+  return total;
+}
+
+auto raw_bitset_popcnt(std::span<GenericLexerTables::RawBitsetChunkType const> chunks_) -> size_t {
+  return std::accumulate(chunks_.begin(), chunks_.end(), 0, [](size_t acc_, GenericLexerTables::RawBitsetChunkType chunk_) { return acc_ + std::popcount(chunk_); });
+}
+
 }  // namespace
 
 GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables const& tables_)
@@ -23,7 +48,7 @@ GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables const& ta
  , _tables(tables_) {
 }
 
-auto GenericLexer::next_token(pmt::base::DynamicBitset const& accepts_) -> GenericAst::UniqueHandle {
+auto GenericLexer::next_token(std::span<GenericLexerTables::RawBitsetChunkType const> accepts_) -> GenericAst::UniqueHandle {
   while (_cursor != _end && (std::strchr(" \t\r\n", *_cursor) != nullptr)) {
     ++_cursor;
   }
@@ -37,6 +62,8 @@ auto GenericLexer::next_token(pmt::base::DynamicBitset const& accepts_) -> Gener
 
   Fa::StateNrType state_nr_cur = GenericLexerTables::STATE_NR_START;
 
+  std::vector<GenericLexerTables::RawBitsetChunkType> accepts_valid(pmt::base::DynamicBitset::get_required_chunk_count(_tables._terminal_ids.size()), 0);
+
   for (char const* p = _cursor; _cursor <= _end; ++p) {
     if (state_nr_cur == GenericLexerTables::STATE_NR_INVALID) {
       if (te != nullptr) {
@@ -49,11 +76,12 @@ auto GenericLexer::next_token(pmt::base::DynamicBitset const& accepts_) -> Gener
       }
     }
 
-    pmt::base::DynamicBitset const accepts_valid = accepts_.clone_and(_tables._accepts[state_nr_cur]);
-    assert(accepts_valid.popcnt() <= 1);
-    size_t const countl = accepts_valid.countl(false);
+    raw_bitset_and(_tables._accepts[state_nr_cur], accepts_, accepts_valid);
 
-    if (countl != accepts_.size()) {
+    assert(raw_bitset_popcnt(accepts_valid) <= 1);
+    size_t const countl = raw_bitset_find_first_bit(accepts_valid);
+
+    if (countl != accepts_valid.size() * sizeof(GenericLexerTables::RawBitsetChunkType) * CHAR_BIT) {
       te = p;
       id = _tables._terminal_ids[countl];
 

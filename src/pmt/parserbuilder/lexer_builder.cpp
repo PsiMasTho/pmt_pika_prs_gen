@@ -597,12 +597,11 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
       transitions[symbol] = state_nr_next;
     }
 
-    pmt::base::DynamicBitset accepts = state._accepts;
-    if (accepts.popcnt() == 0) {
-      accepts.resize(_accepting_terminals.size(), false);
+    ret._accepts.emplace_back(pmt::base::DynamicBitset::get_required_chunk_count(_accepting_terminals.size()), 0);
+    for (size_t i = 0; i < state._accepts.get_chunk_count(); ++i) {
+      ret._accepts.back()[i] = state._accepts.get_chunk(i);
     }
 
-    ret._accepts.push_back(std::move(accepts));
     ret._transitions.push_back(transitions);
   }
 

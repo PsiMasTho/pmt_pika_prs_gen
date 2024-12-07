@@ -1,12 +1,10 @@
 #pragma once
 
-#include "pmt/fw_decl.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
+#include "pmt/util/parse/generic_lexer_tables.hpp"
 
+#include <span>
 #include <string_view>
-
-PMT_FW_DECL_NS_CLASS(pmt::util::parse, GenericLexerTables);
-PMT_FW_DECL_NS_CLASS(pmt::base, DynamicBitset);
 
 namespace pmt::util::parse {
 
@@ -14,7 +12,7 @@ class GenericLexer {
  public:
   GenericLexer(std::string_view input_, GenericLexerTables const& tables_);
 
-  auto next_token(pmt::base::DynamicBitset const& accepts_) -> GenericAst::UniqueHandle;
+  auto next_token(std::span<GenericLexerTables::RawBitsetChunkType const> accepts_) -> GenericAst::UniqueHandle;
 
  private:
   char const* _begin = nullptr;

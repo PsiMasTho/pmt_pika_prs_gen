@@ -34,7 +34,7 @@ void ParserBuilder::build() {
 
   pmt::util::parse::GenericLexer generic_lexer(_input_sample, tables);
 
-  pmt::base::DynamicBitset const accepts_all(tables._terminal_ids.size(), true);
+  std::vector<util::parse::GenericLexerTables::RawBitsetChunkType> const accepts_all(pmt::base::DynamicBitset::get_required_chunk_count(tables._terminal_ids.size()), 1);
 
   auto const to_string = [&tables](pmt::util::parse::GenericAst::IdType id_) -> std::string {
     if (id_ < tables._id_names.size()) {

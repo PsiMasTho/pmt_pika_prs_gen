@@ -9,6 +9,10 @@ namespace pmt::base {
 
 class DynamicBitset {
  public:
+  // - Public types / constants -
+  using ChunkType = std::uint64_t;
+  static constexpr size_t CHUNK_TYPE_SIZE = sizeof(ChunkType) * CHAR_BIT;
+
   // - Lifetime -
   explicit DynamicBitset(size_t size_ = 0, bool value_ = false);
   DynamicBitset(const DynamicBitset& other_);
@@ -33,6 +37,11 @@ class DynamicBitset {
   auto get(size_t index_) const -> bool;
   auto set(size_t index_, bool value_) -> bool;
   auto toggle(size_t index_) -> bool;
+
+  // - Chunk access -
+  auto get_chunk(size_t index_) const -> ChunkType;
+  auto get_chunk_count() const -> size_t;
+  static auto get_required_chunk_count(size_t size_) -> size_t;
 
   // - Equality -
   auto operator==(const DynamicBitset& other_) const -> bool;
@@ -69,8 +78,6 @@ class DynamicBitset {
   friend struct std::hash<DynamicBitset>;
 
   // - Private types / constants -
-  using ChunkType = std::uint64_t;
-  static constexpr size_t CHUNK_TYPE_SIZE = sizeof(ChunkType) * CHAR_BIT;
   using GrowthRate = std::ratio<3, 2>;
   static constexpr size_t INITIAL_CAPACITY = CHUNK_TYPE_SIZE;
   static constexpr bool DEFAULT_VALUE = false;
@@ -82,7 +89,6 @@ class DynamicBitset {
   // - Private static functions -
   static auto get_bit_index(size_t index_) -> size_t;
   static auto get_chunk_index(size_t index_) -> size_t;
-  static auto get_required_chunks(size_t size_) -> size_t;
   static auto get_trailing_mask(size_t size_) -> ChunkType;
   static void set_mask(ChunkType& dest_, ChunkType mask_, bool value_);
   static auto round_up_to_chunk_size(size_t size_) -> size_t;
