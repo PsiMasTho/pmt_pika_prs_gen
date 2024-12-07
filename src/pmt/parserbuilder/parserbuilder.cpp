@@ -28,13 +28,17 @@ void ParserBuilder::build() {
   auto const start = std::chrono::high_resolution_clock::now();
   LexerBuilder lexer_builder(*ast, _terminals);
   pmt::util::parse::GenericLexerTables tables = lexer_builder.build();
+  std::ofstream os_header("lexer_tables.hpp");
+  std::ofstream os_source("lexer_tables.cpp");
+  TableWriter table_writer(os_header, os_source, "TestLexerTables", tables);
+  table_writer.write();
   auto const end = std::chrono::high_resolution_clock::now();
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
   std::cout << "State count: " << tables._transitions.size() << std::endl;
 
   pmt::util::parse::GenericLexer generic_lexer(_input_sample, tables);
 
-  std::vector<util::parse::GenericLexerTables::RawBitsetChunkType> const accepts_all(pmt::base::DynamicBitset::get_required_chunk_count(tables._terminal_ids.size()), 1);
+  std::vector<util::parse::GenericLexerTables::RawBitsetChunkType> const accepts_all(pmt::base::DynamicBitset::get_required_chunk_count(tables._terminal_ids.size()), -1);
 
   auto const to_string = [&tables](pmt::util::parse::GenericAst::IdType id_) -> std::string {
     if (id_ < tables._id_names.size()) {
@@ -52,11 +56,6 @@ void ParserBuilder::build() {
       break;
     }
   }
-
-  std::ofstream os_header("lexer_tables.hpp");
-  std::ofstream os_source("lexer_tables.cpp");
-  TableWriter table_writer(os_header, os_source, "TestLexerTables", tables);
-  table_writer.write();
 }
 
 }  // namespace pmt::parserbuilder

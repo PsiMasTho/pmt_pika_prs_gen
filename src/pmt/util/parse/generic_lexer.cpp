@@ -1,5 +1,6 @@
 #include "pmt/util/parse/generic_lexer.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <numeric>
@@ -24,10 +25,10 @@ auto raw_bitset_and(std::span<GenericLexerTables::RawBitsetChunkType const> lhs_
 
 auto raw_bitset_find_first_bit(std::span<GenericLexerTables::RawBitsetChunkType const> chunks_) -> size_t {
   size_t total = 0;
-  for (GenericLexerTables::RawBitsetChunkType chunk : chunks_) {
+  for (GenericLexerTables::RawBitsetChunkType const chunk : chunks_) {
     size_t const incr = std::countr_zero(chunk);
     total += incr;
-    if (incr != sizeof(chunk) * CHAR_BIT) {
+    if (incr != sizeof(GenericLexerTables::RawBitsetChunkType) * CHAR_BIT) {
       break;
     }
   }
@@ -61,7 +62,6 @@ auto GenericLexer::next_token(std::span<GenericLexerTables::RawBitsetChunkType c
   char const* te = nullptr;  // Token end
 
   Fa::StateNrType state_nr_cur = GenericLexerTables::STATE_NR_START;
-
   std::vector<GenericLexerTables::RawBitsetChunkType> accepts_valid(pmt::base::DynamicBitset::get_required_chunk_count(_tables._terminal_ids.size()), 0);
 
   for (char const* p = _cursor; _cursor <= _end; ++p) {
@@ -76,12 +76,11 @@ auto GenericLexer::next_token(std::span<GenericLexerTables::RawBitsetChunkType c
       }
     }
 
+    std::ranges::fill(accepts_valid, 0);
     raw_bitset_and(_tables._accepts[state_nr_cur], accepts_, accepts_valid);
-
     assert(raw_bitset_popcnt(accepts_valid) <= 1);
-    size_t const countl = raw_bitset_find_first_bit(accepts_valid);
 
-    if (countl != accepts_valid.size() * sizeof(GenericLexerTables::RawBitsetChunkType) * CHAR_BIT) {
+    if (size_t const countl = raw_bitset_find_first_bit(accepts_valid); countl < _tables._terminal_ids.size()) {
       te = p;
       id = _tables._terminal_ids[countl];
 
