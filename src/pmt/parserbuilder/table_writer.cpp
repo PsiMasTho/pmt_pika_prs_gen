@@ -22,17 +22,14 @@ void TableWriter::write_header() {
     _os_header <<
     "class " << _class_name << " {\n"
     " public:\n"
-    "  using TransitionType = std::array<pmt::util::parse::Fa::StateNrType, UCHAR_MAX>;\n"
-    "  using AcceptType     = pmt::base::DynamicBitset;\n"
-    "\n"
     "  static inline size_t const STATE_COUNT = " << _tables._transitions.size() << ";\n"
     "  static inline size_t const ACCEPT_COUNT = " << _tables._terminal_names.size() << ";\n"
     "\n"
-    "  static TransitionType const                       TRANSITIONS[STATE_COUNT];\n"
-    "  static AcceptType const                           ACCEPTS[STATE_COUNT];\n"
-    "  static char const* const                          TERMINAL_NAMES[ACCEPT_COUNT];\n"
-    "  static pmt::util::parse::GenericAst::IdType const TERMINAL_IDS[ACCEPT_COUNT];\n"
-    "  static char const* const                          ID_NAMES[ACCEPT_COUNT];\n"
+    "  static pmt::util::parse::GenericLexerTables::TransitionType const TRANSITIONS[STATE_COUNT];\n"
+    "  static pmt::util::parse::GenericLexerTables::AcceptType const     ACCEPTS[STATE_COUNT];\n"
+    "  static char const* const                                          TERMINAL_NAMES[ACCEPT_COUNT];\n"
+    "  static pmt::util::parse::GenericAst::IdType const                 TERMINAL_IDS[ACCEPT_COUNT];\n"
+    "  static char const* const                                          ID_NAMES[ACCEPT_COUNT];\n"
     "\n"
     "  enum : pmt::util::parse::GenericAst::IdType {\n";
     
