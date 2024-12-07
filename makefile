@@ -143,14 +143,14 @@ pmt_util_test_exe: ${PMT_UTIL_TEST_EXE_BIN}
 
 #-- Grammars -------------------------------------------------------------------
 #-- grm_lexer	--
-${PMT_UTIL_PARSE_DIR}/grm_lexer.cpp: ${GRAMMAR_DIR}/grm_lexer.rl
+${PMT_PARSERBUILDER_DIR}/grm_lexer.cpp: ${GRAMMAR_DIR}/grm_lexer.rl
 	${RAGEL} -G2 -o $@ $<
 
 #-- grm_parser	--
-${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp: ${GRAMMAR_DIR}/grm_parser.y
+${PMT_PARSERBUILDER_DIR}/grm_parser-inl.hpp: ${GRAMMAR_DIR}/grm_parser.y
 	-${LEMON} -T${GRAMMAR_DIR}/lempar.cpp $<
-	mv ${GRAMMAR_DIR}/grm_parser.cpp ${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp
-	mv ${GRAMMAR_DIR}/grm_parser.h   ${PMT_UTIL_PARSE_DIR}/grm_ast-inl.hpp
+	mv ${GRAMMAR_DIR}/grm_parser.cpp ${PMT_PARSERBUILDER_DIR}/grm_parser-inl.hpp
+	mv ${GRAMMAR_DIR}/grm_parser.h   ${PMT_PARSERBUILDER_DIR}/grm_ast-inl.hpp
 
 #-- Generic --------------------------------------------------------------------
 %.a: 
@@ -171,7 +171,7 @@ format:
 all: ${ALL_BIN} ${ALL_LIBS}
 
 #-- Rl	-------------------------------------------------------------------------
-rl: ${PMT_UTIL_PARSE_DIR}/grm_lexer.cpp
+rl: ${PMT_PARSERBUILDER_DIR}/grm_lexer.cpp
 
 #-- y --------------------------------------------------------------------------
-y: ${PMT_UTIL_PARSE_DIR}/grm_parser-inl.hpp
+y: ${PMT_PARSERBUILDER_DIR}/grm_parser-inl.hpp
