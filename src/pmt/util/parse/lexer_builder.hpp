@@ -6,10 +6,12 @@
 #include "pmt/util/parse/generic_lexer_tables.hpp"
 #include "pmt/util/parse/terminal_info.hpp"
 
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 PMT_FW_DECL_NS_CLASS(pmt::util::parse, GenericAst);
@@ -32,6 +34,7 @@ class LexerBuilder {
   static inline const char* const DOT_FILE_PREFIX = "lexer_";
   static inline size_t const DOT_FILE_MAX_STATES = 750;
   std::unordered_map<std::string, AstPositionConst> _terminal_definitions;
+  std::map<std::string, std::unordered_set<std::string>> _id_names_to_terminal_names;
   std::vector<TerminalInfo> _accepting_terminals;
   size_t _dot_file_count = 0;
 };

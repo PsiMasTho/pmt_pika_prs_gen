@@ -29,6 +29,8 @@ class GrmAst {
     TkCloseBrace = TOKEN_CLOSE_BRACE,
     TkOpenSquare = TOKEN_OPEN_SQUARE,
     TkCloseSquare = TOKEN_CLOSE_SQUARE,
+    TkOpenAngle = TOKEN_OPEN_ANGLE,
+    TkCloseAngle = TOKEN_CLOSE_ANGLE,
     // - Operators
     TkPlus = TOKEN_PLUS,
     TkStar = TOKEN_STAR,
@@ -37,6 +39,7 @@ class GrmAst {
     TkKwParameterUnpack = TOKEN_KW_PARAMETER_UNPACK,
     TkKwParameterHide = TOKEN_KW_PARAMETER_HIDE,
     TkKwParameterMerge = TOKEN_KW_PARAMETER_MERGE,
+    TkKwParameterId = TOKEN_KW_PARAMETER_ID,
 
     // Non-terminals
     NtGrammar = 123,  // Somewhat arbitrary, we just need it to be higher than any terminal

@@ -33,6 +33,7 @@
 %token TOKEN_KW_PARAMETER_UNPACK.
 %token TOKEN_KW_PARAMETER_HIDE.
 %token TOKEN_KW_PARAMETER_MERGE.
+%token TOKEN_KW_PARAMETER_ID.
 
 grammar ::= production_list(A). {
  *ast_ = std::move(A);
@@ -41,19 +42,30 @@ grammar ::= production_list(A). {
 
 production_list(A) ::= production_list(B) production(C). {
  A = std::move(B);
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(C));
 }
 
 production_list(A) ::= production(B). {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 }
 
 production(A) ::= TOKEN_TERMINAL_IDENTIFIER(B) TOKEN_EQUALS expr(C) TOKEN_SEMICOLON. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtTerminalProduction);
- A->give_child_at(A->get_children_size(), std::move(B));
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(B));
+ auto default_id = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token, pmt::util::parse::GrmAst::TkStringLiteral);
+ default_id->set_token("IdDefault");
+ A->give_child_at_back(std::move(default_id));
+ A->give_child_at_back(std::move(C));
+}
+
+production(A) ::= TOKEN_TERMINAL_IDENTIFIER(B) TOKEN_OPEN_ANGLE TOKEN_KW_PARAMETER_ID TOKEN_EQUALS TOKEN_STRING_LITERAL(C) TOKEN_CLOSE_ANGLE TOKEN_EQUALS expr(D) TOKEN_SEMICOLON. {
+ A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
+ A->set_id(pmt::util::parse::GrmAst::NtTerminalProduction);
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+ A->give_child_at_back(std::move(D));
 }
 
 expr(A) ::= choices(B). {
@@ -83,7 +95,7 @@ term(A) ::= TOKEN_OPEN_PAREN expr(B) TOKEN_CLOSE_PAREN. {
 term(A) ::= term(B) TOKEN_QUESTION. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetition);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 
  // Add repetition info: "," "1"
  auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
@@ -97,15 +109,15 @@ term(A) ::= term(B) TOKEN_QUESTION. {
  auto rhs = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
  rhs->set_id(pmt::util::parse::GrmAst::TkIntegerLiteral);
  rhs->set_token("10#1");
- repetition_info->give_child_at(repetition_info->get_children_size(), std::move(rhs));
+ repetition_info->give_child_at_back(std::move(rhs));
 
- A->give_child_at(A->get_children_size(), std::move(repetition_info));
+ A->give_child_at_back(std::move(repetition_info));
 }
 
 term(A) ::= term(B) TOKEN_STAR. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetition);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 
  // Add repetition info: ","
  auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
@@ -115,14 +127,14 @@ term(A) ::= term(B) TOKEN_STAR. {
  comma->set_id(pmt::util::parse::GrmAst::TkComma);
  comma->set_token(",");
 
- repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
- A->give_child_at(A->get_children_size(), std::move(repetition_info));
+ repetition_info->give_child_at_back(std::move(comma));
+ A->give_child_at_back(std::move(repetition_info));
 }
 
 term(A) ::= term(B) TOKEN_PLUS. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetition);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 
  // Add repetition info: "1" ","
  auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
@@ -138,21 +150,21 @@ term(A) ::= term(B) TOKEN_PLUS. {
  comma->set_token(",");
  repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
 
- A->give_child_at(A->get_children_size(), std::move(repetition_info));
+ A->give_child_at_back(std::move(repetition_info));
 }
 
 term(A) ::= term(B) repetition_range(C). {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetition);
- A->give_child_at(A->get_children_size(), std::move(B));
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
 }
 
 term(A) ::= TOKEN_OPEN_SQUARE range_literal(B) TOKEN_DOUBLE_DOT range_literal(C) TOKEN_CLOSE_SQUARE. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRange);
- A->give_child_at(A->get_children_size(), std::move(B));
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
 }
 
 range_literal(A) ::= TOKEN_STRING_LITERAL(B). {
@@ -166,35 +178,35 @@ range_literal(A) ::= TOKEN_INTEGER_LITERAL(B). {
 repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_COMMA(B) TOKEN_CLOSE_BRACE. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 }
 
 repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_COMMA(C) TOKEN_CLOSE_BRACE. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
- A->give_child_at(A->get_children_size(), std::move(B));
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
 }
 
 repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_COMMA(B) TOKEN_INTEGER_LITERAL(C) TOKEN_CLOSE_BRACE. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
- A->give_child_at(A->get_children_size(), std::move(B));
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
 }
 
 repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_COMMA(C) TOKEN_INTEGER_LITERAL(D) TOKEN_CLOSE_BRACE. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
- A->give_child_at(A->get_children_size(), std::move(B));
- A->give_child_at(A->get_children_size(), std::move(C));
- A->give_child_at(A->get_children_size(), std::move(D));
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+ A->give_child_at_back(std::move(D));
 }
 
 repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_CLOSE_BRACE. {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 }
 
 sequence(A) ::= term(B). {
@@ -204,11 +216,11 @@ sequence(A) ::= term(B). {
 sequence(A) ::= sequence(B) term(C). {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtSequence);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
  if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::util::parse::GrmAst::NtSequence) {
   A->unpack(A->get_children_size() - 1);
  }
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(C));
  if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::util::parse::GrmAst::NtSequence) {
   A->unpack(A->get_children_size() - 1);
  }
@@ -217,11 +229,11 @@ sequence(A) ::= sequence(B) term(C). {
 choices(A) ::= sequence(B). {
  A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
  A->set_id(pmt::util::parse::GrmAst::NtChoices);
- A->give_child_at(A->get_children_size(), std::move(B));
+ A->give_child_at_back(std::move(B));
 }
 
 choices(A) ::= choices(B) TOKEN_PIPE sequence(C). {
  A = std::move(B);
- A->give_child_at(A->get_children_size(), std::move(C));
+ A->give_child_at_back(std::move(C));
 }
 

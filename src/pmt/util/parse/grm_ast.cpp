@@ -35,6 +35,10 @@ auto GrmAst::to_string(GenericAst::IdType id_) -> std::string {
       return "TkOpenSquare";
     case TkCloseSquare:
       return "TkCloseSquare";
+    case TkOpenAngle:
+      return "TkOpenAngle";
+    case TkCloseAngle:
+      return "TkCloseAngle";
     case TkPlus:
       return "TkPlus";
     case TkStar:

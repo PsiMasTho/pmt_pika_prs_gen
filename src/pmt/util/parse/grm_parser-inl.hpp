@@ -197,16 +197,16 @@ typedef union {
 #define ParseARG_PDECL , pmt::util::parse::GenericAst::UniqueHandle *ast_
 #define ParseARG_FETCH pmt::util::parse::GenericAst::UniqueHandle *ast_ = yypParser->ast_
 #define ParseARG_STORE yypParser->ast_ = ast_
-#define YYNSTATE 23
-#define YYNRULE 26
-#define YY_MAX_SHIFT 22
-#define YY_MIN_SHIFTREDUCE 43
-#define YY_MAX_SHIFTREDUCE 68
-#define YY_MIN_REDUCE 69
-#define YY_MAX_REDUCE 94
-#define YY_ERROR_ACTION 95
-#define YY_ACCEPT_ACTION 96
-#define YY_NO_ACTION 97
+#define YYNSTATE 30
+#define YYNRULE 27
+#define YY_MAX_SHIFT 29
+#define YY_MIN_SHIFTREDUCE 51
+#define YY_MAX_SHIFTREDUCE 77
+#define YY_MIN_REDUCE 78
+#define YY_MAX_REDUCE 104
+#define YY_ERROR_ACTION 105
+#define YY_ACCEPT_ACTION 106
+#define YY_NO_ACTION 107
 /************* End control #defines *******************************************/
 
 /* Define the yytestcase() macro to be a no-op if is not already defined
@@ -277,42 +277,44 @@ typedef union {
 **  yy_default[]       Default action for each state.
 **
 *********** Begin parsing tables **********************************************/
-#define YY_ACTTAB_COUNT (50)
+#define YY_ACTTAB_COUNT (60)
 static const YYACTIONTYPE yy_action[] = {
- /*     0 */ 49, 50, 69, 48, 22, 51, 22, 19, 20, 7,
- /*    10 */ 7,  1,  5,  4,  6,  9,  21, 20, 7,  17,
- /*    20 */ 14, 5,  96, 10, 71, 18, 55, 54, 53, 58,
- /*    30 */ 59, 11, 61, 12, 82, 57, 64, 15, 60, 16,
- /*    40 */ 70, 13, 63, 8,  62, 3,  52, 46, 71, 2,
+ /*     0 */ 58, 59, 8,  57, 60, 5,  17, 28,  8,  78,
+ /*    10 */ 2,  6,  16, 16, 10, 27, 28, 8,   67, 68,
+ /*    20 */ 6,  29, 28, 8,  15, 25, 6,  106, 11, 80,
+ /*    30 */ 64, 63, 62, 12, 26, 13, 3,  70,  73, 7,
+ /*    40 */ 23, 79, 14, 92, 55, 22, 69, 24,  1,  18,
+ /*    50 */ 19, 20, 21, 72, 66, 9,  71, 4,   61, 54,
 };
 static const YYCODETYPE yy_lookahead[] = {
- /*     0 */ 1,  2,  0,  4,  4,  6,  4,  30, 31, 32,
- /*    10 */ 32, 12, 35, 35, 32, 16, 30, 31, 32, 2,
- /*    20 */ 14, 35, 27, 28, 29, 2,  20, 21, 22, 1,
- /*    30 */ 2,  10, 15, 2,  33, 17, 15, 34, 15, 34,
- /*    40 */ 29, 10, 15, 11, 15, 7,  13, 8,  36, 9,
+ /*     0 */ 1,  2,  32, 4,  5,  35, 30, 31, 32, 0,
+ /*    10 */ 11, 35, 4,  4,  15, 30, 31, 32, 1,  2,
+ /*    20 */ 35, 30, 31, 32, 13, 2,  35, 27, 28, 29,
+ /*    30 */ 19, 20, 21, 9,  2,  2,  8,  14, 14, 32,
+ /*    40 */ 34, 29, 9,  33, 7,  17, 14, 34, 8,  18,
+ /*    50 */ 1,  8,  25, 14, 16, 10, 14, 6,  12, 7,
 };
-#define YY_SHIFT_USE_DFLT (50)
-#define YY_SHIFT_COUNT (22)
+#define YY_SHIFT_USE_DFLT (60)
+#define YY_SHIFT_COUNT (29)
 #define YY_SHIFT_MIN (-1)
-#define YY_SHIFT_MAX (40)
+#define YY_SHIFT_MAX (52)
 static const signed char yy_shift_ofst[] = {
- /*     0 */ 0,  -1, -1, -1, -1, -1, 6,  6,  28, 28,
- /*    10 */ 2,  17, 21, 23, 31, 18, 32, 27, 29, 33,
- /*    20 */ 38, 39, 40,
+ /*     0 */ 8,  -1, -1, -1, -1, -1, -1, 11, 11, 17,
+ /*    10 */ 17, 9,  23, 24, 32, 33, 28, 37, 40, 31,
+ /*    20 */ 49, 43, 27, 38, 45, 39, 42, 46, 51, 52,
 };
-#define YY_REDUCE_USE_DFLT (-24)
-#define YY_REDUCE_COUNT (10)
-#define YY_REDUCE_MIN (-23)
-#define YY_REDUCE_MAX (11)
+#define YY_REDUCE_USE_DFLT (-31)
+#define YY_REDUCE_COUNT (11)
+#define YY_REDUCE_MIN (-30)
+#define YY_REDUCE_MAX (13)
 static const signed char yy_reduce_ofst[] = {
- /*     0 */ -5, -23, -14, -22, -18, -18, 1, 1, 3, 5,
- /*    10 */ 11,
+ /*     0 */ 0,  -24, -15, -9, -30, 7, 7, 10, 10, 6,
+ /*    10 */ 13, 12,
 };
 static const YYACTIONTYPE yy_default[] = {
- /*     0 */ 95, 95, 95, 95, 94, 93, 92, 91, 95, 95,
- /*    10 */ 95, 95, 95, 95, 95, 95, 95, 95, 95, 95,
- /*    20 */ 73, 95, 95,
+ /*     0 */ 105, 105, 105, 105, 105, 104, 103, 102, 101, 105,
+ /*    10 */ 105, 105, 105, 105, 105, 105, 105, 105, 105, 105,
+ /*    20 */ 105, 105, 105, 105, 105, 105, 105, 105, 83,  105,
 };
 /********** End of lemon-generated parsing tables *****************************/
 
@@ -424,7 +426,6 @@ static const char *const yyTokenName[] = {
  "TOKEN_INTEGER_LITERAL",
  "TOKEN_BOOLEAN_LITERAL",
  "TOKEN_TERMINAL_IDENTIFIER",
- "TOKEN_RULE_IDENTIFIER",
  "TOKEN_EPSILON",
  "TOKEN_PIPE",
  "TOKEN_SEMICOLON",
@@ -445,6 +446,7 @@ static const char *const yyTokenName[] = {
  "TOKEN_KW_PARAMETER_UNPACK",
  "TOKEN_KW_PARAMETER_HIDE",
  "TOKEN_KW_PARAMETER_MERGE",
+ "TOKEN_KW_PARAMETER_ID",
  "error",
  "grammar",
  "production_list",
@@ -466,28 +468,29 @@ static const char *const yyRuleName[] = {
  /*   1 */ "production_list ::= production_list production",
  /*   2 */ "production_list ::= production",
  /*   3 */ "production ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_EQUALS expr TOKEN_SEMICOLON",
- /*   4 */ "expr ::= choices",
- /*   5 */ "term ::= TOKEN_TERMINAL_IDENTIFIER",
- /*   6 */ "term ::= TOKEN_STRING_LITERAL",
- /*   7 */ "term ::= TOKEN_INTEGER_LITERAL",
- /*   8 */ "term ::= TOKEN_EPSILON",
- /*   9 */ "term ::= TOKEN_OPEN_PAREN expr TOKEN_CLOSE_PAREN",
- /*  10 */ "term ::= term TOKEN_QUESTION",
- /*  11 */ "term ::= term TOKEN_STAR",
- /*  12 */ "term ::= term TOKEN_PLUS",
- /*  13 */ "term ::= term repetition_range",
- /*  14 */ "term ::= TOKEN_OPEN_SQUARE range_literal TOKEN_DOUBLE_DOT range_literal TOKEN_CLOSE_SQUARE",
- /*  15 */ "range_literal ::= TOKEN_STRING_LITERAL",
- /*  16 */ "range_literal ::= TOKEN_INTEGER_LITERAL",
- /*  17 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE",
- /*  18 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE",
- /*  19 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
- /*  20 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
- /*  21 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
- /*  22 */ "sequence ::= term",
- /*  23 */ "sequence ::= sequence term",
- /*  24 */ "choices ::= sequence",
- /*  25 */ "choices ::= choices TOKEN_PIPE sequence",
+ /*   4 */ "production ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_OPEN_ANGLE TOKEN_KW_PARAMETER_ID TOKEN_EQUALS TOKEN_STRING_LITERAL TOKEN_CLOSE_ANGLE TOKEN_EQUALS expr TOKEN_SEMICOLON",
+ /*   5 */ "expr ::= choices",
+ /*   6 */ "term ::= TOKEN_TERMINAL_IDENTIFIER",
+ /*   7 */ "term ::= TOKEN_STRING_LITERAL",
+ /*   8 */ "term ::= TOKEN_INTEGER_LITERAL",
+ /*   9 */ "term ::= TOKEN_EPSILON",
+ /*  10 */ "term ::= TOKEN_OPEN_PAREN expr TOKEN_CLOSE_PAREN",
+ /*  11 */ "term ::= term TOKEN_QUESTION",
+ /*  12 */ "term ::= term TOKEN_STAR",
+ /*  13 */ "term ::= term TOKEN_PLUS",
+ /*  14 */ "term ::= term repetition_range",
+ /*  15 */ "term ::= TOKEN_OPEN_SQUARE range_literal TOKEN_DOUBLE_DOT range_literal TOKEN_CLOSE_SQUARE",
+ /*  16 */ "range_literal ::= TOKEN_STRING_LITERAL",
+ /*  17 */ "range_literal ::= TOKEN_INTEGER_LITERAL",
+ /*  18 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE",
+ /*  19 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE",
+ /*  20 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
+ /*  21 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
+ /*  22 */ "repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
+ /*  23 */ "sequence ::= term",
+ /*  24 */ "sequence ::= sequence term",
+ /*  25 */ "choices ::= sequence",
+ /*  26 */ "choices ::= choices TOKEN_PIPE sequence",
 };
 #endif /* NDEBUG */
 
@@ -623,27 +626,27 @@ static void yy_destructor(yyParser *yypParser,  /* The parser */
     case 2:  /* TOKEN_INTEGER_LITERAL */
     case 3:  /* TOKEN_BOOLEAN_LITERAL */
     case 4:  /* TOKEN_TERMINAL_IDENTIFIER */
-    case 5:  /* TOKEN_RULE_IDENTIFIER */
-    case 6:  /* TOKEN_EPSILON */
-    case 7:  /* TOKEN_PIPE */
-    case 8:  /* TOKEN_SEMICOLON */
-    case 9:  /* TOKEN_EQUALS */
-    case 10: /* TOKEN_COMMA */
-    case 11: /* TOKEN_DOUBLE_DOT */
-    case 12: /* TOKEN_OPEN_PAREN */
-    case 13: /* TOKEN_CLOSE_PAREN */
-    case 14: /* TOKEN_OPEN_BRACE */
-    case 15: /* TOKEN_CLOSE_BRACE */
-    case 16: /* TOKEN_OPEN_SQUARE */
-    case 17: /* TOKEN_CLOSE_SQUARE */
-    case 18: /* TOKEN_OPEN_ANGLE */
-    case 19: /* TOKEN_CLOSE_ANGLE */
-    case 20: /* TOKEN_PLUS */
-    case 21: /* TOKEN_STAR */
-    case 22: /* TOKEN_QUESTION */
-    case 23: /* TOKEN_KW_PARAMETER_UNPACK */
-    case 24: /* TOKEN_KW_PARAMETER_HIDE */
-    case 25: /* TOKEN_KW_PARAMETER_MERGE */
+    case 5:  /* TOKEN_EPSILON */
+    case 6:  /* TOKEN_PIPE */
+    case 7:  /* TOKEN_SEMICOLON */
+    case 8:  /* TOKEN_EQUALS */
+    case 9:  /* TOKEN_COMMA */
+    case 10: /* TOKEN_DOUBLE_DOT */
+    case 11: /* TOKEN_OPEN_PAREN */
+    case 12: /* TOKEN_CLOSE_PAREN */
+    case 13: /* TOKEN_OPEN_BRACE */
+    case 14: /* TOKEN_CLOSE_BRACE */
+    case 15: /* TOKEN_OPEN_SQUARE */
+    case 16: /* TOKEN_CLOSE_SQUARE */
+    case 17: /* TOKEN_OPEN_ANGLE */
+    case 18: /* TOKEN_CLOSE_ANGLE */
+    case 19: /* TOKEN_PLUS */
+    case 20: /* TOKEN_STAR */
+    case 21: /* TOKEN_QUESTION */
+    case 22: /* TOKEN_KW_PARAMETER_UNPACK */
+    case 23: /* TOKEN_KW_PARAMETER_HIDE */
+    case 24: /* TOKEN_KW_PARAMETER_MERGE */
+    case 25: /* TOKEN_KW_PARAMETER_ID */
     case 27: /* grammar */
     case 28: /* production_list */
     case 29: /* production */
@@ -680,27 +683,27 @@ static void yy_move(YYCODETYPE yymajor,   /* Type code for object to destroy */
     case 2:  /* TOKEN_INTEGER_LITERAL */
     case 3:  /* TOKEN_BOOLEAN_LITERAL */
     case 4:  /* TOKEN_TERMINAL_IDENTIFIER */
-    case 5:  /* TOKEN_RULE_IDENTIFIER */
-    case 6:  /* TOKEN_EPSILON */
-    case 7:  /* TOKEN_PIPE */
-    case 8:  /* TOKEN_SEMICOLON */
-    case 9:  /* TOKEN_EQUALS */
-    case 10: /* TOKEN_COMMA */
-    case 11: /* TOKEN_DOUBLE_DOT */
-    case 12: /* TOKEN_OPEN_PAREN */
-    case 13: /* TOKEN_CLOSE_PAREN */
-    case 14: /* TOKEN_OPEN_BRACE */
-    case 15: /* TOKEN_CLOSE_BRACE */
-    case 16: /* TOKEN_OPEN_SQUARE */
-    case 17: /* TOKEN_CLOSE_SQUARE */
-    case 18: /* TOKEN_OPEN_ANGLE */
-    case 19: /* TOKEN_CLOSE_ANGLE */
-    case 20: /* TOKEN_PLUS */
-    case 21: /* TOKEN_STAR */
-    case 22: /* TOKEN_QUESTION */
-    case 23: /* TOKEN_KW_PARAMETER_UNPACK */
-    case 24: /* TOKEN_KW_PARAMETER_HIDE */
-    case 25: /* TOKEN_KW_PARAMETER_MERGE */
+    case 5:  /* TOKEN_EPSILON */
+    case 6:  /* TOKEN_PIPE */
+    case 7:  /* TOKEN_SEMICOLON */
+    case 8:  /* TOKEN_EQUALS */
+    case 9:  /* TOKEN_COMMA */
+    case 10: /* TOKEN_DOUBLE_DOT */
+    case 11: /* TOKEN_OPEN_PAREN */
+    case 12: /* TOKEN_CLOSE_PAREN */
+    case 13: /* TOKEN_OPEN_BRACE */
+    case 14: /* TOKEN_CLOSE_BRACE */
+    case 15: /* TOKEN_OPEN_SQUARE */
+    case 16: /* TOKEN_CLOSE_SQUARE */
+    case 17: /* TOKEN_OPEN_ANGLE */
+    case 18: /* TOKEN_CLOSE_ANGLE */
+    case 19: /* TOKEN_PLUS */
+    case 20: /* TOKEN_STAR */
+    case 21: /* TOKEN_QUESTION */
+    case 22: /* TOKEN_KW_PARAMETER_UNPACK */
+    case 23: /* TOKEN_KW_PARAMETER_HIDE */
+    case 24: /* TOKEN_KW_PARAMETER_MERGE */
+    case 25: /* TOKEN_KW_PARAMETER_ID */
     case 27: /* grammar */
     case 28: /* production_list */
     case 29: /* production */
@@ -959,7 +962,7 @@ static const struct {
   YYCODETYPE lhs;   /* Symbol on the left-hand side of the rule */
   signed char nrhs; /* Negative of the number of RHS symbols in the rule */
 } yyRuleInfo[] = {
- {27, -1}, {28, -2}, {28, -1}, {29, -4}, {30, -1}, {32, -1}, {32, -1}, {32, -1}, {32, -1}, {32, -3}, {32, -2}, {32, -2}, {32, -2}, {32, -2}, {32, -5}, {34, -1}, {34, -1}, {33, -3}, {33, -4}, {33, -4}, {33, -5}, {33, -3}, {35, -1}, {35, -2}, {31, -1}, {31, -3},
+ {27, -1}, {28, -2}, {28, -1}, {29, -4}, {29, -9}, {30, -1}, {32, -1}, {32, -1}, {32, -1}, {32, -1}, {32, -3}, {32, -2}, {32, -2}, {32, -2}, {32, -2}, {32, -5}, {34, -1}, {34, -1}, {33, -3}, {33, -4}, {33, -4}, {33, -5}, {33, -3}, {35, -1}, {35, -2}, {31, -1}, {31, -3},
 };
 
 static void yy_accept(yyParser *); /* Forward Declaration */
@@ -1028,7 +1031,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
         *ast_ = std::move(A);
         (*ast_)->set_id(pmt::util::parse::GrmAst::NtGrammar);
       }
-#line 1053 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1057 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(A);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
     } break;
@@ -1040,9 +1043,9 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 43 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = std::move(B);
-        A->give_child_at(A->get_children_size(), std::move(C));
+        A->give_child_at_back(std::move(C));
       }
-#line 1068 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1072 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
@@ -1054,9 +1057,9 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 48 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->give_child_at(A->get_children_size(), std::move(B));
+        A->give_child_at_back(std::move(B));
       }
-#line 1083 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1087 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
     } break;
@@ -1071,60 +1074,89 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtTerminalProduction);
-        A->give_child_at(A->get_children_size(), std::move(B));
-        A->give_child_at(A->get_children_size(), std::move(C));
+        A->give_child_at_back(std::move(B));
+        auto default_id = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token, pmt::util::parse::GrmAst::TkStringLiteral);
+        default_id->set_token("IdDefault");
+        A->give_child_at_back(std::move(default_id));
+        A->give_child_at_back(std::move(C));
       }
-#line 1102 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1109 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0), std::move(A));
     } break;
-    case 4: /* expr ::= choices */
-    case 5: /* term ::= TOKEN_TERMINAL_IDENTIFIER */
-      yytestcase(yyruleno == 5);
-    case 6: /* term ::= TOKEN_STRING_LITERAL */
+    case 4: /* production ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_OPEN_ANGLE TOKEN_KW_PARAMETER_ID TOKEN_EQUALS TOKEN_STRING_LITERAL TOKEN_CLOSE_ANGLE TOKEN_EQUALS expr TOKEN_SEMICOLON */
+    {
+      yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-7].minor.yy0));
+      yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-6].minor.yy0));
+      yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-5].minor.yy0));
+      yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
+      yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
+      yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
+      pmt::util::parse::GenericAst::UniqueHandle A;
+      auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-8].minor.yy0));
+      auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
+      auto &D = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
+#line 63 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+      {
+        A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
+        A->set_id(pmt::util::parse::GrmAst::NtTerminalProduction);
+        A->give_child_at_back(std::move(B));
+        A->give_child_at_back(std::move(C));
+        A->give_child_at_back(std::move(D));
+      }
+#line 1135 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+      yy_destructor(B);
+      yy_destructor(C);
+      yy_destructor(D);
+      yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-8].minor.yy0), std::move(A));
+    } break;
+    case 5: /* expr ::= choices */
+    case 6: /* term ::= TOKEN_TERMINAL_IDENTIFIER */
       yytestcase(yyruleno == 6);
-    case 7: /* term ::= TOKEN_INTEGER_LITERAL */
+    case 7: /* term ::= TOKEN_STRING_LITERAL */
       yytestcase(yyruleno == 7);
-    case 8: /* term ::= TOKEN_EPSILON */
+    case 8: /* term ::= TOKEN_INTEGER_LITERAL */
       yytestcase(yyruleno == 8);
-    case 15: /* range_literal ::= TOKEN_STRING_LITERAL */
-      yytestcase(yyruleno == 15);
-    case 16: /* range_literal ::= TOKEN_INTEGER_LITERAL */
+    case 9: /* term ::= TOKEN_EPSILON */
+      yytestcase(yyruleno == 9);
+    case 16: /* range_literal ::= TOKEN_STRING_LITERAL */
       yytestcase(yyruleno == 16);
-    case 22: /* sequence ::= term */
-      yytestcase(yyruleno == 22);
+    case 17: /* range_literal ::= TOKEN_INTEGER_LITERAL */
+      yytestcase(yyruleno == 17);
+    case 23: /* sequence ::= term */
+      yytestcase(yyruleno == 23);
       {
         pmt::util::parse::GenericAst::UniqueHandle A;
         auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 60 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 71 "/home/pmt/repos/pmt/grammars/grm_parser.y"
         { A = std::move(B); }
-#line 1123 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1157 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
         yy_destructor(B);
         yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
       }
       break;
-    case 9: /* term ::= TOKEN_OPEN_PAREN expr TOKEN_CLOSE_PAREN */
+    case 10: /* term ::= TOKEN_OPEN_PAREN expr TOKEN_CLOSE_PAREN */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
       auto &A = yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 80 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 91 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       { A = std::move(B); }
-#line 1138 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1172 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
     } break;
-    case 10: /* term ::= term TOKEN_QUESTION */
+    case 11: /* term ::= term TOKEN_QUESTION */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 84 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 95 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtRepetition);
-        A->give_child_at(A->get_children_size(), std::move(B));
+        A->give_child_at_back(std::move(B));
 
         // Add repetition info: "," "1"
         auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
@@ -1138,24 +1170,24 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
         auto rhs = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
         rhs->set_id(pmt::util::parse::GrmAst::TkIntegerLiteral);
         rhs->set_token("10#1");
-        repetition_info->give_child_at(repetition_info->get_children_size(), std::move(rhs));
+        repetition_info->give_child_at_back(std::move(rhs));
 
-        A->give_child_at(A->get_children_size(), std::move(repetition_info));
+        A->give_child_at_back(std::move(repetition_info));
       }
-#line 1169 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1203 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
     } break;
-    case 11: /* term ::= term TOKEN_STAR */
+    case 12: /* term ::= term TOKEN_STAR */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 106 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 117 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtRepetition);
-        A->give_child_at(A->get_children_size(), std::move(B));
+        A->give_child_at_back(std::move(B));
 
         // Add repetition info: ","
         auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
@@ -1165,23 +1197,23 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
         comma->set_id(pmt::util::parse::GrmAst::TkComma);
         comma->set_token(",");
 
-        repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
-        A->give_child_at(A->get_children_size(), std::move(repetition_info));
+        repetition_info->give_child_at_back(std::move(comma));
+        A->give_child_at_back(std::move(repetition_info));
       }
-#line 1196 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1230 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
     } break;
-    case 12: /* term ::= term TOKEN_PLUS */
+    case 13: /* term ::= term TOKEN_PLUS */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 123 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 134 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtRepetition);
-        A->give_child_at(A->get_children_size(), std::move(B));
+        A->give_child_at_back(std::move(B));
 
         // Add repetition info: "1" ","
         auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
@@ -1197,30 +1229,30 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
         comma->set_token(",");
         repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
 
-        A->give_child_at(A->get_children_size(), std::move(repetition_info));
+        A->give_child_at_back(std::move(repetition_info));
       }
-#line 1228 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1262 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
     } break;
-    case 13: /* term ::= term repetition_range */
+    case 14: /* term ::= term repetition_range */
     {
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
       auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 145 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 156 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtRepetition);
-        A->give_child_at(A->get_children_size(), std::move(B));
-        A->give_child_at(A->get_children_size(), std::move(C));
+        A->give_child_at_back(std::move(B));
+        A->give_child_at_back(std::move(C));
       }
-#line 1245 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1279 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
     } break;
-    case 14: /* term ::= TOKEN_OPEN_SQUARE range_literal TOKEN_DOUBLE_DOT range_literal TOKEN_CLOSE_SQUARE */
+    case 15: /* term ::= TOKEN_OPEN_SQUARE range_literal TOKEN_DOUBLE_DOT range_literal TOKEN_CLOSE_SQUARE */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
@@ -1228,57 +1260,57 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
       auto &A = yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
       auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 152 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 163 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtRange);
-        A->give_child_at(A->get_children_size(), std::move(B));
-        A->give_child_at(A->get_children_size(), std::move(C));
+        A->give_child_at_back(std::move(B));
+        A->give_child_at_back(std::move(C));
       }
-#line 1266 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1300 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
     } break;
-    case 17: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
-    case 21: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-      yytestcase(yyruleno == 21);
+    case 18: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
+    case 22: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+      yytestcase(yyruleno == 22);
       {
         yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
         yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
         auto &A = yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
         auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 167 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 178 "/home/pmt/repos/pmt/grammars/grm_parser.y"
         {
           A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
           A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
-          A->give_child_at(A->get_children_size(), std::move(B));
+          A->give_child_at_back(std::move(B));
         }
-#line 1284 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1318 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
         yy_destructor(B);
       }
       break;
-    case 18: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
-    case 19: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-      yytestcase(yyruleno == 19);
+    case 19: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
+    case 20: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+      yytestcase(yyruleno == 20);
       {
         yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
         yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
         auto &A = yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
         auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
         auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 173 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 184 "/home/pmt/repos/pmt/grammars/grm_parser.y"
         {
           A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
           A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
-          A->give_child_at(A->get_children_size(), std::move(B));
-          A->give_child_at(A->get_children_size(), std::move(C));
+          A->give_child_at_back(std::move(B));
+          A->give_child_at_back(std::move(C));
         }
-#line 1303 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1337 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
         yy_destructor(B);
         yy_destructor(C);
       }
       break;
-    case 20: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+    case 21: /* repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
@@ -1286,68 +1318,68 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
       auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
       auto &D = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 187 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 198 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
-        A->give_child_at(A->get_children_size(), std::move(B));
-        A->give_child_at(A->get_children_size(), std::move(C));
-        A->give_child_at(A->get_children_size(), std::move(D));
+        A->give_child_at_back(std::move(B));
+        A->give_child_at_back(std::move(C));
+        A->give_child_at_back(std::move(D));
       }
-#line 1324 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1358 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
       yy_destructor(D);
     } break;
-    case 23: /* sequence ::= sequence term */
+    case 24: /* sequence ::= sequence term */
     {
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
       auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 205 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 216 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtSequence);
-        A->give_child_at(A->get_children_size(), std::move(B));
+        A->give_child_at_back(std::move(B));
         if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::util::parse::GrmAst::NtSequence) {
           A->unpack(A->get_children_size() - 1);
         }
-        A->give_child_at(A->get_children_size(), std::move(C));
+        A->give_child_at_back(std::move(C));
         if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::util::parse::GrmAst::NtSequence) {
           A->unpack(A->get_children_size() - 1);
         }
       }
-#line 1348 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1382 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
     } break;
-    case 24: /* choices ::= sequence */
+    case 25: /* choices ::= sequence */
     {
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 218 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 229 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
         A->set_id(pmt::util::parse::GrmAst::NtChoices);
-        A->give_child_at(A->get_children_size(), std::move(B));
+        A->give_child_at_back(std::move(B));
       }
-#line 1364 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1398 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
     } break;
-    case 25: /* choices ::= choices TOKEN_PIPE sequence */
+    case 26: /* choices ::= choices TOKEN_PIPE sequence */
     {
       yy_destructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
       pmt::util::parse::GenericAst::UniqueHandle A;
       auto &B = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
       auto &C = yy_cast<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 224 "/home/pmt/repos/pmt/grammars/grm_parser.y"
+#line 235 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = std::move(B);
-        A->give_child_at(A->get_children_size(), std::move(C));
+        A->give_child_at_back(std::move(C));
       }
-#line 1380 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1414 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(B);
       yy_destructor(C);
       yy_constructor<pmt::util::parse::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0), std::move(A));
@@ -1416,7 +1448,7 @@ static void yy_syntax_error(yyParser *yypParser,   /* The parser */
 #line 8 "/home/pmt/repos/pmt/grammars/grm_parser.y"
 
   throw std::runtime_error("Syntax error");
-#line 1451 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
+#line 1485 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
   /************ End %syntax_error code ******************************************/
   ParseARG_STORE; /* Suppress warning about unused %extra_argument variable */
 }

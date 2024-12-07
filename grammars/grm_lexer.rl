@@ -20,29 +20,32 @@
 %%{
  machine GrmLexer;
   
- StringLiteral                = '"' (print - ['"])* '"';
- IntegerLiteral               = [0-9]+ '#' [0-9a-zA-Z]+;
- BooleanLiteral               = 'true' | 'false';
- TerminalIdentifier              = '$' [_a-zA-Z][a-zA-Z0-9_]+;
- RuleIdentifier               = '%' [a-zA-Z][a-zA-Z0-9_]+;
- Epsilon                      = 'epsilon';
- Pipe                         = '|';
- SemiColon                    = ';';
- Equals                       = '=';
- Comma                        = ',';
- DoubleDot                    = '..';
- OpenParen                    = '(';
- CloseParen                   = ')';
- OpenBrace                    = '{';
- CloseBrace                   = '}';
- OpenSquare                   = '[';
- CloseSquare                  = ']';
- Plus                         = '+';
- Star                         = '*';
- Question                     = '?';
- KwParameterUnpack            = 'unpack';
- KwParameterHide              = 'hide';
- KwParameterMerge             = 'merge';
+ StringLiteral      = '"' (print - ['"])* '"';
+ IntegerLiteral     = [0-9]+ '#' [0-9a-zA-Z]+;
+ BooleanLiteral     = 'true' | 'false';
+ TerminalIdentifier = '$' [_a-zA-Z][a-zA-Z0-9_]+;
+ RuleIdentifier     = '%' [a-zA-Z][a-zA-Z0-9_]+;
+ Epsilon            = 'epsilon';
+ Pipe               = '|';
+ SemiColon          = ';';
+ Equals             = '=';
+ Comma              = ',';
+ DoubleDot          = '..';
+ OpenParen          = '(';
+ CloseParen         = ')';
+ OpenBrace          = '{';
+ CloseBrace         = '}';
+ OpenSquare         = '[';
+ CloseSquare        = ']';
+ OpenAngle          = '<';
+ CloseAngle         = '>';
+ Plus               = '+';
+ Star               = '*';
+ Question           = '?';
+ KwParameterUnpack  = 'unpack';
+ KwParameterHide    = 'hide';
+ KwParameterMerge   = 'merge';
+ KwParameterId      = 'id';
 
  SingleLineComment = "//" [^\n]*;
  MultiLineComment  = "/*" ([^*] | '*' [^/])* "*/";
@@ -131,6 +134,16 @@
    fbreak;
   };
 
+  OpenAngle => {
+   ACCEPT_TOKEN(GrmAst::TkOpenAngle);
+   fbreak;
+  };
+
+  CloseAngle => {
+   ACCEPT_TOKEN(GrmAst::TkCloseAngle);
+   fbreak;
+  };
+
   Plus => {
    ACCEPT_TOKEN(GrmAst::TkPlus);
    fbreak;
@@ -158,6 +171,11 @@
 
   KwParameterMerge => {
    ACCEPT_TOKEN(GrmAst::TkKwParameterMerge);
+   fbreak;
+  };
+
+  KwParameterId => {
+   ACCEPT_TOKEN(GrmAst::TkKwParameterId);
    fbreak;
   };
         

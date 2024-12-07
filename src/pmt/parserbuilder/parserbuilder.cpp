@@ -22,7 +22,6 @@ ParserBuilder::ParserBuilder(std::string_view input_path_, std::string_view inpu
 }
 
 void ParserBuilder::build() {
-  pmt::util::parse::GenericAstPrinter printer(&pmt::util::parse::GrmAst::to_string);
   pmt::util::parse::GrmLexer lexer(_input_grammar);
   auto ast = pmt::util::parse::GrmParser::parse(lexer);
 
@@ -36,6 +35,15 @@ void ParserBuilder::build() {
   pmt::util::parse::GenericLexer generic_lexer(_input_sample, tables);
 
   pmt::base::DynamicBitset const accepts_all(tables._terminals.size(), true);
+
+  auto const to_string = [&tables](pmt::util::parse::GenericAst::IdType id_) -> std::string {
+    if (id_ < tables._id_names.size()) {
+      return tables._id_names[id_];
+    }
+
+    return "Unknown token: " + std::to_string(id_);
+  };
+  pmt::util::parse::GenericAstPrinter printer(to_string);
 
   while (true) {
     pmt::util::parse::GenericAst::UniqueHandle token = generic_lexer.next_token(accepts_all);

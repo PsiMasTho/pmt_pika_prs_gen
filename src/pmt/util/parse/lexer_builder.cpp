@@ -484,15 +484,18 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
     GenericAst const& child = *ast_.get_child_at(i);
     if (child.get_id() == GrmAst::NtTerminalProduction) {
       std::string const& terminal_name = child.get_child_at(0)->get_token();
+      std::string const& terminal_id = child.get_child_at(1)->get_token();
 
       if (accepting_terminals_.contains(terminal_name)) {
         _accepting_terminals.emplace_back();
         _accepting_terminals.back()._name = terminal_name;
-        _accepting_terminals.back()._id = GenericAst::IdDefault;
+        _accepting_terminals.back()._id = GenericAst::IdUninitialized;
       }
 
+      _id_names_to_terminal_names[terminal_id].insert(terminal_name);
+
       if (auto const itr = _terminal_definitions.find(terminal_name); itr == _terminal_definitions.end()) {
-        _terminal_definitions.insert_or_assign(terminal_name, AstPositionConst{&child, 1});
+        _terminal_definitions.insert_or_assign(terminal_name, AstPositionConst{&child, 2});
       } else {
         throw std::runtime_error("Terminal '" + terminal_name + "' defined multiple times");
       }
@@ -516,6 +519,13 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
       text += std::exchange(delim, ", ") + *terminal_name;
     }
     throw std::runtime_error(text);
+  }
+
+  for (GenericAst::IdType i = 0; auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
+    for (std::string const& terminal_name : terminal_names) {
+      _accepting_terminals[*find_accepting_terminal_nr(terminal_name)]._id = (terminal_id == "IdDefault") ? GenericAst::IdDefault : i;
+    }
+    i += (terminal_id == "IdDefault") ? 0 : 1;
   }
 }
 
@@ -582,7 +592,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   for (Fa::StateNrType const state_nr : state_nrs_sorted) {
     assert(ret._transitions.size() == state_nr && ret._accepts.size() == state_nr);
     Fa::State const& state = fa_._states.find(state_nr)->second;
-    std::array<Fa::StateNrType, 256> transitions;
+    std::array<Fa::StateNrType, UCHAR_MAX> transitions;
     transitions.fill(GenericLexerTables::INVALID_STATE_NR);
 
     for (auto const& [symbol, state_nr_next] : state._transitions._symbol_transitions) {
@@ -600,6 +610,13 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
 
   for (TerminalInfo const& terminal_info : _accepting_terminals) {
     ret._terminals.push_back(terminal_info);
+  }
+
+  for (auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
+    if (terminal_id == "IdDefault") {
+      continue;
+    }
+    ret._id_names.push_back(terminal_id);
   }
 
   return ret;
