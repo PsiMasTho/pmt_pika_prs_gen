@@ -1,9 +1,10 @@
-#include "pmt/util/parse/fa_part.hpp"
+#include "pmt/parserbuilder/fa_part.hpp"
 
 #include <stack>
 #include <unordered_map>
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
+using namespace pmt::util::parse;
 
 FaPart::FaPart(Fa::StateNrType incoming_state_nr_)
  : _incoming_state_nr(incoming_state_nr_) {
@@ -68,4 +69,4 @@ void FaPart::connect_outgoing_transitions_to(Fa::StateNrType state_nr_to_, Fa& f
   clear_outgoing_transitions();
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::parserbuilder

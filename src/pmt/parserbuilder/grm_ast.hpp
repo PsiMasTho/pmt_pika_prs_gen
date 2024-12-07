@@ -1,13 +1,13 @@
 #pragma once
 
+#include "pmt/parserbuilder/grm_ast-inl.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
-#include "pmt/util/parse/grm_ast-inl.hpp"
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
 
 class GrmAst {
  public:
-  enum : GenericAst::IdType {
+  enum : pmt::util::parse::GenericAst::IdType {
     // Terminals
     // - Literals
     TkStringLiteral = TOKEN_STRING_LITERAL,
@@ -51,7 +51,7 @@ class GrmAst {
     NtRange
   };
 
-  static auto to_string(GenericAst::IdType id_) -> std::string;
+  static auto to_string(pmt::util::parse::GenericAst::IdType id_) -> std::string;
 };
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::parserbuilder

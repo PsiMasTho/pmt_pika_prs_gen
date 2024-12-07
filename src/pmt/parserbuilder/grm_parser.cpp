@@ -1,8 +1,9 @@
-#include "pmt/util/parse/grm_parser.hpp"
+#include "pmt/parserbuilder/grm_parser.hpp"
 
-#include "pmt/util/parse/grm_parser-inl.hpp"
+#include "pmt/parserbuilder/grm_parser-inl.hpp"
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
+using namespace pmt::util::parse;
 
 auto GrmParser::parse(GrmLexer& lexer_) -> GenericAst::UniqueHandle {
   GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Children);
@@ -15,7 +16,7 @@ auto GrmParser::parse(GrmLexer& lexer_) -> GenericAst::UniqueHandle {
     if (!token) {
       break;
     }
-    // ParseTrace(stderr, "");
+
     Parse(parser, token->get_id(), std::move(token), &ret);
   }
   Parse(parser, 0, GenericAst::UniqueHandle(), &ret);
@@ -25,4 +26,4 @@ auto GrmParser::parse(GrmLexer& lexer_) -> GenericAst::UniqueHandle {
   return ret;
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::parserbuilder

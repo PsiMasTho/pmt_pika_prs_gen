@@ -1,13 +1,13 @@
-#include "pmt/util/parse/lexer_builder.hpp"
+#include "pmt/parserbuilder/lexer_builder.hpp"
 
 #include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/parserbuilder/fa_part.hpp"
+#include "pmt/parserbuilder/grm_ast.hpp"
+#include "pmt/parserbuilder/grm_number.hpp"
 #include "pmt/util/parse/ast_position.hpp"
 #include "pmt/util/parse/fa.hpp"
-#include "pmt/util/parse/fa_part.hpp"
 #include "pmt/util/parse/generic_ast.hpp"
 #include "pmt/util/parse/graph_writer.hpp"
-#include "pmt/util/parse/grm_ast.hpp"
-#include "pmt/util/parse/grm_ast_transformations.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -19,7 +19,8 @@
 #include <utility>
 #include <vector>
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
+using namespace pmt::util::parse;
 namespace {
 // - Expression -> Fa declarations -
 // -- ExpressionFrameBase --
@@ -95,7 +96,7 @@ class RepetitionExpressionFrame : public ExpressionFrameBase {
 
   FaPart _choices;
   FaPart _chunk;
-  GrmAstTransformations::RepetitionRangeType _range;
+  GrmNumber::RepetitionRangeType _range;
   Fa::Transitions* _transitions_choices = nullptr;
   size_t _stage = 0;
   size_t _idx = 0;
@@ -251,7 +252,7 @@ void ChoicesExpressionFrame::process_stage_2(CallstackType& callstack_, Captures
 // -- RepetitionExpressionFrame --
 RepetitionExpressionFrame::RepetitionExpressionFrame(AstPositionConst ast_position_)
  : ExpressionFrameBase({ast_position_.first->get_child_at(ast_position_.second), 0})
- , _range(GrmAstTransformations::get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1))) {
+ , _range(GrmNumber::get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1))) {
 }
 
 void RepetitionExpressionFrame::process(CallstackType& callstack_, Captures& captures_) {
@@ -374,8 +375,8 @@ void RangeExpressionFrame::process(CallstackType&, Captures& captures_) {
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
 
-  Fa::SymbolType const min = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(0));
-  Fa::SymbolType const max = GrmAstTransformations::single_char_as_value(*cur_expr.get_child_at(1));
+  Fa::SymbolType const min = GrmNumber::single_char_as_value(*cur_expr.get_child_at(0));
+  Fa::SymbolType const max = GrmNumber::single_char_as_value(*cur_expr.get_child_at(1));
 
   for (Fa::SymbolType i = min; i <= max; ++i) {
     captures_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, i);
@@ -387,7 +388,7 @@ void IntegerLiteralExpressionFrame::process(CallstackType&, Captures& captures_)
   Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
   captures_._result._states[state_nr_incoming];
   captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
-  captures_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, GrmAstTransformations::single_char_as_value(*_ast_position.first->get_child_at(_ast_position.second)));
+  captures_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, GrmNumber::single_char_as_value(*_ast_position.first->get_child_at(_ast_position.second)));
 }
 
 // -- EpsilonExpressionFrame --
@@ -487,9 +488,7 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
       std::string const& terminal_id = child.get_child_at(1)->get_token();
 
       if (accepting_terminals_.contains(terminal_name)) {
-        _accepting_terminals.emplace_back();
-        _accepting_terminals.back()._name = terminal_name;
-        _accepting_terminals.back()._id = GenericAst::IdUninitialized;
+        _accepting_terminals.emplace_back(terminal_name);
       }
 
       _id_names_to_terminal_names[terminal_id].insert(terminal_name);
@@ -502,7 +501,7 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
     }
   }
 
-  std::ranges::sort(_accepting_terminals, [](TerminalInfo const& lhs_, TerminalInfo const& rhs_) { return lhs_._name < rhs_._name; });
+  std::ranges::sort(_accepting_terminals);
 
   // Check if all accepting terminals are defined
   std::unordered_set<std::string const*> missing_terminals;
@@ -521,9 +520,10 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
     throw std::runtime_error(text);
   }
 
+  _terminal_ids.resize(_accepting_terminals.size(), GenericAst::IdDefault);
   for (GenericAst::IdType i = 0; auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
     for (std::string const& terminal_name : terminal_names) {
-      _accepting_terminals[*find_accepting_terminal_nr(terminal_name)]._id = (terminal_id == "IdDefault") ? GenericAst::IdDefault : i;
+      _terminal_ids[*find_accepting_terminal_nr(terminal_name)] = (terminal_id == "IdDefault") ? GenericAst::IdDefault : i;
     }
     i += (terminal_id == "IdDefault") ? 0 : 1;
   }
@@ -544,8 +544,7 @@ auto LexerBuilder::build_initial_fa() -> Fa {
 
   Fa::State& state_start = ret._states[ret.get_unused_state_nr()];
 
-  for (TerminalInfo const& terminal_info : _accepting_terminals) {
-    std::string const& terminal_name = terminal_info._name;
+  for (std::string const& terminal_name : _accepting_terminals) {
     AstPositionConst terminal_def = _terminal_definitions.find(terminal_name)->second;
 
     FaPart ret_part;
@@ -581,7 +580,6 @@ auto LexerBuilder::build_initial_fa() -> Fa {
 
 auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   GenericLexerTables ret;
-  ret._state_nr_start = 0;
 
   // We need to traverse the states in order
   std::set<Fa::StateNrType> state_nrs_sorted;
@@ -593,7 +591,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     assert(ret._transitions.size() == state_nr && ret._accepts.size() == state_nr);
     Fa::State const& state = fa_._states.find(state_nr)->second;
     std::array<Fa::StateNrType, UCHAR_MAX> transitions;
-    transitions.fill(GenericLexerTables::INVALID_STATE_NR);
+    transitions.fill(GenericLexerTables::STATE_NR_INVALID);
 
     for (auto const& [symbol, state_nr_next] : state._transitions._symbol_transitions) {
       transitions[symbol] = state_nr_next;
@@ -608,9 +606,8 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     ret._transitions.push_back(transitions);
   }
 
-  for (TerminalInfo const& terminal_info : _accepting_terminals) {
-    ret._terminals.push_back(terminal_info);
-  }
+  ret._terminal_names = _accepting_terminals;
+  ret._terminal_ids = _terminal_ids;
 
   for (auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
     if (terminal_id == "IdDefault") {
@@ -623,9 +620,9 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
 }
 
 auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t> {
-  auto const itr = std::lower_bound(_accepting_terminals.begin(), _accepting_terminals.end(), terminal_name_, [](TerminalInfo const& a_, std::string const& b_) { return a_._name < b_; });
+  auto const itr = std::lower_bound(_accepting_terminals.begin(), _accepting_terminals.end(), terminal_name_);
 
-  if (itr == _accepting_terminals.end() || itr->_name != terminal_name_) {
+  if (itr == _accepting_terminals.end() || *itr != terminal_name_) {
     return std::nullopt;
   }
 
@@ -643,7 +640,7 @@ void LexerBuilder::write_dot(Fa const& fa_) {
 }
 
 auto LexerBuilder::accepts_to_label(size_t accepts_) -> std::string {
-  return _accepting_terminals[accepts_]._name;
+  return _accepting_terminals[accepts_];
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::parserbuilder

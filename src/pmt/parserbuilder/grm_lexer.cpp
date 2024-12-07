@@ -1,8 +1,8 @@
 
 #line 1 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
-#include "pmt/util/parse/grm_lexer.hpp"
+#include "pmt/parserbuilder/grm_lexer.hpp"
 
-#include "pmt/util/parse/grm_ast.hpp"
+#include "pmt/parserbuilder/grm_ast.hpp"
 
 #define MAKE_RL_CONTEXT_AVAILABLE \
   char const *&p = _p;            \
@@ -23,7 +23,7 @@
 
 namespace {
 
-#line 25 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 25 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
 static const int GrmLexer_start = 24;
 static const int GrmLexer_first_final = 24;
 static const int GrmLexer_error = -1;
@@ -34,7 +34,8 @@ static const int GrmLexer_en_main = 24;
 
 }  // namespace
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
+using namespace pmt::util::parse;
 
 GrmLexer::GrmLexer(std::string_view input_)
  : _p{input_.data()}
@@ -46,7 +47,7 @@ GrmLexer::GrmLexer(std::string_view input_)
  , _cs{0} {
   MAKE_RL_CONTEXT_AVAILABLE;
 
-#line 47 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 48 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
   {
     cs = GrmLexer_start;
     ts = 0;
@@ -54,7 +55,7 @@ GrmLexer::GrmLexer(std::string_view input_)
     act = 0;
   }
 
-#line 211 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+#line 212 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
 }
 
 auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
@@ -62,7 +63,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
 
   GenericAst::UniqueHandle accepted;
 
-#line 60 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 61 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
   {
     if (p == pe)
       goto _test_eof;
@@ -474,7 +475,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       {
         ts = p;
       }
-#line 241 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 242 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         switch ((*p)) {
           case 32:
             goto tr28;
@@ -547,7 +548,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof25;
       case 25:
-#line 283 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 284 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 34)
           goto tr2;
         if ((*p) > 38) {
@@ -578,7 +579,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof26;
       case 26:
-#line 310 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 311 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 95)
           goto st1;
         if ((*p) > 90) {
@@ -634,7 +635,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof29;
       case 29:
-#line 362 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 363 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         switch ((*p)) {
           case 42:
             goto st2;
@@ -673,7 +674,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof31;
       case 31:
-#line 395 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 396 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 35)
           goto st4;
         if (48 <= (*p) && (*p) <= 57)
@@ -724,7 +725,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof33;
       case 33:
-#line 442 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 443 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 112)
           goto st6;
         goto tr56;
@@ -773,7 +774,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof34;
       case 34:
-#line 487 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 488 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 97)
           goto st11;
         goto tr56;
@@ -808,7 +809,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof35;
       case 35:
-#line 518 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 519 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 105)
           goto st14;
         goto tr56;
@@ -843,7 +844,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof37;
       case 37:
-#line 549 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 550 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 101)
           goto st16;
         goto tr56;
@@ -878,7 +879,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof38;
       case 38:
-#line 580 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 581 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 114)
           goto st19;
         goto tr56;
@@ -899,7 +900,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (++p == pe)
           goto _test_eof39;
       case 39:
-#line 597 "/home/pmt/repos/pmt/src/pmt/util/parse/grm_lexer.cpp"
+#line 598 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 110)
           goto st20;
         goto tr56;
@@ -1140,7 +1141,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _out : {}
   }
 
-#line 219 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+#line 220 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
 
   if (_p == _pe && accepted.get() == nullptr) {
     return nullptr;
@@ -1154,6 +1155,6 @@ auto GrmLexer::is_eof() const -> bool {
   return _p == _pe;
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::parserbuilder
 
 #undef MAKE_RL_CONTEXT_AVAILABLE

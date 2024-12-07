@@ -119,7 +119,7 @@ class yy_storage {
 
 /************ Begin %include sections from the grammar ************************/
 #line 1 "/home/pmt/repos/pmt/grammars/grm_parser.y"
-#include "pmt/util/parse/grm_ast.hpp"
+#include "pmt/parserbuilder/grm_ast.hpp"
 #line 2 "/home/pmt/repos/pmt/grammars/grm_parser.y"
 #include "pmt/util/parse/generic_ast.hpp"
 #line 130 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
@@ -1029,7 +1029,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 38 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         *ast_ = std::move(A);
-        (*ast_)->set_id(pmt::util::parse::GrmAst::NtGrammar);
+        (*ast_)->set_id(pmt::parserbuilder::GrmAst::NtGrammar);
       }
 #line 1057 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
       yy_destructor(A);
@@ -1073,9 +1073,9 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 53 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtTerminalProduction);
+        A->set_id(pmt::parserbuilder::GrmAst::NtTerminalProduction);
         A->give_child_at_back(std::move(B));
-        auto default_id = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token, pmt::util::parse::GrmAst::TkStringLiteral);
+        auto default_id = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token, pmt::parserbuilder::GrmAst::TkStringLiteral);
         default_id->set_token("IdDefault");
         A->give_child_at_back(std::move(default_id));
         A->give_child_at_back(std::move(C));
@@ -1100,7 +1100,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 63 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtTerminalProduction);
+        A->set_id(pmt::parserbuilder::GrmAst::NtTerminalProduction);
         A->give_child_at_back(std::move(B));
         A->give_child_at_back(std::move(C));
         A->give_child_at_back(std::move(D));
@@ -1155,20 +1155,20 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 95 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtRepetition);
+        A->set_id(pmt::parserbuilder::GrmAst::NtRepetition);
         A->give_child_at_back(std::move(B));
 
         // Add repetition info: "," "1"
         auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        repetition_info->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
+        repetition_info->set_id(pmt::parserbuilder::GrmAst::NtRepetitionRange);
 
         auto comma = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
-        comma->set_id(pmt::util::parse::GrmAst::TkComma);
+        comma->set_id(pmt::parserbuilder::GrmAst::TkComma);
         comma->set_token(",");
         repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
 
         auto rhs = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
-        rhs->set_id(pmt::util::parse::GrmAst::TkIntegerLiteral);
+        rhs->set_id(pmt::parserbuilder::GrmAst::TkIntegerLiteral);
         rhs->set_token("10#1");
         repetition_info->give_child_at_back(std::move(rhs));
 
@@ -1186,15 +1186,15 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 117 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtRepetition);
+        A->set_id(pmt::parserbuilder::GrmAst::NtRepetition);
         A->give_child_at_back(std::move(B));
 
         // Add repetition info: ","
         auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        repetition_info->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
+        repetition_info->set_id(pmt::parserbuilder::GrmAst::NtRepetitionRange);
 
         auto comma = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
-        comma->set_id(pmt::util::parse::GrmAst::TkComma);
+        comma->set_id(pmt::parserbuilder::GrmAst::TkComma);
         comma->set_token(",");
 
         repetition_info->give_child_at_back(std::move(comma));
@@ -1212,20 +1212,20 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 134 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtRepetition);
+        A->set_id(pmt::parserbuilder::GrmAst::NtRepetition);
         A->give_child_at_back(std::move(B));
 
         // Add repetition info: "1" ","
         auto repetition_info = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        repetition_info->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
+        repetition_info->set_id(pmt::parserbuilder::GrmAst::NtRepetitionRange);
 
         auto lhs = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
-        lhs->set_id(pmt::util::parse::GrmAst::TkIntegerLiteral);
+        lhs->set_id(pmt::parserbuilder::GrmAst::TkIntegerLiteral);
         lhs->set_token("10#1");
         repetition_info->give_child_at(repetition_info->get_children_size(), std::move(lhs));
 
         auto comma = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Token);
-        comma->set_id(pmt::util::parse::GrmAst::TkComma);
+        comma->set_id(pmt::parserbuilder::GrmAst::TkComma);
         comma->set_token(",");
         repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
 
@@ -1243,7 +1243,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 156 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtRepetition);
+        A->set_id(pmt::parserbuilder::GrmAst::NtRepetition);
         A->give_child_at_back(std::move(B));
         A->give_child_at_back(std::move(C));
       }
@@ -1263,7 +1263,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 163 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtRange);
+        A->set_id(pmt::parserbuilder::GrmAst::NtRange);
         A->give_child_at_back(std::move(B));
         A->give_child_at_back(std::move(C));
       }
@@ -1282,7 +1282,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 178 "/home/pmt/repos/pmt/grammars/grm_parser.y"
         {
           A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-          A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
+          A->set_id(pmt::parserbuilder::GrmAst::NtRepetitionRange);
           A->give_child_at_back(std::move(B));
         }
 #line 1318 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"
@@ -1301,7 +1301,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 184 "/home/pmt/repos/pmt/grammars/grm_parser.y"
         {
           A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-          A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
+          A->set_id(pmt::parserbuilder::GrmAst::NtRepetitionRange);
           A->give_child_at_back(std::move(B));
           A->give_child_at_back(std::move(C));
         }
@@ -1321,7 +1321,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 198 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtRepetitionRange);
+        A->set_id(pmt::parserbuilder::GrmAst::NtRepetitionRange);
         A->give_child_at_back(std::move(B));
         A->give_child_at_back(std::move(C));
         A->give_child_at_back(std::move(D));
@@ -1339,13 +1339,13 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 216 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtSequence);
+        A->set_id(pmt::parserbuilder::GrmAst::NtSequence);
         A->give_child_at_back(std::move(B));
-        if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::util::parse::GrmAst::NtSequence) {
+        if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::parserbuilder::GrmAst::NtSequence) {
           A->unpack(A->get_children_size() - 1);
         }
         A->give_child_at_back(std::move(C));
-        if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::util::parse::GrmAst::NtSequence) {
+        if (A->get_child_at(A->get_children_size() - 1)->get_id() == pmt::parserbuilder::GrmAst::NtSequence) {
           A->unpack(A->get_children_size() - 1);
         }
       }
@@ -1361,7 +1361,7 @@ static void yy_reduce(yyParser *yypParser,  /* The parser */
 #line 229 "/home/pmt/repos/pmt/grammars/grm_parser.y"
       {
         A = pmt::util::parse::GenericAst::construct(pmt::util::parse::GenericAst::Tag::Children);
-        A->set_id(pmt::util::parse::GrmAst::NtChoices);
+        A->set_id(pmt::parserbuilder::GrmAst::NtChoices);
         A->give_child_at_back(std::move(B));
       }
 #line 1398 "/home/pmt/repos/pmt/grammars/grm_parser.cpp"

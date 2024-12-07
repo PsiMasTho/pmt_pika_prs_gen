@@ -35,10 +35,10 @@ auto GenericLexer::next_token(pmt::base::DynamicBitset const& accepts_) -> Gener
   GenericAst::IdType id = GenericAst::IdConstants::IdUninitialized;
   char const* te = nullptr;  // Token end
 
-  Fa::StateNrType state_nr_cur = _tables._state_nr_start;
+  Fa::StateNrType state_nr_cur = GenericLexerTables::STATE_NR_START;
 
   for (char const* p = _cursor; _cursor <= _end; ++p) {
-    if (state_nr_cur == GenericLexerTables::INVALID_STATE_NR) {
+    if (state_nr_cur == GenericLexerTables::STATE_NR_INVALID) {
       if (te != nullptr) {
         GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
         ret->set_token(std::string(_cursor, te));
@@ -55,9 +55,9 @@ auto GenericLexer::next_token(pmt::base::DynamicBitset const& accepts_) -> Gener
 
     if (countl != accepts_.size()) {
       te = p;
-      id = _tables._terminals[countl]._id;
+      id = _tables._terminal_ids[countl];
 
-      if (state_nr_cur == GenericLexerTables::INVALID_STATE_NR) {
+      if (state_nr_cur == GenericLexerTables::STATE_NR_INVALID) {
         GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
         ret->set_token(std::string(_cursor, te));
         _cursor = te;

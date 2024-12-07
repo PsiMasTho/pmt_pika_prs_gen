@@ -4,11 +4,11 @@
 
 #include <string_view>
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
 class GrmLexer {
  public:
   GrmLexer(std::string_view input_);
-  auto next_token() -> GenericAst::UniqueHandle;
+  auto next_token() -> pmt::util::parse::GenericAst::UniqueHandle;
   auto is_eof() const -> bool;
 
  private:
@@ -20,4 +20,4 @@ class GrmLexer {
   int _act;
   int _cs;
 };
-}  // namespace pmt::util::parse
+}  // namespace pmt::parserbuilder

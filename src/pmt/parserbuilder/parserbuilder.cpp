@@ -1,11 +1,11 @@
 #include "pmt/parserbuilder/parserbuilder.hpp"
 
+#include "pmt/parserbuilder/grm_lexer.hpp"
+#include "pmt/parserbuilder/grm_parser.hpp"
+#include "pmt/parserbuilder/lexer_builder.hpp"
+#include "pmt/parserbuilder/table_writer.hpp"
 #include "pmt/util/parse/generic_ast_printer.hpp"
 #include "pmt/util/parse/generic_lexer.hpp"
-#include "pmt/util/parse/grm_ast.hpp"
-#include "pmt/util/parse/grm_lexer.hpp"
-#include "pmt/util/parse/grm_parser.hpp"
-#include "pmt/util/parse/lexer_builder.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -22,11 +22,11 @@ ParserBuilder::ParserBuilder(std::string_view input_path_, std::string_view inpu
 }
 
 void ParserBuilder::build() {
-  pmt::util::parse::GrmLexer lexer(_input_grammar);
-  auto ast = pmt::util::parse::GrmParser::parse(lexer);
+  GrmLexer lexer(_input_grammar);
+  auto ast = GrmParser::parse(lexer);
 
   auto const start = std::chrono::high_resolution_clock::now();
-  pmt::util::parse::LexerBuilder lexer_builder(*ast, _terminals);
+  LexerBuilder lexer_builder(*ast, _terminals);
   pmt::util::parse::GenericLexerTables tables = lexer_builder.build();
   auto const end = std::chrono::high_resolution_clock::now();
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
@@ -34,7 +34,7 @@ void ParserBuilder::build() {
 
   pmt::util::parse::GenericLexer generic_lexer(_input_sample, tables);
 
-  pmt::base::DynamicBitset const accepts_all(tables._terminals.size(), true);
+  pmt::base::DynamicBitset const accepts_all(tables._terminal_ids.size(), true);
 
   auto const to_string = [&tables](pmt::util::parse::GenericAst::IdType id_) -> std::string {
     if (id_ < tables._id_names.size()) {
@@ -52,6 +52,11 @@ void ParserBuilder::build() {
       break;
     }
   }
+
+  std::ofstream os_header("lexer_tables.hpp");
+  std::ofstream os_source("lexer_tables.cpp");
+  TableWriter table_writer(os_header, os_source, "TestLexerTables", tables);
+  table_writer.write();
 }
 
 }  // namespace pmt::parserbuilder

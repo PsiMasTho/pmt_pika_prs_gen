@@ -1,6 +1,6 @@
-#include "pmt/util/parse/grm_lexer.hpp"
+#include "pmt/parserbuilder/grm_lexer.hpp"
 
-#include "pmt/util/parse/grm_ast.hpp"
+#include "pmt/parserbuilder/grm_ast.hpp"
 
 #define MAKE_RL_CONTEXT_AVAILABLE \
   char const*  &p = _p;           \
@@ -194,7 +194,8 @@ namespace {
 
 } // namespace
 
-namespace pmt::util::parse {
+namespace pmt::parserbuilder {
+ using namespace pmt::util::parse;
 
 GrmLexer::GrmLexer(std::string_view input_)
 :
