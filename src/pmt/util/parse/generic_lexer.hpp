@@ -12,7 +12,7 @@ class GenericLexer {
  public:
   GenericLexer(std::string_view input_, GenericLexerTables const& tables_);
 
-  auto next_token(std::span<GenericLexerTables::RawBitsetChunkType const> accepts_) -> GenericAst::UniqueHandle;
+  auto next_token(std::span<uint64_t const> accepts_) -> GenericAst::UniqueHandle;
 
  private:
   char const* _begin = nullptr;

@@ -3,6 +3,7 @@
 #include "pmt/fw_decl.hpp"
 #include "pmt/util/parse/ast_position.hpp"
 #include "pmt/util/parse/fa.hpp"
+#include "pmt/util/parse/generic_ast.hpp"
 #include "pmt/util/parse/generic_lexer_tables.hpp"
 
 #include <map>

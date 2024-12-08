@@ -581,28 +581,20 @@ auto LexerBuilder::build_initial_fa() -> Fa {
 auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   GenericLexerTables ret;
 
+  ret._state_nr_invalid = fa_._states.size();
+
   // We need to traverse the states in order
   std::set<Fa::StateNrType> state_nrs_sorted;
-  for (auto const& [state_nr, _] : fa_._states) {
+  for (auto const& [state_nr, state] : fa_._states) {
     state_nrs_sorted.insert(state_nr);
   }
 
   for (Fa::StateNrType const state_nr : state_nrs_sorted) {
-    assert(ret._transitions.size() == state_nr && ret._accepts.size() == state_nr);
     Fa::State const& state = fa_._states.find(state_nr)->second;
-    std::array<Fa::StateNrType, UCHAR_MAX> transitions;
-    transitions.fill(GenericLexerTables::STATE_NR_INVALID);
-
-    for (auto const& [symbol, state_nr_next] : state._transitions._symbol_transitions) {
-      transitions[symbol] = state_nr_next;
-    }
-
     ret._accepts.emplace_back(pmt::base::DynamicBitset::get_required_chunk_count(_accepting_terminals.size()), 0);
     for (size_t i = 0; i < state._accepts.get_chunk_count(); ++i) {
       ret._accepts.back()[i] = state._accepts.get_chunk(i);
     }
-
-    ret._transitions.push_back(transitions);
   }
 
   ret._terminal_names = _accepting_terminals;
@@ -614,6 +606,80 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     }
     ret._id_names.push_back(terminal_id);
   }
+
+  std::vector<std::vector<uint64_t>> orig;
+  orig.reserve(fa_._states.size());
+  for (Fa::StateNrType const state_nr : state_nrs_sorted) {
+    Fa::State const& state = fa_._states.find(state_nr)->second;
+    std::vector<uint64_t> next(UCHAR_MAX, ret._state_nr_invalid);
+    for (auto const& [symbol, next_state_nr] : state._transitions._symbol_transitions) {
+      next[static_cast<unsigned char>(symbol)] = next_state_nr;
+    }
+    orig.push_back(std::move(next));
+  }
+
+  std::unordered_set<size_t> occupied;
+  std::vector<uint64_t> shifts;
+  size_t shift_max = 0;
+  for (size_t i = 0; i < orig.size(); ++i) {
+    std::unordered_set<size_t> non_invalids;
+    for (size_t j = 0; j < orig[i].size(); ++j) {
+      if (orig[i][j] != ret._state_nr_invalid) {
+        non_invalids.insert(j);
+      }
+    }
+    // try different shift values until all non-invalids have only invalids "above" them
+    size_t shift_cur = 0;
+    while (true) {
+      bool good = true;
+      for (size_t const non_invalid : non_invalids) {
+        if (occupied.contains(non_invalid + shift_cur)) {
+          good = false;
+          break;
+        }
+      }
+
+      if (good) {
+        break;
+      }
+      ++shift_cur;
+    }
+
+    // this shift is good, add to occupied and shifts vector
+    for (size_t const non_invalid : non_invalids) {
+      occupied.insert(non_invalid + shift_cur);
+    }
+    shifts.push_back(shift_cur);
+    shift_max = std::max(shift_max, shift_cur);
+  }
+
+  std::vector<uint64_t> next(shift_max + UCHAR_MAX, ret._state_nr_invalid);
+  std::vector<uint64_t> check(shift_max + UCHAR_MAX, ret._state_nr_invalid);
+
+  for (size_t i = 0; i < orig.size(); ++i) {
+    for (size_t j = 0; j < orig[i].size(); ++j) {
+      assert(next.size() == check.size());
+
+      uint64_t const val = orig[i][j];
+      if (val == ret._state_nr_invalid) {
+        continue;
+      }
+
+      size_t const offset = shifts[i] + j;
+      next[offset] = val;
+      check[offset] = i;
+    }
+  }
+
+  // pop any trailing invalid. During lookup if we index out of bounds, we assume that was the invalid state
+  while (!next.empty() && next.back() == ret._state_nr_invalid) {
+    next.pop_back();
+    check.pop_back();
+  }
+
+  ret._transitions_shifts = std::move(shifts);
+  ret._transitions_next = std::move(next);
+  ret._transitions_check = std::move(check);
 
   return ret;
 }

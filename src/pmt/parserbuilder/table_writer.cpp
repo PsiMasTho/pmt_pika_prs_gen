@@ -28,22 +28,31 @@ void TableWriter::write() {
   write_source();
 }
 
+/*
+  std::vector<uint64_t> _transitions_shifts;
+  std::vector<uint64_t> _transitions_next;
+  std::vector<uint64_t> _transitions_check;
+*/
+
 void TableWriter::write_header() {
   // clang-format off
   _os_header <<
   "class " << _class_name << " {\n"
   " public:\n"
-  "  static inline size_t const STATE_COUNT  = " << _tables._transitions.size() << ";\n"
+  "  static inline size_t const SHIFT_COUNT  = " << _tables._transitions_shifts.size() << ";\n"
+  "  static inline size_t cosnt NEXT_COUNT   = " << _tables._transitions_next.size() << ";\n"
   "  static inline size_t const ACCEPT_COUNT = " << _tables._terminal_names.size() << ";\n"
   "  static inline size_t const ID_COUNT     = " << _tables._id_names.size() << ";\n"
   "\n"
-  "  using RawBitsetType = std::array<uint64_t, ACCEPT_COUNT>;\n"
+  "  static inline uint64_t const STATE_NR_INVALID = " << as_hex(_tables._state_nr_invalid) << ";\n"
   "\n"
-  "  static pmt::util::parse::GenericLexerTables::TransitionType const TRANSITIONS[STATE_COUNT];\n"
-  "  static RawBitsetType const                                        ACCEPTS[STATE_COUNT];\n"
-  "  static char const* const                                          TERMINAL_NAMES[ACCEPT_COUNT];\n"
-  "  static pmt::util::parse::GenericAst::IdType const                 TERMINAL_IDS[ACCEPT_COUNT];\n"
-  "  static char const* const                                          ID_NAMES[ID_COUNT];\n"
+  "  static uint64_t const                             TRANSITIONS_SHIFTS[SHIFT_COUNT];\n"
+  "  static uint64_t const                             TRANSITIONS_NEXT[NEXT_COUNT];\n"
+  "  static uint64_t const                             TRANSITIONS_CHECK[NEXT_COUNT];\n"
+  "  static uint64_t const                             ACCEPTS[STATE_COUNT];\n"
+  "  static char const* const                          TERMINAL_NAMES[ACCEPT_COUNT];\n"
+  "  static pmt::util::parse::GenericAst::IdType const TERMINAL_IDS[ACCEPT_COUNT];\n"
+  "  static char const* const                          ID_NAMES[ID_COUNT];\n"
   "\n"
   "  enum : pmt::util::parse::GenericAst::IdType {\n";
   
@@ -61,22 +70,51 @@ void TableWriter::write_header() {
 }
 
 void TableWriter::write_source() {
-  _os_source << "pmt::util::parse::GenericLexerTables::TransitionType const " << _class_name << "::TRANSITIONS[" << _class_name << "::STATE_COUNT] = {\n";
-  std::string delim1;
-  for (size_t i = 0; i < _tables._transitions.size(); ++i) {
-    _os_source << std::exchange(delim1, ",\n") << " {";
-    std::string delim2;
-    for (size_t j = 0; j < _tables._transitions[i].size(); ++j) {
-      _os_source << std::exchange(delim2, ", ") << as_hex(_tables._transitions[i][j]);
+  static size_t const PER_LINE = 16;
+  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_SHIFTS[" << _class_name << "::SHIFT_COUNT] = {\n";
+  for (size_t i = 0; i < _tables._transitions_shifts.size(); ++i) {
+    if (i == 0) {
+      _os_source << " ";
+    } else if (i % PER_LINE == 0) {
+      _os_source << ",\n ";
+    } else {
+      _os_source << ", ";
     }
-    _os_source << "}";
+    _os_source << as_hex(_tables._transitions_shifts[i]);
   }
   _os_source << "\n};\n"
                 "\n";
 
-  delim1.clear();
+  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_NEXT[" << _class_name << "::NEXT_COUNT] = {\n";
+  for (size_t i = 0; i < _tables._transitions_next.size(); ++i) {
+    if (i == 0) {
+      _os_source << " ";
+    } else if (i % PER_LINE == 0) {
+      _os_source << ",\n ";
+    } else {
+      _os_source << ", ";
+    }
+    _os_source << as_hex(_tables._transitions_next[i]);
+  }
+  _os_source << "\n};\n"
+                "\n";
 
-  _os_source << _class_name << "::RawBitsetType const " << _class_name << "::ACCEPTS[" << _class_name << "::STATE_COUNT] = {\n";
+  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_CHECK[" << _class_name << "::NEXT_COUNT] = {\n";
+  for (size_t i = 0; i < _tables._transitions_check.size(); ++i) {
+    if (i == 0) {
+      _os_source << " ";
+    } else if (i % PER_LINE == 0) {
+      _os_source << ",\n ";
+    } else {
+      _os_source << ", ";
+    }
+    _os_source << as_hex(_tables._transitions_check[i]);
+  }
+  _os_source << "\n};\n"
+                "\n";
+
+  std::string delim1;
+  _os_source << _class_name << "::uint64_t const " << _class_name << "::ACCEPTS[" << _class_name << "::STATE_COUNT] = {\n";
 
   for (size_t i = 0; i < _tables._accepts.size(); ++i) {
     _os_source << std::exchange(delim1, ",\n") << " {";
@@ -104,7 +142,14 @@ void TableWriter::write_source() {
   _os_source << "pmt::util::parse::GenericAst::IdType const " << _class_name << "::TERMINAL_IDS[" << _class_name << "::ACCEPT_COUNT] = {\n";
 
   for (size_t i = 0; i < _tables._terminal_ids.size(); ++i) {
-    _os_source << std::exchange(delim1, ",\n") << " " << as_hex(_tables._terminal_ids[i]);
+    if (i == 0) {
+      _os_source << " ";
+    } else if (i % PER_LINE == 0) {
+      _os_source << ",\n ";
+    } else {
+      _os_source << ", ";
+    }
+    _os_source << as_hex(_tables._terminal_ids[i]);
   }
 
   _os_source << "\n};\n"
