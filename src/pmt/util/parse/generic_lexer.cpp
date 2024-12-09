@@ -42,6 +42,23 @@ auto raw_bitset_popcnt(std::span<uint64_t const> chunks_) -> size_t {
   return std::accumulate(chunks_.begin(), chunks_.end(), 0, [](size_t acc_, uint64_t chunk_) { return acc_ + std::popcount(chunk_); });
 }
 
+auto get_next_state(GenericLexerTables const& tables_, uint64_t state_nr_, char symbol_) -> uint64_t {
+  uint64_t offset = tables_._transitions_shift[state_nr_] + symbol_;
+  while (true) {
+    if (tables_._transitions_check.size() < offset || state_nr_ == tables_._state_nr_invalid) {
+      return tables_._state_nr_invalid;
+    }
+
+    if (tables_._transitions_check[offset] == state_nr_) {
+      return tables_._transitions_next[offset];
+    }
+
+    // Update state_nr_ and offset for the next iteration
+    state_nr_ = tables_._transitions_default[state_nr_];
+    offset = tables_._transitions_shift[state_nr_] + symbol_;
+  }
+}
+
 }  // namespace
 
 GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables const& tables_)
@@ -98,8 +115,7 @@ auto GenericLexer::next_token(std::span<uint64_t const> accepts_) -> GenericAst:
       break;
     }
 
-    uint64_t const offset = _tables._transitions_shifts[state_nr_cur] + *p;
-    state_nr_cur = (offset >= _tables._transitions_check.size()) ? _tables._state_nr_invalid : (_tables._transitions_check[offset] == state_nr_cur) ? _tables._transitions_next[offset] : _tables._state_nr_invalid;
+    state_nr_cur = get_next_state(_tables, state_nr_cur, *p);
   }
 
   if (te != nullptr) {

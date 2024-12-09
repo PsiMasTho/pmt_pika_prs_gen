@@ -12,7 +12,8 @@ class GenericLexerTables {
 
   uint64_t _state_nr_invalid = std::numeric_limits<uint64_t>::max();
 
-  std::vector<uint64_t> _transitions_shifts;
+  std::vector<uint64_t> _transitions_default;
+  std::vector<uint64_t> _transitions_shift;
   std::vector<uint64_t> _transitions_next;
   std::vector<uint64_t> _transitions_check;
 

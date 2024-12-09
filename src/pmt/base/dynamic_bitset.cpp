@@ -177,6 +177,23 @@ auto DynamicBitset::operator!=(const DynamicBitset& other_) const -> bool {
   return !(*this == other_);
 }
 
+auto DynamicBitset::any() const -> bool {
+  return std::any_of(_data.get(), _data.get() + get_required_chunk_count(_size), [](ChunkType chunk_) { return chunk_ != ALL_SET_MASKS[0]; });
+}
+
+auto DynamicBitset::none() const -> bool {
+  return std::all_of(_data.get(), _data.get() + get_required_chunk_count(_size), [](ChunkType chunk_) { return chunk_ == ALL_SET_MASKS[0]; });
+}
+
+auto DynamicBitset::all() const -> bool {
+  size_t max = get_required_chunk_count(_size) - 1;
+  bool const lhs = std::all_of(_data.get(), _data.get() + max, [](ChunkType chunk_) { return chunk_ == ALL_SET_MASKS[1]; });
+  if (!lhs) {
+    return false;
+  }
+  return static_cast<size_t>(std::popcount(_data[max])) == get_bit_index(_size);
+}
+
 auto DynamicBitset::popcnt() const -> size_t {
   return std::accumulate(_data.get(), _data.get() + get_required_chunk_count(_size), 0, [](size_t acc_, ChunkType chunk_) { return acc_ + std::popcount(chunk_); });
 }

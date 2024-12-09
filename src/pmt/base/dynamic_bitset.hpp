@@ -48,6 +48,9 @@ class DynamicBitset {
   auto operator!=(const DynamicBitset& other_) const -> bool;
 
   // - Bitwise operations -
+  auto any() const -> bool;
+  auto none() const -> bool;
+  auto all() const -> bool;
   auto popcnt() const -> size_t;
   auto countl(bool value_) const -> size_t;
   auto countr(bool value_) const -> size_t;

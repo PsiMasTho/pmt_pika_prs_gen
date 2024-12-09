@@ -1,7 +1,9 @@
 #include "pmt/parserbuilder/lexer_builder.hpp"
 
 #include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/dynamic_bitset_converter.hpp"
 #include "pmt/parserbuilder/fa_part.hpp"
+#include "pmt/parserbuilder/fa_to_dsnc_transitions.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
 #include "pmt/util/parse/ast_position.hpp"
@@ -11,6 +13,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -523,7 +527,11 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
   _terminal_ids.resize(_accepting_terminals.size(), GenericAst::IdDefault);
   for (GenericAst::IdType i = 0; auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
     for (std::string const& terminal_name : terminal_names) {
-      _terminal_ids[*find_accepting_terminal_nr(terminal_name)] = (terminal_id == "IdDefault") ? GenericAst::IdDefault : i;
+      std::optional<size_t> const terminal_nr = find_accepting_terminal_nr(terminal_name);
+      if (!terminal_nr.has_value()) {
+        continue;
+      }
+      _terminal_ids[*terminal_nr] = (terminal_id == "IdDefault") ? GenericAst::IdDefault : i;
     }
     i += (terminal_id == "IdDefault") ? 0 : 1;
   }
@@ -535,6 +543,24 @@ auto LexerBuilder::build() -> GenericLexerTables {
   fa.determinize();
   write_dot(fa);
   fa.minimize();
+
+  pmt::base::DynamicBitset accepts0 = fa._states.find(0)->second._accepts;
+  if (accepts0.any()) {
+    static size_t const MAX_REPORTED = 8;
+    std::unordered_set<size_t> const accepts0_set = pmt::base::DynamicBitsetConverter::to_unordered_set(accepts0);
+    std::string msg;
+    std::string delim;
+    for (size_t i = 1; size_t const terminal_nr : accepts0_set) {
+      msg += std::exchange(delim, ", ");
+      if (i <= MAX_REPORTED) {
+        msg += _accepting_terminals[terminal_nr];
+      } else {
+        msg += "...";
+        break;
+      }
+    }
+    throw std::runtime_error("Initial state accepts terminal(s): " + msg);
+  }
 
   return fa_to_lexer_tables(fa);
 }
@@ -581,8 +607,6 @@ auto LexerBuilder::build_initial_fa() -> Fa {
 auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   GenericLexerTables ret;
 
-  ret._state_nr_invalid = fa_._states.size();
-
   // We need to traverse the states in order
   std::set<Fa::StateNrType> state_nrs_sorted;
   for (auto const& [state_nr, state] : fa_._states) {
@@ -607,81 +631,19 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     ret._id_names.push_back(terminal_id);
   }
 
-  std::vector<std::vector<uint64_t>> orig;
-  orig.reserve(fa_._states.size());
-  for (Fa::StateNrType const state_nr : state_nrs_sorted) {
-    Fa::State const& state = fa_._states.find(state_nr)->second;
-    std::vector<uint64_t> next(UCHAR_MAX, ret._state_nr_invalid);
-    for (auto const& [symbol, next_state_nr] : state._transitions._symbol_transitions) {
-      next[static_cast<unsigned char>(symbol)] = next_state_nr;
-    }
-    orig.push_back(std::move(next));
-  }
-
-  std::unordered_set<size_t> occupied;
-  std::vector<uint64_t> shifts;
-  size_t shift_max = 0;
-  for (size_t i = 0; i < orig.size(); ++i) {
-    std::unordered_set<size_t> non_invalids;
-    for (size_t j = 0; j < orig[i].size(); ++j) {
-      if (orig[i][j] != ret._state_nr_invalid) {
-        non_invalids.insert(j);
-      }
-    }
-    // try different shift values until all non-invalids have only invalids "above" them
-    size_t shift_cur = 0;
-    while (true) {
-      bool good = true;
-      for (size_t const non_invalid : non_invalids) {
-        if (occupied.contains(non_invalid + shift_cur)) {
-          good = false;
-          break;
-        }
-      }
-
-      if (good) {
-        break;
-      }
-      ++shift_cur;
-    }
-
-    // this shift is good, add to occupied and shifts vector
-    for (size_t const non_invalid : non_invalids) {
-      occupied.insert(non_invalid + shift_cur);
-    }
-    shifts.push_back(shift_cur);
-    shift_max = std::max(shift_max, shift_cur);
-  }
-
-  std::vector<uint64_t> next(shift_max + UCHAR_MAX, ret._state_nr_invalid);
-  std::vector<uint64_t> check(shift_max + UCHAR_MAX, ret._state_nr_invalid);
-
-  for (size_t i = 0; i < orig.size(); ++i) {
-    for (size_t j = 0; j < orig[i].size(); ++j) {
-      assert(next.size() == check.size());
-
-      uint64_t const val = orig[i][j];
-      if (val == ret._state_nr_invalid) {
-        continue;
-      }
-
-      size_t const offset = shifts[i] + j;
-      next[offset] = val;
-      check[offset] = i;
-    }
-  }
-
-  // pop any trailing invalid. During lookup if we index out of bounds, we assume that was the invalid state
-  while (!next.empty() && next.back() == ret._state_nr_invalid) {
-    next.pop_back();
-    check.pop_back();
-  }
-
-  ret._transitions_shifts = std::move(shifts);
-  ret._transitions_next = std::move(next);
-  ret._transitions_check = std::move(check);
-
+  create_tables_transitions(fa_, ret);
   return ret;
+}
+
+void LexerBuilder::create_tables_transitions(pmt::util::parse::Fa const& fa_, pmt::util::parse::GenericLexerTables& tables_) {
+  FaToDsncTransitions fa_to_dsnc_transitions(fa_);
+  Dsnc dsnc = fa_to_dsnc_transitions.convert();
+
+  tables_._state_nr_invalid = dsnc._state_nr_invalid;
+  tables_._transitions_default = std::move(dsnc._transitions_default);
+  tables_._transitions_shift = std::move(dsnc._transitions_shift);
+  tables_._transitions_next = std::move(dsnc._transitions_next);
+  tables_._transitions_check = std::move(dsnc._transitions_check);
 }
 
 auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t> {

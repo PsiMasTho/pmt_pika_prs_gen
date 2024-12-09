@@ -15,6 +15,9 @@ void DynamicBitsetTest::run() {
   test_bitwise_operations();
   test_countl();
   test_countr();
+  test_any();
+  test_none();
+  test_all();
 }
 
 void DynamicBitsetTest::test_lifetime_functions() {
@@ -204,6 +207,57 @@ void DynamicBitsetTest::test_countr() {
     }
 
     assert(b1.countr(false) == i);
+  }
+}
+
+void DynamicBitsetTest::test_any() {
+  static size_t const SIZE = 1234;
+
+  // positive test
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    b1.set(i / 7, true);
+    assert(b1.any());
+  }
+
+  // negative test
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    assert(!b1.any());
+  }
+}
+
+void DynamicBitsetTest::test_none() {
+  static size_t const SIZE = 1234;
+
+  // positive test
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    assert(b1.none());
+  }
+
+  // negative test
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    b1.set(i / 7, true);
+    assert(!b1.none());
+  }
+}
+
+void DynamicBitsetTest::test_all() {
+  static size_t const SIZE = 1234;
+
+  // positive test
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    assert(b1.all());
+  }
+
+  // negative test
+  for (size_t i = 0; i < SIZE; ++i) {
+    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    b1.set(i / 7, false);
+    assert(!b1.all());
   }
 }
 

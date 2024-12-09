@@ -29,7 +29,7 @@ void TableWriter::write() {
 }
 
 /*
-  std::vector<uint64_t> _transitions_shifts;
+  std::vector<uint64_t> _transitions_shift;
   std::vector<uint64_t> _transitions_next;
   std::vector<uint64_t> _transitions_check;
 */
@@ -39,16 +39,19 @@ void TableWriter::write_header() {
   _os_header <<
   "class " << _class_name << " {\n"
   " public:\n"
-  "  static inline size_t const SHIFT_COUNT  = " << _tables._transitions_shifts.size() << ";\n"
-  "  static inline size_t cosnt NEXT_COUNT   = " << _tables._transitions_next.size() << ";\n"
+  "  static inline size_t const DEFAULT_COUNT = " << _tables._transitions_default.size() << ";\n"
+  "  static inline size_t const SHIFT_COUNT  = " << _tables._transitions_shift.size() << ";\n"
+  "  static inline size_t const NEXT_COUNT   = " << _tables._transitions_next.size() << ";\n"
+  "  static inline size_t const CHECK_COUNT  = " << _tables._transitions_check.size() << ";\n"
   "  static inline size_t const ACCEPT_COUNT = " << _tables._terminal_names.size() << ";\n"
   "  static inline size_t const ID_COUNT     = " << _tables._id_names.size() << ";\n"
   "\n"
   "  static inline uint64_t const STATE_NR_INVALID = " << as_hex(_tables._state_nr_invalid) << ";\n"
   "\n"
+  "  static uint64_t const                             TRANSITIONS_DEFAULT[DEFAULT_COUNT];\n"
   "  static uint64_t const                             TRANSITIONS_SHIFTS[SHIFT_COUNT];\n"
   "  static uint64_t const                             TRANSITIONS_NEXT[NEXT_COUNT];\n"
-  "  static uint64_t const                             TRANSITIONS_CHECK[NEXT_COUNT];\n"
+  "  static uint64_t const                             TRANSITIONS_CHECK[CHECK_COUNT];\n"
   "  static uint64_t const                             ACCEPTS[STATE_COUNT];\n"
   "  static char const* const                          TERMINAL_NAMES[ACCEPT_COUNT];\n"
   "  static pmt::util::parse::GenericAst::IdType const TERMINAL_IDS[ACCEPT_COUNT];\n"
@@ -71,8 +74,8 @@ void TableWriter::write_header() {
 
 void TableWriter::write_source() {
   static size_t const PER_LINE = 16;
-  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_SHIFTS[" << _class_name << "::SHIFT_COUNT] = {\n";
-  for (size_t i = 0; i < _tables._transitions_shifts.size(); ++i) {
+  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_DEFAULT[" << _class_name << "::DEFAULT_COUNT] = {\n";
+  for (size_t i = 0; i < _tables._transitions_default.size(); ++i) {
     if (i == 0) {
       _os_source << " ";
     } else if (i % PER_LINE == 0) {
@@ -80,7 +83,21 @@ void TableWriter::write_source() {
     } else {
       _os_source << ", ";
     }
-    _os_source << as_hex(_tables._transitions_shifts[i]);
+    _os_source << as_hex(_tables._transitions_default[i]);
+  }
+  _os_source << "\n};\n"
+                "\n";
+
+  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_SHIFTS[" << _class_name << "::SHIFT_COUNT] = {\n";
+  for (size_t i = 0; i < _tables._transitions_shift.size(); ++i) {
+    if (i == 0) {
+      _os_source << " ";
+    } else if (i % PER_LINE == 0) {
+      _os_source << ",\n ";
+    } else {
+      _os_source << ", ";
+    }
+    _os_source << as_hex(_tables._transitions_shift[i]);
   }
   _os_source << "\n};\n"
                 "\n";
@@ -99,7 +116,7 @@ void TableWriter::write_source() {
   _os_source << "\n};\n"
                 "\n";
 
-  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_CHECK[" << _class_name << "::NEXT_COUNT] = {\n";
+  _os_source << "uint64_t const " << _class_name << "::TRANSITIONS_CHECK[" << _class_name << "::CHECK_COUNT] = {\n";
   for (size_t i = 0; i < _tables._transitions_check.size(); ++i) {
     if (i == 0) {
       _os_source << " ";
