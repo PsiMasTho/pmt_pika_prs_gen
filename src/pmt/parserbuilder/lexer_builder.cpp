@@ -639,7 +639,10 @@ void LexerBuilder::create_tables_transitions(pmt::util::parse::Fa const& fa_, pm
   FaToDsncTransitions fa_to_dsnc_transitions(fa_);
   Dsnc dsnc = fa_to_dsnc_transitions.convert();
 
-  tables_._state_nr_invalid = dsnc._state_nr_invalid;
+  tables_._state_nr_sink = dsnc._state_nr_sink;
+  tables_._state_nr_most_frequent = dsnc._state_nr_most_frequent;
+  tables_._padding_l = dsnc._padding_l;
+  tables_._padding_r = dsnc._padding_r;
   tables_._transitions_default = std::move(dsnc._transitions_default);
   tables_._transitions_shift = std::move(dsnc._transitions_shift);
   tables_._transitions_next = std::move(dsnc._transitions_next);

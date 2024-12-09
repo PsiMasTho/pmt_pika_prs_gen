@@ -44,13 +44,17 @@ auto raw_bitset_popcnt(std::span<uint64_t const> chunks_) -> size_t {
 
 auto get_next_state(GenericLexerTables const& tables_, uint64_t state_nr_, char symbol_) -> uint64_t {
   uint64_t offset = tables_._transitions_shift[state_nr_] + symbol_;
-  while (true) {
-    if (tables_._transitions_check.size() < offset || state_nr_ == tables_._state_nr_invalid) {
-      return tables_._state_nr_invalid;
-    }
 
-    if (tables_._transitions_check[offset] == state_nr_) {
-      return tables_._transitions_next[offset];
+  while (true) {
+    if (offset < tables_._padding_l || offset >= tables_._transitions_next.size() + tables_._padding_l) {
+      if (tables_._state_nr_most_frequent == state_nr_) {
+        return tables_._state_nr_most_frequent;
+      }
+    } else {
+      uint64_t const offset_adjusted = offset - tables_._padding_l;
+      if (tables_._transitions_check[offset_adjusted] == state_nr_) {
+        return tables_._transitions_next[offset_adjusted];
+      }
     }
 
     // Update state_nr_ and offset for the next iteration
@@ -84,7 +88,7 @@ auto GenericLexer::next_token(std::span<uint64_t const> accepts_) -> GenericAst:
   std::vector<uint64_t> accepts_valid(pmt::base::DynamicBitset::get_required_chunk_count(_tables._terminal_ids.size()), 0);
 
   for (char const* p = _cursor; _cursor <= _end; ++p) {
-    if (state_nr_cur == _tables._state_nr_invalid) {
+    if (state_nr_cur == _tables._state_nr_sink) {
       if (te != nullptr) {
         GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
         ret->set_token(std::string(_cursor, te));
@@ -103,7 +107,7 @@ auto GenericLexer::next_token(std::span<uint64_t const> accepts_) -> GenericAst:
       te = p;
       id = _tables._terminal_ids[countl];
 
-      if (state_nr_cur == _tables._state_nr_invalid) {
+      if (state_nr_cur == _tables._state_nr_sink) {
         GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Token, id);
         ret->set_token(std::string(_cursor, te));
         _cursor = te;

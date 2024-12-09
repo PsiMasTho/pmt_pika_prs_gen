@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <vector>
@@ -10,7 +11,11 @@ class GenericLexerTables {
  public:
   static inline constexpr uint64_t STATE_NR_START = 0;
 
-  uint64_t _state_nr_invalid = std::numeric_limits<uint64_t>::max();
+  uint64_t _state_nr_sink = std::numeric_limits<uint64_t>::max();
+  uint64_t _state_nr_most_frequent = std::numeric_limits<uint64_t>::max();
+
+  uint64_t _padding_l = 0;
+  uint64_t _padding_r = 0;
 
   std::vector<uint64_t> _transitions_default;
   std::vector<uint64_t> _transitions_shift;
