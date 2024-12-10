@@ -12,7 +12,7 @@ class GenericLexerTables {
   static inline constexpr uint64_t STATE_NR_START = 0;
 
   uint64_t _state_nr_sink = std::numeric_limits<uint64_t>::max();
-  uint64_t _state_nr_most_frequent = std::numeric_limits<uint64_t>::max();
+  uint64_t _state_nr_min_diff = std::numeric_limits<uint64_t>::max();
 
   uint64_t _padding_l = 0;
   uint64_t _padding_r = 0;

@@ -12,7 +12,7 @@ namespace pmt::parserbuilder {
 class Dsnc {
  public:
   pmt::util::parse::Fa::StateNrType _state_nr_sink;
-  pmt::util::parse::Fa::StateNrType _state_nr_most_frequent;
+  pmt::util::parse::Fa::StateNrType _state_nr_min_diff;
 
   uint64_t _padding_l = 0;
   uint64_t _padding_r = 0;
@@ -35,6 +35,7 @@ class FaToDsncTransitions {
   void step_2(Dsnc& dsnc_);
   void step_3(Dsnc& dsnc_);
   void step_4(Dsnc& dsnc_);
+  void step_5(Dsnc& dsnc_);
 
   auto debug_pre_checks() const -> bool;
   auto debug_post_checks(Dsnc const& dsnc_) const -> bool;
@@ -42,9 +43,9 @@ class FaToDsncTransitions {
   static auto get_next_state(Dsnc const& dsnc_, uint64_t state_nr_, pmt::util::parse::Fa::SymbolType symbol_) -> uint64_t;
   static auto get_next_state(pmt::util::parse::Fa const& fa_, uint64_t state_nr_, pmt::util::parse::Fa::SymbolType symbol_) -> uint64_t;
 
-  std::vector<pmt::util::parse::Fa::StateNrType> _ordering;
-  std::vector<pmt::base::DynamicBitset> _keep;
   pmt::util::parse::Fa _fa;
+  std::vector<pmt::util::parse::Fa::StateNrType> _ordering;
+  std::vector<pmt::base::DynamicBitset> _diff_mat2d;
 };
 
 }  // namespace pmt::parserbuilder

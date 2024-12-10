@@ -47,8 +47,8 @@ auto get_next_state(GenericLexerTables const& tables_, uint64_t state_nr_, char 
 
   while (true) {
     if (offset < tables_._padding_l || offset >= tables_._transitions_next.size() + tables_._padding_l) {
-      if (tables_._state_nr_most_frequent == state_nr_) {
-        return tables_._state_nr_most_frequent;
+      if (tables_._state_nr_min_diff == state_nr_) {
+        return tables_._state_nr_min_diff;
       }
     } else {
       uint64_t const offset_adjusted = offset - tables_._padding_l;
@@ -57,8 +57,11 @@ auto get_next_state(GenericLexerTables const& tables_, uint64_t state_nr_, char 
       }
     }
 
-    // Update state_nr_ and offset for the next iteration
-    state_nr_ = tables_._transitions_default[state_nr_];
+    uint64_t const state_nr_next = tables_._transitions_default[state_nr_];
+    if (state_nr_next == state_nr_) {
+      return tables_._state_nr_min_diff;
+    }
+    state_nr_ = state_nr_next;
     offset = tables_._transitions_shift[state_nr_] + symbol_;
   }
 }

@@ -1,6 +1,5 @@
 #include "pmt/parserbuilder/fa_to_dsnc_transitions.hpp"
 
-#include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/util/parse/fa.hpp"
 
 #include <algorithm>
@@ -12,6 +11,16 @@
 namespace pmt::parserbuilder {
 using namespace pmt::util::parse;
 using namespace pmt::base;
+
+namespace {
+auto index_2d_to_1d(size_t x_, size_t y_, size_t width_) -> size_t {
+  return y_ * width_ + x_;
+}
+
+auto index_1d_to_2d(size_t i_, size_t width_) -> std::pair<size_t, size_t> {
+  return {i_ % width_, i_ / width_};
+}
+}  // namespace
 
 FaToDsncTransitions::FaToDsncTransitions(Fa const& fa_)
  : _fa(fa_) {
@@ -26,6 +35,7 @@ auto FaToDsncTransitions::convert() -> Dsnc {
   step_2(dsnc);
   step_3(dsnc);
   step_4(dsnc);
+  step_5(dsnc);
 
   debug_post_checks(dsnc);
 
@@ -49,49 +59,73 @@ void FaToDsncTransitions::step_0(Dsnc& dsnc_) {
   }
 }
 
-void FaToDsncTransitions::step_1(Dsnc& dsnc_) {
-  std::generate_n(std::back_inserter(_ordering), _fa._states.size(), [i = 0]() mutable { return i++; });
+void FaToDsncTransitions::step_1(Dsnc&) {
+  size_t const width = _fa._states.size();
+  _diff_mat2d.reserve(width * width);
 
-  std::vector<size_t> frequencies(_fa._states.size(), 0);
-  for (auto const& [state_nr, state] : _fa._states) {
-    for (auto const& [symbol, state_nr_next] : state._transitions._symbol_transitions) {
-      ++frequencies[state_nr_next];
+  for (size_t i = 0; i < width * width; ++i) {
+    auto const [j1, j2] = index_1d_to_2d(i, width);
+    Fa::Transitions const& transitions_j1 = _fa._states.find(j1)->second._transitions;
+    Fa::Transitions const& transitions_j2 = _fa._states.find(j2)->second._transitions;
+
+    _diff_mat2d.emplace_back(UCHAR_MAX, false);
+    for (Fa::SymbolType k = 0; k < UCHAR_MAX; ++k) {
+      _diff_mat2d.back().set(k, transitions_j1._symbol_transitions.find(k)->second != transitions_j2._symbol_transitions.find(k)->second);
     }
   }
-
-  std::ranges::sort(_ordering, [&frequencies](size_t lhs_, size_t rhs_) { return frequencies[lhs_] > frequencies[rhs_]; });
-
-  // Determine the most frequent state
-  dsnc_._state_nr_most_frequent = _ordering.front();
 }
 
 void FaToDsncTransitions::step_2(Dsnc& dsnc_) {
+  std::unordered_set<Fa::StateNrType> unvisited;
+  std::generate_n(std::inserter(unvisited, unvisited.end()), _fa._states.size(), [i = 0]() mutable { return i++; });
+  _ordering.reserve(_fa._states.size());
+
+  // Fill the ordering based on the lowest average differences to other states
+  while (!unvisited.empty()) {
+    double avg_diff_best = std::numeric_limits<double>::max();
+    Fa::StateNrType state_nr_best = std::numeric_limits<Fa::StateNrType>::max();
+
+    for (Fa::StateNrType i : unvisited) {
+      double avg_diff = 0.f;
+      for (Fa::StateNrType j : unvisited) {
+        if (i == j) {
+          continue;
+        }
+        avg_diff += _diff_mat2d[index_2d_to_1d(i, j, _fa._states.size())].popcnt();
+      }
+      avg_diff /= unvisited.size();
+
+      if (avg_diff < avg_diff_best) {
+        avg_diff_best = avg_diff;
+        state_nr_best = i;
+      }
+    }
+
+    _ordering.push_back(state_nr_best);
+    unvisited.erase(state_nr_best);
+  }
+
+  dsnc_._state_nr_min_diff = _ordering.front();
+}
+
+void FaToDsncTransitions::step_3(Dsnc& dsnc_) {
   dsnc_._transitions_default.resize(_fa._states.size(), std::numeric_limits<uint64_t>::max());
-  _keep.resize(_fa._states.size());
-
   dsnc_._transitions_default[_ordering.front()] = _ordering.front();
-  _keep[_ordering.front()] = DynamicBitset(UCHAR_MAX, true);
 
-  // For every state, pick the most similar state that appears before it in the ordering,
-  // and keep track of the symbols that differ between the two states
-  for (size_t i = 1; i < _ordering.size(); ++i) {
+  // For every state, pick the most similar state that appears before it in the ordering
+  // as the default for that state
+  for (size_t i = 0; i < _ordering.size(); ++i) {
     Fa::StateNrType const state_nr_i = _ordering[i];
 
     Fa::StateNrType state_nr_best = _ordering.front();
-    DynamicBitset keep_best = _keep[state_nr_best];
+    size_t popcnt_best = _diff_mat2d[index_2d_to_1d(state_nr_i, state_nr_best, _fa._states.size())].popcnt();
 
     for (Fa::StateNrType j = 0; j < i; ++j) {
       Fa::StateNrType const state_nr_j = _ordering[j];
-
-      DynamicBitset keep_cur(UCHAR_MAX, false);
-      for (Fa::SymbolType k = 0; k < UCHAR_MAX; ++k) {
-        keep_cur.set(k, get_next_state(_fa, state_nr_i, k) != get_next_state(_fa, state_nr_j, k));
-      }
-
-      size_t const popcnt_cur = keep_cur.popcnt();
-      if (popcnt_cur < keep_best.popcnt()) {
+      size_t const popcnt_cur = _diff_mat2d[index_2d_to_1d(state_nr_i, state_nr_j, _fa._states.size())].popcnt();
+      if (popcnt_cur < popcnt_best) {
         state_nr_best = state_nr_j;
-        keep_best = std::move(keep_cur);
+        popcnt_best = popcnt_cur;
       }
       if (popcnt_cur == 0) {
         break;
@@ -99,18 +133,18 @@ void FaToDsncTransitions::step_2(Dsnc& dsnc_) {
     }
 
     dsnc_._transitions_default[state_nr_i] = state_nr_best;
-    _keep[state_nr_i] = std::move(keep_best);
   }
 }
 
-void FaToDsncTransitions::step_3(Dsnc& dsnc_) {
+void FaToDsncTransitions::step_4(Dsnc& dsnc_) {
   std::unordered_map<Fa::StateNrType, uint64_t> shifts;
   std::unordered_map<size_t, std::pair<Fa::StateNrType, Fa::StateNrType>> occupied;  // <index, which state filled it, state_nr_to>
   size_t shift_max = 0;
   for (Fa::StateNrType state_nr_i : _ordering) {
+    DynamicBitset const& keep = _diff_mat2d[index_2d_to_1d(state_nr_i, dsnc_._transitions_default[state_nr_i], _fa._states.size())];
     std::unordered_map<size_t, Fa::StateNrType> kept;
     for (Fa::SymbolType j = 0; j < UCHAR_MAX; ++j) {
-      if (!_keep[state_nr_i].get(j)) {
+      if (!keep.get(j)) {
         continue;
       }
       kept[j] = get_next_state(_fa, state_nr_i, j);
@@ -140,8 +174,8 @@ void FaToDsncTransitions::step_3(Dsnc& dsnc_) {
   }
 
   dsnc_._transitions_shift.resize(_fa._states.size(), std::numeric_limits<uint64_t>::max());
-  dsnc_._transitions_next.resize(shift_max + UCHAR_MAX, dsnc_._state_nr_most_frequent);
-  dsnc_._transitions_check.resize(shift_max + UCHAR_MAX, dsnc_._state_nr_most_frequent);
+  dsnc_._transitions_next.resize(shift_max + UCHAR_MAX, dsnc_._state_nr_min_diff);
+  dsnc_._transitions_check.resize(shift_max + UCHAR_MAX, dsnc_._state_nr_min_diff);
 
   for (auto const& [i, shift] : shifts) {
     dsnc_._transitions_shift[i] = shift;
@@ -154,11 +188,11 @@ void FaToDsncTransitions::step_3(Dsnc& dsnc_) {
   }
 }
 
-void FaToDsncTransitions::step_4(Dsnc& dsnc_) {
+void FaToDsncTransitions::step_5(Dsnc& dsnc_) {
   // Calculate padding
   // Left:
   while (dsnc_._padding_l < dsnc_._transitions_next.size()) {
-    if (dsnc_._transitions_next[dsnc_._padding_l] != dsnc_._state_nr_most_frequent || dsnc_._transitions_check[dsnc_._padding_l] != dsnc_._state_nr_most_frequent) {
+    if (dsnc_._transitions_next[dsnc_._padding_l] != dsnc_._state_nr_min_diff || dsnc_._transitions_check[dsnc_._padding_l] != dsnc_._state_nr_min_diff) {
       break;
     }
     ++dsnc_._padding_l;
@@ -166,7 +200,7 @@ void FaToDsncTransitions::step_4(Dsnc& dsnc_) {
 
   // Right:
   while (dsnc_._padding_r < dsnc_._transitions_next.size()) {
-    if (dsnc_._transitions_next[dsnc_._transitions_next.size() - dsnc_._padding_r - 1] != dsnc_._state_nr_most_frequent || dsnc_._transitions_check[dsnc_._transitions_next.size() - dsnc_._padding_r - 1] != dsnc_._state_nr_most_frequent) {
+    if (dsnc_._transitions_next[dsnc_._transitions_next.size() - dsnc_._padding_r - 1] != dsnc_._state_nr_min_diff || dsnc_._transitions_check[dsnc_._transitions_next.size() - dsnc_._padding_r - 1] != dsnc_._state_nr_min_diff) {
       break;
     }
     ++dsnc_._padding_r;
@@ -197,16 +231,16 @@ auto FaToDsncTransitions::debug_pre_checks() const -> bool {
 auto FaToDsncTransitions::debug_post_checks(Dsnc const& dsnc_) const -> bool {
 #ifndef NDEBUG
   /*
-  std::cout << "-- Post checks --\n";
-  std::cout << "FA State count: " << _fa._states.size() << '\n';
-  std::cout << "DSNC::sink: " << dsnc_._state_nr_sink << '\n';
-  std::cout << "DSNC::most frequent: " << dsnc_._state_nr_most_frequent << '\n';
-  std::cout << "DSNC::lpadding: " << dsnc_._padding_l << '\n';
-  std::cout << "DSNC::rpadding: " << dsnc_._padding_r << '\n';
-  std::cout << "DSNC::default size: " << dsnc_._transitions_default.size() << '\n';
-  std::cout << "DSNC::shift size: " << dsnc_._transitions_shift.size() << '\n';
-  std::cout << "DSNC::next size: " << dsnc_._transitions_next.size() << '\n';
-  std::cout << "DSNC::check size: " << dsnc_._transitions_check.size() << '\n';
+    std::cout << "-- Post checks --\n";
+    std::cout << "FA State count: " << _fa._states.size() << '\n';
+    std::cout << "DSNC::sink: " << dsnc_._state_nr_sink << '\n';
+    std::cout << "DSNC::min diff: " << dsnc_._state_nr_min_diff << '\n';
+    std::cout << "DSNC::lpadding: " << dsnc_._padding_l << '\n';
+    std::cout << "DSNC::rpadding: " << dsnc_._padding_r << '\n';
+    std::cout << "DSNC::default size: " << dsnc_._transitions_default.size() << '\n';
+    std::cout << "DSNC::shift size: " << dsnc_._transitions_shift.size() << '\n';
+    std::cout << "DSNC::next size: " << dsnc_._transitions_next.size() << '\n';
+    std::cout << "DSNC::check size: " << dsnc_._transitions_check.size() << '\n';
   */
   // check that transitions in the tables match the transitions in the fa
   for (size_t i = 0; i < _fa._states.size(); ++i) {
@@ -228,8 +262,8 @@ auto FaToDsncTransitions::get_next_state(Dsnc const& dsnc_, uint64_t state_nr_, 
 
   while (true) {
     if (offset < dsnc_._padding_l || offset >= dsnc_._transitions_next.size() + dsnc_._padding_l) {
-      if (dsnc_._state_nr_most_frequent == state_nr_) {
-        return dsnc_._state_nr_most_frequent;
+      if (dsnc_._state_nr_min_diff == state_nr_) {
+        return dsnc_._state_nr_min_diff;
       }
     } else {
       uint64_t const offset_adjusted = offset - dsnc_._padding_l;
@@ -238,8 +272,11 @@ auto FaToDsncTransitions::get_next_state(Dsnc const& dsnc_, uint64_t state_nr_, 
       }
     }
 
-    // Update state_nr_ and offset for the next iteration
-    state_nr_ = dsnc_._transitions_default[state_nr_];
+    uint64_t const state_nr_next = dsnc_._transitions_default[state_nr_];
+    if (state_nr_next == state_nr_) {
+      return dsnc_._state_nr_min_diff;
+    }
+    state_nr_ = state_nr_next;
     offset = dsnc_._transitions_shift[state_nr_] + symbol_;
   }
 }

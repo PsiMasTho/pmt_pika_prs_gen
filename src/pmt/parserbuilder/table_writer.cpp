@@ -47,7 +47,7 @@ void TableWriter::write_header() {
   "  static inline size_t const ID_COUNT     = " << _tables._id_names.size() << ";\n"
   "\n"
   "  static inline uint64_t const STATE_NR_SINK = " << as_hex(_tables._state_nr_sink) << ";\n"
-  "  static inline uint64_t const STATE_NR_MOST_FREQUENT = " << as_hex(_tables._state_nr_most_frequent) << ";\n"
+  "  static inline uint64_t const STATE_NR_MIN_DIFF = " << as_hex(_tables._state_nr_min_diff) << ";\n"
   "  static inline uint64_t const PADDING_L = " << as_hex(_tables._padding_l) << ";\n"
   "  static inline uint64_t const PADDING_R = " << as_hex(_tables._padding_r) << ";\n"
   "\n"
@@ -134,7 +134,7 @@ void TableWriter::write_source() {
                 "\n";
 
   std::string delim1;
-  _os_source << _class_name << "::uint64_t const " << _class_name << "::ACCEPTS[" << _class_name << "::STATE_COUNT] = {\n";
+  _os_source << "uint64_t const " << _class_name << "::ACCEPTS[" << _class_name << "::STATE_COUNT] = {\n";
 
   for (size_t i = 0; i < _tables._accepts.size(); ++i) {
     _os_source << std::exchange(delim1, ",\n") << " {";
