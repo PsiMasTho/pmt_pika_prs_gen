@@ -13,7 +13,7 @@
 
  #define ACCEPT_TOKEN(id)                                    \
   do {                                                       \
-   accepted = GenericAst::construct(GenericAst::Tag::Token); \
+   accepted = GenericAst::construct(GenericAst::Tag::String); \
    accepted->set_id(id);                                     \
   } while (0)
 
@@ -195,7 +195,7 @@ namespace {
 } // namespace
 
 namespace pmt::parserbuilder {
- using namespace pmt::util::parse;
+ using namespace pmt::util::parsert;
 
 GrmLexer::GrmLexer(std::string_view input_)
 :
@@ -222,7 +222,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   return nullptr;
  }
 
- accepted->set_token(GenericAst::TokenType(ts, te - ts));
+ accepted->set_string(GenericAst::StringType(ts, te - ts));
  return accepted;
 }
 

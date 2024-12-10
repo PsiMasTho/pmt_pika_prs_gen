@@ -1,10 +1,9 @@
 #include "pmt/parserbuilder/fa_part.hpp"
 
-#include <stack>
 #include <unordered_map>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parse;
+using namespace pmt::util::parsect;
 
 FaPart::FaPart(Fa::StateNrType incoming_state_nr_)
  : _incoming_state_nr(incoming_state_nr_) {

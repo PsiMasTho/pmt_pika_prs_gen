@@ -1,4 +1,4 @@
-#include "pmt/util/parse/generic_ast.hpp"
+#include "pmt/util/parsert/generic_ast.hpp"
 
 #include "pmt/asserts.hpp"
 
@@ -7,7 +7,7 @@
 #include <queue>
 #include <stack>
 
-namespace pmt::util::parse {
+namespace pmt::util::parsert {
 
 void GenericAst::UniqueHandleDeleter::operator()(GenericAst* self_) const {
   destruct(self_);
@@ -29,7 +29,7 @@ void GenericAst::destruct(GenericAst* self_) {
   }
 }
 
-auto GenericAst::construct(Tag tag_, IdType id_) -> UniqueHandle {
+auto GenericAst::construct(Tag tag_, GenericId::IdType id_) -> UniqueHandle {
   return UniqueHandle{new GenericAst{tag_, id_}};
 }
 
@@ -45,8 +45,8 @@ auto GenericAst::clone(GenericAst const& other_) -> UniqueHandle {
 
     dst->set_id(src->get_id());
 
-    if (src->get_tag() == Tag::Token) {
-      dst->set_token(src->get_token());
+    if (src->get_tag() == Tag::String) {
+      dst->set_string(src->get_string());
     } else {
       for (size_t i = 0; i < src->get_children_size(); ++i) {
         UniqueHandle child = construct(src->get_child_at(i)->get_tag());
@@ -63,36 +63,36 @@ void GenericAst::swap(GenericAst& lhs_, GenericAst& rhs_) {
   std::swap(lhs_._data, rhs_._data);
 }
 
-auto GenericAst::get_id() const -> IdType {
+auto GenericAst::get_id() const -> GenericId::IdType {
   return _id;
 }
 
-void GenericAst::set_id(IdType id_) {
+void GenericAst::set_id(GenericId::IdType id_) {
   _id = id_;
 }
 
 auto GenericAst::get_tag() const -> Tag {
-  if (std::holds_alternative<TokenType>(_data))
-    return Tag::Token;
+  if (std::holds_alternative<StringType>(_data))
+    return Tag::String;
   else if (std::holds_alternative<ChildrenType>(_data))
     return Tag::Children;
   else
     pmt_unreachable();
 }
 
-auto GenericAst::get_token() -> TokenType& {
-  assert(get_tag() == Tag::Token);
-  return *std::get_if<TokenType>(&_data);
+auto GenericAst::get_string() -> StringType& {
+  assert(get_tag() == Tag::String);
+  return *std::get_if<StringType>(&_data);
 }
 
-auto GenericAst::get_token() const -> TokenType const& {
-  assert(get_tag() == Tag::Token);
-  return *std::get_if<TokenType>(&_data);
+auto GenericAst::get_string() const -> StringType const& {
+  assert(get_tag() == Tag::String);
+  return *std::get_if<StringType>(&_data);
 }
 
-void GenericAst::set_token(TokenType token_) {
-  assert(get_tag() == Tag::Token);
-  _data = std::move(token_);
+void GenericAst::set_string(StringType string_) {
+  assert(get_tag() == Tag::String);
+  _data = std::move(string_);
 }
 
 auto GenericAst::get_children_size() const -> std::size_t {
@@ -161,15 +161,15 @@ void GenericAst::give_child_at_back(UniqueHandle child_) {
 }
 
 void GenericAst::merge() {
-  UniqueHandle result = construct(Tag::Token);
+  UniqueHandle result = construct(Tag::String);
 
   std::queue<GenericAst*> queue;
   queue.push(this);
   while (!queue.empty()) {
     auto* node = queue.front();
     queue.pop();
-    if (node->get_tag() == Tag::Token) {
-      result->get_token() += node->get_token();
+    if (node->get_tag() == Tag::String) {
+      result->get_string() += node->get_string();
     } else {
       for (size_t i = 0; i < node->get_children_size(); ++i) {
         queue.push(node->get_child_at(i));
@@ -198,11 +198,11 @@ void GenericAst::unpack(size_t index_) {
   }
 }
 
-GenericAst::GenericAst(Tag tag_, IdType id_)
- : _data{[tag_]() -> std::variant<TokenType, ChildrenType> {
+GenericAst::GenericAst(Tag tag_, GenericId::IdType id_)
+ : _data{[tag_]() -> std::variant<StringType, ChildrenType> {
    switch (tag_) {
-     case Tag::Token:
-       return TokenType{};
+     case Tag::String:
+       return StringType{};
      case Tag::Children:
        return ChildrenType{};
      default:
@@ -212,4 +212,4 @@ GenericAst::GenericAst(Tag tag_, IdType id_)
  , _id(id_) {
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsert

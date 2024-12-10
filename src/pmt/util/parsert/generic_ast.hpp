@@ -1,27 +1,23 @@
 #pragma once
 
-#include <cstdint>
+#include "pmt/util/parsert/generic_id.hpp"
+
 #include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
-namespace pmt::util::parse {
+namespace pmt::util::parsert {
 
 class GenericAst {
  public:
-  using IdType = std::uint64_t;
-  using TokenType = std::string;
+  using StringType = std::string;
   using ChildrenType = std::vector<GenericAst*>;
-
-  enum IdConstants : IdType {
-    IdUninitialized = -1ULL,
-    IdDefault = -2ULL,
-    IdEoi = -3ULL,
-  };
+  using AstPosition = std::pair<GenericAst*, size_t>;
+  using PositionConst = std::pair<GenericAst const*, size_t>;
 
   enum class Tag {
-    Token,
+    String,
     Children,
   };
 
@@ -32,20 +28,20 @@ class GenericAst {
 
   static void destruct(GenericAst* self_);
   using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
-  static auto construct(Tag tag_, IdType id_ = IdConstants::IdUninitialized) -> UniqueHandle;
+  static auto construct(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized) -> UniqueHandle;
 
   static auto clone(GenericAst const& other_) -> UniqueHandle;
 
   static void swap(GenericAst& lhs_, GenericAst& rhs_);
 
-  auto get_id() const -> IdType;
-  void set_id(IdType id_);
+  auto get_id() const -> GenericId::IdType;
+  void set_id(GenericId::IdType id_);
 
   auto get_tag() const -> Tag;
 
-  auto get_token() -> TokenType&;
-  auto get_token() const -> TokenType const&;
-  void set_token(TokenType token_);
+  auto get_string() -> StringType&;
+  auto get_string() const -> StringType const&;
+  void set_string(StringType string_);
 
   auto get_children_size() const -> size_t;
   auto get_child_at(size_t index_) -> GenericAst*;
@@ -66,16 +62,16 @@ class GenericAst {
   auto take_child_at_back() -> UniqueHandle;
   void give_child_at_back(UniqueHandle child_);
 
-  // Merge the children into a token
+  // Merge the children into a string
   void merge();
   // Unpack the child's children into this node
   void unpack(size_t index_);
 
  private:
-  explicit GenericAst(Tag tag_, IdType id_ = IdConstants::IdUninitialized);
+  explicit GenericAst(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized);
 
-  std::variant<TokenType, ChildrenType> _data;
-  IdType _id;
+  std::variant<StringType, ChildrenType> _data;
+  GenericId::IdType _id;
 };
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsert

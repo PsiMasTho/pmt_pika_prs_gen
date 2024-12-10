@@ -1,10 +1,10 @@
-#include "pmt/util/parse/fa.hpp"
+#include "pmt/util/parsect/fa.hpp"
 
 #include "pmt/base/dynamic_bitset_converter.hpp"
 
 #include <stack>
 
-namespace pmt::util::parse {
+namespace pmt::util::parsect {
 using namespace pmt::base;
 
 void Fa::prune(StateNrType state_nr_from_) {
@@ -185,4 +185,4 @@ auto Fa::get_symbols(std::unordered_set<StateNrType> const& state_nrs_from_) con
   return ret;
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsect

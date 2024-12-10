@@ -1,14 +1,14 @@
-#include "pmt/util/parse/generic_ast_printer.hpp"
+#include "pmt/util/parsert/generic_ast_printer.hpp"
 
 #include "pmt/asserts.hpp"
 
 #include <ostream>
 #include <stack>
 
-namespace pmt::util::parse {
+namespace pmt::util::parsert {
 
-GenericAstPrinter::GenericAstPrinter(IdNameFunctionType id_name_function_)
- : _id_name_function(std::move(id_name_function_)) {
+GenericAstPrinter::GenericAstPrinter(IdToStringFnType id_to_string_fn_)
+ : _id_to_string_fn(std::move(id_to_string_fn_)) {
 }
 
 void GenericAstPrinter::print(GenericAst const& ast_, std::ostream& out_) {
@@ -29,11 +29,11 @@ void GenericAstPrinter::print(GenericAst const& ast_, std::ostream& out_) {
   while (!stack.empty()) {
     auto const [node, depth] = take();
     std::string const indent(depth * INDENT_WIDTH, ' ');
-    out_ << indent << get_name(node->get_id());
+    out_ << indent << id_to_string(node->get_id());
 
     switch (node->get_tag()) {
-      case GenericAst::Tag::Token:
-        out_ << ": " << node->get_token();
+      case GenericAst::Tag::String:
+        out_ << ": " << node->get_string();
         break;
       case GenericAst::Tag::Children:
         for (size_t i = node->get_children_size(); i--;) {
@@ -48,17 +48,11 @@ void GenericAstPrinter::print(GenericAst const& ast_, std::ostream& out_) {
   }
 }
 
-auto GenericAstPrinter::get_name(GenericAst::IdType id_) -> std::string {
-  switch (id_) {
-    case GenericAst::IdConstants::IdUninitialized:
-      return "Uninitialized";
-    case GenericAst::IdConstants::IdDefault:
-      return "Default";
-    case GenericAst::IdConstants::IdEoi:
-      return "Eoi";
-    default:
-      return _id_name_function(id_);
+auto GenericAstPrinter::id_to_string(GenericId::IdType id_) -> std::string_view {
+  if (GenericId::is_generic_id(id_)) {
+    return GenericId::id_to_string(id_);
   }
+  return _id_to_string_fn(id_);
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsert

@@ -1,4 +1,4 @@
-#include "pmt/util/parse/graph_writer.hpp"
+#include "pmt/util/parsect/graph_writer.hpp"
 
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace pmt::util::parse {
+namespace pmt::util::parsect {
 
 void GraphWriter::write_dot(std::ostream& os_, Fa const& fa_, AcceptsToLabel accepts_to_label_) {
   if (!accepts_to_label_) {
@@ -166,4 +166,4 @@ auto GraphWriter::to_displayable(Fa::SymbolType sym_) -> std::string {
   return "0x" + ret;
 }
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsect

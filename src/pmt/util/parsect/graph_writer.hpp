@@ -1,15 +1,15 @@
 #pragma once
 
 #include "pmt/fw_decl.hpp"
-#include "pmt/util/parse/fa.hpp"
+#include "pmt/util/parsect/fa.hpp"
 
 #include <functional>
 #include <iosfwd>
 #include <set>
 
-PMT_FW_DECL_NS_CLASS(pmt::util::parse, Fa);
+PMT_FW_DECL_NS_CLASS(pmt::util::parsect, Fa);
 
-namespace pmt::util::parse {
+namespace pmt::util::parsect {
 
 class GraphWriter {
  public:
@@ -24,4 +24,4 @@ class GraphWriter {
   static auto to_displayable(Fa::SymbolType sym_) -> std::string;
 };
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsect

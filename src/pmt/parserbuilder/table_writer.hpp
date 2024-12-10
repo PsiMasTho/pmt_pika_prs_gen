@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pmt/fw_decl.hpp"
-#include "pmt/util/parse/generic_lexer_tables.hpp"
+#include "pmt/parserbuilder/lexer_tables.hpp"
 
 #include <iosfwd>
 

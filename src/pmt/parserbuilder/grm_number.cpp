@@ -1,23 +1,24 @@
 #include "pmt/parserbuilder/grm_number.hpp"
 
 #include "pmt/parserbuilder/grm_ast.hpp"
+#include "pmt/util/parsert/generic_ast.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <unordered_map>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parse;
+using namespace pmt::util::parsert;
 
 auto GrmNumber::single_char_as_value(GenericAst const& ast_) -> NumberType {
   if (ast_.get_id() == GrmAst::TkStringLiteral) {
-    std::string const& token = ast_.get_token();
+    std::string const& token = ast_.get_string();
     assert(token.size() == 1);
     return token[0];
   }
 
   if (ast_.get_id() == GrmAst::TkIntegerLiteral) {
-    auto const [base_str, number_str] = split_number(ast_.get_token());
+    auto const [base_str, number_str] = split_number(ast_.get_string());
     NumberType const base = number_convert(base_str, 10);
     NumberType const number = number_convert(number_str, base);
     return number;
@@ -81,7 +82,7 @@ auto GrmNumber::get_repetition_number(GenericAst const& token_) -> std::optional
   }
 
   assert(token_.get_id() == GrmAst::TkIntegerLiteral);
-  auto const [base_str, number_str] = split_number(token_.get_token());
+  auto const [base_str, number_str] = split_number(token_.get_string());
   NumberType const base = number_convert(base_str, 10);
   NumberType const number = number_convert(number_str, base);
 

@@ -13,10 +13,10 @@
   int &act = _act;                \
   int &cs = _cs;
 
-#define ACCEPT_TOKEN(id)                                      \
-  do {                                                        \
-    accepted = GenericAst::construct(GenericAst::Tag::Token); \
-    accepted->set_id(id);                                     \
+#define ACCEPT_TOKEN(id)                                       \
+  do {                                                         \
+    accepted = GenericAst::construct(GenericAst::Tag::String); \
+    accepted->set_id(id);                                      \
   } while (0)
 
 #line 189 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
@@ -35,7 +35,7 @@ static const int GrmLexer_en_main = 24;
 }  // namespace
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parse;
+using namespace pmt::util::parsert;
 
 GrmLexer::GrmLexer(std::string_view input_)
  : _p{input_.data()}
@@ -1147,7 +1147,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
     return nullptr;
   }
 
-  accepted->set_token(GenericAst::TokenType(ts, te - ts));
+  accepted->set_string(GenericAst::StringType(ts, te - ts));
   return accepted;
 }
 

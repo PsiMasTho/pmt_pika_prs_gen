@@ -6,10 +6,9 @@
 #include "pmt/parserbuilder/fa_to_dsnc_transitions.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
-#include "pmt/util/parse/ast_position.hpp"
-#include "pmt/util/parse/fa.hpp"
-#include "pmt/util/parse/generic_ast.hpp"
-#include "pmt/util/parse/graph_writer.hpp"
+#include "pmt/util/parsect/fa.hpp"
+#include "pmt/util/parsect/graph_writer.hpp"
+#include "pmt/util/parsert/generic_ast.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -24,7 +23,9 @@
 #include <vector>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parse;
+using namespace pmt::util::parsect;
+using namespace pmt::util::parsert;
+
 namespace {
 // - Expression -> Fa declarations -
 // -- ExpressionFrameBase --
@@ -37,18 +38,18 @@ class ExpressionFrameBase : public std::enable_shared_from_this<ExpressionFrameB
    public:
     FaPart& _ret_part;
     Fa& _result;
-    std::unordered_map<std::string, AstPositionConst> const& _terminal_definitions;
+    std::unordered_map<std::string, GenericAst::PositionConst> const& _terminal_definitions;
     std::unordered_set<std::string>& _terminal_stack_contents;
     std::vector<std::string>& _terminal_stack;
   };
 
-  explicit ExpressionFrameBase(AstPositionConst ast_position_);
+  explicit ExpressionFrameBase(GenericAst::PositionConst ast_position_);
   virtual ~ExpressionFrameBase() = default;
 
   virtual void process(CallstackType& callstack_, Captures& captures_) = 0;
 
  protected:
-  AstPositionConst _ast_position;
+  GenericAst::PositionConst _ast_position;
 };
 
 // -- SequenceExpressionFrame --
@@ -86,7 +87,7 @@ class ChoicesExpressionFrame : public ExpressionFrameBase {
 // -- RepetitionExpressionFrame --
 class RepetitionExpressionFrame : public ExpressionFrameBase {
  public:
-  explicit RepetitionExpressionFrame(AstPositionConst ast_position_);
+  explicit RepetitionExpressionFrame(GenericAst::PositionConst ast_position_);
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:
@@ -156,12 +157,12 @@ class TerminalIdentifierExpressionFrame : public ExpressionFrameBase {
 // -- ExpressionFrameFactory --
 class ExpressionFrameFactory {
  public:
-  static auto construct(AstPositionConst position_) -> ExpressionFrameBase::FrameHandle;
+  static auto construct(GenericAst::PositionConst position_) -> ExpressionFrameBase::FrameHandle;
 };
 
 // - Expression -> Fa definitions -
 // -- ExpressionFrameBase --
-ExpressionFrameBase::ExpressionFrameBase(AstPositionConst ast_position_)
+ExpressionFrameBase::ExpressionFrameBase(GenericAst::PositionConst ast_position_)
  : _ast_position(std::move(ast_position_)) {
 }
 
@@ -182,7 +183,7 @@ void SequenceExpressionFrame::process_stage_0(CallstackType& callstack_) {
   ++_stage;
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  callstack_.push(ExpressionFrameFactory::construct(AstPositionConst{&cur_expr, _idx}));
+  callstack_.push(ExpressionFrameFactory::construct(GenericAst::PositionConst{&cur_expr, _idx}));
 }
 
 void SequenceExpressionFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
@@ -234,7 +235,7 @@ void ChoicesExpressionFrame::process_stage_1(CallstackType& callstack_) {
   ++_stage;
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  callstack_.push(ExpressionFrameFactory::construct(AstPositionConst{&cur_expr, _idx}));
+  callstack_.push(ExpressionFrameFactory::construct(GenericAst::PositionConst{&cur_expr, _idx}));
 }
 
 void ChoicesExpressionFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {
@@ -254,7 +255,7 @@ void ChoicesExpressionFrame::process_stage_2(CallstackType& callstack_, Captures
 }
 
 // -- RepetitionExpressionFrame --
-RepetitionExpressionFrame::RepetitionExpressionFrame(AstPositionConst ast_position_)
+RepetitionExpressionFrame::RepetitionExpressionFrame(GenericAst::PositionConst ast_position_)
  : ExpressionFrameBase({ast_position_.first->get_child_at(ast_position_.second), 0})
  , _range(GrmNumber::get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1))) {
 }
@@ -358,16 +359,16 @@ void StringLiteralExpressionFrame::process(CallstackType&, Captures& captures_) 
   captures_._ret_part.set_incoming_state_nr(state_nr_prev);
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  for (size_t i = 1; i < cur_expr.get_token().size(); ++i) {
+  for (size_t i = 1; i < cur_expr.get_string().size(); ++i) {
     Fa::StateNrType state_nr_cur = captures_._result.get_unused_state_nr();
     Fa::State* state_cur = &captures_._result._states[state_nr_cur];
 
-    state_prev->_transitions._symbol_transitions[cur_expr.get_token()[i - 1]] = state_nr_cur;
+    state_prev->_transitions._symbol_transitions[cur_expr.get_string()[i - 1]] = state_nr_cur;
     state_prev = state_cur;
     state_nr_prev = state_nr_cur;
   }
 
-  captures_._ret_part.add_outgoing_symbol_transition(state_nr_prev, cur_expr.get_token().back());
+  captures_._ret_part.add_outgoing_symbol_transition(state_nr_prev, cur_expr.get_string().back());
 }
 
 // -- RangeExpressionFrame --
@@ -421,7 +422,7 @@ void TerminalIdentifierExpressionFrame::process(CallstackType& callstack_, Captu
 }
 
 void TerminalIdentifierExpressionFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
-  _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_token();
+  _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_string();
 
   captures_._terminal_stack.push_back(*_terminal_name);
   if (!captures_._terminal_stack_contents.insert(*_terminal_name).second) {
@@ -457,8 +458,8 @@ void TerminalIdentifierExpressionFrame::process_stage_1(Captures& captures_) {
 }
 
 // -- ExpressionFrameFactory --
-auto ExpressionFrameFactory::construct(AstPositionConst position_) -> ExpressionFrameBase::FrameHandle {
-  GenericAst::IdType const id = position_.first->get_child_at(position_.second)->get_id();
+auto ExpressionFrameFactory::construct(GenericAst::PositionConst position_) -> ExpressionFrameBase::FrameHandle {
+  GenericId::IdType const id = position_.first->get_child_at(position_.second)->get_id();
   switch (id) {
     case GrmAst::NtSequence:
       return std::make_shared<SequenceExpressionFrame>(position_);
@@ -476,8 +477,10 @@ auto ExpressionFrameFactory::construct(AstPositionConst position_) -> Expression
       return std::make_shared<EpsilonExpressionFrame>(position_);
     case GrmAst::TkTerminalIdentifier:
       return std::make_shared<TerminalIdentifierExpressionFrame>(position_);
-    default:
-      throw std::runtime_error("Unknown expression frame id: " + GrmAst::to_string(id));
+    default: {
+      std::string const id_as_string(GrmAst::id_to_string(id));
+      throw std::runtime_error("Unknown expression frame id: " + id_as_string);
+    }
   }
 }
 
@@ -488,8 +491,8 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
   for (size_t i = 0; i < ast_.get_children_size(); ++i) {
     GenericAst const& child = *ast_.get_child_at(i);
     if (child.get_id() == GrmAst::NtTerminalProduction) {
-      std::string const& terminal_name = child.get_child_at(0)->get_token();
-      std::string const& terminal_id = child.get_child_at(1)->get_token();
+      std::string const& terminal_name = child.get_child_at(0)->get_string();
+      std::string const& terminal_id = child.get_child_at(1)->get_string();
 
       if (accepting_terminals_.contains(terminal_name)) {
         _accepting_terminals.emplace_back(terminal_name);
@@ -498,7 +501,7 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
       _id_names_to_terminal_names[terminal_id].insert(terminal_name);
 
       if (auto const itr = _terminal_definitions.find(terminal_name); itr == _terminal_definitions.end()) {
-        _terminal_definitions.insert_or_assign(terminal_name, AstPositionConst{&child, 2});
+        _terminal_definitions.insert_or_assign(terminal_name, GenericAst::PositionConst{&child, 2});
       } else {
         throw std::runtime_error("Terminal '" + terminal_name + "' defined multiple times");
       }
@@ -524,20 +527,20 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
     throw std::runtime_error(text);
   }
 
-  _terminal_ids.resize(_accepting_terminals.size(), GenericAst::IdDefault);
-  for (GenericAst::IdType i = 0; auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
+  _terminal_ids.resize(_accepting_terminals.size(), GenericId::IdDefault);
+  for (GenericId::IdType i = 0; auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
     for (std::string const& terminal_name : terminal_names) {
       std::optional<size_t> const terminal_nr = find_accepting_terminal_nr(terminal_name);
       if (!terminal_nr.has_value()) {
         continue;
       }
-      _terminal_ids[*terminal_nr] = (terminal_id == "IdDefault") ? GenericAst::IdDefault : i;
+      _terminal_ids[*terminal_nr] = (terminal_id == "IdDefault") ? GenericId::IdDefault : i;
     }
     i += (terminal_id == "IdDefault") ? 0 : 1;
   }
 }
 
-auto LexerBuilder::build() -> GenericLexerTables {
+auto LexerBuilder::build() -> LexerTables {
   Fa fa = build_initial_fa();
   write_dot(fa);
   fa.determinize();
@@ -571,7 +574,7 @@ auto LexerBuilder::build_initial_fa() -> Fa {
   Fa::State& state_start = ret._states[ret.get_unused_state_nr()];
 
   for (std::string const& terminal_name : _accepting_terminals) {
-    AstPositionConst terminal_def = _terminal_definitions.find(terminal_name)->second;
+    GenericAst::PositionConst terminal_def = _terminal_definitions.find(terminal_name)->second;
 
     FaPart ret_part;
     ExpressionFrameBase::CallstackType callstack;
@@ -604,8 +607,8 @@ auto LexerBuilder::build_initial_fa() -> Fa {
   return ret;
 }
 
-auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
-  GenericLexerTables ret;
+auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> LexerTables {
+  LexerTables ret;
 
   // We need to traverse the states in order
   std::set<Fa::StateNrType> state_nrs_sorted;
@@ -615,14 +618,13 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
 
   for (Fa::StateNrType const state_nr : state_nrs_sorted) {
     Fa::State const& state = fa_._states.find(state_nr)->second;
-    ret._accepts.emplace_back(pmt::base::DynamicBitset::get_required_chunk_count(_accepting_terminals.size()), 0);
     for (size_t i = 0; i < state._accepts.get_chunk_count(); ++i) {
-      ret._accepts.back()[i] = state._accepts.get_chunk(i);
+      ret._accepts_2d.push_back(state._accepts.get_chunk(i));
     }
   }
 
+  ret._accept_ids = _terminal_ids;
   ret._terminal_names = _accepting_terminals;
-  ret._terminal_ids = _terminal_ids;
 
   for (auto const& [terminal_id, terminal_names] : _id_names_to_terminal_names) {
     if (terminal_id == "IdDefault") {
@@ -635,7 +637,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   return ret;
 }
 
-void LexerBuilder::create_tables_transitions(pmt::util::parse::Fa const& fa_, pmt::util::parse::GenericLexerTables& tables_) {
+void LexerBuilder::create_tables_transitions(pmt::util::parsect::Fa const& fa_, LexerTables& tables_) {
   FaToDsncTransitions fa_to_dsnc_transitions(fa_);
   Dsnc dsnc = fa_to_dsnc_transitions.convert();
 
@@ -643,10 +645,8 @@ void LexerBuilder::create_tables_transitions(pmt::util::parse::Fa const& fa_, pm
   tables_._state_nr_min_diff = dsnc._state_nr_min_diff;
   tables_._padding_l = dsnc._padding_l;
   tables_._padding_r = dsnc._padding_r;
-  tables_._transitions_default = std::move(dsnc._transitions_default);
-  tables_._transitions_shift = std::move(dsnc._transitions_shift);
-  tables_._transitions_next = std::move(dsnc._transitions_next);
-  tables_._transitions_check = std::move(dsnc._transitions_check);
+  tables_._state_transition_entries = std::move(dsnc._state_transition_entries);
+  tables_._compressed_transition_entries = std::move(dsnc._compressed_transition_entries);
 }
 
 auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t> {

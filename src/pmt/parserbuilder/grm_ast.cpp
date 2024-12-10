@@ -1,7 +1,9 @@
 #include "pmt/parserbuilder/grm_ast.hpp"
 
+#include <stdexcept>
+
 namespace pmt::parserbuilder {
-auto GrmAst::to_string(pmt::util::parse::GenericAst::IdType id_) -> std::string {
+auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string_view {
   switch (id_) {
     case TkStringLiteral:
       return "TkStringLiteral";
@@ -67,7 +69,7 @@ auto GrmAst::to_string(pmt::util::parse::GenericAst::IdType id_) -> std::string 
     case NtRange:
       return "NtRange";
     default:
-      return "Unknown token: " + std::to_string(id_);
+      throw std::runtime_error("Invalid id");
   }
 }
 }  // namespace pmt::parserbuilder

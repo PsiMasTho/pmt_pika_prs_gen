@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace pmt::util::parse {
+namespace pmt::util::parsect {
 
 class Fa {
  public:
@@ -43,4 +43,4 @@ class Fa {
   auto get_symbols(std::unordered_set<StateNrType> const& state_nrs_from_) const -> std::unordered_set<SymbolType>;
 };
 
-}  // namespace pmt::util::parse
+}  // namespace pmt::util::parsect
