@@ -4,14 +4,15 @@
 #include "pmt/parserbuilder/grm_parser.hpp"
 #include "pmt/parserbuilder/lexer_builder.hpp"
 #include "pmt/parserbuilder/table_writer.hpp"
-#include "pmt/util/parse/generic_ast_printer.hpp"
-#include "pmt/util/parse/generic_lexer.hpp"
+#include "pmt/util/parsert/generic_ast_printer.hpp"
+#include "pmt/util/parsert/generic_lexer.hpp"
 
 #include <chrono>
 #include <fstream>
 #include <iostream>
 
 namespace pmt::parserbuilder {
+using namespace pmt::util::parsert;
 
 ParserBuilder::ParserBuilder(std::string_view input_path_, std::string_view input_sample_path_, std::set<std::string> const& terminals_)
  : _terminals(terminals_) {
@@ -27,7 +28,7 @@ void ParserBuilder::build() {
 
   auto const start = std::chrono::high_resolution_clock::now();
   LexerBuilder lexer_builder(*ast, _terminals);
-  pmt::util::parse::GenericLexerTables tables = lexer_builder.build();
+  LexerTables tables = lexer_builder.build();
   auto const end = std::chrono::high_resolution_clock::now();
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
 

@@ -1,6 +1,6 @@
 #include "pmt/parserbuilder/table_writer.hpp"
 
-#include "pmt/util/parse/generic_lexer_tables.hpp"
+#include "pmt/parserbuilder/lexer_tables.hpp"
 
 #include <sstream>
 #include <utility>
@@ -16,11 +16,11 @@ auto as_hex(std::integral auto value_) -> std::string {
 }
 }  // namespace
 
-TableWriter::TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string_view class_name_, pmt::util::parse::GenericLexerTables const& tables_)
+TableWriter::TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string_view class_name_, LexerTables const& tables_)
  : _os_header(os_header_)
  , _os_source(os_source_)
- , _class_name(class_name_)
- , _tables(tables_) {
+ , _tables(tables_)
+ , _class_name(class_name_) {
 }
 
 void TableWriter::write() {
@@ -28,50 +28,12 @@ void TableWriter::write() {
   write_source();
 }
 
-/*
-  std::vector<uint64_t> _transitions_shift;
-  std::vector<uint64_t> _transitions_next;
-  std::vector<uint64_t> _transitions_check;
-*/
-
 void TableWriter::write_header() {
   // clang-format off
-  _os_header <<
-  "class " << _class_name << " {\n"
-  " public:\n"
-  "  static inline size_t const DEFAULT_COUNT = " << _tables._transitions_default.size() << ";\n"
-  "  static inline size_t const SHIFT_COUNT  = " << _tables._transitions_shift.size() << ";\n"
-  "  static inline size_t const NEXT_COUNT   = " << _tables._transitions_next.size() << ";\n"
-  "  static inline size_t const CHECK_COUNT  = " << _tables._transitions_check.size() << ";\n"
-  "  static inline size_t const ACCEPT_COUNT = " << _tables._terminal_names.size() << ";\n"
-  "  static inline size_t const ID_COUNT     = " << _tables._id_names.size() << ";\n"
-  "\n"
-  "  static inline uint64_t const STATE_NR_SINK = " << as_hex(_tables._state_nr_sink) << ";\n"
-  "  static inline uint64_t const STATE_NR_MIN_DIFF = " << as_hex(_tables._state_nr_min_diff) << ";\n"
-  "  static inline uint64_t const PADDING_L = " << as_hex(_tables._padding_l) << ";\n"
-  "  static inline uint64_t const PADDING_R = " << as_hex(_tables._padding_r) << ";\n"
-  "\n"
-  "  static uint64_t const                             TRANSITIONS_DEFAULT[DEFAULT_COUNT];\n"
-  "  static uint64_t const                             TRANSITIONS_SHIFTS[SHIFT_COUNT];\n"
-  "  static uint64_t const                             TRANSITIONS_NEXT[NEXT_COUNT];\n"
-  "  static uint64_t const                             TRANSITIONS_CHECK[CHECK_COUNT];\n"
-  "  static uint64_t const                             ACCEPTS[STATE_COUNT];\n"
-  "  static char const* const                          TERMINAL_NAMES[ACCEPT_COUNT];\n"
-  "  static pmt::util::parse::GenericAst::IdType const TERMINAL_IDS[ACCEPT_COUNT];\n"
-  "  static char const* const                          ID_NAMES[ID_COUNT];\n"
-  "\n"
-  "  enum : pmt::util::parse::GenericAst::IdType {\n";
-  
-  std::string first_eq = " = 0";
-  std::string delim;
-  for (std::string const& id_name : _tables._id_names) {
-    _os_header << std::exchange(delim, ",\n") << "   " << id_name << std::exchange(first_eq, "");
-  }
 
-  _os_header <<
-  "\n"
-  "  };\n"
-  "};\n";
+  _os_header << "\n"
+  "  auto id_to_string(pmt::util::parse::GenericAst::IdType id_) -> std::string_view;\n"
+  "  auto as_generic_lexer_tables() const -> pmt::util::parsert::GenericLexerTables;\n";
   // clang-format on
 }
 
@@ -186,4 +148,22 @@ void TableWriter::write_source() {
                 "\n";
   delim1.clear();
 }
+
+void TableWriter::write_header_id_enum() {
+  _os_header << "class " << _class_name
+             << " {\n"
+                " public:\n"
+                "  enum : pmt::util::parse::GenericAst::IdType {\n";
+
+  std::string first_eq = " = 0";
+  std::string delim;
+  for (std::string const& id_name : _tables._id_names) {
+    _os_header << std::exchange(delim, ",\n") << "   " << id_name << std::exchange(first_eq, "");
+  }
+
+  _os_header << "\n"
+                "  };\n"
+                "};\n";
+}
+
 };  // namespace pmt::parserbuilder
