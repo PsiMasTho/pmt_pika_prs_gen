@@ -11,10 +11,10 @@ namespace pmt::util::parsert {
 
 using RawBitsetType = RawBitset<GenericLexerTables::TableIndexType>;
 
-GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables const& tables_)
- : _accepts_valid(std::make_unique_for_overwrite<GenericLexerTables::TableIndexType[]>(RawBitsetType::get_required_chunk_count(tables_._accepts_2d_width)))
+GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables tables_)
+ : _tables(tables_)
+ , _accepts_valid(std::make_unique_for_overwrite<GenericLexerTables::TableIndexType[]>(RawBitsetType::get_required_chunk_count(tables_._accepts_2d_width)))
  , _accepts_all(std::make_unique_for_overwrite<GenericLexerTables::TableIndexType[]>(RawBitsetType::get_required_chunk_count(tables_._accepts_2d_width)))
- , _tables(tables_)
  , _begin(input_.data())
  , _cursor(input_.data())
  , _end(input_.data() + input_.size()) {

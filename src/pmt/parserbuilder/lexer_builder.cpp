@@ -634,6 +634,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> LexerTables {
   }
 
   create_tables_transitions(fa_, ret);
+  ret.fill_sv();
   return ret;
 }
 
@@ -644,7 +645,6 @@ void LexerBuilder::create_tables_transitions(pmt::util::parsect::Fa const& fa_, 
   tables_._state_nr_sink = dsnc._state_nr_sink;
   tables_._state_nr_min_diff = dsnc._state_nr_min_diff;
   tables_._padding_l = dsnc._padding_l;
-  tables_._padding_r = dsnc._padding_r;
   tables_._state_transition_entries = std::move(dsnc._state_transition_entries);
   tables_._compressed_transition_entries = std::move(dsnc._compressed_transition_entries);
 }

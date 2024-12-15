@@ -15,7 +15,6 @@ class Dsnc {
   pmt::util::parsert::GenericLexerTables::TableIndexType _state_nr_min_diff;
 
   pmt::util::parsert::GenericLexerTables::TableIndexType _padding_l = 0;
-  pmt::util::parsert::GenericLexerTables::TableIndexType _padding_r = 0;
 
   std::vector<util::parsert::GenericLexerTables::StateTransitionEntry> _state_transition_entries;
   std::vector<util::parsert::GenericLexerTables::CompressedTransitionEntry> _compressed_transition_entries;

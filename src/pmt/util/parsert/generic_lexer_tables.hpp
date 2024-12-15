@@ -37,7 +37,6 @@ class GenericLexerTables {
 
   // -- Paddings --
   TableIndexType _padding_l;
-  TableIndexType _padding_r;
 
   // -- Sizes --
   TableIndexType _state_count;

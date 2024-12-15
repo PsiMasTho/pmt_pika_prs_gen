@@ -8,6 +8,10 @@
 #include <limits>
 #include <utility>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif
+
 namespace pmt::parserbuilder {
 using namespace pmt::util::parsect;
 using namespace pmt::util::parsert;
@@ -183,7 +187,7 @@ void FaToDsncTransitions::step_4(Dsnc& dsnc_) {
 
   for (auto const& [i, j] : occupied) {
     auto const& [check, next] = j;
-    dsnc_._compressed_transition_entries[i] = {next, check};
+    dsnc_._compressed_transition_entries[i] = {check, next};
   }
 }
 
@@ -191,7 +195,7 @@ void FaToDsncTransitions::step_5(Dsnc& dsnc_) {
   // Calculate padding
   // Left:
   while (dsnc_._padding_l < dsnc_._compressed_transition_entries.size()) {
-    auto const& [next, check] = dsnc_._compressed_transition_entries[dsnc_._padding_l];
+    auto const& [check, next] = dsnc_._compressed_transition_entries[dsnc_._padding_l];
     if (next != dsnc_._state_nr_min_diff || next != check) {
       break;
     }
@@ -199,12 +203,13 @@ void FaToDsncTransitions::step_5(Dsnc& dsnc_) {
   }
 
   // Right:
-  while (dsnc_._padding_r < dsnc_._compressed_transition_entries.size()) {
-    auto const& [next, check] = dsnc_._compressed_transition_entries[dsnc_._compressed_transition_entries.size() - dsnc_._padding_r - 1];
+  size_t padding_r = 0;
+  while (padding_r < dsnc_._compressed_transition_entries.size()) {
+    auto const& [check, next] = dsnc_._compressed_transition_entries[dsnc_._compressed_transition_entries.size() - padding_r - 1];
     if (next != dsnc_._state_nr_min_diff || next != check) {
       break;
     }
-    ++dsnc_._padding_r;
+    ++padding_r;
   }
 
   // Erase according to padding
@@ -212,7 +217,7 @@ void FaToDsncTransitions::step_5(Dsnc& dsnc_) {
   dsnc_._compressed_transition_entries.erase(dsnc_._compressed_transition_entries.begin(), dsnc_._compressed_transition_entries.begin() + dsnc_._padding_l);
 
   // Right:
-  dsnc_._compressed_transition_entries.resize(dsnc_._compressed_transition_entries.size() - dsnc_._padding_r);
+  dsnc_._compressed_transition_entries.resize(dsnc_._compressed_transition_entries.size() - padding_r);
 }
 
 auto FaToDsncTransitions::debug_pre_checks() const -> bool {
@@ -229,24 +234,20 @@ auto FaToDsncTransitions::debug_pre_checks() const -> bool {
 
 auto FaToDsncTransitions::debug_post_checks(Dsnc const& dsnc_) const -> bool {
 #ifndef NDEBUG
-  /*
-    std::cout << "-- Post checks --\n";
-    std::cout << "FA State count: " << _fa._states.size() << '\n';
-    std::cout << "DSNC::sink: " << dsnc_._state_nr_sink << '\n';
-    std::cout << "DSNC::min diff: " << dsnc_._state_nr_min_diff << '\n';
-    std::cout << "DSNC::lpadding: " << dsnc_._padding_l << '\n';
-    std::cout << "DSNC::rpadding: " << dsnc_._padding_r << '\n';
-    std::cout << "DSNC::default size: " << dsnc_._transitions_default.size() << '\n';
-    std::cout << "DSNC::shift size: " << dsnc_._transitions_shift.size() << '\n';
-    std::cout << "DSNC::next size: " << dsnc_._transitions_next.size() << '\n';
-    std::cout << "DSNC::check size: " << dsnc_._transitions_check.size() << '\n';
-  */
+  std::cout << "-- Post checks --\n";
+  std::cout << "FA State count: " << _fa._states.size() << '\n';
+  std::cout << "DSNC::sink: " << dsnc_._state_nr_sink << '\n';
+  std::cout << "DSNC::min diff: " << dsnc_._state_nr_min_diff << '\n';
+  std::cout << "DSNC::lpadding: " << dsnc_._padding_l << '\n';
+  std::cout << "DSNC::state count: " << dsnc_._state_transition_entries.size() << '\n';
+  std::cout << "DSNC::compressed transition count: " << dsnc_._compressed_transition_entries.size() << '\n';
 
   GenericLexerTables tables;
   tables._padding_l = dsnc_._padding_l;
-  tables._padding_r = dsnc_._padding_r;
   tables._state_nr_sink = dsnc_._state_nr_sink;
   tables._state_nr_min_diff = dsnc_._state_nr_min_diff;
+  tables._state_count = dsnc_._state_transition_entries.size();
+  tables._compressed_transition_entry_count = dsnc_._compressed_transition_entries.size();
   tables._state_transition_entries = dsnc_._state_transition_entries.data();
   tables._compressed_transition_entries = dsnc_._compressed_transition_entries.data();
 

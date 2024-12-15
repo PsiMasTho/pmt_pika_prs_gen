@@ -3,7 +3,8 @@
 #include "pmt/fw_decl.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
 
-#include <iosfwd>
+#include <ostream>
+#include <string>
 
 PMT_FW_DECL_NS_CLASS(pmt::util::parse, LexerTables);
 
@@ -11,7 +12,7 @@ namespace pmt::parserbuilder {
 
 class TableWriter {
  public:
-  TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string_view class_name_, LexerTables const& tables_);
+  TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string header_path_, std::string namespace_name_, std::string class_name_, LexerTables const& tables_);
 
   void write();
 
@@ -20,15 +21,28 @@ class TableWriter {
   void write_source();
 
   void write_header_id_enum();
+  void write_source_id_to_string_defintion();
+  void write_source_as_generic_lexer_tables_definition();
 
-  void write_line(auto&& first_, auto&& rest_...);
+  template <typename T_>
+  void write_pair_entries(std::vector<T_> const& entries_, std::string const& label_);
+
+  template <typename T_>
+  void write_single_entries(std::vector<T_> const& entries_, std::string const& label_);
+
+  void write_single_entries(std::vector<std::string_view> const& entries_, std::string const& label_);
+
+  static auto as_hex(std::integral auto value_, bool hex_prefix_ = true) -> std::string;
+
+  static inline size_t const PER_LINE = 16;
+  static inline size_t const PER_LINE_HEX_PAIRS = 6;
 
   std::ostream& _os_header;
   std::ostream& _os_source;
   LexerTables const& _tables;
-  std::string_view _namespace_name;
-  std::string_view _class_name;
-  size_t _indent = 0;
+  std::string _header_path;
+  std::string _namespace_name;
+  std::string _class_name;
 };
 
 }  // namespace pmt::parserbuilder

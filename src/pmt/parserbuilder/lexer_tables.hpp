@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/util/parsert/generic_lexer_tables.hpp"
 
 #include <string>
@@ -17,7 +16,6 @@ class LexerTables {
 
   // -- Paddings --
   pmt::util::parsert::GenericLexerTables::TableIndexType _padding_l;
-  pmt::util::parsert::GenericLexerTables::TableIndexType _padding_r;
 
   // -- Sizes --
   pmt::util::parsert::GenericLexerTables::TableIndexType _accepts_2d_width;

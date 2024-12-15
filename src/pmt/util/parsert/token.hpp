@@ -15,8 +15,8 @@ class Token {
 
   // - Member functions -
   //- Lifetime -
-  Token(std::string_view token_, SourcePosition source_position_);
   Token() = default;
+  Token(std::string_view token_, SourcePosition source_position_);
 
   // - Conversion -
   auto to_ast() const -> GenericAst::UniqueHandle;

@@ -20,7 +20,6 @@ auto LexerTables::as_generic_lexer_tables() const -> pmt::util::parsert::Generic
   ret._state_nr_min_diff = _state_nr_min_diff;
 
   ret._padding_l = _padding_l;
-  ret._padding_r = _padding_r;
 
   ret._state_count = _state_transition_entries.size();
   ret._compressed_transition_entry_count = _compressed_transition_entries.size();
