@@ -247,9 +247,8 @@ auto FaToDsncTransitions::debug_post_checks(Dsnc const& dsnc_) const -> bool {
   tables._state_nr_sink = dsnc_._state_nr_sink;
   tables._state_nr_min_diff = dsnc_._state_nr_min_diff;
   tables._state_count = dsnc_._state_transition_entries.size();
-  tables._compressed_transition_entry_count = dsnc_._compressed_transition_entries.size();
-  tables._state_transition_entries = dsnc_._state_transition_entries.data();
-  tables._compressed_transition_entries = dsnc_._compressed_transition_entries.data();
+  tables._state_transition_entries = dsnc_._state_transition_entries;
+  tables._compressed_transition_entries = dsnc_._compressed_transition_entries;
 
   // check that transitions in the tables match the transitions in the fa
   for (size_t i = 0; i < _fa._states.size(); ++i) {

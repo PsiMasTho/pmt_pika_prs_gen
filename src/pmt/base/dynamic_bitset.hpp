@@ -11,7 +11,7 @@ class DynamicBitset {
  public:
   // - Public types / constants -
   using ChunkType = std::uint64_t;
-  static constexpr size_t CHUNK_TYPE_SIZE = sizeof(ChunkType) * CHAR_BIT;
+  static constexpr size_t CHUNK_BIT = sizeof(ChunkType) * CHAR_BIT;
 
   // - Lifetime -
   explicit DynamicBitset(size_t size_ = 0, bool value_ = false);
@@ -37,6 +37,10 @@ class DynamicBitset {
   auto get(size_t index_) const -> bool;
   auto set(size_t index_, bool value_) -> bool;
   auto toggle(size_t index_) -> bool;
+
+  // - All bit access -
+  void set_all(bool value_);
+  void toggle_all();
 
   // - Chunk access -
   auto get_chunk(size_t index_) const -> ChunkType;
@@ -82,7 +86,7 @@ class DynamicBitset {
 
   // - Private types / constants -
   using GrowthRate = std::ratio<3, 2>;
-  static constexpr size_t INITIAL_CAPACITY = CHUNK_TYPE_SIZE;
+  static constexpr size_t INITIAL_CAPACITY = CHUNK_BIT;
   static constexpr bool DEFAULT_VALUE = false;
   static constexpr std::array<ChunkType, 2> ALL_SET_MASKS = {ChunkType(0), ~ChunkType(0)};
 

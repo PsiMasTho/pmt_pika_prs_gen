@@ -28,7 +28,7 @@ void ParserBuilder::build() {
 
   auto const start = std::chrono::high_resolution_clock::now();
   LexerBuilder lexer_builder(*ast, _terminals);
-  LexerTables tables = lexer_builder.build();
+  GenericLexerTables tables = lexer_builder.build();
   auto const end = std::chrono::high_resolution_clock::now();
   std::cout << "Lexer build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
 
@@ -39,7 +39,7 @@ void ParserBuilder::build() {
     table_writer.write();
   }
 
-  pmt::util::parsert::GenericLexer generic_lexer(_input_sample, tables.as_generic_lexer_tables());
+  pmt::util::parsert::GenericLexer generic_lexer(_input_sample, tables);
 
   auto const to_string = [&tables](pmt::util::parsert::GenericId::IdType id_) -> std::string {
     if (id_ < tables._id_names.size()) {
@@ -52,7 +52,8 @@ void ParserBuilder::build() {
 
   while (true) {
     pmt::util::parsert::GenericLexer::LexReturn token = generic_lexer.lex();
-    printer.print(*token._token.to_ast(), std::cerr);
+    pmt::util::parsert::GenericAst::UniqueHandle const ast = token._token.to_ast();
+    printer.print(*ast, std::cerr);
     if (token._token._id == pmt::util::parsert::GenericId::IdEoi) {
       break;
     }

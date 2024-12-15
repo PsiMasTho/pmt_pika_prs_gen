@@ -48,7 +48,7 @@ void GenericAstPrinter::print(GenericAst const& ast_, std::ostream& out_) {
   }
 }
 
-auto GenericAstPrinter::id_to_string(GenericId::IdType id_) -> std::string_view {
+auto GenericAstPrinter::id_to_string(GenericId::IdType id_) -> std::string {
   if (GenericId::is_generic_id(id_)) {
     return GenericId::id_to_string(id_);
   }

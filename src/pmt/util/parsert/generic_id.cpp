@@ -4,7 +4,7 @@
 
 namespace pmt::util::parsert {
 
-auto GenericId::id_to_string(IdType id_) -> std::string_view {
+auto GenericId::id_to_string(IdType id_) -> std::string {
   switch (id_) {
     case IdUninitialized:
       return "Uninitialized";

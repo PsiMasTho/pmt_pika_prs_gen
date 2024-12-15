@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <string_view>
+#include <string>
 
 namespace pmt::util::parsert {
 
@@ -15,7 +15,7 @@ class GenericId {
     IdEoi = -3ULL,
   };
 
-  static auto id_to_string(IdType id_) -> std::string_view;
+  static auto id_to_string(IdType id_) -> std::string;
   static auto string_to_id(std::string_view str_) -> IdType;
 
   static auto is_generic_id(IdType id_) -> bool;

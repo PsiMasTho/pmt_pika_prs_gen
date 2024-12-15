@@ -1,32 +1,27 @@
 #include "pmt/util/parsert/generic_lexer.hpp"
 
-#include "pmt/util/parsert/raw_bitset.hpp"
-
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 
 namespace pmt::util::parsert {
-
-using RawBitsetType = RawBitset<GenericLexerTables::TableIndexType>;
+using namespace pmt::base;
 
 GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables tables_)
- : _tables(tables_)
- , _accepts_valid(std::make_unique_for_overwrite<GenericLexerTables::TableIndexType[]>(RawBitsetType::get_required_chunk_count(tables_._accepts_2d_width)))
- , _accepts_all(std::make_unique_for_overwrite<GenericLexerTables::TableIndexType[]>(RawBitsetType::get_required_chunk_count(tables_._accepts_2d_width)))
+ : _tables(std::move(tables_))
+ , _accepts_valid(tables_._accepts_width, false)
+ , _accepts_all(tables_._accepts_width, true)
  , _begin(input_.data())
  , _cursor(input_.data())
  , _end(input_.data() + input_.size()) {
-  fill_bitset(_accepts_valid.get(), false);
-  fill_bitset(_accepts_all.get(), true);
 }
 
 auto GenericLexer::lex() -> LexReturn {
-  return lex(_accepts_all.get());
+  return lex(_accepts_all);
 }
 
-auto GenericLexer::lex(GenericLexerTables::TableIndexType const* accepts_) -> LexReturn {
+auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
   while (_cursor != _end && (std::strchr(" \t\r\n", *_cursor) != nullptr)) {
     ++_cursor;
   }
@@ -46,36 +41,20 @@ auto GenericLexer::lex(GenericLexerTables::TableIndexType const* accepts_) -> Le
 
   for (char const* p = _cursor; _cursor <= _end; ++p) {
     if (state_nr_cur == _tables._state_nr_sink) {
-      if (te != nullptr) {
-        ret._accepted = countl;
-        ret._token._token = std::string_view(_cursor, te);
-        ret._token._id = id;
-        _cursor = te;
-        return ret;
-      } else {
-        throw std::runtime_error("Unexpected character: " + std::string(1, *_cursor));
-      }
+      break;
     }
 
-    fill_bitset(_accepts_valid.get(), false);
-    RawBitsetType::op_and(_tables.get_accepts_2d_bitset_at(state_nr_cur), accepts_, _accepts_valid.get(), _tables._accepts_2d_width);
-    assert(RawBitsetType::popcnt(_accepts_valid.get(), _tables._accepts_2d_width) <= 1);
+    _accepts_valid = _tables._accepts[state_nr_cur].clone_and(accepts_);
 
-    countl = RawBitsetType::find_first_bit(_accepts_valid.get(), _tables._accepts_2d_width);
-    if (countl < _tables._accepts_2d_width) {
+    assert(_accepts_valid.popcnt() <= 1);
+
+    countl = _accepts_valid.countl(false);
+    if (countl < _accepts_valid.size()) {
       te = p;
       id = _tables._accept_ids[countl];
-
-      if (state_nr_cur == _tables._state_nr_sink) {
-        ret._accepted = countl;
-        ret._token._token = std::string_view(_cursor, te);
-        ret._token._id = id;
-        _cursor = te;
-        return ret;
-      }
     }
 
-    if (p == _end) {
+    if (p == _end || state_nr_cur == _tables._state_nr_sink) {
       break;
     }
 
@@ -91,10 +70,6 @@ auto GenericLexer::lex(GenericLexerTables::TableIndexType const* accepts_) -> Le
   } else {
     throw std::runtime_error("Unexpected character: " + std::string(1, *_cursor));
   }
-}
-
-void GenericLexer::fill_bitset(GenericLexerTables::TableIndexType* bitset_, bool value_) {
-  std::fill(bitset_, bitset_ + RawBitsetType::get_required_chunk_count(_tables._accepts_2d_width), value_ ? std::numeric_limits<GenericLexerTables::TableIndexType>::max() : 0);
 }
 
 }  // namespace pmt::util::parsert

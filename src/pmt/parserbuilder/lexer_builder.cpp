@@ -540,7 +540,7 @@ LexerBuilder::LexerBuilder(GenericAst const& ast_, std::set<std::string> const& 
   }
 }
 
-auto LexerBuilder::build() -> LexerTables {
+auto LexerBuilder::build() -> GenericLexerTables {
   Fa fa = build_initial_fa();
   write_dot(fa);
   fa.determinize();
@@ -607,21 +607,10 @@ auto LexerBuilder::build_initial_fa() -> Fa {
   return ret;
 }
 
-auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> LexerTables {
-  LexerTables ret;
+auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
+  GenericLexerTables ret;
 
-  // We need to traverse the states in order
-  std::set<Fa::StateNrType> state_nrs_sorted;
-  for (auto const& [state_nr, state] : fa_._states) {
-    state_nrs_sorted.insert(state_nr);
-  }
-
-  for (Fa::StateNrType const state_nr : state_nrs_sorted) {
-    Fa::State const& state = fa_._states.find(state_nr)->second;
-    for (size_t i = 0; i < state._accepts.get_chunk_count(); ++i) {
-      ret._accepts_2d.push_back(state._accepts.get_chunk(i));
-    }
-  }
+  ret._accepts_width = _accepting_terminals.size();
 
   ret._accept_ids = _terminal_ids;
   ret._terminal_names = _accepting_terminals;
@@ -634,11 +623,29 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> LexerTables {
   }
 
   create_tables_transitions(fa_, ret);
-  ret.fill_sv();
+
+  // We need to traverse the states in order
+  std::set<Fa::StateNrType> state_nrs_sorted;
+  for (auto const& [state_nr, state] : fa_._states) {
+    state_nrs_sorted.insert(state_nr);
+  }
+
+  for (Fa::StateNrType const state_nr : state_nrs_sorted) {
+    Fa::State const& state = fa_._states.find(state_nr)->second;
+
+    size_t const accepts_width = state._accepts.size();
+    assert(accepts_width == 0 || accepts_width == _accepting_terminals.size());
+    if (accepts_width == 0) {
+      ret._accepts.emplace_back(_accepting_terminals.size(), false);
+    } else {
+      ret._accepts.push_back(state._accepts);
+    }
+  }
+
   return ret;
 }
 
-void LexerBuilder::create_tables_transitions(pmt::util::parsect::Fa const& fa_, LexerTables& tables_) {
+void LexerBuilder::create_tables_transitions(pmt::util::parsect::Fa const& fa_, GenericLexerTables& tables_) {
   FaToDsncTransitions fa_to_dsnc_transitions(fa_);
   Dsnc dsnc = fa_to_dsnc_transitions.convert();
 

@@ -1,16 +1,16 @@
 #include "pmt/parserbuilder/table_writer.hpp"
 
-#include "pmt/parserbuilder/lexer_tables.hpp"
+#include "pmt/util/parsert/generic_lexer_tables.hpp"
 
 #include <sstream>
 #include <utility>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parse;
+using namespace pmt::util::parsert;
 
 namespace {}  // namespace
 
-TableWriter::TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string header_path_, std::string namespace_name_, std::string class_name_, LexerTables const& tables_)
+TableWriter::TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string header_path_, std::string namespace_name_, std::string class_name_, GenericLexerTables const& tables_)
  : _os_header(os_header_)
  , _os_source(os_source_)
  , _tables(tables_)
@@ -58,13 +58,13 @@ void TableWriter::write_source() {
   "GenericLexerTables::TableIndexType const PADDING_L = " << as_hex(_tables._padding_l) << ";\n"
   "GenericLexerTables::TableIndexType const STATE_COUNT = " << as_hex(_tables._state_transition_entries.size()) << ";\n"
   "GenericLexerTables::TableIndexType const COMPRESSED_TRANSITION_ENTRY_COUNT = " << as_hex(_tables._compressed_transition_entries.size()) << ";\n"
-  "GenericLexerTables::TableIndexType const ACCEPTS_2D_WIDTH = " << as_hex(_tables._accepts_2d_width) << ";\n";
+  "GenericLexerTables::TableIndexType const ACCEPTS_2D_WIDTH = " << as_hex(_tables._accepts_width) << ";\n";
   write_pair_entries(_tables._state_transition_entries, "GenericLexerTables::StateTransitionEntry const STATE_TRANSITION_ENTRIES[STATE_COUNT]");
   write_pair_entries(_tables._compressed_transition_entries, "GenericLexerTables::CompressedTransitionEntry const COMPRESSED_TRANSITION_ENTRIES[COMPRESSED_TRANSITION_ENTRY_COUNT]");
-  write_single_entries(_tables._accepts_2d, "GenericLexerTables::TableIndexType const ACCEPTS_2D[STATE_COUNT * ACCEPTS_2D_WIDTH]");
+  write_single_entries(_tables._accepts, "GenericLexerTables::TableIndexType const ACCEPTS_2D[STATE_COUNT * ACCEPTS_2D_WIDTH]");
   write_single_entries(_tables._accept_ids, "GenericId::IdType const ACCEPT_IDS[ACCEPTS_2D_WIDTH]");
-  write_single_entries(_tables._terminal_names_sv, "std::string_view const TERMINAL_NAMES[ACCEPTS_2D_WIDTH]");
-  write_single_entries(_tables._id_names_sv, "std::string_view const ID_NAMES[" + std::to_string(_tables._id_names.size()) + "]");
+  write_single_entries(_tables._terminal_names, "std::string_view const TERMINAL_NAMES[ACCEPTS_2D_WIDTH]");
+  write_single_entries(_tables._id_names, "std::string_view const ID_NAMES[" + std::to_string(_tables._id_names.size()) + "]");
   _os_source << "}\n"
   "\n";
 
@@ -123,7 +123,7 @@ void TableWriter::write_source_as_generic_lexer_tables_definition() {
                 "}\n";
 }
 
-void TableWriter::write_single_entries(std::vector<std::string_view> const& entries_, std::string const& label_) {
+void TableWriter::write_single_entries(std::vector<std::string> const& entries_, std::string const& label_) {
   _os_source << label_ << " = {\n";
   std::string delim;
   for (size_t i = 0; i < entries_.size(); ++i) {
@@ -135,6 +135,9 @@ void TableWriter::write_single_entries(std::vector<std::string_view> const& entr
     _os_source << '"' << entries_[i] << '"';
   }
   _os_source << "\n};\n";
+}
+
+void TableWriter::write_single_entries(std::vector<pmt::base::DynamicBitset> const& entries_, std::string const& label_) {
 }
 
 auto TableWriter::as_hex(std::integral auto value_, bool hex_prefix_) -> std::string {

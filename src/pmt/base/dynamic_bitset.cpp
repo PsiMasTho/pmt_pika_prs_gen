@@ -83,7 +83,7 @@ void DynamicBitset::resize(size_t size_, bool value_) {
   if (_size < size_) {
     size_t const initial_chunks = get_required_chunk_count(_size);
     size_t const required_chunks = get_required_chunk_count(size_);
-    reserve(required_chunks * CHUNK_TYPE_SIZE);
+    reserve(required_chunks * CHUNK_BIT);
     set_trailing_chunk(value_);
     ChunkType* const start = _data.get() + initial_chunks;
     ChunkType* const end = _data.get() + required_chunks;
@@ -156,6 +156,19 @@ auto DynamicBitset::toggle(size_t index_) -> bool {
   return old_value;
 }
 
+void DynamicBitset::set_all(bool value_) {
+  ChunkType const mask = ALL_SET_MASKS[value_];
+  std::fill(_data.get(), _data.get() + get_required_chunk_count(_size), mask);
+  set_trailing_chunk(DEFAULT_VALUE);
+}
+
+void DynamicBitset::toggle_all() {
+  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
+    _data[i] = ~_data[i];
+  }
+  set_trailing_chunk(DEFAULT_VALUE);
+}
+
 auto DynamicBitset::get_chunk(size_t index_) const -> ChunkType {
   assert(index_ < get_required_chunk_count(_size));
   return _data[index_];
@@ -166,7 +179,7 @@ auto DynamicBitset::get_chunk_count() const -> size_t {
 }
 
 auto DynamicBitset::get_required_chunk_count(size_t size_) -> size_t {
-  return (size_ + CHUNK_TYPE_SIZE - 1) / CHUNK_TYPE_SIZE;
+  return (size_ + CHUNK_BIT - 1) / CHUNK_BIT;
 }
 
 auto DynamicBitset::operator==(const DynamicBitset& other_) const -> bool {
@@ -206,13 +219,13 @@ auto DynamicBitset::countl(bool value_) const -> size_t {
   for (size_t i = 0; i < max; ++i) {
     ChunkType chunk = _data[i];
 
-    if (i == max - 1 && _size % CHUNK_TYPE_SIZE != 0) {
+    if (i == max - 1 && _size % CHUNK_BIT != 0) {
       set_mask(chunk, get_trailing_mask(_size), !value_);
     }
 
     size_t const incr = fn(chunk);
     total += incr;
-    if (incr != CHUNK_TYPE_SIZE) {
+    if (incr != CHUNK_BIT) {
       break;
     }
   }
@@ -228,10 +241,10 @@ auto DynamicBitset::countr(bool value_) const -> size_t {
   size_t i = max;
   while (true) {
     ChunkType chunk = _data[i];
-    size_t breakout = CHUNK_TYPE_SIZE;
+    size_t breakout = CHUNK_BIT;
     if (i == max) {
       breakout = get_bit_index(_size);
-      chunk <<= CHUNK_TYPE_SIZE - breakout;
+      chunk <<= CHUNK_BIT - breakout;
     }
 
     size_t const incr = std::min(breakout, static_cast<size_t>(fn(chunk)));
@@ -364,7 +377,7 @@ auto DynamicBitset::clone_asymmetric_difference(const DynamicBitset& other_) con
 }
 
 void DynamicBitset::set_trailing_chunk(bool value_) {
-  if (_size % CHUNK_TYPE_SIZE == 0) {
+  if (_size % CHUNK_BIT == 0) {
     return;
   }
 
@@ -374,11 +387,11 @@ void DynamicBitset::set_trailing_chunk(bool value_) {
 }
 
 auto DynamicBitset::get_bit_index(size_t index_) -> size_t {
-  return index_ % CHUNK_TYPE_SIZE;
+  return index_ % CHUNK_BIT;
 }
 
 auto DynamicBitset::get_chunk_index(size_t index_) -> size_t {
-  return index_ / CHUNK_TYPE_SIZE;
+  return index_ / CHUNK_BIT;
 }
 
 auto DynamicBitset::get_trailing_mask(size_t size_) -> ChunkType {
@@ -394,7 +407,7 @@ void DynamicBitset::set_mask(ChunkType& dest_, ChunkType mask_, bool value_) {
 }
 
 auto DynamicBitset::round_up_to_chunk_size(size_t size_) -> size_t {
-  return (size_ + CHUNK_TYPE_SIZE - 1) / CHUNK_TYPE_SIZE * CHUNK_TYPE_SIZE;
+  return (size_ + CHUNK_BIT - 1) / CHUNK_BIT * CHUNK_BIT;
 }
 
 auto DynamicBitset::get_next_capacity(size_t capacity_) -> size_t {
