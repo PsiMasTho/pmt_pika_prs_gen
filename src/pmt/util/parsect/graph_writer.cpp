@@ -3,7 +3,6 @@
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
 
-#include <cstring>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -151,7 +150,16 @@ auto GraphWriter::create_label(std::set<Fa::SymbolType> const& state_nrs_) -> st
 }
 
 auto GraphWriter::is_displayable(Fa::SymbolType sym_) -> bool {
-  return ('a' <= sym_ && sym_ <= 'z') || ('A' <= sym_ && sym_ <= 'Z') || ('0' <= sym_ && sym_ <= '9') || (std::strchr("!#$%&()*,-..@^_", sym_) != nullptr);
+  static std::unordered_set<Fa::SymbolType> const DISPLAYABLES = {
+   // clang-format off
+      '!', '#', '$', '%', '&', '(', ')', '*', ',', '-', '.', '@', '^', '_',
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+   // clang-format on
+  };
+
+  return DISPLAYABLES.contains(sym_);
 }
 
 auto GraphWriter::to_displayable(Fa::SymbolType sym_) -> std::string {

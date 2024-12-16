@@ -23,7 +23,6 @@ class LexerBuilder {
  private:
   auto build_initial_fa() -> pmt::util::parsect::Fa;
   auto fa_to_lexer_tables(pmt::util::parsect::Fa const& fa_) -> pmt::util::parsert::GenericLexerTables;
-  void create_tables_transitions(pmt::util::parsect::Fa const& fa_, pmt::util::parsert::GenericLexerTables& tables_);
   auto find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t>;
   void write_dot(pmt::util::parsect::Fa const& fa_);
   auto accepts_to_label(size_t accepts_) -> std::string;

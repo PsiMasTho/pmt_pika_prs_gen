@@ -3,9 +3,9 @@
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
 #include "pmt/parserbuilder/fa_part.hpp"
-#include "pmt/parserbuilder/fa_to_dsnc_transitions.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
+#include "pmt/parserbuilder/lexer_table_transition_converter.hpp"
 #include "pmt/util/parsect/fa.hpp"
 #include "pmt/util/parsect/graph_writer.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
@@ -622,7 +622,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     ret._id_names.push_back(terminal_id);
   }
 
-  create_tables_transitions(fa_, ret);
+  LexerTableTransitionConverter::convert(fa_, ret);
 
   // We need to traverse the states in order
   std::set<Fa::StateNrType> state_nrs_sorted;
@@ -643,17 +643,6 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
   }
 
   return ret;
-}
-
-void LexerBuilder::create_tables_transitions(pmt::util::parsect::Fa const& fa_, GenericLexerTables& tables_) {
-  FaToDsncTransitions fa_to_dsnc_transitions(fa_);
-  Dsnc dsnc = fa_to_dsnc_transitions.convert();
-
-  tables_._state_nr_sink = dsnc._state_nr_sink;
-  tables_._state_nr_min_diff = dsnc._state_nr_min_diff;
-  tables_._padding_l = dsnc._padding_l;
-  tables_._state_transition_entries = std::move(dsnc._state_transition_entries);
-  tables_._compressed_transition_entries = std::move(dsnc._compressed_transition_entries);
 }
 
 auto LexerBuilder::find_accepting_terminal_nr(std::string const& terminal_name_) -> std::optional<size_t> {

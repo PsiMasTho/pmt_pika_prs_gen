@@ -54,7 +54,6 @@ void TableWriter::write_source() {
   "using namespace pmt::util::parsert;\n"
   "namespace {\n"
   "GenericLexerTables::TableIndexType const STATE_NR_SINK = " << as_hex(_tables._state_nr_sink) << ";\n"
-  "GenericLexerTables::TableIndexType const STATE_NR_MIN_DIFF = " << as_hex(_tables._state_nr_min_diff) << ";\n"
   "GenericLexerTables::TableIndexType const PADDING_L = " << as_hex(_tables._padding_l) << ";\n"
   "GenericLexerTables::TableIndexType const STATE_COUNT = " << as_hex(_tables._state_transition_entries.size()) << ";\n"
   "GenericLexerTables::TableIndexType const COMPRESSED_TRANSITION_ENTRY_COUNT = " << as_hex(_tables._compressed_transition_entries.size()) << ";\n"

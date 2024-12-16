@@ -58,7 +58,7 @@ auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
       break;
     }
 
-    state_nr_cur = _tables.get_next_state(state_nr_cur, *p);
+    state_nr_cur = _tables.get_state_nr_next(state_nr_cur, *p);
   }
 
   if (te != nullptr) {

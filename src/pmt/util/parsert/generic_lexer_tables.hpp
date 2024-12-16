@@ -35,7 +35,6 @@ class GenericLexerTables {
   // - Nonstatic data -
   // -- Special state numbers --
   TableIndexType _state_nr_sink;
-  TableIndexType _state_nr_min_diff;
 
   // -- Paddings --
   TableIndexType _padding_l;
@@ -57,7 +56,7 @@ class GenericLexerTables {
   std::vector<std::string> _id_names;        // size: (max(_accept_ids) excluding GenericId::*) + 1
 
   // - Member functions -
-  auto get_next_state(TableIndexType state_nr_, TableIndexType symbol_) const -> TableIndexType;
+  auto get_state_nr_next(TableIndexType state_nr_, TableIndexType symbol_) const -> TableIndexType;
   auto get_id_names_size() const -> size_t;
 };
 
