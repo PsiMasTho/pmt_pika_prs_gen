@@ -11,41 +11,46 @@
   int          &act = _act;       \
   int          &cs = _cs;
 
- #define ACCEPT_TOKEN(id)                                    \
-  do {                                                       \
-   accepted = GenericAst::construct(GenericAst::Tag::String); \
-   accepted->set_id(id);                                     \
+ #define ACCEPT_TOKEN(id)                                         \
+  do {                                                            \
+   accepted = GenericAst::construct(GenericAst::Tag::String, id); \
   } while (0)
 
 %%{
  machine GrmLexer;
   
- StringLiteral      = '"' (print - ['"])* '"';
- IntegerLiteral     = [0-9]+ '#' [0-9a-zA-Z]+;
- BooleanLiteral     = 'true' | 'false';
- TerminalIdentifier = '$' [_a-zA-Z][a-zA-Z0-9_]+;
- RuleIdentifier     = '%' [a-zA-Z][a-zA-Z0-9_]+;
- Epsilon            = 'epsilon';
- Pipe               = '|';
- SemiColon          = ';';
- Equals             = '=';
- Comma              = ',';
- DoubleDot          = '..';
- OpenParen          = '(';
- CloseParen         = ')';
- OpenBrace          = '{';
- CloseBrace         = '}';
- OpenSquare         = '[';
- CloseSquare        = ']';
- OpenAngle          = '<';
- CloseAngle         = '>';
- Plus               = '+';
- Star               = '*';
- Question           = '?';
- KwParameterUnpack  = 'unpack';
- KwParameterHide    = 'hide';
- KwParameterMerge   = 'merge';
- KwParameterId      = 'id';
+ StringLiteral                    = '"' (print - ['"])* '"';
+ IntegerLiteral                   = [0-9]+ '#' [0-9a-zA-Z]+;
+ BooleanLiteral                   = 'true' | 'false';
+ TerminalIdentifier               = '$' [_a-zA-Z][_a-zA-Z0-9]+;
+ RuleIdentifier                   = '%' [_a-zA-Z][_a-zA-Z0-9]+;
+ Epsilon                          = 'epsilon';
+ Pipe                             = '|';
+ SemiColon                        = ';';
+ Equals                           = '=';
+ Comma                            = ',';
+ DoubleDot                        = '..';
+ OpenParen                        = '(';
+ CloseParen                       = ')';
+ OpenBrace                        = '{';
+ CloseBrace                       = '}';
+ OpenSquare                       = '[';
+ CloseSquare                      = ']';
+ OpenAngle                        = '<';
+ CloseAngle                       = '>';
+ Plus                             = '+';
+ Star                             = '*';
+ Question                         = '?';
+ KwParameterUnpack                = 'unpack';
+ KwParameterHide                  = 'hide';
+ KwParameterMerge                 = 'merge';
+ KwParameterId                    = 'id';
+ KwParameterCaseSensitive         = 'case_sensitive';
+ GrammarPropertyStart             = '@start';
+ GrammarPropertyWhitespace        = '@whitespace';
+ GrammarPropertySingleLineComment = '@single_line_comment';
+ GrammarPropertyMultiLineComment  = '@multi_line_comment';
+ GrammarPropertyCaseSensitive     = '@case_sensitive';
 
  SingleLineComment = "//" [^\n]*;
  MultiLineComment  = "/*" ([^*] | '*' [^/])* "*/";
@@ -71,6 +76,11 @@
   
   TerminalIdentifier => {
    ACCEPT_TOKEN(GrmAst::TkTerminalIdentifier);
+   fbreak;
+  };
+
+  RuleIdentifier => {
+   ACCEPT_TOKEN(GrmAst::TkRuleIdentifier);
    fbreak;
   };
 
@@ -176,6 +186,36 @@
 
   KwParameterId => {
    ACCEPT_TOKEN(GrmAst::TkKwParameterId);
+   fbreak;
+  };
+
+  KwParameterCaseSensitive => {
+   ACCEPT_TOKEN(GrmAst::TkKwParameterCaseSensitive);
+   fbreak;
+  };
+
+  GrammarPropertyStart => {
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyStart);
+   fbreak;
+  };
+
+  GrammarPropertyWhitespace => {
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyWhitespace);
+   fbreak;
+  };
+
+  GrammarPropertySingleLineComment => {
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertySingleLineComment);
+   fbreak;
+  };
+
+  GrammarPropertyMultiLineComment => {
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyMultiLineComment);
+   fbreak;
+  };
+
+  GrammarPropertyCaseSensitive => {
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyCaseSensitive);
    fbreak;
   };
         

@@ -17,7 +17,8 @@ auto GrmParser::parse(GrmLexer& lexer_) -> GenericAst::UniqueHandle {
       break;
     }
 
-    Parse(parser, token->get_id(), std::move(token), &ret);
+    GenericId::IdType const id = token->get_id();
+    Parse(parser, id, std::move(token), &ret);
   }
   Parse(parser, 0, GenericAst::UniqueHandle(), &ret);
 

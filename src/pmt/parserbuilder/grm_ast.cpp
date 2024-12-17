@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 namespace pmt::parserbuilder {
-auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string_view {
+auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string {
   switch (id_) {
     case TkStringLiteral:
       return "TkStringLiteral";
@@ -13,6 +13,8 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "TkBooleanLiteral";
     case TkTerminalIdentifier:
       return "TkTerminalIdentifier";
+    case TkRuleIdentifier:
+      return "TkRuleIdentifier";
     case TkEpsilon:
       return "TkEpsilon";
     case TkPipe:
@@ -53,21 +55,62 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "TkKwParameterHide";
     case TkKwParameterMerge:
       return "TkKwParameterMerge";
-    // --
+    case TkKwParameterId:
+      return "TkKwParameterId";
+    case TkKwParameterCaseSensitive:
+      return "TkKwParameterCaseSensitive";
+    case TkGrammarPropertyStart:
+      return "TkGrammarPropertyStart";
+    case TkGrammarPropertyWhitespace:
+      return "TkGrammarPropertyWhitespace";
+    case TkGrammarPropertySingleLineComment:
+      return "TkGrammarPropertySingleLineComment";
+    case TkGrammarPropertyMultiLineComment:
+      return "TkGrammarPropertyMultiLineComment";
+    case TkGrammarPropertyCaseSensitive:
+      return "TkGrammarPropertyCaseSensitive";
     case NtGrammar:
       return "NtGrammar";
     case NtTerminalProduction:
       return "NtTerminalProduction";
-    case NtChoices:
-      return "NtChoices";
-    case NtSequence:
-      return "NtSequence";
+    case NtTerminalParameter:
+      return "NtTerminalParameter";
+    case NtTerminalSequence:
+      return "NtTerminalSequence";
+    case NtTerminalChoices:
+      return "NtTerminalChoices";
+    case NtRuleProduction:
+      return "NtRuleProduction";
+    case NtRuleParameter:
+      return "NtRuleParameter";
+    case NtRuleSequence:
+      return "NtRuleSequence";
+    case NtRuleChoices:
+      return "NtRuleChoices";
     case NtRepetition:
-      return "NtRepetition";
+      return "NtTerminalRepetition";
     case NtRepetitionRange:
-      return "NtRepetitionRange";
+      return "NtTerminalRepetitionRange";
     case NtRange:
-      return "NtRange";
+      return "NtTerminalRange";
+    case NtGrammarProperty:
+      return "NtGrammarProperty";
+    case NtGrammarPropertyWhitespace:
+      return "NtGrammarPropertyWhitespace";
+    case NtGrammarPropertyWhitespaceChoices:
+      return "NtGramarPropertyWhitespaceChoices";
+    case NtGrammarPropertySingleLineComment:
+      return "NtGrammarPropertySingleLineComment";
+    case NtGrammarPropertySingleLineCommentChoices:
+      return "NtGrammarPropertySingleLineCommentChoices";
+    case NtGrammarPropertyMultiLineComment:
+      return "NtGrammarPropertyMultiLineComment";
+    case NtGrammarPropertyMultiLineCommentChoices:
+      return "NtGrammarPropertyMultiLineCommentChoices";
+    case NtGrammarPropertyCaseSensitive:
+      return "NtGrammarPropertyCaseSensitive";
+    case NtStringLiteralPair:
+      return "NtStringLiteralPair";
     default:
       throw std::runtime_error("Invalid id");
   }

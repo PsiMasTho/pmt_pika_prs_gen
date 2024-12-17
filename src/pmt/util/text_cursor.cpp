@@ -16,7 +16,7 @@ namespace {
 using BufferType = std::array<unsigned char, 4>;
 const TextCursor::FatCodepointType INVALID_FAT_CODEPOINT = {INVALID_CODEPOINT, 0};
 
-using buffer16_type = std::array<uint16_t, 2>;
+using Buffer16Type = std::array<uint16_t, 2>;
 
 auto to_buffer(CodepointType codepoint_) -> BufferType {
   return std::bit_cast<BufferType>(codepoint_);
@@ -26,8 +26,8 @@ auto from_buffer(BufferType buffer_) -> CodepointType {
   return std::bit_cast<CodepointType>(buffer_);
 }
 
-auto to_buffer16(CodepointType codepoint_) -> buffer16_type {
-  return std::bit_cast<buffer16_type>(codepoint_);
+auto to_buffer16(CodepointType codepoint_) -> Buffer16Type {
+  return std::bit_cast<Buffer16Type>(codepoint_);
 }
 
 // There are neater ways to do this, but this is the fastest i found
@@ -74,7 +74,7 @@ auto convert_utf8(TextCursor::FatCodepointType codepoint_) -> TextCursor::FatCod
 }
 
 auto convert_utf16(TextCursor::FatCodepointType codepoint_) -> TextCursor::FatCodepointType {
-  buffer16_type const buffer = to_buffer16(codepoint_.first);
+  Buffer16Type const buffer = to_buffer16(codepoint_.first);
   uint32_t c1 = buffer[0];
   if (c1 >= 0xD800 && c1 <= 0xDBFF) {
     if (codepoint_.second < 2) [[unlikely]]

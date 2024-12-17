@@ -1,14 +1,11 @@
 #include "pmt/parserbuilder/lexer_table_transition_converter.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <limits>
 #include <utility>
-
-#ifndef NDEBUG
-#include <iostream>
-#endif
 
 namespace pmt::parserbuilder {
 using namespace pmt::util::parsect;
@@ -56,11 +53,6 @@ void LexerTableTransitionConverter::step_2(Context& context_) {
   std::generate_n(std::inserter(unvisited, unvisited.end()), context_._fa_with_sink.get_size(), [i = 0]() mutable { return i++; });
   context_._ordering.reserve(context_._fa_with_sink.get_size());
 
-  // Sink state is always first
-  context_._tables._state_nr_sink = context_._fa_with_sink.get_state_nr_sink();
-  context_._ordering.push_back(context_._tables._state_nr_sink);
-  unvisited.erase(context_._tables._state_nr_sink);
-
   // Fill the ordering based on the lowest average differences to other states
   while (!unvisited.empty()) {
     double avg_diff_best = std::numeric_limits<double>::max();
@@ -84,6 +76,13 @@ void LexerTableTransitionConverter::step_2(Context& context_) {
 
     context_._ordering.push_back(state_nr_best);
     unvisited.erase(state_nr_best);
+  }
+
+  // Move the sink state to the front
+  if (std::optional<Fa::StateNrType> const state_nr_sink = context_._fa_with_sink.get_state_nr_sink()) {
+    auto const itr = std::find(context_._ordering.begin(), context_._ordering.end(), *state_nr_sink);
+    std::move_backward(context_._ordering.begin(), itr, itr + 1);
+    context_._ordering.front() = *state_nr_sink;
   }
 
   context_._tables._state_nr_sink = context_._ordering.front();
@@ -169,6 +168,7 @@ void LexerTableTransitionConverter::step_4(Context& context_) {
 void LexerTableTransitionConverter::step_5(Context& context_) {
   // Calculate padding
   // Left:
+  context_._tables._padding_l = 0;
   while (context_._tables._padding_l < context_._tables._compressed_transition_entries.size()) {
     auto const& [check, next] = context_._tables._compressed_transition_entries[context_._tables._padding_l];
     if (next != context_._tables._state_nr_sink || next != check) {
@@ -197,27 +197,11 @@ void LexerTableTransitionConverter::step_5(Context& context_) {
 
 auto LexerTableTransitionConverter::debug_post_checks(Context const& context_) -> bool {
 #ifndef NDEBUG
-  std::cout << "-- Post checks --\n"
-            << "FA State count: " << context_._fa_with_sink.get_size() << '\n'
-            << "DSNC::sink: " << context_._tables._state_nr_sink << '\n'
-            << "DSNC::min diff: " << context_._tables._state_nr_sink << '\n'
-            << "DSNC::lpadding: " << context_._tables._padding_l << '\n'
-            << "DSNC::state count: " << context_._tables._state_transition_entries.size() << '\n'
-            << "DSNC::compressed transition count: " << context_._tables._compressed_transition_entries.size() << '\n';
-
-  GenericLexerTables tables;
-  tables._padding_l = context_._tables._padding_l;
-  tables._state_nr_sink = context_._tables._state_nr_sink;
-  tables._state_nr_sink = context_._tables._state_nr_sink;
-  tables._state_count = context_._tables._state_transition_entries.size();
-  tables._state_transition_entries = context_._tables._state_transition_entries;
-  tables._compressed_transition_entries = context_._tables._compressed_transition_entries;
-
   // check that transitions in the tables match the transitions in the fa
   for (size_t i = 0; i < context_._fa_with_sink.get_size(); ++i) {
     for (Fa::SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
       Fa::StateNrType const state_nr_next_fa = context_._fa_with_sink.get_state_nr_next(i, symbol);
-      Fa::StateNrType const state_nr_next = tables.get_state_nr_next(i, symbol);
+      Fa::StateNrType const state_nr_next = context_._tables.get_state_nr_next(i, symbol);
       if (state_nr_next != state_nr_next_fa) {
         throw std::runtime_error("Transition mismatch for state " + std::to_string(i) + " and symbol " + std::to_string(symbol) + ": " + std::to_string(state_nr_next) + " != " + std::to_string(state_nr_next_fa));
       }

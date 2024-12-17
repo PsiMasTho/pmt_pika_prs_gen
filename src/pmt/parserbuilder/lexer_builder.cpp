@@ -461,9 +461,9 @@ void TerminalIdentifierExpressionFrame::process_stage_1(Captures& captures_) {
 auto ExpressionFrameFactory::construct(GenericAst::PositionConst position_) -> ExpressionFrameBase::FrameHandle {
   GenericId::IdType const id = position_.first->get_child_at(position_.second)->get_id();
   switch (id) {
-    case GrmAst::NtSequence:
+    case GrmAst::NtTerminalSequence:
       return std::make_shared<SequenceExpressionFrame>(position_);
-    case GrmAst::NtChoices:
+    case GrmAst::NtTerminalChoices:
       return std::make_shared<ChoicesExpressionFrame>(position_);
     case GrmAst::NtRepetition:
       return std::make_shared<RepetitionExpressionFrame>(position_);
@@ -546,6 +546,7 @@ auto LexerBuilder::build() -> GenericLexerTables {
   fa.determinize();
   write_dot(fa);
   fa.minimize();
+  write_dot(fa);
 
   pmt::base::DynamicBitset accepts0 = fa._states.find(0)->second._accepts;
   if (accepts0.any()) {

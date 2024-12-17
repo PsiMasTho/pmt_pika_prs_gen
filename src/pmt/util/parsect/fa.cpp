@@ -1,7 +1,10 @@
 #include "pmt/util/parsect/fa.hpp"
 
+#include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/util/parsect/fa_sink_wrapper.hpp"
 
+#include <climits>
 #include <stack>
 
 namespace pmt::util::parsect {
@@ -41,8 +44,8 @@ void Fa::prune(StateNrType state_nr_from_) {
 
   // Remove unvisited states
   visited.inplace_not();
-  std::unordered_set<size_t> const to_remove = DynamicBitsetConverter::to_unordered_set(visited);
-  for (size_t state_nr : to_remove) {
+  std::unordered_set<Fa::StateNrType> const to_remove = DynamicBitsetConverter::to_unordered_set<Fa::StateNrType>(visited);
+  for (Fa::StateNrType const state_nr : to_remove) {
     _states.erase(state_nr);
   }
 }
@@ -52,6 +55,7 @@ void Fa::determinize() {
 }
 
 void Fa::minimize() {
+  hopcroft();
 }
 
 auto Fa::get_unused_state_nr() const -> StateNrType {
@@ -183,6 +187,148 @@ auto Fa::get_symbols(std::unordered_set<StateNrType> const& state_nrs_from_) con
   }
 
   return ret;
+}
+
+void Fa::hopcroft() {
+  // Create a wrapper to mimic having a sink state
+  FaSinkWrapper fa_with_sink(*this);
+
+  // Initialize partitions
+  std::unordered_map<DynamicBitset, DynamicBitset> by_accepts;
+
+  for (Fa::StateNrType state_nr = 0; state_nr < fa_with_sink.get_size(); ++state_nr) {
+    if (state_nr == fa_with_sink.get_state_nr_sink()) {
+      by_accepts.insert_or_assign(DynamicBitset(fa_with_sink.get_size(), false), DynamicBitset(fa_with_sink.get_size(), false));
+      continue;
+    }
+
+    Fa::State const& state = _states.find(state_nr)->second;
+    auto itr = by_accepts.find(state._accepts);
+    if (itr == by_accepts.end()) {
+      itr = by_accepts.insert_or_assign(state._accepts, DynamicBitset(fa_with_sink.get_size(), false)).first;
+    }
+    itr->second.set(state_nr, true);
+  }
+
+  std::unordered_set<DynamicBitset> p;
+
+  for (auto const& [accepts, state_nrs] : by_accepts) {
+    p.insert(state_nrs);
+  }
+
+  std::unordered_set<DynamicBitset> w = p;
+
+  while (!w.empty()) {
+    DynamicBitset a = *w.begin();
+    w.erase(w.begin());
+
+    for (Fa::SymbolType c = 0; c < UCHAR_MAX; ++c) {
+      DynamicBitset x(fa_with_sink.get_size(), false);
+      for (size_t i = 0; i < fa_with_sink.get_size(); ++i) {
+        Fa::StateNrType const state_nr_next = fa_with_sink.get_state_nr_next(i, c);
+        if (a.get(state_nr_next)) {
+          x.set(i, true);
+        }
+      }
+
+      std::unordered_set<DynamicBitset> p_new;
+      for (DynamicBitset const& y : p) {
+        DynamicBitset const x_intersect_y = x.clone_and(y);
+        DynamicBitset const x_diff_y = y.clone_asymmetric_difference(x);
+
+        size_t const popcnt_x_intersect_y = x_intersect_y.popcnt();
+        size_t const popcnt_x_diff_y = x_diff_y.popcnt();
+
+        if (popcnt_x_intersect_y == 0 || popcnt_x_diff_y == 0) {
+          p_new.insert(y);
+          continue;
+        }
+
+        p_new.insert(x_intersect_y);
+        p_new.insert(x_diff_y);
+
+        auto const itr = w.find(y);
+        if (itr != w.end()) {
+          w.erase(itr);
+          w.insert(x_intersect_y);
+          w.insert(x_diff_y);
+        } else {
+          (popcnt_x_intersect_y <= popcnt_x_diff_y) ? w.insert(x_intersect_y) : w.insert(x_diff_y);
+        }
+      }
+
+      p = std::move(p_new);
+    }
+  }
+
+  // Construct the minimized fa
+  std::unordered_map<StateNrType, DynamicBitset const*> state_nr_to_equiv_class;
+
+  for (DynamicBitset const& equivalence_class : p) {
+    for (Fa::StateNrType state_nr = 0; state_nr < fa_with_sink.get_size(); ++state_nr) {
+      if (equivalence_class.get(state_nr)) {
+        state_nr_to_equiv_class.insert_or_assign(state_nr, &equivalence_class);
+      }
+    }
+  }
+
+  std::stack<DynamicBitset const*> stack;
+  std::unordered_map<DynamicBitset const*, StateNrType> visited;
+  Fa result;
+
+  auto const take = [&stack]() {
+    DynamicBitset const* ret = stack.top();
+    stack.pop();
+    return ret;
+  };
+
+  auto const push_and_visit = [&](DynamicBitset const* item_) -> StateNrType {
+    auto itr = visited.find(item_);
+    if (itr != visited.end()) {
+      return itr->second;
+    } else {
+      itr = visited.insert_or_assign(item_, result.get_unused_state_nr()).first;
+    }
+
+    stack.push(item_);
+    visited.insert_or_assign(item_, itr->second);
+    result._states[itr->second];
+    return itr->second;
+  };
+
+  push_and_visit(state_nr_to_equiv_class.find(0)->second);
+
+  while (!stack.empty()) {
+    DynamicBitset const* bitset_cur = take();
+    StateNrType const state_nr_cur = visited.find(bitset_cur)->second;
+    State& state_cur = result._states.find(state_nr_cur)->second;
+
+    // Set up the accepts
+    std::unordered_set<Fa::StateNrType> const state_nrs_cur = DynamicBitsetConverter::to_unordered_set<Fa::StateNrType>(*bitset_cur);
+    for (Fa::StateNrType const state_nr_old : state_nrs_cur) {
+      DynamicBitset const& accepts_old = _states.find(state_nr_old)->second._accepts;
+      // Set up the accepts
+      if (accepts_old.popcnt() != 0) {
+        state_cur._accepts.resize(accepts_old.size(), false);
+        state_cur._accepts.inplace_or(accepts_old);
+      }
+
+      // Set up the transitions
+      for (Fa::SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
+        Fa::StateNrType const state_nr_next_old = fa_with_sink.get_state_nr_next(state_nr_old, symbol);
+
+        if (state_nr_next_old == fa_with_sink.get_state_nr_sink()) {
+          continue;
+        }
+
+        DynamicBitset const& bitset_next_old = *state_nr_to_equiv_class.find(state_nr_next_old)->second;
+        StateNrType const state_nr_next_new = push_and_visit(&bitset_next_old);
+        state_cur._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_next_new);
+      }
+    }
+  }
+
+  *this = std::move(result);
 }
 
 }  // namespace pmt::util::parsect

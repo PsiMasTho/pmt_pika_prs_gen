@@ -15,6 +15,7 @@ class GrmAst {
     TkBooleanLiteral = TOKEN_BOOLEAN_LITERAL,
     // - Identifiers
     TkTerminalIdentifier = TOKEN_TERMINAL_IDENTIFIER,
+    TkRuleIdentifier = TOKEN_RULE_IDENTIFIER,
     TkEpsilon = TOKEN_EPSILON,
     // - Symbols
     TkPipe = TOKEN_PIPE,
@@ -40,18 +41,44 @@ class GrmAst {
     TkKwParameterHide = TOKEN_KW_PARAMETER_HIDE,
     TkKwParameterMerge = TOKEN_KW_PARAMETER_MERGE,
     TkKwParameterId = TOKEN_KW_PARAMETER_ID,
+    TkKwParameterCaseSensitive = TOKEN_KW_PARAMETER_CASE_SENSITIVE,
+    // - Grammar properties
+    TkGrammarPropertyStart = TOKEN_GRAMMAR_PROPERTY_START,
+    TkGrammarPropertyWhitespace = TOKEN_GRAMMAR_PROPERTY_WHITESPACE,
+    TkGrammarPropertySingleLineComment = TOKEN_GRAMMAR_PROPERTY_SINGLE_LINE_COMMENT,
+    TkGrammarPropertyMultiLineComment = TOKEN_GRAMMAR_PROPERTY_MULTI_LINE_COMMENT,
+    TkGrammarPropertyCaseSensitive = TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE,  // Also used as a parameter keyword
 
     // Non-terminals
     NtGrammar = 123,  // Somewhat arbitrary, we just need it to be higher than any terminal
+    // - Terminal productions
     NtTerminalProduction,
-    NtSequence,
-    NtChoices,
+    NtTerminalParameter,
+    NtTerminalSequence,
+    NtTerminalChoices,
+    // - Rule productions
+    NtRuleProduction,
+    NtRuleParameter,
+    NtRuleSequence,
+    NtRuleChoices,
+    // - Rule / Terminal common
     NtRepetition,
     NtRepetitionRange,
-    NtRange
+    NtRange,
+    // - Grammar properties
+    NtGrammarProperty,
+    NtGrammarPropertyWhitespace,
+    NtGrammarPropertyWhitespaceChoices,
+    NtGrammarPropertySingleLineComment,
+    NtGrammarPropertySingleLineCommentChoices,
+    NtGrammarPropertyMultiLineComment,
+    NtGrammarPropertyMultiLineCommentChoices,
+    NtGrammarPropertyCaseSensitive,
+    // - Other
+    NtStringLiteralPair,
   };
 
-  static auto id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string_view;
+  static auto id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string;
 };
 
 }  // namespace pmt::parserbuilder

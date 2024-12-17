@@ -1,5 +1,6 @@
 #include "pmt/parserbuilder/parserbuilder.hpp"
 
+#include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
 #include "pmt/parserbuilder/lexer_builder.hpp"
@@ -26,6 +27,11 @@ void ParserBuilder::build() {
   GrmLexer lexer(_input_grammar);
   auto ast = GrmParser::parse(lexer);
 
+  pmt::util::parsert::GenericAstPrinter printer1(GrmAst::id_to_string);
+  printer1.print(*ast, std::cerr);
+
+  return;
+
   auto const start = std::chrono::high_resolution_clock::now();
   LexerBuilder lexer_builder(*ast, _terminals);
   GenericLexerTables tables = lexer_builder.build();
@@ -48,12 +54,12 @@ void ParserBuilder::build() {
 
     return "Unknown token: " + std::to_string(id_);
   };
-  pmt::util::parsert::GenericAstPrinter printer(to_string);
+  pmt::util::parsert::GenericAstPrinter printer2(to_string);
 
   while (true) {
     pmt::util::parsert::GenericLexer::LexReturn token = generic_lexer.lex();
     pmt::util::parsert::GenericAst::UniqueHandle const ast = token._token.to_ast();
-    printer.print(*ast, std::cerr);
+    printer2.print(*ast, std::cerr);
     if (token._token._id == pmt::util::parsert::GenericId::IdEoi) {
       break;
     }

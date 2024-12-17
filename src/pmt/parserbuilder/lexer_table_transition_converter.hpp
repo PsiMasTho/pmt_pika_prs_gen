@@ -1,8 +1,8 @@
 #pragma once
 
 #include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/parserbuilder/fa_sink_wrapper.hpp"
 #include "pmt/util/parsect/fa.hpp"
+#include "pmt/util/parsect/fa_sink_wrapper.hpp"
 #include "pmt/util/parsert/generic_lexer_tables.hpp"
 
 #include <vector>
@@ -31,7 +31,7 @@ class LexerTableTransitionConverter::Context {
  public:
   Context(pmt::util::parsect::Fa const& fa_, pmt::util::parsert::GenericLexerTables& lexer_tables_);
 
-  FaSinkWrapper _fa_with_sink;
+  pmt::util::parsect::FaSinkWrapper _fa_with_sink;
   std::vector<pmt::util::parsect::Fa::StateNrType> _ordering;
   std::vector<pmt::base::DynamicBitset> _diff_mat_2d;
   pmt::util::parsert::GenericLexerTables& _tables;
