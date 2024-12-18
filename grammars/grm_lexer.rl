@@ -48,8 +48,7 @@
  KwParameterCaseSensitive         = 'case_sensitive';
  GrammarPropertyStart             = '@start';
  GrammarPropertyWhitespace        = '@whitespace';
- GrammarPropertySingleLineComment = '@single_line_comment';
- GrammarPropertyMultiLineComment  = '@multi_line_comment';
+ GrammarPropertyComment           = '@comment';
  GrammarPropertyCaseSensitive     = '@case_sensitive';
 
  SingleLineComment = "//" [^\n]*;
@@ -75,11 +74,13 @@
   };
   
   TerminalIdentifier => {
+   ++ts;
    ACCEPT_TOKEN(GrmAst::TkTerminalIdentifier);
    fbreak;
   };
 
   RuleIdentifier => {
+   ++ts;
    ACCEPT_TOKEN(GrmAst::TkRuleIdentifier);
    fbreak;
   };
@@ -195,26 +196,25 @@
   };
 
   GrammarPropertyStart => {
+   ++ts;
    ACCEPT_TOKEN(GrmAst::TkGrammarPropertyStart);
    fbreak;
   };
 
   GrammarPropertyWhitespace => {
+   ++ts;
    ACCEPT_TOKEN(GrmAst::TkGrammarPropertyWhitespace);
    fbreak;
   };
 
-  GrammarPropertySingleLineComment => {
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertySingleLineComment);
-   fbreak;
-  };
-
-  GrammarPropertyMultiLineComment => {
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyMultiLineComment);
+  GrammarPropertyComment => {
+   ++ts;
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyComment);
    fbreak;
   };
 
   GrammarPropertyCaseSensitive => {
+   ++ts;
    ACCEPT_TOKEN(GrmAst::TkGrammarPropertyCaseSensitive);
    fbreak;
   };

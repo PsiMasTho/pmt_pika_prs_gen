@@ -38,8 +38,7 @@
 %token TOKEN_KW_PARAMETER_CASE_SENSITIVE.
 %token TOKEN_GRAMMAR_PROPERTY_START.
 %token TOKEN_GRAMMAR_PROPERTY_WHITESPACE.
-%token TOKEN_GRAMMAR_PROPERTY_SINGLE_LINE_COMMENT.
-%token TOKEN_GRAMMAR_PROPERTY_MULTI_LINE_COMMENT.
+%token TOKEN_GRAMMAR_PROPERTY_COMMENT.
 %token TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE.
 
 // - GRAMMAR -
@@ -73,13 +72,13 @@ statement(A) ::= grammar_property(B). {
 }
 
 // - TERMINAL_PRODUCTION -
-terminal_production(A) ::= TOKEN_TERMINAL_IDENTIFIER(B) TOKEN_EQUALS terminal_choices(C) TOKEN_SEMICOLON. {
+terminal_production(A) ::= TOKEN_TERMINAL_IDENTIFIER(B) TOKEN_EQUALS terminal_definition(C) TOKEN_SEMICOLON. {
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalProduction);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
 
-terminal_production(A) ::= TOKEN_TERMINAL_IDENTIFIER(B) TOKEN_OPEN_ANGLE terminal_parameter_list(C) TOKEN_CLOSE_ANGLE TOKEN_EQUALS terminal_choices(D) TOKEN_SEMICOLON. {
+terminal_production(A) ::= TOKEN_TERMINAL_IDENTIFIER(B) TOKEN_OPEN_ANGLE terminal_parameter_list(C) TOKEN_CLOSE_ANGLE TOKEN_EQUALS terminal_definition(D) TOKEN_SEMICOLON. {
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalProduction);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
@@ -109,6 +108,12 @@ terminal_parameter(A) ::= TOKEN_KW_PARAMETER_CASE_SENSITIVE(B) TOKEN_EQUALS TOKE
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalParameter);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
+}
+
+// - TERMINAL_DEFINITION -
+terminal_definition(A) ::= terminal_choices(B). {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalDefinition);
+ A->give_child_at_back(std::move(B));
 }
 
 // - TERMINAL_CHOICES -
@@ -261,13 +266,13 @@ terminal_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN
 }
 
 // - RULE_PRODUCTION -
-rule_production(A) ::= TOKEN_RULE_IDENTIFIER(B) TOKEN_EQUALS rule_choices(C) TOKEN_SEMICOLON. {
+rule_production(A) ::= TOKEN_RULE_IDENTIFIER(B) TOKEN_EQUALS rule_definition(C) TOKEN_SEMICOLON. {
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleProduction);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
 
-rule_production(A) ::= TOKEN_RULE_IDENTIFIER(B) TOKEN_OPEN_ANGLE rule_parameter_list(C) TOKEN_CLOSE_ANGLE TOKEN_EQUALS rule_choices(D) TOKEN_SEMICOLON. {
+rule_production(A) ::= TOKEN_RULE_IDENTIFIER(B) TOKEN_OPEN_ANGLE rule_parameter_list(C) TOKEN_CLOSE_ANGLE TOKEN_EQUALS rule_definition(D) TOKEN_SEMICOLON. {
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleProduction);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
@@ -309,6 +314,12 @@ rule_parameter(A) ::= TOKEN_KW_PARAMETER_MERGE(B) TOKEN_EQUALS TOKEN_BOOLEAN_LIT
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleParameter);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
+}
+
+// - RULE_DEFINITION -
+rule_definition(A) ::= rule_choices(B). {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleDefinition);
+ A->give_child_at_back(std::move(B));
 }
 
 // - RULE_CHOICES -
@@ -373,73 +384,33 @@ grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_START(B) TOKEN_EQUALS TOKEN_RULE_
  A->give_child_at_back(std::move(C));
 }
 
-grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_SINGLE_LINE_COMMENT(B) TOKEN_EQUALS grammar_property_single_line_comment_choices(C) TOKEN_SEMICOLON. {
+grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_COMMENT(B) TOKEN_EQUALS terminal_definition_pair_list(C) TOKEN_SEMICOLON. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarProperty);
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+ A->unpack(1);
+}
+
+grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE(B) TOKEN_EQUALS terminal_definition(C) TOKEN_SEMICOLON. {
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarProperty);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
 
-grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_MULTI_LINE_COMMENT(B) TOKEN_EQUALS grammar_property_multi_line_comment_choices(C) TOKEN_SEMICOLON. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarProperty);
- A->give_child_at_back(std::move(B));
- A->give_child_at_back(std::move(C));
-}
-
-grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE(B) TOKEN_EQUALS grammar_property_whitespace_choices(C) TOKEN_SEMICOLON. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarProperty);
- A->give_child_at_back(std::move(B));
- A->give_child_at_back(std::move(C));
-}
-
-// - GRAMMAR_PROPERTY_SINGLE_LINE_COMMENT_CHOICES -
-grammar_property_single_line_comment_choices(A) ::= TOKEN_STRING_LITERAL(B). {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarPropertySingleLineCommentChoices);
+// - TERMINAL_DEFINITION_PAIR_LIST -
+terminal_definition_pair_list(A) ::= terminal_definition_pair(B). {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children);
  A->give_child_at_back(std::move(B));
 }
 
-grammar_property_single_line_comment_choices(A) ::= grammar_property_single_line_comment_choices(B) TOKEN_PIPE TOKEN_STRING_LITERAL(C). {
+terminal_definition_pair_list(A) ::= terminal_definition_pair_list(B) TOKEN_COMMA terminal_definition_pair(C). {
  A = std::move(B);
  A->give_child_at_back(std::move(C));
 }
 
-// - GRAMMAR_PROPERTY_MULTI_LINE_COMMENT_CHOICES -
-grammar_property_multi_line_comment_choices(A) ::= string_literal_pair(B). {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarPropertyMultiLineCommentChoices);
- A->give_child_at_back(std::move(B));
-}
-
-grammar_property_multi_line_comment_choices(A) ::= grammar_property_multi_line_comment_choices(B) TOKEN_PIPE string_literal_pair(C). {
- A = std::move(B);
- A->give_child_at_back(std::move(C));
-}
-
-// - GRAMMAR_PROPERTY_WHITESPACE_CHOICES -
-grammar_property_whitespace_choices(A) ::= grammar_property_whitespace_expression(B). {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarPropertyWhitespaceChoices);
- A->give_child_at_back(std::move(B));
-}
-
-grammar_property_whitespace_choices(A) ::= grammar_property_whitespace_choices(B) TOKEN_PIPE grammar_property_whitespace_expression(C). {
- A = std::move(B);
- A->give_child_at_back(std::move(C));
-}
-
-// - STRING_LITERAL_PAIR -
-string_literal_pair(A) ::= TOKEN_STRING_LITERAL(B) TOKEN_STRING_LITERAL(C). {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtStringLiteralPair);
+// - TERMINAL_DEFINITION_PAIR -
+terminal_definition_pair(A) ::= TOKEN_OPEN_BRACE terminal_definition(B) TOKEN_COMMA terminal_definition(C) TOKEN_CLOSE_BRACE. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalDefinitionPair);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
-}
-
-// - GRAMMAR_PROPERTY_WHITESPACE_EXPRESSION -
-grammar_property_whitespace_expression(A) ::= TOKEN_STRING_LITERAL(B). {
- A = std::move(B);
-}
-
-grammar_property_whitespace_expression(A) ::= TOKEN_INTEGER_LITERAL(B). {
- A = std::move(B);
-}
-
-grammar_property_whitespace_expression(A) ::= range_expression(B). {
- A = std::move(B);
 }

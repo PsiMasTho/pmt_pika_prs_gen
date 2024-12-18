@@ -63,10 +63,8 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "TkGrammarPropertyStart";
     case TkGrammarPropertyWhitespace:
       return "TkGrammarPropertyWhitespace";
-    case TkGrammarPropertySingleLineComment:
-      return "TkGrammarPropertySingleLineComment";
-    case TkGrammarPropertyMultiLineComment:
-      return "TkGrammarPropertyMultiLineComment";
+    case TkGrammarPropertyComment:
+      return "TkGrammarPropertyComment";
     case TkGrammarPropertyCaseSensitive:
       return "TkGrammarPropertyCaseSensitive";
     case NtGrammar:
@@ -75,6 +73,8 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtTerminalProduction";
     case NtTerminalParameter:
       return "NtTerminalParameter";
+    case NtTerminalDefinition:
+      return "NtTerminalDefinition";
     case NtTerminalSequence:
       return "NtTerminalSequence";
     case NtTerminalChoices:
@@ -83,6 +83,8 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtRuleProduction";
     case NtRuleParameter:
       return "NtRuleParameter";
+    case NtRuleDefinition:
+      return "NtRuleDefinition";
     case NtRuleSequence:
       return "NtRuleSequence";
     case NtRuleChoices:
@@ -97,20 +99,12 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtGrammarProperty";
     case NtGrammarPropertyWhitespace:
       return "NtGrammarPropertyWhitespace";
-    case NtGrammarPropertyWhitespaceChoices:
-      return "NtGramarPropertyWhitespaceChoices";
-    case NtGrammarPropertySingleLineComment:
-      return "NtGrammarPropertySingleLineComment";
-    case NtGrammarPropertySingleLineCommentChoices:
-      return "NtGrammarPropertySingleLineCommentChoices";
-    case NtGrammarPropertyMultiLineComment:
-      return "NtGrammarPropertyMultiLineComment";
-    case NtGrammarPropertyMultiLineCommentChoices:
-      return "NtGrammarPropertyMultiLineCommentChoices";
+    case NtGrammarPropertyComment:
+      return "NtGrammarPropertyComment";
     case NtGrammarPropertyCaseSensitive:
       return "NtGrammarPropertyCaseSensitive";
-    case NtStringLiteralPair:
-      return "NtStringLiteralPair";
+    case NtTerminalDefinitionPair:
+      return "NtTerminalDefinitionPair";
     default:
       throw std::runtime_error("Invalid id");
   }

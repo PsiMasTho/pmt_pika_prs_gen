@@ -23,11 +23,11 @@
 namespace {
 
 #line 24 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-static const int GrmLexer_start = 97;
-static const int GrmLexer_first_final = 97;
+static const int GrmLexer_start = 68;
+static const int GrmLexer_first_final = 68;
 static const int GrmLexer_error = -1;
 
-static const int GrmLexer_en_main = 97;
+static const int GrmLexer_en_main = 68;
 
 #line 234 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
 
@@ -73,9 +73,9 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       { p = ((te)) - 1; }
       { throw std::runtime_error("lexer error"); }
     }
-      goto st97;
+      goto st68;
     tr2 :
-#line 60 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+#line 59 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
@@ -84,456 +84,448 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         ACCEPT_TOKEN(GrmAst::TkStringLiteral);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
+      goto st68;
     tr7 :
 #line 224 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
     }
-      goto st97;
-    tr23 :
-#line 217 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr24 :
+#line 216 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
+        ++ts;
         ACCEPT_TOKEN(GrmAst::TkGrammarPropertyCaseSensitive);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr40 :
-#line 212 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr29 :
+#line 210 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
-        ACCEPT_TOKEN(GrmAst::TkGrammarPropertyMultiLineComment);
+        ++ts;
+        ACCEPT_TOKEN(GrmAst::TkGrammarPropertyComment);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr59 :
-#line 207 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr33 :
+#line 198 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
-        ACCEPT_TOKEN(GrmAst::TkGrammarPropertySingleLineComment);
-        {
-          p++;
-          cs = 97;
-          goto _out;
-        }
-      }
-    }
-      goto st97;
-    tr62 :
-#line 197 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
-    {
-      te = p + 1;
-      {
+        ++ts;
         ACCEPT_TOKEN(GrmAst::TkGrammarPropertyStart);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr71 :
-#line 202 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr42 :
+#line 204 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
+        ++ts;
         ACCEPT_TOKEN(GrmAst::TkGrammarPropertyWhitespace);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr83 :
-#line 192 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr54 :
+#line 193 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkKwParameterCaseSensitive);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr88 :
-#line 87 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr59 :
+#line 88 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkEpsilon);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr91 :
-#line 72 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr62 :
+#line 71 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkBooleanLiteral);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr93 :
-#line 177 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr64 :
+#line 178 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkKwParameterHide);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr96 :
-#line 182 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr67 :
+#line 183 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkKwParameterMerge);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr100 :
-#line 172 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr71 :
+#line 173 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkKwParameterUnpack);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr101 :
+      goto st68;
+    tr72 :
 #line 227 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       { throw std::runtime_error("lexer error"); }
     }
-      goto st97;
-    tr102 :
+      goto st68;
+    tr73 :
 #line 222 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
     }
-      goto st97;
-    tr106 :
-#line 117 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr77 :
+#line 118 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkOpenParen);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr107 :
-#line 122 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr78 :
+#line 123 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkCloseParen);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr108 :
-#line 162 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr79 :
+#line 163 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkStar);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr109 :
-#line 157 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr80 :
+#line 158 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkPlus);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr110 :
-#line 107 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr81 :
+#line 108 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkComma);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr114 :
-#line 97 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr85 :
+#line 98 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkSemiColon);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr115 :
-#line 147 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr86 :
+#line 148 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkOpenAngle);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr116 :
-#line 102 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr87 :
+#line 103 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkEquals);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr117 :
-#line 152 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr88 :
+#line 153 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkCloseAngle);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr118 :
-#line 167 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr89 :
+#line 168 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkQuestion);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr120 :
-#line 137 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr91 :
+#line 138 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkOpenSquare);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr121 :
-#line 142 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr92 :
+#line 143 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkCloseSquare);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr130 :
-#line 127 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr101 :
+#line 128 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkOpenBrace);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr131 :
-#line 92 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr102 :
+#line 93 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkPipe);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr132 :
-#line 132 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr103 :
+#line 133 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkCloseBrace);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr133 :
+      goto st68;
+    tr104 :
 #line 227 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
       p--;
       { throw std::runtime_error("lexer error"); }
     }
-      goto st97;
-    tr135 :
-#line 77 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr106 :
+#line 76 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
       p--;
       {
+        ++ts;
         ACCEPT_TOKEN(GrmAst::TkTerminalIdentifier);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr137 :
+      goto st68;
+    tr108 :
 #line 82 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
       p--;
       {
+        ++ts;
         ACCEPT_TOKEN(GrmAst::TkRuleIdentifier);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr138 :
-#line 112 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr109 :
+#line 113 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkDoubleDot);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr140 :
+      goto st68;
+    tr111 :
 #line 223 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
       p--;
     }
-      goto st97;
-    tr141 :
-#line 67 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr112 :
+#line 66 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
       p--;
@@ -541,34 +533,34 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         ACCEPT_TOKEN(GrmAst::TkIntegerLiteral);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    tr150 :
-#line 187 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
+      goto st68;
+    tr120 :
+#line 188 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       {
         ACCEPT_TOKEN(GrmAst::TkKwParameterId);
         {
           p++;
-          cs = 97;
+          cs = 68;
           goto _out;
         }
       }
     }
-      goto st97;
-    st97 :
+      goto st68;
+    st68 :
 #line 1 "NONE"
     {
       ts = 0;
     }
       if (++p == pe)
-        goto _test_eof97;
-      case 97:
+        goto _test_eof68;
+      case 68:
 #line 1 "NONE"
       {
         ts = p;
@@ -576,82 +568,82 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
 #line 283 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         switch ((*p)) {
           case 32:
-            goto tr102;
+            goto tr73;
           case 34:
-            goto tr103;
+            goto tr74;
           case 36:
-            goto tr104;
+            goto tr75;
           case 37:
-            goto tr105;
+            goto tr76;
           case 40:
-            goto tr106;
+            goto tr77;
           case 41:
-            goto tr107;
+            goto tr78;
           case 42:
-            goto tr108;
+            goto tr79;
           case 43:
-            goto tr109;
+            goto tr80;
           case 44:
-            goto tr110;
+            goto tr81;
           case 46:
-            goto st103;
+            goto st74;
           case 47:
-            goto tr112;
+            goto tr83;
           case 59:
-            goto tr114;
+            goto tr85;
           case 60:
-            goto tr115;
+            goto tr86;
           case 61:
-            goto tr116;
+            goto tr87;
           case 62:
-            goto tr117;
+            goto tr88;
           case 63:
-            goto tr118;
+            goto tr89;
           case 64:
-            goto tr119;
+            goto tr90;
           case 91:
-            goto tr120;
+            goto tr91;
           case 93:
-            goto tr121;
+            goto tr92;
           case 99:
-            goto tr122;
+            goto tr93;
           case 101:
-            goto tr123;
+            goto tr94;
           case 102:
-            goto tr124;
+            goto tr95;
           case 104:
-            goto tr125;
+            goto tr96;
           case 105:
-            goto st113;
+            goto st84;
           case 109:
-            goto tr127;
+            goto tr98;
           case 116:
-            goto tr128;
+            goto tr99;
           case 117:
-            goto tr129;
+            goto tr100;
           case 123:
-            goto tr130;
+            goto tr101;
           case 124:
-            goto tr131;
+            goto tr102;
           case 125:
-            goto tr132;
+            goto tr103;
         }
         if ((*p) > 13) {
           if (48 <= (*p) && (*p) <= 57)
-            goto tr113;
+            goto tr84;
         } else if ((*p) >= 9)
-          goto tr102;
-        goto tr101;
-      tr103 :
+          goto tr73;
+        goto tr72;
+      tr74 :
 #line 1 "NONE"
       {
         te = p + 1;
       }
-        goto st98;
-      st98:
+        goto st69;
+      st69:
         if (++p == pe)
-          goto _test_eof98;
-      case 98:
+          goto _test_eof69;
+      case 69:
 #line 328 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 34)
           goto tr2;
@@ -660,7 +652,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
             goto st0;
         } else if ((*p) >= 32)
           goto st0;
-        goto tr133;
+        goto tr104;
       st0:
         if (++p == pe)
           goto _test_eof0;
@@ -673,16 +665,16 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         } else if ((*p) >= 32)
           goto st0;
         goto tr0;
-      tr104 :
+      tr75 :
 #line 1 "NONE"
       {
         te = p + 1;
       }
-        goto st99;
-      st99:
+        goto st70;
+      st70:
         if (++p == pe)
-          goto _test_eof99;
-      case 99:
+          goto _test_eof70;
+      case 70:
 #line 355 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 95)
           goto st1;
@@ -691,47 +683,47 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
             goto st1;
         } else if ((*p) >= 65)
           goto st1;
-        goto tr133;
+        goto tr104;
       st1:
         if (++p == pe)
           goto _test_eof1;
       case 1:
         if ((*p) == 95)
-          goto st100;
+          goto st71;
         if ((*p) < 65) {
           if (48 <= (*p) && (*p) <= 57)
-            goto st100;
+            goto st71;
         } else if ((*p) > 90) {
           if (97 <= (*p) && (*p) <= 122)
-            goto st100;
+            goto st71;
         } else
-          goto st100;
+          goto st71;
         goto tr0;
-      st100:
+      st71:
         if (++p == pe)
-          goto _test_eof100;
-      case 100:
+          goto _test_eof71;
+      case 71:
         if ((*p) == 95)
-          goto st100;
+          goto st71;
         if ((*p) < 65) {
           if (48 <= (*p) && (*p) <= 57)
-            goto st100;
+            goto st71;
         } else if ((*p) > 90) {
           if (97 <= (*p) && (*p) <= 122)
-            goto st100;
+            goto st71;
         } else
-          goto st100;
-        goto tr135;
-      tr105 :
+          goto st71;
+        goto tr106;
+      tr76 :
 #line 1 "NONE"
       {
         te = p + 1;
       }
-        goto st101;
-      st101:
+        goto st72;
+      st72:
         if (++p == pe)
-          goto _test_eof101;
-      case 101:
+          goto _test_eof72;
+      case 72:
 #line 400 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 95)
           goto st2;
@@ -740,62 +732,62 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
             goto st2;
         } else if ((*p) >= 65)
           goto st2;
-        goto tr133;
+        goto tr104;
       st2:
         if (++p == pe)
           goto _test_eof2;
       case 2:
         if ((*p) == 95)
-          goto st102;
+          goto st73;
         if ((*p) < 65) {
           if (48 <= (*p) && (*p) <= 57)
-            goto st102;
+            goto st73;
         } else if ((*p) > 90) {
           if (97 <= (*p) && (*p) <= 122)
-            goto st102;
+            goto st73;
         } else
-          goto st102;
+          goto st73;
         goto tr0;
-      st102:
+      st73:
         if (++p == pe)
-          goto _test_eof102;
-      case 102:
+          goto _test_eof73;
+      case 73:
         if ((*p) == 95)
-          goto st102;
+          goto st73;
         if ((*p) < 65) {
           if (48 <= (*p) && (*p) <= 57)
-            goto st102;
+            goto st73;
         } else if ((*p) > 90) {
           if (97 <= (*p) && (*p) <= 122)
-            goto st102;
+            goto st73;
         } else
-          goto st102;
-        goto tr137;
-      st103:
+          goto st73;
+        goto tr108;
+      st74:
         if (++p == pe)
-          goto _test_eof103;
-      case 103:
+          goto _test_eof74;
+      case 74:
         if ((*p) == 46)
-          goto tr138;
-        goto tr133;
-      tr112 :
+          goto tr109;
+        goto tr104;
+      tr83 :
 #line 1 "NONE"
       {
         te = p + 1;
       }
-        goto st104;
-      st104:
+        goto st75;
+      st75:
         if (++p == pe)
-          goto _test_eof104;
-      case 104:
+          goto _test_eof75;
+      case 75:
 #line 452 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         switch ((*p)) {
           case 42:
             goto st3;
           case 47:
-            goto st105;
+            goto st76;
         }
-        goto tr133;
+        goto tr104;
       st3:
         if (++p == pe)
           goto _test_eof3;
@@ -810,55 +802,55 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 47)
           goto tr7;
         goto st3;
-      st105:
+      st76:
         if (++p == pe)
-          goto _test_eof105;
-      case 105:
+          goto _test_eof76;
+      case 76:
         if ((*p) == 10)
-          goto tr140;
-        goto st105;
-      tr113 :
+          goto tr111;
+        goto st76;
+      tr84 :
 #line 1 "NONE"
       {
         te = p + 1;
       }
-        goto st106;
-      st106:
+        goto st77;
+      st77:
         if (++p == pe)
-          goto _test_eof106;
-      case 106:
+          goto _test_eof77;
+      case 77:
 #line 485 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         if ((*p) == 35)
           goto st5;
         if (48 <= (*p) && (*p) <= 57)
           goto st6;
-        goto tr133;
+        goto tr104;
       st5:
         if (++p == pe)
           goto _test_eof5;
       case 5:
         if ((*p) < 65) {
           if (48 <= (*p) && (*p) <= 57)
-            goto st107;
+            goto st78;
         } else if ((*p) > 90) {
           if (97 <= (*p) && (*p) <= 122)
-            goto st107;
+            goto st78;
         } else
-          goto st107;
+          goto st78;
         goto tr0;
-      st107:
+      st78:
         if (++p == pe)
-          goto _test_eof107;
-      case 107:
+          goto _test_eof78;
+      case 78:
         if ((*p) < 65) {
           if (48 <= (*p) && (*p) <= 57)
-            goto st107;
+            goto st78;
         } else if ((*p) > 90) {
           if (97 <= (*p) && (*p) <= 122)
-            goto st107;
+            goto st78;
         } else
-          goto st107;
-        goto tr141;
+          goto st78;
+        goto tr112;
       st6:
         if (++p == pe)
           goto _test_eof6;
@@ -868,34 +860,36 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (48 <= (*p) && (*p) <= 57)
           goto st6;
         goto tr0;
-      tr119 :
+      tr90 :
 #line 1 "NONE"
       {
         te = p + 1;
       }
-        goto st108;
-      st108:
+        goto st79;
+      st79:
         if (++p == pe)
-          goto _test_eof108;
-      case 108:
+          goto _test_eof79;
+      case 79:
 #line 532 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
         switch ((*p)) {
           case 99:
             goto st7;
-          case 109:
-            goto st20;
           case 115:
-            goto st37;
+            goto st25;
           case 119:
-            goto st58;
+            goto st29;
         }
-        goto tr133;
+        goto tr104;
       st7:
         if (++p == pe)
           goto _test_eof7;
       case 7:
-        if ((*p) == 97)
-          goto st8;
+        switch ((*p)) {
+          case 97:
+            goto st8;
+          case 111:
+            goto st20;
+        }
         goto tr0;
       st8:
         if (++p == pe)
@@ -979,689 +973,482 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
           goto _test_eof19;
       case 19:
         if ((*p) == 101)
-          goto tr23;
+          goto tr24;
         goto tr0;
       st20:
         if (++p == pe)
           goto _test_eof20;
       case 20:
-        if ((*p) == 117)
+        if ((*p) == 109)
           goto st21;
         goto tr0;
       st21:
         if (++p == pe)
           goto _test_eof21;
       case 21:
-        if ((*p) == 108)
+        if ((*p) == 109)
           goto st22;
         goto tr0;
       st22:
         if (++p == pe)
           goto _test_eof22;
       case 22:
-        if ((*p) == 116)
+        if ((*p) == 101)
           goto st23;
         goto tr0;
       st23:
         if (++p == pe)
           goto _test_eof23;
       case 23:
-        if ((*p) == 105)
+        if ((*p) == 110)
           goto st24;
         goto tr0;
       st24:
         if (++p == pe)
           goto _test_eof24;
       case 24:
-        if ((*p) == 95)
-          goto st25;
+        if ((*p) == 116)
+          goto tr29;
         goto tr0;
       st25:
         if (++p == pe)
           goto _test_eof25;
       case 25:
-        if ((*p) == 108)
+        if ((*p) == 116)
           goto st26;
         goto tr0;
       st26:
         if (++p == pe)
           goto _test_eof26;
       case 26:
-        if ((*p) == 105)
+        if ((*p) == 97)
           goto st27;
         goto tr0;
       st27:
         if (++p == pe)
           goto _test_eof27;
       case 27:
-        if ((*p) == 110)
+        if ((*p) == 114)
           goto st28;
         goto tr0;
       st28:
         if (++p == pe)
           goto _test_eof28;
       case 28:
-        if ((*p) == 101)
-          goto st29;
+        if ((*p) == 116)
+          goto tr33;
         goto tr0;
       st29:
         if (++p == pe)
           goto _test_eof29;
       case 29:
-        if ((*p) == 95)
+        if ((*p) == 104)
           goto st30;
         goto tr0;
       st30:
         if (++p == pe)
           goto _test_eof30;
       case 30:
-        if ((*p) == 99)
+        if ((*p) == 105)
           goto st31;
         goto tr0;
       st31:
         if (++p == pe)
           goto _test_eof31;
       case 31:
-        if ((*p) == 111)
+        if ((*p) == 116)
           goto st32;
         goto tr0;
       st32:
         if (++p == pe)
           goto _test_eof32;
       case 32:
-        if ((*p) == 109)
+        if ((*p) == 101)
           goto st33;
         goto tr0;
       st33:
         if (++p == pe)
           goto _test_eof33;
       case 33:
-        if ((*p) == 109)
+        if ((*p) == 115)
           goto st34;
         goto tr0;
       st34:
         if (++p == pe)
           goto _test_eof34;
       case 34:
-        if ((*p) == 101)
+        if ((*p) == 112)
           goto st35;
         goto tr0;
       st35:
         if (++p == pe)
           goto _test_eof35;
       case 35:
-        if ((*p) == 110)
+        if ((*p) == 97)
           goto st36;
         goto tr0;
       st36:
         if (++p == pe)
           goto _test_eof36;
       case 36:
-        if ((*p) == 116)
-          goto tr40;
+        if ((*p) == 99)
+          goto st37;
         goto tr0;
       st37:
         if (++p == pe)
           goto _test_eof37;
       case 37:
-        switch ((*p)) {
-          case 105:
-            goto st38;
-          case 116:
-            goto st55;
-        }
+        if ((*p) == 101)
+          goto tr42;
         goto tr0;
+      tr93 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st80;
+      st80:
+        if (++p == pe)
+          goto _test_eof80;
+      case 80:
+#line 764 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 97)
+          goto st38;
+        goto tr104;
       st38:
         if (++p == pe)
           goto _test_eof38;
       case 38:
-        if ((*p) == 110)
+        if ((*p) == 115)
           goto st39;
         goto tr0;
       st39:
         if (++p == pe)
           goto _test_eof39;
       case 39:
-        if ((*p) == 103)
+        if ((*p) == 101)
           goto st40;
         goto tr0;
       st40:
         if (++p == pe)
           goto _test_eof40;
       case 40:
-        if ((*p) == 108)
+        if ((*p) == 95)
           goto st41;
         goto tr0;
       st41:
         if (++p == pe)
           goto _test_eof41;
       case 41:
-        if ((*p) == 101)
+        if ((*p) == 115)
           goto st42;
         goto tr0;
       st42:
         if (++p == pe)
           goto _test_eof42;
       case 42:
-        if ((*p) == 95)
+        if ((*p) == 101)
           goto st43;
         goto tr0;
       st43:
         if (++p == pe)
           goto _test_eof43;
       case 43:
-        if ((*p) == 108)
+        if ((*p) == 110)
           goto st44;
         goto tr0;
       st44:
         if (++p == pe)
           goto _test_eof44;
       case 44:
-        if ((*p) == 105)
+        if ((*p) == 115)
           goto st45;
         goto tr0;
       st45:
         if (++p == pe)
           goto _test_eof45;
       case 45:
-        if ((*p) == 110)
+        if ((*p) == 105)
           goto st46;
         goto tr0;
       st46:
         if (++p == pe)
           goto _test_eof46;
       case 46:
-        if ((*p) == 101)
+        if ((*p) == 116)
           goto st47;
         goto tr0;
       st47:
         if (++p == pe)
           goto _test_eof47;
       case 47:
-        if ((*p) == 95)
+        if ((*p) == 105)
           goto st48;
         goto tr0;
       st48:
         if (++p == pe)
           goto _test_eof48;
       case 48:
-        if ((*p) == 99)
+        if ((*p) == 118)
           goto st49;
         goto tr0;
       st49:
         if (++p == pe)
           goto _test_eof49;
       case 49:
-        if ((*p) == 111)
-          goto st50;
+        if ((*p) == 101)
+          goto tr54;
         goto tr0;
+      tr94 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st81;
+      st81:
+        if (++p == pe)
+          goto _test_eof81;
+      case 81:
+#line 858 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 112)
+          goto st50;
+        goto tr104;
       st50:
         if (++p == pe)
           goto _test_eof50;
       case 50:
-        if ((*p) == 109)
+        if ((*p) == 115)
           goto st51;
         goto tr0;
       st51:
         if (++p == pe)
           goto _test_eof51;
       case 51:
-        if ((*p) == 109)
+        if ((*p) == 105)
           goto st52;
         goto tr0;
       st52:
         if (++p == pe)
           goto _test_eof52;
       case 52:
-        if ((*p) == 101)
+        if ((*p) == 108)
           goto st53;
         goto tr0;
       st53:
         if (++p == pe)
           goto _test_eof53;
       case 53:
-        if ((*p) == 110)
+        if ((*p) == 111)
           goto st54;
         goto tr0;
       st54:
         if (++p == pe)
           goto _test_eof54;
       case 54:
-        if ((*p) == 116)
+        if ((*p) == 110)
           goto tr59;
         goto tr0;
+      tr95 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st82;
+      st82:
+        if (++p == pe)
+          goto _test_eof82;
+      case 82:
+#line 903 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 97)
+          goto st55;
+        goto tr104;
       st55:
         if (++p == pe)
           goto _test_eof55;
       case 55:
-        if ((*p) == 97)
+        if ((*p) == 108)
           goto st56;
         goto tr0;
       st56:
         if (++p == pe)
           goto _test_eof56;
       case 56:
-        if ((*p) == 114)
+        if ((*p) == 115)
           goto st57;
         goto tr0;
       st57:
         if (++p == pe)
           goto _test_eof57;
       case 57:
-        if ((*p) == 116)
+        if ((*p) == 101)
           goto tr62;
         goto tr0;
+      tr96 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st83;
+      st83:
+        if (++p == pe)
+          goto _test_eof83;
+      case 83:
+#line 934 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 105)
+          goto st58;
+        goto tr104;
       st58:
         if (++p == pe)
           goto _test_eof58;
       case 58:
-        if ((*p) == 104)
+        if ((*p) == 100)
           goto st59;
         goto tr0;
       st59:
         if (++p == pe)
           goto _test_eof59;
       case 59:
-        if ((*p) == 105)
-          goto st60;
+        if ((*p) == 101)
+          goto tr64;
         goto tr0;
+      st84:
+        if (++p == pe)
+          goto _test_eof84;
+      case 84:
+        if ((*p) == 100)
+          goto tr120;
+        goto tr104;
+      tr98 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st85;
+      st85:
+        if (++p == pe)
+          goto _test_eof85;
+      case 85:
+#line 965 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 101)
+          goto st60;
+        goto tr104;
       st60:
         if (++p == pe)
           goto _test_eof60;
       case 60:
-        if ((*p) == 116)
+        if ((*p) == 114)
           goto st61;
         goto tr0;
       st61:
         if (++p == pe)
           goto _test_eof61;
       case 61:
-        if ((*p) == 101)
+        if ((*p) == 103)
           goto st62;
         goto tr0;
       st62:
         if (++p == pe)
           goto _test_eof62;
       case 62:
-        if ((*p) == 115)
-          goto st63;
+        if ((*p) == 101)
+          goto tr67;
         goto tr0;
+      tr99 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st86;
+      st86:
+        if (++p == pe)
+          goto _test_eof86;
+      case 86:
+#line 996 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 114)
+          goto st63;
+        goto tr104;
       st63:
         if (++p == pe)
           goto _test_eof63;
       case 63:
-        if ((*p) == 112)
-          goto st64;
+        if ((*p) == 117)
+          goto st57;
         goto tr0;
+      tr100 :
+#line 1 "NONE"
+      {
+        te = p + 1;
+      }
+        goto st87;
+      st87:
+        if (++p == pe)
+          goto _test_eof87;
+      case 87:
+#line 1013 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
+        if ((*p) == 110)
+          goto st64;
+        goto tr104;
       st64:
         if (++p == pe)
           goto _test_eof64;
       case 64:
-        if ((*p) == 97)
+        if ((*p) == 112)
           goto st65;
         goto tr0;
       st65:
         if (++p == pe)
           goto _test_eof65;
       case 65:
-        if ((*p) == 99)
+        if ((*p) == 97)
           goto st66;
         goto tr0;
       st66:
         if (++p == pe)
           goto _test_eof66;
       case 66:
-        if ((*p) == 101)
-          goto tr71;
-        goto tr0;
-      tr122 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st109;
-      st109:
-        if (++p == pe)
-          goto _test_eof109;
-      case 109:
-#line 968 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 97)
+        if ((*p) == 99)
           goto st67;
-        goto tr133;
+        goto tr0;
       st67:
         if (++p == pe)
           goto _test_eof67;
       case 67:
-        if ((*p) == 115)
-          goto st68;
-        goto tr0;
-      st68:
-        if (++p == pe)
-          goto _test_eof68;
-      case 68:
-        if ((*p) == 101)
-          goto st69;
-        goto tr0;
-      st69:
-        if (++p == pe)
-          goto _test_eof69;
-      case 69:
-        if ((*p) == 95)
-          goto st70;
-        goto tr0;
-      st70:
-        if (++p == pe)
-          goto _test_eof70;
-      case 70:
-        if ((*p) == 115)
-          goto st71;
-        goto tr0;
-      st71:
-        if (++p == pe)
-          goto _test_eof71;
-      case 71:
-        if ((*p) == 101)
-          goto st72;
-        goto tr0;
-      st72:
-        if (++p == pe)
-          goto _test_eof72;
-      case 72:
-        if ((*p) == 110)
-          goto st73;
-        goto tr0;
-      st73:
-        if (++p == pe)
-          goto _test_eof73;
-      case 73:
-        if ((*p) == 115)
-          goto st74;
-        goto tr0;
-      st74:
-        if (++p == pe)
-          goto _test_eof74;
-      case 74:
-        if ((*p) == 105)
-          goto st75;
-        goto tr0;
-      st75:
-        if (++p == pe)
-          goto _test_eof75;
-      case 75:
-        if ((*p) == 116)
-          goto st76;
-        goto tr0;
-      st76:
-        if (++p == pe)
-          goto _test_eof76;
-      case 76:
-        if ((*p) == 105)
-          goto st77;
-        goto tr0;
-      st77:
-        if (++p == pe)
-          goto _test_eof77;
-      case 77:
-        if ((*p) == 118)
-          goto st78;
-        goto tr0;
-      st78:
-        if (++p == pe)
-          goto _test_eof78;
-      case 78:
-        if ((*p) == 101)
-          goto tr83;
-        goto tr0;
-      tr123 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st110;
-      st110:
-        if (++p == pe)
-          goto _test_eof110;
-      case 110:
-#line 1062 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 112)
-          goto st79;
-        goto tr133;
-      st79:
-        if (++p == pe)
-          goto _test_eof79;
-      case 79:
-        if ((*p) == 115)
-          goto st80;
-        goto tr0;
-      st80:
-        if (++p == pe)
-          goto _test_eof80;
-      case 80:
-        if ((*p) == 105)
-          goto st81;
-        goto tr0;
-      st81:
-        if (++p == pe)
-          goto _test_eof81;
-      case 81:
-        if ((*p) == 108)
-          goto st82;
-        goto tr0;
-      st82:
-        if (++p == pe)
-          goto _test_eof82;
-      case 82:
-        if ((*p) == 111)
-          goto st83;
-        goto tr0;
-      st83:
-        if (++p == pe)
-          goto _test_eof83;
-      case 83:
-        if ((*p) == 110)
-          goto tr88;
-        goto tr0;
-      tr124 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st111;
-      st111:
-        if (++p == pe)
-          goto _test_eof111;
-      case 111:
-#line 1107 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 97)
-          goto st84;
-        goto tr133;
-      st84:
-        if (++p == pe)
-          goto _test_eof84;
-      case 84:
-        if ((*p) == 108)
-          goto st85;
-        goto tr0;
-      st85:
-        if (++p == pe)
-          goto _test_eof85;
-      case 85:
-        if ((*p) == 115)
-          goto st86;
-        goto tr0;
-      st86:
-        if (++p == pe)
-          goto _test_eof86;
-      case 86:
-        if ((*p) == 101)
-          goto tr91;
-        goto tr0;
-      tr125 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st112;
-      st112:
-        if (++p == pe)
-          goto _test_eof112;
-      case 112:
-#line 1138 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 105)
-          goto st87;
-        goto tr133;
-      st87:
-        if (++p == pe)
-          goto _test_eof87;
-      case 87:
-        if ((*p) == 100)
-          goto st88;
-        goto tr0;
-      st88:
-        if (++p == pe)
-          goto _test_eof88;
-      case 88:
-        if ((*p) == 101)
-          goto tr93;
-        goto tr0;
-      st113:
-        if (++p == pe)
-          goto _test_eof113;
-      case 113:
-        if ((*p) == 100)
-          goto tr150;
-        goto tr133;
-      tr127 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st114;
-      st114:
-        if (++p == pe)
-          goto _test_eof114;
-      case 114:
-#line 1169 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 101)
-          goto st89;
-        goto tr133;
-      st89:
-        if (++p == pe)
-          goto _test_eof89;
-      case 89:
-        if ((*p) == 114)
-          goto st90;
-        goto tr0;
-      st90:
-        if (++p == pe)
-          goto _test_eof90;
-      case 90:
-        if ((*p) == 103)
-          goto st91;
-        goto tr0;
-      st91:
-        if (++p == pe)
-          goto _test_eof91;
-      case 91:
-        if ((*p) == 101)
-          goto tr96;
-        goto tr0;
-      tr128 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st115;
-      st115:
-        if (++p == pe)
-          goto _test_eof115;
-      case 115:
-#line 1200 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 114)
-          goto st92;
-        goto tr133;
-      st92:
-        if (++p == pe)
-          goto _test_eof92;
-      case 92:
-        if ((*p) == 117)
-          goto st86;
-        goto tr0;
-      tr129 :
-#line 1 "NONE"
-      {
-        te = p + 1;
-      }
-        goto st116;
-      st116:
-        if (++p == pe)
-          goto _test_eof116;
-      case 116:
-#line 1217 "/home/pmt/repos/pmt/src/pmt/parserbuilder/grm_lexer.cpp"
-        if ((*p) == 110)
-          goto st93;
-        goto tr133;
-      st93:
-        if (++p == pe)
-          goto _test_eof93;
-      case 93:
-        if ((*p) == 112)
-          goto st94;
-        goto tr0;
-      st94:
-        if (++p == pe)
-          goto _test_eof94;
-      case 94:
-        if ((*p) == 97)
-          goto st95;
-        goto tr0;
-      st95:
-        if (++p == pe)
-          goto _test_eof95;
-      case 95:
-        if ((*p) == 99)
-          goto st96;
-        goto tr0;
-      st96:
-        if (++p == pe)
-          goto _test_eof96;
-      case 96:
         if ((*p) == 107)
-          goto tr100;
+          goto tr71;
         goto tr0;
     }
-  _test_eof97:
-    cs = 97;
+  _test_eof68:
+    cs = 68;
     goto _test_eof;
-  _test_eof98:
-    cs = 98;
+  _test_eof69:
+    cs = 69;
     goto _test_eof;
   _test_eof0:
     cs = 0;
     goto _test_eof;
-  _test_eof99:
-    cs = 99;
+  _test_eof70:
+    cs = 70;
     goto _test_eof;
   _test_eof1:
     cs = 1;
     goto _test_eof;
-  _test_eof100:
-    cs = 100;
+  _test_eof71:
+    cs = 71;
     goto _test_eof;
-  _test_eof101:
-    cs = 101;
+  _test_eof72:
+    cs = 72;
     goto _test_eof;
   _test_eof2:
     cs = 2;
     goto _test_eof;
-  _test_eof102:
-    cs = 102;
+  _test_eof73:
+    cs = 73;
     goto _test_eof;
-  _test_eof103:
-    cs = 103;
+  _test_eof74:
+    cs = 74;
     goto _test_eof;
-  _test_eof104:
-    cs = 104;
+  _test_eof75:
+    cs = 75;
     goto _test_eof;
   _test_eof3:
     cs = 3;
@@ -1669,23 +1456,23 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof4:
     cs = 4;
     goto _test_eof;
-  _test_eof105:
-    cs = 105;
+  _test_eof76:
+    cs = 76;
     goto _test_eof;
-  _test_eof106:
-    cs = 106;
+  _test_eof77:
+    cs = 77;
     goto _test_eof;
   _test_eof5:
     cs = 5;
     goto _test_eof;
-  _test_eof107:
-    cs = 107;
+  _test_eof78:
+    cs = 78;
     goto _test_eof;
   _test_eof6:
     cs = 6;
     goto _test_eof;
-  _test_eof108:
-    cs = 108;
+  _test_eof79:
+    cs = 79;
     goto _test_eof;
   _test_eof7:
     cs = 7;
@@ -1780,6 +1567,9 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof37:
     cs = 37;
     goto _test_eof;
+  _test_eof80:
+    cs = 80;
+    goto _test_eof;
   _test_eof38:
     cs = 38;
     goto _test_eof;
@@ -1816,6 +1606,9 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof49:
     cs = 49;
     goto _test_eof;
+  _test_eof81:
+    cs = 81;
+    goto _test_eof;
   _test_eof50:
     cs = 50;
     goto _test_eof;
@@ -1831,6 +1624,9 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof54:
     cs = 54;
     goto _test_eof;
+  _test_eof82:
+    cs = 82;
+    goto _test_eof;
   _test_eof55:
     cs = 55;
     goto _test_eof;
@@ -1840,11 +1636,20 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof57:
     cs = 57;
     goto _test_eof;
+  _test_eof83:
+    cs = 83;
+    goto _test_eof;
   _test_eof58:
     cs = 58;
     goto _test_eof;
   _test_eof59:
     cs = 59;
+    goto _test_eof;
+  _test_eof84:
+    cs = 84;
+    goto _test_eof;
+  _test_eof85:
+    cs = 85;
     goto _test_eof;
   _test_eof60:
     cs = 60;
@@ -1855,8 +1660,14 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof62:
     cs = 62;
     goto _test_eof;
+  _test_eof86:
+    cs = 86;
+    goto _test_eof;
   _test_eof63:
     cs = 63;
+    goto _test_eof;
+  _test_eof87:
+    cs = 87;
     goto _test_eof;
   _test_eof64:
     cs = 64;
@@ -1867,160 +1678,49 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
   _test_eof66:
     cs = 66;
     goto _test_eof;
-  _test_eof109:
-    cs = 109;
-    goto _test_eof;
   _test_eof67:
     cs = 67;
-    goto _test_eof;
-  _test_eof68:
-    cs = 68;
-    goto _test_eof;
-  _test_eof69:
-    cs = 69;
-    goto _test_eof;
-  _test_eof70:
-    cs = 70;
-    goto _test_eof;
-  _test_eof71:
-    cs = 71;
-    goto _test_eof;
-  _test_eof72:
-    cs = 72;
-    goto _test_eof;
-  _test_eof73:
-    cs = 73;
-    goto _test_eof;
-  _test_eof74:
-    cs = 74;
-    goto _test_eof;
-  _test_eof75:
-    cs = 75;
-    goto _test_eof;
-  _test_eof76:
-    cs = 76;
-    goto _test_eof;
-  _test_eof77:
-    cs = 77;
-    goto _test_eof;
-  _test_eof78:
-    cs = 78;
-    goto _test_eof;
-  _test_eof110:
-    cs = 110;
-    goto _test_eof;
-  _test_eof79:
-    cs = 79;
-    goto _test_eof;
-  _test_eof80:
-    cs = 80;
-    goto _test_eof;
-  _test_eof81:
-    cs = 81;
-    goto _test_eof;
-  _test_eof82:
-    cs = 82;
-    goto _test_eof;
-  _test_eof83:
-    cs = 83;
-    goto _test_eof;
-  _test_eof111:
-    cs = 111;
-    goto _test_eof;
-  _test_eof84:
-    cs = 84;
-    goto _test_eof;
-  _test_eof85:
-    cs = 85;
-    goto _test_eof;
-  _test_eof86:
-    cs = 86;
-    goto _test_eof;
-  _test_eof112:
-    cs = 112;
-    goto _test_eof;
-  _test_eof87:
-    cs = 87;
-    goto _test_eof;
-  _test_eof88:
-    cs = 88;
-    goto _test_eof;
-  _test_eof113:
-    cs = 113;
-    goto _test_eof;
-  _test_eof114:
-    cs = 114;
-    goto _test_eof;
-  _test_eof89:
-    cs = 89;
-    goto _test_eof;
-  _test_eof90:
-    cs = 90;
-    goto _test_eof;
-  _test_eof91:
-    cs = 91;
-    goto _test_eof;
-  _test_eof115:
-    cs = 115;
-    goto _test_eof;
-  _test_eof92:
-    cs = 92;
-    goto _test_eof;
-  _test_eof116:
-    cs = 116;
-    goto _test_eof;
-  _test_eof93:
-    cs = 93;
-    goto _test_eof;
-  _test_eof94:
-    cs = 94;
-    goto _test_eof;
-  _test_eof95:
-    cs = 95;
-    goto _test_eof;
-  _test_eof96:
-    cs = 96;
     goto _test_eof;
 
   _test_eof : {}
     if (p == eof) {
       switch (cs) {
-        case 98:
-          goto tr133;
+        case 69:
+          goto tr104;
         case 0:
           goto tr0;
-        case 99:
-          goto tr133;
+        case 70:
+          goto tr104;
         case 1:
           goto tr0;
-        case 100:
-          goto tr135;
-        case 101:
-          goto tr133;
+        case 71:
+          goto tr106;
+        case 72:
+          goto tr104;
         case 2:
           goto tr0;
-        case 102:
-          goto tr137;
-        case 103:
-          goto tr133;
-        case 104:
-          goto tr133;
+        case 73:
+          goto tr108;
+        case 74:
+          goto tr104;
+        case 75:
+          goto tr104;
         case 3:
           goto tr0;
         case 4:
           goto tr0;
-        case 105:
-          goto tr140;
-        case 106:
-          goto tr133;
+        case 76:
+          goto tr111;
+        case 77:
+          goto tr104;
         case 5:
           goto tr0;
-        case 107:
-          goto tr141;
+        case 78:
+          goto tr112;
         case 6:
           goto tr0;
-        case 108:
-          goto tr133;
+        case 79:
+          goto tr104;
         case 7:
           goto tr0;
         case 8:
@@ -2083,6 +1783,8 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
           goto tr0;
         case 37:
           goto tr0;
+        case 80:
+          goto tr104;
         case 38:
           goto tr0;
         case 39:
@@ -2107,6 +1809,8 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
           goto tr0;
         case 49:
           goto tr0;
+        case 81:
+          goto tr104;
         case 50:
           goto tr0;
         case 51:
@@ -2117,105 +1821,43 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
           goto tr0;
         case 54:
           goto tr0;
+        case 82:
+          goto tr104;
         case 55:
           goto tr0;
         case 56:
           goto tr0;
         case 57:
           goto tr0;
+        case 83:
+          goto tr104;
         case 58:
           goto tr0;
         case 59:
           goto tr0;
+        case 84:
+          goto tr104;
+        case 85:
+          goto tr104;
         case 60:
           goto tr0;
         case 61:
           goto tr0;
         case 62:
           goto tr0;
+        case 86:
+          goto tr104;
         case 63:
           goto tr0;
+        case 87:
+          goto tr104;
         case 64:
           goto tr0;
         case 65:
           goto tr0;
         case 66:
           goto tr0;
-        case 109:
-          goto tr133;
         case 67:
-          goto tr0;
-        case 68:
-          goto tr0;
-        case 69:
-          goto tr0;
-        case 70:
-          goto tr0;
-        case 71:
-          goto tr0;
-        case 72:
-          goto tr0;
-        case 73:
-          goto tr0;
-        case 74:
-          goto tr0;
-        case 75:
-          goto tr0;
-        case 76:
-          goto tr0;
-        case 77:
-          goto tr0;
-        case 78:
-          goto tr0;
-        case 110:
-          goto tr133;
-        case 79:
-          goto tr0;
-        case 80:
-          goto tr0;
-        case 81:
-          goto tr0;
-        case 82:
-          goto tr0;
-        case 83:
-          goto tr0;
-        case 111:
-          goto tr133;
-        case 84:
-          goto tr0;
-        case 85:
-          goto tr0;
-        case 86:
-          goto tr0;
-        case 112:
-          goto tr133;
-        case 87:
-          goto tr0;
-        case 88:
-          goto tr0;
-        case 113:
-          goto tr133;
-        case 114:
-          goto tr133;
-        case 89:
-          goto tr0;
-        case 90:
-          goto tr0;
-        case 91:
-          goto tr0;
-        case 115:
-          goto tr133;
-        case 92:
-          goto tr0;
-        case 116:
-          goto tr133;
-        case 93:
-          goto tr0;
-        case 94:
-          goto tr0;
-        case 95:
-          goto tr0;
-        case 96:
           goto tr0;
       }
     }

@@ -45,8 +45,7 @@ class GrmAst {
     // - Grammar properties
     TkGrammarPropertyStart = TOKEN_GRAMMAR_PROPERTY_START,
     TkGrammarPropertyWhitespace = TOKEN_GRAMMAR_PROPERTY_WHITESPACE,
-    TkGrammarPropertySingleLineComment = TOKEN_GRAMMAR_PROPERTY_SINGLE_LINE_COMMENT,
-    TkGrammarPropertyMultiLineComment = TOKEN_GRAMMAR_PROPERTY_MULTI_LINE_COMMENT,
+    TkGrammarPropertyComment = TOKEN_GRAMMAR_PROPERTY_COMMENT,
     TkGrammarPropertyCaseSensitive = TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE,  // Also used as a parameter keyword
 
     // Non-terminals
@@ -54,11 +53,13 @@ class GrmAst {
     // - Terminal productions
     NtTerminalProduction,
     NtTerminalParameter,
+    NtTerminalDefinition,
     NtTerminalSequence,
     NtTerminalChoices,
     // - Rule productions
     NtRuleProduction,
     NtRuleParameter,
+    NtRuleDefinition,
     NtRuleSequence,
     NtRuleChoices,
     // - Rule / Terminal common
@@ -68,14 +69,10 @@ class GrmAst {
     // - Grammar properties
     NtGrammarProperty,
     NtGrammarPropertyWhitespace,
-    NtGrammarPropertyWhitespaceChoices,
-    NtGrammarPropertySingleLineComment,
-    NtGrammarPropertySingleLineCommentChoices,
-    NtGrammarPropertyMultiLineComment,
-    NtGrammarPropertyMultiLineCommentChoices,
+    NtGrammarPropertyComment,
     NtGrammarPropertyCaseSensitive,
     // - Other
-    NtStringLiteralPair,
+    NtTerminalDefinitionPair,
   };
 
   static auto id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string;
