@@ -14,7 +14,7 @@ class Token {
   GenericId::IdType _id = GenericId::IdUninitialized;
 
   // - Member functions -
-  //- Lifetime -
+  // - Lifetime -
   Token() = default;
   Token(std::string_view token_, SourcePosition source_position_);
 

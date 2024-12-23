@@ -42,6 +42,7 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   step_3(context);
   step_4(context);
   step_5(context);
+  step_6(context);
 
   // Debug print everything...
   std::cout << "Terminal names: ";
@@ -82,7 +83,9 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   std::cout << "Rule merge values: " << DynamicBitsetConverter::to_string(context._rule_merge_values) << std::endl;
   std::cout << "Rule unpack values: " << DynamicBitsetConverter::to_string(context._rule_unpack_values) << std::endl;
   std::cout << "Rule hide values: " << DynamicBitsetConverter::to_string(context._rule_hide_values) << std::endl;
-}
+
+  write_dot(context, context._fa);
+ }
 
 void ParserBuilder::step_1(Context& context_) {
   for (size_t i = 0; i < context_._ast->get_children_size(); ++i) {
@@ -362,9 +365,41 @@ void ParserBuilder::step_5(Context& context_) {
 
 void ParserBuilder::step_6(Context& context_) {
  Fa::StateNrType const state_nr_start = context_._fa.get_unused_state_nr();
- context_._fa._states[state_nr_start];
+ Fa::State& state_start = context_._fa._states[state_nr_start];
+
+ Fa::StateNrType const state_nr_terminal_start = context_._fa.get_unused_state_nr();
+ Fa::State& state_terminal_start = context_._fa._states[state_nr_terminal_start];
 
  for (size_t i = 0; i < context_._comment_open_definitions.size(); ++i) {
+  FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(context_._fa, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions);
+  FaPart fa_part_rule_close = TerminalDefinitionToFaPart::convert(context_._fa, "@comment_close" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions);
+  
+  Fa::StateNrType const state_nr_rule_close = *fa_part_rule_close.get_incoming_state_nr();
+
+  fa_part_rule_open.connect_outgoing_transitions_to(state_nr_rule_close, context_._fa);
+  fa_part_rule_close.connect_outgoing_transitions_to(state_nr_terminal_start, context_._fa);
+
+  Fa::StateNrType const state_nr_rule_open = *fa_part_rule_open.get_incoming_state_nr();
+  
+  Fa::State& state_rule_open = context_._fa._states[state_nr_rule_open];
+  Fa::State& state_rule_close = context_._fa._states[state_nr_rule_close];
+
+  state_start._transitions._epsilon_transitions.insert(state_nr_rule_open);
+ 
+  for (Fa::SymbolType const symbol : context_._whitespace) {
+   if (!state_rule_open._transitions._symbol_transitions.contains(symbol)) {
+    state_rule_open._transitions._symbol_transitions[symbol] = state_nr_start;
+   }
+   if (!state_rule_close._transitions._symbol_transitions.contains(symbol)) {
+    state_rule_close._transitions._symbol_transitions[symbol] = state_nr_rule_close;
+   }
+  }
+ }
+
+ for (size_t i = 0; i < context_._terminal_accepts.size(); ++i) {
+  if (!context_._terminal_accepts[i].has_value()) {
+   continue;
+  }
   
  }
 
