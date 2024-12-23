@@ -79,6 +79,12 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtTerminalSequence";
     case NtTerminalChoices:
       return "NtTerminalChoices";
+    case NtTerminalRepetition:
+      return "NtTerminalRepetition";
+    case NtTerminalRepetitionRange:
+      return "NtTerminalRepetitionRange";
+    case NtTerminalRange:
+      return "NtTerminalRange";
     case NtRuleProduction:
       return "NtRuleProduction";
     case NtRuleParameter:
@@ -89,12 +95,6 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtRuleSequence";
     case NtRuleChoices:
       return "NtRuleChoices";
-    case NtRepetition:
-      return "NtTerminalRepetition";
-    case NtRepetitionRange:
-      return "NtTerminalRepetitionRange";
-    case NtRange:
-      return "NtTerminalRange";
     case NtGrammarProperty:
       return "NtGrammarProperty";
     case NtGrammarPropertyWhitespace:
@@ -103,6 +103,8 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtGrammarPropertyComment";
     case NtGrammarPropertyCaseSensitive:
       return "NtGrammarPropertyCaseSensitive";
+    case NtTerminalDefinitionPairList:
+      return "NtTerminalDefinitionPairList";
     case NtTerminalDefinitionPair:
       return "NtTerminalDefinitionPair";
     default:

@@ -1,11 +1,13 @@
+#if 0
+
 #include "pmt/parserbuilder/lexer_builder.hpp"
 
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
 #include "pmt/parserbuilder/fa_part.hpp"
+#include "pmt/parserbuilder/fa_to_fa_state_tables.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
-#include "pmt/parserbuilder/lexer_table_transition_converter.hpp"
 #include "pmt/parserbuilder/terminal_definition_to_fa_part.hpp"
 #include "pmt/util/parsect/fa.hpp"
 #include "pmt/util/parsect/graph_writer.hpp"
@@ -151,7 +153,7 @@ auto LexerBuilder::fa_to_lexer_tables(Fa const& fa_) -> GenericLexerTables {
     ret._id_names.push_back(terminal_id);
   }
 
-  LexerTableTransitionConverter::convert(fa_, ret);
+  FaToFaStateTables::convert(fa_, ret._fa_state_tables);
 
   // We need to traverse the states in order
   std::set<Fa::StateNrType> state_nrs_sorted;
@@ -199,3 +201,5 @@ auto LexerBuilder::accepts_to_label(size_t accepts_) -> std::string {
 }
 
 }  // namespace pmt::parserbuilder
+
+#endif

@@ -160,11 +160,11 @@ terminal_expression(A) ::= TOKEN_OPEN_PAREN terminal_choices(B) TOKEN_CLOSE_PARE
 }
 
 terminal_expression(A) ::= terminal_expression(B) TOKEN_QUESTION. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetition);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetition);
  A->give_child_at_back(std::move(B));
 
  // Add repetition info: "," "1"
- auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
 
  auto comma = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkComma);
  comma->set_string(",");
@@ -178,11 +178,11 @@ terminal_expression(A) ::= terminal_expression(B) TOKEN_QUESTION. {
 }
 
 terminal_expression(A) ::= terminal_expression(B) TOKEN_STAR. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetition);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetition);
  A->give_child_at_back(std::move(B));
 
  // Add repetition info: ","
- auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
 
  auto comma = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkComma);
  comma->set_string(",");
@@ -192,11 +192,11 @@ terminal_expression(A) ::= terminal_expression(B) TOKEN_STAR. {
 }
 
 terminal_expression(A) ::= terminal_expression(B) TOKEN_PLUS. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetition);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetition);
  A->give_child_at_back(std::move(B));
 
  // Add repetition info: "1" ","
- auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
 
  auto lhs = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkIntegerLiteral);
  lhs->set_string("10#1");
@@ -210,7 +210,7 @@ terminal_expression(A) ::= terminal_expression(B) TOKEN_PLUS. {
 }
 
 terminal_expression(A) ::= terminal_expression(B) terminal_repetition_range(C). {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetition);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetition);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
@@ -221,7 +221,7 @@ terminal_expression(A) ::= range_expression(B). {
 
 // - RANGE_EXPRESSION -
 range_expression(A) ::= TOKEN_OPEN_SQUARE range_literal(B) TOKEN_DOUBLE_DOT range_literal(C) TOKEN_CLOSE_SQUARE. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRange);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRange);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
@@ -237,31 +237,31 @@ range_literal(A) ::= TOKEN_INTEGER_LITERAL(B). {
 
 // - TERMINAL_REPETITION_RANGE -
 terminal_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_COMMA(B) TOKEN_CLOSE_BRACE. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
  A->give_child_at_back(std::move(B));
 }
 
 terminal_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_COMMA(C) TOKEN_CLOSE_BRACE. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
 
 terminal_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_COMMA(B) TOKEN_INTEGER_LITERAL(C) TOKEN_CLOSE_BRACE. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
 
 terminal_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_COMMA(C) TOKEN_INTEGER_LITERAL(D) TOKEN_CLOSE_BRACE. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
  A->give_child_at_back(std::move(D));
 }
 
 terminal_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_CLOSE_BRACE. {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRepetitionRange);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
  A->give_child_at_back(std::move(B));
 }
 
@@ -359,14 +359,6 @@ rule_expression(A) ::= TOKEN_TERMINAL_IDENTIFIER(B). {
  A = std::move(B);
 }
 
-rule_expression(A) ::= TOKEN_STRING_LITERAL(B). {
- A = std::move(B);
-}
-
-rule_expression(A) ::= TOKEN_INTEGER_LITERAL(B). {
- A = std::move(B);
-}
-
 rule_expression(A) ::= TOKEN_EPSILON(B). {
  A = std::move(B);
 }
@@ -388,7 +380,6 @@ grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_COMMENT(B) TOKEN_EQUALS terminal_
  A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarProperty);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
- A->unpack(1);
 }
 
 grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE(B) TOKEN_EQUALS terminal_definition(C) TOKEN_SEMICOLON. {
@@ -399,7 +390,7 @@ grammar_property(A) ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE(B) TOKEN_EQUALS termin
 
 // - TERMINAL_DEFINITION_PAIR_LIST -
 terminal_definition_pair_list(A) ::= terminal_definition_pair(B). {
- A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children);
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalDefinitionPairList);
  A->give_child_at_back(std::move(B));
 }
 

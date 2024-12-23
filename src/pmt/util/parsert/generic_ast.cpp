@@ -1,6 +1,7 @@
 #include "pmt/util/parsert/generic_ast.hpp"
 
 #include "pmt/asserts.hpp"
+#include "pmt/base/hash.hpp"
 
 #include <cassert>
 #include <iterator>
@@ -213,3 +214,12 @@ GenericAst::GenericAst(Tag tag_, GenericId::IdType id_)
 }
 
 }  // namespace pmt::util::parsert
+
+namespace std {
+auto hash<pmt::util::parsert::GenericAst::AstPositionConst>::operator()(pmt::util::parsert::GenericAst::AstPositionConst const& ast_position_) const -> size_t {
+  size_t seed = 0;
+  pmt::base::Hash::combine(ast_position_.first, seed);
+  pmt::base::Hash::combine(ast_position_.second, seed);
+  return seed;
+}
+}  // namespace std

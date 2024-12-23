@@ -7,7 +7,7 @@ namespace pmt::parserbuilder {
 using namespace pmt::util::parsect;
 using namespace pmt::util::parsert;
 
-RepetitionExpressionToFaPartFrame::RepetitionExpressionToFaPartFrame(GenericAst::PositionConst ast_position_)
+RepetitionExpressionToFaPartFrame::RepetitionExpressionToFaPartFrame(GenericAst::AstPositionConst ast_position_)
  : ExpressionToFaPartFrameBase({ast_position_.first->get_child_at(ast_position_.second), 0})
  , _range(GrmNumber::get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1))) {
 }

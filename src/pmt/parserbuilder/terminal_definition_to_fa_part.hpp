@@ -9,7 +9,7 @@ namespace pmt::parserbuilder {
 
 class TerminalDefinitionToFaPart {
  public:
-  static auto convert(pmt::util::parsect::Fa& dest_fa_, std::string const& terminal_name_, pmt::util::parsert::GenericAst::PositionConst terminal_definition_, std::unordered_map<std::string, pmt::util::parsert::GenericAst::PositionConst> const& terminal_definitions_) -> FaPart;
+  static auto convert(pmt::util::parsect::Fa& dest_fa_, std::string const& terminal_name_, pmt::util::parsert::GenericAst::AstPositionConst terminal_definition_, std::vector<std::string> const& terminal_names_, std::vector<pmt::util::parsert::GenericAst::AstPositionConst> const& terminal_definitions_) -> FaPart;
 };
 
 }  // namespace pmt::parserbuilder

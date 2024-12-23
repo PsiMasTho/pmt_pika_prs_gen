@@ -15,6 +15,8 @@ void DynamicBitsetTest::run() {
   test_bitwise_operations();
   test_countl();
   test_countr();
+  test_swap();
+  test_exchange();
   test_any();
   test_none();
   test_all();
@@ -208,6 +210,34 @@ void DynamicBitsetTest::test_countr() {
 
     assert(b1.countr(false) == i);
   }
+}
+
+void DynamicBitsetTest::test_swap() {
+  DynamicBitset b1 = DynamicBitsetConverter::from_string("11010");
+  b1.swap(0, 1);
+  assert(b1 == DynamicBitsetConverter::from_string("11010"));
+  b1.swap(1, 2);
+  assert(b1 == DynamicBitsetConverter::from_string("10110"));
+  b1.swap(2, 3);
+  assert(b1 == DynamicBitsetConverter::from_string("10110"));
+  b1.swap(3, 4);
+  assert(b1 == DynamicBitsetConverter::from_string("10101"));
+  b1.swap(4, 0);
+  assert(b1 == DynamicBitsetConverter::from_string("10101"));
+}
+
+void DynamicBitsetTest::test_exchange() {
+  DynamicBitset b1 = DynamicBitsetConverter::from_string("11010");
+  assert(b1.exchange(0, true) == true);
+  assert(b1 == DynamicBitsetConverter::from_string("11010"));
+  assert(b1.exchange(1, false) == true);
+  assert(b1 == DynamicBitsetConverter::from_string("10010"));
+  assert(b1.exchange(2, true) == false);
+  assert(b1 == DynamicBitsetConverter::from_string("10110"));
+  assert(b1.exchange(3, false) == true);
+  assert(b1 == DynamicBitsetConverter::from_string("10100"));
+  assert(b1.exchange(4, true) == false);
+  assert(b1 == DynamicBitsetConverter::from_string("10101"));
 }
 
 void DynamicBitsetTest::test_any() {

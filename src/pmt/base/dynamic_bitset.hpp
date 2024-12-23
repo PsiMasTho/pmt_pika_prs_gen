@@ -58,6 +58,8 @@ class DynamicBitset {
   auto popcnt() const -> size_t;
   auto countl(bool value_) const -> size_t;
   auto countr(bool value_) const -> size_t;
+  void swap(size_t lhs_, size_t rhs_);
+  auto exchange(size_t index_, bool value_) -> bool;
 
   // -- Inplace --
   void inplace_not();

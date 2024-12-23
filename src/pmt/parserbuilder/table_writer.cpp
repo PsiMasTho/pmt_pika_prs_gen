@@ -53,13 +53,13 @@ void TableWriter::write_source() {
   "namespace " << _namespace_name << " {\n"
   "using namespace pmt::util::parsert;\n"
   "namespace {\n"
-  "GenericLexerTables::TableIndexType const STATE_NR_SINK = " << as_hex(_tables._state_nr_sink) << ";\n"
-  "GenericLexerTables::TableIndexType const PADDING_L = " << as_hex(_tables._padding_l) << ";\n"
-  "GenericLexerTables::TableIndexType const STATE_COUNT = " << as_hex(_tables._state_transition_entries.size()) << ";\n"
-  "GenericLexerTables::TableIndexType const COMPRESSED_TRANSITION_ENTRY_COUNT = " << as_hex(_tables._compressed_transition_entries.size()) << ";\n"
+  "GenericLexerTables::TableIndexType const STATE_NR_SINK = " << as_hex(_tables._fa_state_tables._state_nr_sink) << ";\n"
+  "GenericLexerTables::TableIndexType const PADDING_L = " << as_hex(_tables._fa_state_tables._padding_l) << ";\n"
+  "GenericLexerTables::TableIndexType const STATE_COUNT = " << as_hex(_tables._fa_state_tables._state_transition_entries.size()) << ";\n"
+  "GenericLexerTables::TableIndexType const COMPRESSED_TRANSITION_ENTRY_COUNT = " << as_hex(_tables._fa_state_tables._compressed_transition_entries.size()) << ";\n"
   "GenericLexerTables::TableIndexType const ACCEPTS_2D_WIDTH = " << as_hex(_tables._accepts_width) << ";\n";
-  write_pair_entries(_tables._state_transition_entries, "GenericLexerTables::StateTransitionEntry const STATE_TRANSITION_ENTRIES[STATE_COUNT]");
-  write_pair_entries(_tables._compressed_transition_entries, "GenericLexerTables::CompressedTransitionEntry const COMPRESSED_TRANSITION_ENTRIES[COMPRESSED_TRANSITION_ENTRY_COUNT]");
+  write_pair_entries(_tables._fa_state_tables._state_transition_entries, "GenericLexerTables::StateTransitionEntry const STATE_TRANSITION_ENTRIES[STATE_COUNT]");
+  write_pair_entries(_tables._fa_state_tables._compressed_transition_entries, "GenericLexerTables::CompressedTransitionEntry const COMPRESSED_TRANSITION_ENTRIES[COMPRESSED_TRANSITION_ENTRY_COUNT]");
   write_single_entries(_tables._accepts, "GenericLexerTables::TableIndexType const ACCEPTS_2D[STATE_COUNT * ACCEPTS_2D_WIDTH]");
   write_single_entries(_tables._accept_ids, "GenericId::IdType const ACCEPT_IDS[ACCEPTS_2D_WIDTH]");
   write_single_entries(_tables._terminal_names, "std::string_view const TERMINAL_NAMES[ACCEPTS_2D_WIDTH]");

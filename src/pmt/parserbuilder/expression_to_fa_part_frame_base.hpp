@@ -6,7 +6,6 @@
 #include <memory>
 #include <stack>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -22,20 +21,21 @@ class ExpressionToFaPartFrameBase : public std::enable_shared_from_this<Expressi
 
   class Captures;
 
-  explicit ExpressionToFaPartFrameBase(pmt::util::parsert::GenericAst::PositionConst ast_position_);
+  explicit ExpressionToFaPartFrameBase(pmt::util::parsert::GenericAst::AstPositionConst ast_position_);
   virtual ~ExpressionToFaPartFrameBase() = default;
 
   virtual void process(CallstackType& callstack_, Captures& captures_) = 0;
 
  protected:
-  pmt::util::parsert::GenericAst::PositionConst _ast_position;
+  pmt::util::parsert::GenericAst::AstPositionConst _ast_position;
 };
 
 class ExpressionToFaPartFrameBase::Captures {
  public:
   FaPart& _ret_part;
   pmt::util::parsect::Fa& _result;
-  std::unordered_map<std::string, pmt::util::parsert::GenericAst::PositionConst> const& _terminal_definitions;
+  std::vector<std::string> const& _terminal_names;
+  std::vector<pmt::util::parsert::GenericAst::AstPositionConst> const& _terminal_definitions;
   std::unordered_set<std::string>& _terminal_stack_contents;
   std::vector<std::string>& _terminal_stack;
 };

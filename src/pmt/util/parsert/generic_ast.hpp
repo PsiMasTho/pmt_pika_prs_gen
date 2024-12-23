@@ -14,7 +14,7 @@ class GenericAst {
   using StringType = std::string;
   using ChildrenType = std::vector<GenericAst*>;
   using AstPosition = std::pair<GenericAst*, size_t>;
-  using PositionConst = std::pair<GenericAst const*, size_t>;
+  using AstPositionConst = std::pair<GenericAst const*, size_t>;
 
   enum class Tag {
     String,
@@ -75,3 +75,10 @@ class GenericAst {
 };
 
 }  // namespace pmt::util::parsert
+
+namespace std {
+template <>
+struct hash<pmt::util::parsert::GenericAst::AstPositionConst> {
+  auto operator()(pmt::util::parsert::GenericAst::AstPositionConst const& ast_position_) const -> size_t;
+};
+}  // namespace std

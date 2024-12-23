@@ -1,5 +1,7 @@
 #include "pmt/util/parsert/generic_lexer.hpp"
 
+#include "pmt/util/parsert/generic_fa_state_tables.hpp"
+
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -37,10 +39,10 @@ auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
   size_t countl = std::numeric_limits<size_t>::max();
   char const* te = nullptr;  // Token end
 
-  uint64_t state_nr_cur = GenericLexerTables::StateNrStart;
+  uint64_t state_nr_cur = GenericFaStateTables::StateNrStart;
 
   for (char const* p = _cursor; _cursor <= _end; ++p) {
-    if (state_nr_cur == _tables._state_nr_sink) {
+    if (state_nr_cur == _tables._fa_state_tables._state_nr_sink) {
       break;
     }
 
@@ -54,11 +56,11 @@ auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
       id = _tables._accept_ids[countl];
     }
 
-    if (p == _end || state_nr_cur == _tables._state_nr_sink) {
+    if (p == _end || state_nr_cur == _tables._fa_state_tables._state_nr_sink) {
       break;
     }
 
-    state_nr_cur = _tables.get_state_nr_next(state_nr_cur, *p);
+    state_nr_cur = _tables._fa_state_tables.get_state_nr_next(state_nr_cur, *p);
   }
 
   if (te != nullptr) {

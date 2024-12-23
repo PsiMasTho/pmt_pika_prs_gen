@@ -10,7 +10,7 @@ namespace pmt::parserbuilder {
 
 class RepetitionExpressionToFaPartFrame : public ExpressionToFaPartFrameBase {
  public:
-  explicit RepetitionExpressionToFaPartFrame(pmt::util::parsert::GenericAst::PositionConst ast_position_);
+  explicit RepetitionExpressionToFaPartFrame(pmt::util::parsert::GenericAst::AstPositionConst ast_position_);
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:

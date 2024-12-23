@@ -258,6 +258,16 @@ auto DynamicBitset::countr(bool value_) const -> size_t {
   return total;
 }
 
+void DynamicBitset::swap(size_t lhs_, size_t rhs_) {
+  set(lhs_, exchange(rhs_, get(lhs_)));
+}
+
+auto DynamicBitset::exchange(size_t index_, bool value_) -> bool {
+  bool const old_value = get(index_);
+  set(index_, value_);
+  return old_value;
+}
+
 void DynamicBitset::inplace_not() {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~_data[i];

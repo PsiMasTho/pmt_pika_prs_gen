@@ -21,7 +21,7 @@ void SequenceExpressionToFaPartFrame::process_stage_0(CallstackType& callstack_)
   ++_stage;
 
   GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  callstack_.push(ExpressionToFaPartFrameFactory::construct(GenericAst::PositionConst{&cur_expr, _idx}));
+  callstack_.push(ExpressionToFaPartFrameFactory::construct(GenericAst::AstPositionConst{&cur_expr, _idx}));
 }
 
 void SequenceExpressionToFaPartFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {

@@ -1,6 +1,7 @@
 
 #include "pmt/parserbuilder/terminal_identifier_expression_to_fa_part_frame.hpp"
 
+#include "pmt/base/algo.hpp"
 #include "pmt/parserbuilder/expression_to_fa_part_frame_factory.hpp"
 #include "pmt/parserbuilder/fa_part.hpp"
 
@@ -35,8 +36,8 @@ void TerminalIdentifierExpressionToFaPart::process_stage_0(CallstackType& callst
   ++_stage;
   callstack_.push(shared_from_this());
 
-  if (auto const itr = captures_._terminal_definitions.find(*_terminal_name); itr != captures_._terminal_definitions.end()) {
-    _ast_position = itr->second;
+  if (std::optional<size_t> const index = pmt::base::binary_find_index(captures_._terminal_names.begin(), captures_._terminal_names.end(), *_terminal_name); index.has_value()) {
+    _ast_position = captures_._terminal_definitions[*index];
   } else {
     throw std::runtime_error("Terminal '" + *_terminal_name + "' not defined");
   }

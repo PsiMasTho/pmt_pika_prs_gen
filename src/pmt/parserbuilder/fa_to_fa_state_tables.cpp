@@ -1,4 +1,4 @@
-#include "pmt/parserbuilder/lexer_table_transition_converter.hpp"
+#include "pmt/parserbuilder/fa_to_fa_state_tables.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -6,6 +6,7 @@
 #include <iterator>
 #include <limits>
 #include <utility>
+#include "pmt/util/parsert/generic_fa_state_tables.hpp"
 
 namespace pmt::parserbuilder {
 using namespace pmt::util::parsect;
@@ -22,8 +23,8 @@ auto index_1d_to_2d(size_t i_, size_t width_) -> std::pair<size_t, size_t> {
 }
 }  // namespace
 
-void LexerTableTransitionConverter::convert(pmt::util::parsect::Fa const& fa_, pmt::util::parsert::GenericLexerTables& lexer_tables_) {
-  Context context(fa_, lexer_tables_);
+void FaToFaStateTables::convert(pmt::util::parsect::Fa const& fa_, pmt::util::parsert::GenericFaStateTables& fa_state_tables_) {
+  Context context(fa_, fa_state_tables_);
 
   step_1(context);
   step_2(context);
@@ -34,7 +35,7 @@ void LexerTableTransitionConverter::convert(pmt::util::parsect::Fa const& fa_, p
   debug_post_checks(context);
 }
 
-void LexerTableTransitionConverter::step_1(Context& context_) {
+void FaToFaStateTables::step_1(Context& context_) {
   size_t const width = context_._fa_with_sink.get_size();
   context_._diff_mat_2d.reserve(width * width);
 
@@ -48,7 +49,7 @@ void LexerTableTransitionConverter::step_1(Context& context_) {
   }
 }
 
-void LexerTableTransitionConverter::step_2(Context& context_) {
+void FaToFaStateTables::step_2(Context& context_) {
   std::unordered_set<Fa::StateNrType> unvisited;
   std::generate_n(std::inserter(unvisited, unvisited.end()), context_._fa_with_sink.get_size(), [i = 0]() mutable { return i++; });
   context_._ordering.reserve(context_._fa_with_sink.get_size());
@@ -88,7 +89,7 @@ void LexerTableTransitionConverter::step_2(Context& context_) {
   context_._tables._state_nr_sink = context_._ordering.front();
 }
 
-void LexerTableTransitionConverter::step_3(Context& context_) {
+void FaToFaStateTables::step_3(Context& context_) {
   context_._tables._state_transition_entries.resize(context_._fa_with_sink.get_size());
   context_._tables._state_transition_entries[context_._ordering.front()]._default = context_._ordering.front();
 
@@ -116,7 +117,7 @@ void LexerTableTransitionConverter::step_3(Context& context_) {
   }
 }
 
-void LexerTableTransitionConverter::step_4(Context& context_) {
+void FaToFaStateTables::step_4(Context& context_) {
   std::unordered_map<Fa::StateNrType, uint64_t> shifts;
   std::unordered_map<size_t, std::pair<Fa::StateNrType, Fa::StateNrType>> occupied;  // <index, which state filled it, state_nr_to>
   size_t shift_max = 0;
@@ -165,7 +166,7 @@ void LexerTableTransitionConverter::step_4(Context& context_) {
   }
 }
 
-void LexerTableTransitionConverter::step_5(Context& context_) {
+void FaToFaStateTables::step_5(Context& context_) {
   // Calculate padding
   // Left:
   context_._tables._padding_l = 0;
@@ -195,7 +196,7 @@ void LexerTableTransitionConverter::step_5(Context& context_) {
   context_._tables._compressed_transition_entries.resize(context_._tables._compressed_transition_entries.size() - padding_r);
 }
 
-auto LexerTableTransitionConverter::debug_post_checks(Context const& context_) -> bool {
+auto FaToFaStateTables::debug_post_checks(Context const& context_) -> bool {
 #ifndef NDEBUG
   // check that transitions in the tables match the transitions in the fa
   for (size_t i = 0; i < context_._fa_with_sink.get_size(); ++i) {
@@ -212,9 +213,9 @@ auto LexerTableTransitionConverter::debug_post_checks(Context const& context_) -
   return true;
 }
 
-LexerTableTransitionConverter::Context::Context(pmt::util::parsect::Fa const& fa_, pmt::util::parsert::GenericLexerTables& lexer_tables_)
+FaToFaStateTables::Context::Context(pmt::util::parsect::Fa const& fa_, pmt::util::parsert::GenericFaStateTables& fa_state_tables_)
  : _fa_with_sink(fa_)
- , _tables(lexer_tables_) {
+ , _tables(fa_state_tables_) {
 }
 
 }  // namespace pmt::parserbuilder

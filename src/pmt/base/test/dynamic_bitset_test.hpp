@@ -14,6 +14,8 @@ class DynamicBitsetTest {
   static void test_bitwise_operations();
   static void test_countl();
   static void test_countr();
+  static void test_swap();
+  static void test_exchange();
   static void test_any();
   static void test_none();
   static void test_all();

@@ -7,7 +7,7 @@
 
 namespace pmt::base {
 
-template <std::default_initializable T_, uint64_t ID_ = namespace_id::SHARED_NAMESPACE_ID, uint64_t EXTRA_ = 0>
+template <std::default_initializable T_, uint64_t ID_ = NamespaceId::SHARED_NAMESPACE_ID, uint64_t EXTRA_ = 0>
 class Singleton {
  public:
   using value_type = T_;

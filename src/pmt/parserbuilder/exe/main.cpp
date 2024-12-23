@@ -7,8 +7,7 @@
 auto main(int argc, char const* const* argv) -> int try {
   pmt::parserbuilder::exe::Args const args(argc, argv);
 
-  pmt::parserbuilder::ParserBuilder builder(args._input_grammar_file, args._input_sample_file);
-  builder.build();
+  pmt::parserbuilder::ParserBuilder::build(args._input_grammar_file);
 
   return 0;
 } catch (std::exception const& e) {

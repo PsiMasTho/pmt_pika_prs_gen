@@ -56,22 +56,22 @@ class GrmAst {
     NtTerminalDefinition,
     NtTerminalSequence,
     NtTerminalChoices,
+    NtTerminalRepetition,
+    NtTerminalRepetitionRange,
+    NtTerminalRange,
     // - Rule productions
     NtRuleProduction,
     NtRuleParameter,
     NtRuleDefinition,
     NtRuleSequence,
     NtRuleChoices,
-    // - Rule / Terminal common
-    NtRepetition,
-    NtRepetitionRange,
-    NtRange,
     // - Grammar properties
     NtGrammarProperty,
     NtGrammarPropertyWhitespace,
     NtGrammarPropertyComment,
     NtGrammarPropertyCaseSensitive,
     // - Other
+    NtTerminalDefinitionPairList,
     NtTerminalDefinitionPair,
   };
 
