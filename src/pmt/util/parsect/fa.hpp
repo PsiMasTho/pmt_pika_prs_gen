@@ -29,7 +29,7 @@ class Fa {
   std::unordered_map<StateNrType, State> _states;
 
   // - Public functions -
-  void prune(StateNrType state_nr_from_ = 0);
+  void prune(StateNrType state_nr_from_ = 0, StateNrType state_nr_from_new_ = 0, bool renumber_ = false);
   void determinize();
   void minimize();
 

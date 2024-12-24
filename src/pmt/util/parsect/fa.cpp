@@ -5,49 +5,56 @@
 #include "pmt/util/parsect/fa_sink_wrapper.hpp"
 
 #include <climits>
-#include <stack>
+#include <vector>
 
 namespace pmt::util::parsect {
 using namespace pmt::base;
 
-void Fa::prune(StateNrType state_nr_from_) {
-  std::stack<StateNrType> stack;
-  DynamicBitset visited(_states.size(), false);
+void Fa::prune(StateNrType state_nr_from_, StateNrType state_nr_from_new_, bool renumber_) {
+  std::vector<StateNrType> pending;
+  std::unordered_map<StateNrType, StateNrType> visited;
 
-  auto const push_and_visit = [&stack, &visited](StateNrType item_) {
-    if (visited.set(item_, true)) {
-      return;
+  auto const push_and_visit = [&pending, &visited, &state_nr_from_new_, &renumber_](StateNrType state_nr_) -> StateNrType {
+    if (auto const itr = visited.find(state_nr_); itr != visited.end()) {
+      return itr->second;
     }
-    stack.push(item_);
+
+    Fa::StateNrType const state_nr_new = renumber_ ? state_nr_from_new_++ : state_nr_;
+
+    pending.push_back(state_nr_);
+    visited.insert_or_assign(state_nr_, state_nr_new);
+    return state_nr_new;
   };
 
-  auto const take = [&stack]() {
-    StateNrType ret = stack.top();
-    stack.pop();
+  auto const take = [&pending]() {
+    StateNrType ret = pending.back();
+    pending.pop_back();
     return ret;
   };
 
   push_and_visit(state_nr_from_);
 
-  while (!stack.empty()) {
-    StateNrType const state_nr_cur = take();
-    State& state = _states.find(state_nr_cur)->second;
+  Fa res;
 
-    for (auto const& [symbol, state_nr_next] : state._transitions._symbol_transitions) {
-      push_and_visit(state_nr_next);
+  while (!pending.empty()) {
+    StateNrType const state_nr_old = take();
+    StateNrType const state_nr_new = visited.find(state_nr_old)->second;
+    State const& state_old = _states.find(state_nr_old)->second;
+    State& state_new = res._states[state_nr_new];
+    state_new._accepts = state_old._accepts;
+
+    for (auto const& [symbol, state_nr_next_old] : state_old._transitions._symbol_transitions) {
+      StateNrType const state_nr_next_new = push_and_visit(state_nr_next_old);
+      state_new._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_next_new);
     }
 
-    for (StateNrType state_nr_next : state._transitions._epsilon_transitions) {
-      push_and_visit(state_nr_next);
+    for (StateNrType state_nr_next_old : state_old._transitions._epsilon_transitions) {
+      StateNrType const state_nr_next_new = push_and_visit(state_nr_next_old);
+      state_new._transitions._epsilon_transitions.insert(state_nr_next_new);
     }
   }
 
-  // Remove unvisited states
-  visited.inplace_not();
-  std::unordered_set<Fa::StateNrType> const to_remove = DynamicBitsetConverter::to_unordered_set<Fa::StateNrType>(visited);
-  for (Fa::StateNrType const state_nr : to_remove) {
-    _states.erase(state_nr);
-  }
+  *this = std::move(res);
 }
 
 void Fa::determinize() {
@@ -70,12 +77,12 @@ void Fa::subset() {
   std::unordered_map<StateNrType, std::unordered_set<StateNrType>> e_closure_cache;
   std::unordered_map<StateNrType, std::unordered_set<StateNrType>> new_to_old;
   std::unordered_map<DynamicBitset, StateNrType> old_to_new;
-  std::stack<StateNrType> stack;
+  std::vector<StateNrType> pending;
   Fa result;
 
-  auto const take = [&stack]() {
-    StateNrType ret = stack.top();
-    stack.pop();
+  auto const take = [&pending]() {
+    StateNrType ret = pending.back();
+    pending.pop_back();
     return ret;
   };
 
@@ -89,13 +96,13 @@ void Fa::subset() {
     result._states[state_nr];
     new_to_old.insert_or_assign(state_nr, std::move(state_nr_set_));
     old_to_new.insert_or_assign(state_nr_set_bitset, state_nr);
-    stack.push(state_nr);
+    pending.push_back(state_nr);
     return state_nr;
   };
 
   push_and_visit(get_e_closure(0, e_closure_cache));
 
-  while (!stack.empty()) {
+  while (!pending.empty()) {
     StateNrType const state_nr_cur = take();
     State& state_cur = result._states.find(state_nr_cur)->second;
     std::unordered_set<StateNrType> const& state_nr_set_cur = new_to_old.find(state_nr_cur)->second;
@@ -125,13 +132,13 @@ void Fa::subset() {
 
 auto Fa::get_e_closure(StateNrType state_nr_from_, std::unordered_map<StateNrType, std::unordered_set<StateNrType>>& cache_) const -> std::unordered_set<StateNrType> {
   std::unordered_set<StateNrType> ret;
-  std::stack<StateNrType> stack;
-  stack.push(state_nr_from_);
+  std::vector<StateNrType> pending;
+  pending.push_back(state_nr_from_);
   ret.insert(state_nr_from_);
 
-  while (!stack.empty()) {
-    StateNrType const state_nr_cur = stack.top();
-    stack.pop();
+  while (!pending.empty()) {
+    StateNrType const state_nr_cur = pending.back();
+    pending.pop_back();
 
     if (auto const itr = cache_.find(state_nr_cur); itr != cache_.end()) {
       ret.insert(itr->second.begin(), itr->second.end());
@@ -141,7 +148,7 @@ auto Fa::get_e_closure(StateNrType state_nr_from_, std::unordered_map<StateNrTyp
     State const& state_cur = _states.find(state_nr_cur)->second;
     for (StateNrType state_nr_next : state_cur._transitions._epsilon_transitions) {
       if (ret.insert(state_nr_next).second) {
-        stack.push(state_nr_next);
+        pending.push_back(state_nr_next);
       }
     }
   }
@@ -272,13 +279,13 @@ void Fa::hopcroft() {
     }
   }
 
-  std::stack<DynamicBitset const*> stack;
+  std::vector<DynamicBitset const*> pending;
   std::unordered_map<DynamicBitset const*, StateNrType> visited;
   Fa result;
 
-  auto const take = [&stack]() {
-    DynamicBitset const* ret = stack.top();
-    stack.pop();
+  auto const take = [&pending]() {
+    DynamicBitset const* ret = pending.back();
+    pending.pop_back();
     return ret;
   };
 
@@ -290,7 +297,7 @@ void Fa::hopcroft() {
       itr = visited.insert_or_assign(item_, result.get_unused_state_nr()).first;
     }
 
-    stack.push(item_);
+    pending.push_back(item_);
     visited.insert_or_assign(item_, itr->second);
     result._states[itr->second];
     return itr->second;
@@ -298,7 +305,7 @@ void Fa::hopcroft() {
 
   push_and_visit(state_nr_to_equiv_class.find(0)->second);
 
-  while (!stack.empty()) {
+  while (!pending.empty()) {
     DynamicBitset const* bitset_cur = take();
     StateNrType const state_nr_cur = visited.find(bitset_cur)->second;
     State& state_cur = result._states.find(state_nr_cur)->second;

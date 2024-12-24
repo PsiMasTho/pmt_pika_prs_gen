@@ -1,13 +1,14 @@
 #pragma once
 
+#include "pmt/base/hashable.hpp"
+
 #include <array>
-#include <functional>
 #include <memory>
 #include <ratio>
 
 namespace pmt::base {
 
-class DynamicBitset {
+class DynamicBitset : public Hashable<DynamicBitset> {
  public:
   // - Public types / constants -
   using ChunkType = std::uint64_t;
@@ -82,10 +83,10 @@ class DynamicBitset {
   // -- Cloning --
   auto clone_asymmetric_difference(const DynamicBitset& other_) const -> DynamicBitset;  // in this but not in other
 
- private:
-  // - Friends -
-  friend struct std::hash<DynamicBitset>;
+  // - Hashing -
+  auto hash() const -> size_t;
 
+ private:
   // - Private types / constants -
   using GrowthRate = std::ratio<3, 2>;
   static constexpr size_t INITIAL_CAPACITY = CHUNK_BIT;
@@ -112,10 +113,3 @@ class DynamicBitset {
   size_t _capacity;  // in bits
 };
 }  // namespace pmt::base
-
-namespace std {
-template <>
-struct hash<pmt::base::DynamicBitset> {
-  auto operator()(const pmt::base::DynamicBitset& bitset_) const -> size_t;
-};
-}  // namespace std

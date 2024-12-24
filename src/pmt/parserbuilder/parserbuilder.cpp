@@ -43,6 +43,9 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   step_4(context);
   step_5(context);
   step_6(context);
+  step_7(context);
+  step_8(context);
+  step_9(context);
 
   // Debug print everything...
   std::cout << "Terminal names: ";
@@ -85,7 +88,7 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   std::cout << "Rule hide values: " << DynamicBitsetConverter::to_string(context._rule_hide_values) << std::endl;
 
   write_dot(context, context._fa);
- }
+}
 
 void ParserBuilder::step_1(Context& context_) {
   for (size_t i = 0; i < context_._ast->get_children_size(); ++i) {
@@ -275,6 +278,10 @@ void ParserBuilder::step_3(Context& context_) {
 }
 
 void ParserBuilder::step_4(Context& context_) {
+  if (context_._whitespace_definition.first == nullptr) {
+    return;
+  }
+
   Fa fa_whitespace;
   FaPart fa_part_whitespace = TerminalDefinitionToFaPart::convert(fa_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions);
   Fa::StateNrType const state_nr_end = fa_whitespace.get_unused_state_nr();
@@ -314,7 +321,6 @@ void ParserBuilder::step_4(Context& context_) {
 void ParserBuilder::step_5(Context& context_) {
   context_._terminal_accepts.resize(context_._terminal_names.size(), std::nullopt);
 
-  size_t accept_count = 0;
   std::stack<GenericAst::AstPositionConst> stack;
   std::unordered_set<GenericAst::AstPositionConst> visited;
 
@@ -342,7 +348,7 @@ void ParserBuilder::step_5(Context& context_) {
         if (!index.has_value()) {
           throw std::runtime_error("Terminal not found: " + name);
         }
-        context_._terminal_accepts[*index] = accept_count++;
+        context_._terminal_accepts[*index] = context_._accept_count++;
         push_and_visit(context_._terminal_definitions[*index]);
       } break;
       case GrmAst::TkRuleIdentifier:
@@ -352,6 +358,8 @@ void ParserBuilder::step_5(Context& context_) {
       case GrmAst::NtRuleDefinition:
       case GrmAst::NtTerminalChoices:
       case GrmAst::NtTerminalSequence:
+      case GrmAst::NtRuleChoices:
+      case GrmAst::NtRuleSequence:
         for (size_t i = 0; i < cur.get_children_size(); ++i) {
           push_and_visit(GenericAst::AstPositionConst{&cur, i});
         }
@@ -364,44 +372,143 @@ void ParserBuilder::step_5(Context& context_) {
 }
 
 void ParserBuilder::step_6(Context& context_) {
- Fa::StateNrType const state_nr_start = context_._fa.get_unused_state_nr();
- Fa::State& state_start = context_._fa._states[state_nr_start];
-
- Fa::StateNrType const state_nr_terminal_start = context_._fa.get_unused_state_nr();
- Fa::State& state_terminal_start = context_._fa._states[state_nr_terminal_start];
-
- for (size_t i = 0; i < context_._comment_open_definitions.size(); ++i) {
-  FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(context_._fa, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions);
-  FaPart fa_part_rule_close = TerminalDefinitionToFaPart::convert(context_._fa, "@comment_close" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions);
-  
-  Fa::StateNrType const state_nr_rule_close = *fa_part_rule_close.get_incoming_state_nr();
-
-  fa_part_rule_open.connect_outgoing_transitions_to(state_nr_rule_close, context_._fa);
-  fa_part_rule_close.connect_outgoing_transitions_to(state_nr_terminal_start, context_._fa);
-
-  Fa::StateNrType const state_nr_rule_open = *fa_part_rule_open.get_incoming_state_nr();
-  
-  Fa::State& state_rule_open = context_._fa._states[state_nr_rule_open];
-  Fa::State& state_rule_close = context_._fa._states[state_nr_rule_close];
-
-  state_start._transitions._epsilon_transitions.insert(state_nr_rule_open);
- 
-  for (Fa::SymbolType const symbol : context_._whitespace) {
-   if (!state_rule_open._transitions._symbol_transitions.contains(symbol)) {
-    state_rule_open._transitions._symbol_transitions[symbol] = state_nr_start;
-   }
-   if (!state_rule_close._transitions._symbol_transitions.contains(symbol)) {
-    state_rule_close._transitions._symbol_transitions[symbol] = state_nr_rule_close;
-   }
+  for (size_t i = 0; i < context_._comment_open_definitions.size(); ++i) {
+    Fa fa_comment_open;
+    FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(fa_comment_open, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions);
+    Fa::StateNrType const state_nr_end = fa_comment_open.get_unused_state_nr();
+    fa_comment_open._states[state_nr_end]._accepts.resize(1, true);
+    fa_part_rule_open.connect_outgoing_transitions_to(state_nr_end, fa_comment_open);
+    fa_comment_open.determinize();
+    context_._comment_open_fas.push_back(std::move(fa_comment_open));
   }
- }
 
- for (size_t i = 0; i < context_._terminal_accepts.size(); ++i) {
-  if (!context_._terminal_accepts[i].has_value()) {
-   continue;
+  for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
+    Fa fa_comment_close;
+    FaPart fa_part_rule_close = TerminalDefinitionToFaPart::convert(fa_comment_close, "@comment_close_" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions);
+    Fa::StateNrType const state_nr_end = fa_comment_close.get_unused_state_nr();
+    fa_comment_close._states[state_nr_end]._accepts.resize(1, true);
+    fa_part_rule_close.connect_outgoing_transitions_to(state_nr_end, fa_comment_close);
+    fa_comment_close.determinize();
+    context_._comment_close_fas.push_back(std::move(fa_comment_close));
   }
-  
- }
+
+  for (size_t i = 0; i < context_._terminal_accepts.size(); ++i) {
+    if (!context_._terminal_accepts[i].has_value()) {
+      continue;
+    }
+
+    Fa fa_terminal;
+    FaPart fa_part_terminal = TerminalDefinitionToFaPart::convert(fa_terminal, context_._terminal_id_names[i], context_._terminal_definitions[i], context_._terminal_names, context_._terminal_definitions);
+    Fa::StateNrType const state_nr_end = fa_terminal.get_unused_state_nr();
+    Fa::State& state_end = fa_terminal._states[state_nr_end];
+    state_end._accepts.resize(context_._accept_count, false);
+    state_end._accepts.set(*context_._terminal_accepts[i], true);
+    fa_part_terminal.connect_outgoing_transitions_to(state_nr_end, fa_terminal);
+    fa_terminal.determinize();
+    context_._terminal_fas.push_back(std::move(fa_terminal));
+  }
+}
+
+void ParserBuilder::step_7(Context& context_) {
+  for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
+    Fa& fa_comment_close = context_._comment_close_fas[i];
+
+    std::vector<Fa::StateNrType> pending;
+    std::unordered_set<Fa::StateNrType> visited;
+
+    auto const push_and_visit = [&pending, &visited](Fa::StateNrType state_nr_) {
+      if (visited.contains(state_nr_)) {
+        return;
+      }
+
+      pending.push_back(state_nr_);
+      visited.insert(state_nr_);
+    };
+
+    push_and_visit(0);
+
+    while (!pending.empty()) {
+      Fa::StateNrType const state_nr_cur = pending.back();
+      pending.pop_back();
+
+      Fa::State& state_cur = fa_comment_close._states.find(state_nr_cur)->second;
+
+      if (state_cur._accepts.popcnt() == 0) {
+        for (Fa::SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
+          auto const itr = state_cur._transitions._symbol_transitions.find(symbol);
+          if (itr != state_cur._transitions._symbol_transitions.end()) {
+            push_and_visit(itr->second);
+          } else {
+            state_cur._transitions._symbol_transitions.insert_or_assign(symbol, 0);
+          }
+        }
+      }
+    }
+  }
+}
+
+void ParserBuilder::step_8(Context& context_) {
+  Fa::StateNrType const state_nr_start = context_._fa.get_unused_state_nr();
+  context_._fa._states[state_nr_start];
+
+  for (size_t i = 0; i < context_._comment_open_fas.size(); ++i) {
+    Fa& fa_comment_open = context_._comment_open_fas[i];
+    Fa::StateNrType const state_nr_comment_open = context_._fa._states.size();
+    fa_comment_open.prune(0, state_nr_comment_open, true);
+
+    Fa& fa_comment_close = context_._comment_close_fas[i];
+    Fa::StateNrType const state_nr_comment_close = state_nr_comment_open + fa_comment_close._states.size();
+    fa_comment_close.prune(0, state_nr_comment_close, true);
+
+    context_._fa._states[state_nr_start]._transitions._epsilon_transitions.insert(state_nr_comment_open);
+
+    for (auto& [state_nr, state] : fa_comment_open._states) {
+      if (state._accepts.popcnt() == 0) {
+        continue;
+      }
+      state._accepts.clear();
+      state._transitions._epsilon_transitions.insert(state_nr_comment_close);
+    }
+    context_._fa._states.merge(fa_comment_open._states);
+
+    for (auto& [state_nr, state] : fa_comment_close._states) {
+      if (state._accepts.popcnt() == 0) {
+        continue;
+      }
+      state._accepts.clear();
+      state._transitions._epsilon_transitions.insert(state_nr_start);
+    }
+    context_._fa._states.merge(fa_comment_close._states);
+
+    for (Fa::SymbolType const symbol : context_._whitespace) {
+      if (context_._fa._states[state_nr_comment_open]._transitions._symbol_transitions.contains(symbol)) {
+        throw std::runtime_error("Comment open conflicts with whitespace");
+      }
+      context_._fa._states[state_nr_comment_open]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_start);
+    }
+  }
+
+  for (size_t i = 0; i < context_._terminal_fas.size(); ++i) {
+    Fa& fa_terminal = context_._terminal_fas[i];
+    Fa::StateNrType const state_nr_terminal = context_._fa.get_unused_state_nr();
+    fa_terminal.prune(0, state_nr_terminal, true);
+    context_._fa._states.merge(fa_terminal._states);
+
+    context_._fa._states[state_nr_start]._transitions._epsilon_transitions.insert(state_nr_terminal);
+
+    for (Fa::SymbolType const symbol : context_._whitespace) {
+      if (context_._fa._states[state_nr_terminal]._transitions._symbol_transitions.contains(symbol)) {
+        throw std::runtime_error("Terminal conflicts with whitespace");
+      }
+      context_._fa._states[state_nr_terminal]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_start);
+    }
+  }
+
+  context_._fa.determinize();
+  context_._fa.minimize();
+}
+
+void ParserBuilder::step_9(Context& context_) {
 
 }
 

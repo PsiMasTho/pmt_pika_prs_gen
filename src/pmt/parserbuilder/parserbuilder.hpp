@@ -2,6 +2,7 @@
 
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/util/parsect/fa.hpp"
+#include "pmt/util/parsect/flat_grammar.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
 
 #include <optional>
@@ -29,14 +30,13 @@ class ParserBuilder {
   static void step_1_handle_rule_production(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
 
   static void step_2(Context& context_);
-
   static void step_3(Context& context_);
-
   static void step_4(Context& context_);
-
   static void step_5(Context& context_);
-
   static void step_6(Context& context_);
+  static void step_7(Context& context_);
+  static void step_8(Context& context_);
+  static void step_9(Context& context_);
 
   static void write_dot(Context& context_, pmt::util::parsect::Fa const& fa_);
 
@@ -63,14 +63,20 @@ class ParserBuilder::Context {
   pmt::base::DynamicBitset _terminal_case_sensitive_values;
   pmt::base::DynamicBitset _terminal_case_sensitive_present;
 
+  size_t _accept_count = 0;
+
   std::vector<pmt::util::parsert::GenericAst::AstPositionConst> _terminal_definitions;
 
   std::vector<pmt::util::parsert::GenericAst::AstPositionConst> _comment_open_definitions;
   std::vector<pmt::util::parsert::GenericAst::AstPositionConst> _comment_close_definitions;
 
-  pmt::util::parsert::GenericAst::AstPositionConst _whitespace_definition;
+  pmt::util::parsert::GenericAst::AstPositionConst _whitespace_definition{nullptr, 0};
 
   pmt::util::parsect::Fa _fa;
+
+  std::vector<pmt::util::parsect::Fa> _terminal_fas;
+  std::vector<pmt::util::parsect::Fa> _comment_open_fas;
+  std::vector<pmt::util::parsect::Fa> _comment_close_fas;
 
   std::vector<std::string> _rule_names;
   std::vector<std::string> _rule_id_names;
@@ -83,6 +89,8 @@ class ParserBuilder::Context {
   std::optional<bool> _case_sensitive;
   std::string _start_symbol;
   std::set<pmt::util::parsect::Fa::SymbolType> _whitespace;
+
+  pmt::util::parsect::FlatGrammar _flat_grammar;
 
   size_t _dot_file_count = 0;
 };

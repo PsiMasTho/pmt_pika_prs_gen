@@ -1,6 +1,8 @@
 #include "pmt/util/parsert/generic_lexer.hpp"
 
+#include "pmt/base/numeric_cast.hpp"
 #include "pmt/util/parsert/generic_fa_state_tables.hpp"
+#include "pmt/util/parsert/generic_tables_base.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -14,9 +16,9 @@ GenericLexer::GenericLexer(std::string_view input_, GenericLexerTables tables_)
  : _tables(std::move(tables_))
  , _accepts_valid(tables_._accepts_width, false)
  , _accepts_all(tables_._accepts_width, true)
- , _begin(input_.data())
- , _cursor(input_.data())
- , _end(input_.data() + input_.size()) {
+ , _buffer(input_.data())
+ , _buffer_size(input_.size())
+ , _cursor(0) {
 }
 
 auto GenericLexer::lex() -> LexReturn {
@@ -24,24 +26,15 @@ auto GenericLexer::lex() -> LexReturn {
 }
 
 auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
-  while (_cursor != _end && (std::strchr(" \t\r\n", *_cursor) != nullptr)) {
-    ++_cursor;
-  }
-
   LexReturn ret;
-
-  if (_cursor == _end) {
-    ret._token._id = GenericId::IdEoi;
-    return ret;
-  }
 
   GenericId::IdType id = GenericId::IdUninitialized;
   size_t countl = std::numeric_limits<size_t>::max();
-  char const* te = nullptr;  // Token end
+  size_t te = _cursor;  // Token end
 
   uint64_t state_nr_cur = GenericFaStateTables::StateNrStart;
 
-  for (char const* p = _cursor; _cursor <= _end; ++p) {
+  for (size_t p = _cursor; p <= _buffer_size; ++p) {
     if (state_nr_cur == _tables._fa_state_tables._state_nr_sink) {
       break;
     }
@@ -56,21 +49,22 @@ auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
       id = _tables._accept_ids[countl];
     }
 
-    if (p == _end || state_nr_cur == _tables._fa_state_tables._state_nr_sink) {
+    if (state_nr_cur == _tables._fa_state_tables._state_nr_sink) {
       break;
     }
 
-    state_nr_cur = _tables._fa_state_tables.get_state_nr_next(state_nr_cur, *p);
+    GenericTablesBase::TableIndexType const symbol = (p == _buffer_size) ? GenericTablesBase::SYMBOL_EOI : NumericCast::cast<GenericTablesBase::TableIndexType>(_buffer[p]);
+    state_nr_cur = _tables._fa_state_tables.get_state_nr_next(state_nr_cur, symbol);
   }
 
-  if (te != nullptr) {
+  if (id != GenericId::IdUninitialized) {
     ret._accepted = countl;
-    ret._token._token = std::string_view(_cursor, te);
+    ret._token._token = std::string_view(_buffer + _cursor, te - _cursor);
     ret._token._id = id;
     _cursor = te;
     return ret;
   } else {
-    throw std::runtime_error("Unexpected character: " + std::string(1, *_cursor));
+    throw std::runtime_error("Unexpected character");
   }
 }
 

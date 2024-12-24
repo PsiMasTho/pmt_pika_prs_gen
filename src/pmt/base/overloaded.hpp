@@ -3,7 +3,7 @@
 namespace pmt::base {
 
 template <typename... TS_>
-class Overloaded : TS_... {
+class Overloaded : public TS_... {
  public:
   using TS_::operator()...;
 };

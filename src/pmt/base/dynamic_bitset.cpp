@@ -386,6 +386,14 @@ auto DynamicBitset::clone_asymmetric_difference(const DynamicBitset& other_) con
   return ret;
 }
 
+auto DynamicBitset::hash() const -> size_t {
+  size_t seed = 0;
+  for (size_t i = 0; i < get_required_chunk_count(size()); ++i) {
+    pmt::base::Hash::combine(_data.get()[i], seed);
+  }
+  return seed;
+}
+
 void DynamicBitset::set_trailing_chunk(bool value_) {
   if (_size % CHUNK_BIT == 0) {
     return;
@@ -439,13 +447,3 @@ auto DynamicBitset::get_next_capacity(size_t capacity_) -> size_t {
 }
 
 }  // namespace pmt::base
-
-namespace std {
-auto hash<pmt::base::DynamicBitset>::operator()(const pmt::base::DynamicBitset& bitset_) const -> size_t {
-  size_t seed = 0;
-  for (size_t i = 0; i < bitset_.get_required_chunk_count(bitset_.size()); ++i) {
-    pmt::base::Hash::combine(bitset_._data.get()[i], seed);
-  }
-  return seed;
-}
-}  // namespace std

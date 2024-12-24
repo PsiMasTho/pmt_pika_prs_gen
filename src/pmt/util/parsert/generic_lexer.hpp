@@ -30,9 +30,9 @@ class GenericLexer {
   GenericLexerTables _tables;
   pmt::base::DynamicBitset _accepts_valid;
   pmt::base::DynamicBitset _accepts_all;
-  char const* _begin = nullptr;
-  char const* _cursor = nullptr;
-  char const* _end = nullptr;
+  char const* _buffer = nullptr;
+  size_t _buffer_size = 0;
+  size_t _cursor = 0;
 };
 
 }  // namespace pmt::util::parsert
