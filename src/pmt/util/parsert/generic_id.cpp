@@ -7,22 +7,22 @@ namespace pmt::util::parsert {
 auto GenericId::id_to_string(IdType id_) -> std::string {
   switch (id_) {
     case IdUninitialized:
-      return "Uninitialized";
+      return "IdUninitialized";
     case IdDefault:
-      return "Default";
+      return "IdDefault";
     case IdEoi:
-      return "Eoi";
+      return "IdEoi";
     default:
       throw std::runtime_error("Invalid id");
   }
 }
 
 auto GenericId::string_to_id(std::string_view str_) -> IdType {
-  if (str_ == "Uninitialized") {
+  if (str_ == "IdUninitialized") {
     return IdUninitialized;
-  } else if (str_ == "Default") {
+  } else if (str_ == "IdDefault") {
     return IdDefault;
-  } else if (str_ == "Eoi") {
+  } else if (str_ == "IdEoi") {
     return IdEoi;
   } else {
     throw std::runtime_error("Invalid id");

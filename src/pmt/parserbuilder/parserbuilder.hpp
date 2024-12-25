@@ -20,25 +20,30 @@ class ParserBuilder {
   static void build(std::string_view input_grammar_path_);
 
  private:
-  static void step_1(Context& context_);
-  static void step_1_handle_grammar_property(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
-  static void step_1_handle_grammar_property_case_sensitive(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
-  static void step_1_handle_grammar_property_start(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
-  static void step_1_handle_grammar_property_whitespace(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
-  static void step_1_handle_grammar_property_comment(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
-  static void step_1_handle_terminal_production(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
-  static void step_1_handle_rule_production(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01(Context& context_);
+  static void step_01_handle_grammar_property(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01_handle_grammar_property_case_sensitive(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01_handle_grammar_property_start(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01_handle_grammar_property_whitespace(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01_handle_grammar_property_comment(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01_handle_terminal_production(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
+  static void step_01_handle_rule_production(Context& context_, pmt::util::parsert::GenericAst::AstPositionConst position_);
 
-  static void step_2(Context& context_);
-  static void step_3(Context& context_);
-  static void step_4(Context& context_);
-  static void step_5(Context& context_);
-  static void step_6(Context& context_);
-  static void step_7(Context& context_);
-  static void step_8(Context& context_);
-  static void step_9(Context& context_);
+  static void step_02(Context& context_);
+  static void step_03(Context& context_);
+  static void step_04(Context& context_);
+  static void step_05(Context& context_);
+  static void step_06(Context& context_);
+  static void step_07(Context& context_);
+  static void step_08(Context& context_);
+  static void step_09(Context& context_);
+  static void step_10(Context& context_);
+  static void step_11(Context& context_);
+  static void step_12(Context& context_);
 
   static void write_dot(Context& context_, pmt::util::parsect::Fa const& fa_);
+
+  static auto accepts_to_label(Context& context_, size_t accept_idx_) -> std::string;
 
   static inline const char* const DOT_FILE_PREFIX = "graph_";
   static inline size_t const DOT_FILE_MAX_STATES = 750;
@@ -63,7 +68,7 @@ class ParserBuilder::Context {
   pmt::base::DynamicBitset _terminal_case_sensitive_values;
   pmt::base::DynamicBitset _terminal_case_sensitive_present;
 
-  size_t _accept_count = 0;
+  std::vector<size_t> _accepts;
 
   std::vector<pmt::util::parsert::GenericAst::AstPositionConst> _terminal_definitions;
 

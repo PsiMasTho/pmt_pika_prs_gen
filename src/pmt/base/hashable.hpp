@@ -24,7 +24,7 @@ template <typename CRTP_>
   requires std::is_base_of_v<pmt::base::Hashable<CRTP_>, CRTP_>
 struct hash<CRTP_> {
   auto operator()(CRTP_ const& hashable_) const -> size_t {
-   return hashable_.hash();
+    return hashable_.hash();
   }
 };
 }  // namespace std

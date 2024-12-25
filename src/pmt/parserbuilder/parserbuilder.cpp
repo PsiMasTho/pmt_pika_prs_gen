@@ -7,18 +7,16 @@
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
-#include "pmt/parserbuilder/lexer_builder.hpp"
-#include "pmt/parserbuilder/table_writer.hpp"
 #include "pmt/parserbuilder/terminal_definition_to_fa_part.hpp"
 #include "pmt/util/parsect/graph_writer.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
 #include "pmt/util/parsert/generic_ast_printer.hpp"
-#include "pmt/util/parsert/generic_lexer.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <stack>
+#include <utility>
 
 namespace pmt::parserbuilder {
 using namespace pmt::util::parsert;
@@ -37,15 +35,18 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   GenericAstPrinter printer(GrmAst::id_to_string);
   printer.print(*context._ast, std::cout);
 
-  step_1(context);
-  step_2(context);
-  step_3(context);
-  step_4(context);
-  step_5(context);
-  step_6(context);
-  step_7(context);
-  step_8(context);
-  step_9(context);
+  step_01(context);
+  step_02(context);
+  step_03(context);
+  step_04(context);
+  step_05(context);
+  step_06(context);
+  step_07(context);
+  step_08(context);
+  step_09(context);
+  step_10(context);
+  step_11(context);
+  step_12(context);
 
   // Debug print everything...
   std::cout << "Terminal names: ";
@@ -90,62 +91,62 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   write_dot(context, context._fa);
 }
 
-void ParserBuilder::step_1(Context& context_) {
+void ParserBuilder::step_01(Context& context_) {
   for (size_t i = 0; i < context_._ast->get_children_size(); ++i) {
     GenericAst const& child = *context_._ast->get_child_at(i);
     switch (child.get_id()) {
       case GrmAst::NtGrammarProperty:
-        step_1_handle_grammar_property(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
+        step_01_handle_grammar_property(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
         break;
       case GrmAst::NtTerminalProduction:
-        step_1_handle_terminal_production(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
+        step_01_handle_terminal_production(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
         break;
       case GrmAst::NtRuleProduction:
-        step_1_handle_rule_production(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
+        step_01_handle_rule_production(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
         break;
     }
   }
 }
 
-void ParserBuilder::step_1_handle_grammar_property(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_grammar_property(Context& context_, GenericAst::AstPositionConst position_) {
   GenericAst const& grammar_property = *position_.first->get_child_at(position_.second);
   GenericAst const& property_name = *grammar_property.get_child_at(0);
   GenericAst::AstPositionConst const property_value_position(&grammar_property, 1);
   switch (property_name.get_id()) {
     case GrmAst::TkGrammarPropertyCaseSensitive:
-      step_1_handle_grammar_property_case_sensitive(context_, property_value_position);
+      step_01_handle_grammar_property_case_sensitive(context_, property_value_position);
       break;
     case GrmAst::TkGrammarPropertyStart:
-      step_1_handle_grammar_property_start(context_, property_value_position);
+      step_01_handle_grammar_property_start(context_, property_value_position);
       break;
     case GrmAst::TkGrammarPropertyWhitespace:
-      step_1_handle_grammar_property_whitespace(context_, property_value_position);
+      step_01_handle_grammar_property_whitespace(context_, property_value_position);
       break;
     case GrmAst::TkGrammarPropertyComment:
-      step_1_handle_grammar_property_comment(context_, property_value_position);
+      step_01_handle_grammar_property_comment(context_, property_value_position);
       break;
     default:
       pmt_unreachable();
   }
 }
 
-void ParserBuilder::step_1_handle_grammar_property_case_sensitive(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_grammar_property_case_sensitive(Context& context_, GenericAst::AstPositionConst position_) {
   GenericAst const& value = *position_.first->get_child_at(position_.second);
   assert(value.get_id() == GrmAst::TkBooleanLiteral);
   context_._case_sensitive = value.get_string() == "true";
 }
 
-void ParserBuilder::step_1_handle_grammar_property_start(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_grammar_property_start(Context& context_, GenericAst::AstPositionConst position_) {
   GenericAst const& value = *position_.first->get_child_at(position_.second);
   assert(value.get_id() == GrmAst::TkRuleIdentifier);
   context_._start_symbol = value.get_string();
 }
 
-void ParserBuilder::step_1_handle_grammar_property_whitespace(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_grammar_property_whitespace(Context& context_, GenericAst::AstPositionConst position_) {
   context_._whitespace_definition = position_;
 }
 
-void ParserBuilder::step_1_handle_grammar_property_comment(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_grammar_property_comment(Context& context_, GenericAst::AstPositionConst position_) {
   GenericAst const& terminal_definition_pair_list = *position_.first->get_child_at(position_.second);
   for (size_t i = 0; i < terminal_definition_pair_list.get_children_size(); ++i) {
     GenericAst const& terminal_definition_pair = *terminal_definition_pair_list.get_child_at(i);
@@ -154,7 +155,7 @@ void ParserBuilder::step_1_handle_grammar_property_comment(Context& context_, Ge
   }
 }
 
-void ParserBuilder::step_1_handle_terminal_production(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_terminal_production(Context& context_, GenericAst::AstPositionConst position_) {
   GenericAst const& terminal_production = *position_.first->get_child_at(position_.second);
   std::string terminal_name = terminal_production.get_child_at(0)->get_string();
 
@@ -184,11 +185,11 @@ void ParserBuilder::step_1_handle_terminal_production(Context& context_, Generic
   context_._terminal_names.push_back(terminal_name);
   context_._terminal_id_names.push_back(terminal_id_name);
   context_._terminal_case_sensitive_present.push_back(terminal_case_sensitive.has_value());
-  context_._terminal_case_sensitive_values.push_back(terminal_case_sensitive.value_or(false));
+  context_._terminal_case_sensitive_values.push_back(terminal_case_sensitive.value_or(CASE_SENSITIVITY_DEFAULT));
   context_._terminal_definitions.push_back(terminal_definition_position);
 }
 
-void ParserBuilder::step_1_handle_rule_production(Context& context_, GenericAst::AstPositionConst position_) {
+void ParserBuilder::step_01_handle_rule_production(Context& context_, GenericAst::AstPositionConst position_) {
   GenericAst const& rule_production = *position_.first->get_child_at(position_.second);
   std::string rule_name = rule_production.get_child_at(0)->get_string();
 
@@ -231,7 +232,15 @@ void ParserBuilder::step_1_handle_rule_production(Context& context_, GenericAst:
   context_._rule_definitions.push_back(rule_definition_position);
 }
 
-void ParserBuilder::step_2(Context& context_) {
+void ParserBuilder::step_02(Context& context_) {
+  context_._terminal_names.push_back("@eoi");
+  context_._terminal_id_names.push_back(GenericId::id_to_string(GenericId::IdEoi));
+  context_._terminal_case_sensitive_present.push_back(CASE_SENSITIVITY_DEFAULT);
+  context_._terminal_case_sensitive_values.push_back(CASE_SENSITIVITY_DEFAULT);
+  context_._terminal_definitions.push_back(GenericAst::AstPositionConst{nullptr, 0});
+}
+
+void ParserBuilder::step_03(Context& context_) {
   // Sort the terminals by name
   std::vector<size_t> ordering;
   std::generate_n(std::back_inserter(ordering), context_._terminal_names.size(), [i = 0]() mutable { return i++; });
@@ -254,7 +263,7 @@ void ParserBuilder::step_2(Context& context_) {
   apply_permutation(context_._rule_definitions.begin(), context_._rule_definitions.end(), ordering.begin());
 }
 
-void ParserBuilder::step_3(Context& context_) {
+void ParserBuilder::step_04(Context& context_) {
   // Check that the terminal names are unique
   if (auto const itr = std::adjacent_find(context_._terminal_names.begin(), context_._terminal_names.end()); itr != context_._terminal_names.end()) {
     throw std::runtime_error("Terminal defined more than once: " + *itr);
@@ -277,7 +286,7 @@ void ParserBuilder::step_3(Context& context_) {
   }
 }
 
-void ParserBuilder::step_4(Context& context_) {
+void ParserBuilder::step_05(Context& context_) {
   if (context_._whitespace_definition.first == nullptr) {
     return;
   }
@@ -318,8 +327,11 @@ void ParserBuilder::step_4(Context& context_) {
   }
 }
 
-void ParserBuilder::step_5(Context& context_) {
+void ParserBuilder::step_06(Context& context_) {
   context_._terminal_accepts.resize(context_._terminal_names.size(), std::nullopt);
+  size_t const index_eoi = *pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
+  context_._terminal_accepts[index_eoi] = context_._accepts.size();
+  context_._accepts.push_back(index_eoi);
 
   std::stack<GenericAst::AstPositionConst> stack;
   std::unordered_set<GenericAst::AstPositionConst> visited;
@@ -348,8 +360,8 @@ void ParserBuilder::step_5(Context& context_) {
         if (!index.has_value()) {
           throw std::runtime_error("Terminal not found: " + name);
         }
-        context_._terminal_accepts[*index] = context_._accept_count++;
-        push_and_visit(context_._terminal_definitions[*index]);
+        context_._terminal_accepts[*index] = context_._accepts.size();
+        context_._accepts.push_back(*index);
       } break;
       case GrmAst::TkRuleIdentifier:
         push_and_visit(context_.try_find_rule_definition(cur.get_string()));
@@ -371,7 +383,7 @@ void ParserBuilder::step_5(Context& context_) {
   }
 }
 
-void ParserBuilder::step_6(Context& context_) {
+void ParserBuilder::step_07(Context& context_) {
   for (size_t i = 0; i < context_._comment_open_definitions.size(); ++i) {
     Fa fa_comment_open;
     FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(fa_comment_open, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions);
@@ -393,7 +405,7 @@ void ParserBuilder::step_6(Context& context_) {
   }
 
   for (size_t i = 0; i < context_._terminal_accepts.size(); ++i) {
-    if (!context_._terminal_accepts[i].has_value()) {
+    if (!context_._terminal_accepts[i].has_value() || context_._terminal_names[i] == "@eoi") {
       continue;
     }
 
@@ -401,7 +413,7 @@ void ParserBuilder::step_6(Context& context_) {
     FaPart fa_part_terminal = TerminalDefinitionToFaPart::convert(fa_terminal, context_._terminal_id_names[i], context_._terminal_definitions[i], context_._terminal_names, context_._terminal_definitions);
     Fa::StateNrType const state_nr_end = fa_terminal.get_unused_state_nr();
     Fa::State& state_end = fa_terminal._states[state_nr_end];
-    state_end._accepts.resize(context_._accept_count, false);
+    state_end._accepts.resize(context_._accepts.size(), false);
     state_end._accepts.set(*context_._terminal_accepts[i], true);
     fa_part_terminal.connect_outgoing_transitions_to(state_nr_end, fa_terminal);
     fa_terminal.determinize();
@@ -409,7 +421,7 @@ void ParserBuilder::step_6(Context& context_) {
   }
 }
 
-void ParserBuilder::step_7(Context& context_) {
+void ParserBuilder::step_08(Context& context_) {
   for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
     Fa& fa_comment_close = context_._comment_close_fas[i];
 
@@ -447,8 +459,8 @@ void ParserBuilder::step_7(Context& context_) {
   }
 }
 
-void ParserBuilder::step_8(Context& context_) {
-  Fa::StateNrType const state_nr_start = context_._fa.get_unused_state_nr();
+void ParserBuilder::step_09(Context& context_) {
+  Fa::StateNrType const state_nr_start = 0;
   context_._fa._states[state_nr_start];
 
   for (size_t i = 0; i < context_._comment_open_fas.size(); ++i) {
@@ -487,6 +499,20 @@ void ParserBuilder::step_8(Context& context_) {
       context_._fa._states[state_nr_comment_open]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_start);
     }
   }
+}
+
+void ParserBuilder::step_10(Context& context_) {
+  Fa::StateNrType const state_nr_start = 0;
+  Fa::StateNrType const state_nr_eoi = context_._fa.get_unused_state_nr();
+  Fa::State& state_eoi = context_._fa._states[state_nr_eoi];
+  state_eoi._accepts.resize(context_._accepts.size(), false);
+  std::optional<size_t> const index_eoi = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
+  state_eoi._accepts.set(*context_._terminal_accepts[*index_eoi], true);
+  context_._fa._states.find(state_nr_start)->second._transitions._epsilon_transitions.insert(state_nr_eoi);
+}
+
+void ParserBuilder::step_11(Context& context_) {
+  Fa::StateNrType const state_nr_start = 0;
 
   for (size_t i = 0; i < context_._terminal_fas.size(); ++i) {
     Fa& fa_terminal = context_._terminal_fas[i];
@@ -503,13 +529,33 @@ void ParserBuilder::step_8(Context& context_) {
       context_._fa._states[state_nr_terminal]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_start);
     }
   }
-
-  context_._fa.determinize();
-  context_._fa.minimize();
 }
 
-void ParserBuilder::step_9(Context& context_) {
+void ParserBuilder::step_12(Context& context_) {
+  context_._fa.determinize();
+  context_._fa.minimize();
 
+  pmt::base::DynamicBitset accepts_start = context_._fa._states.find(0)->second._accepts;
+
+  // Eoi is allowed
+  accepts_start.set(*context_._terminal_accepts[*base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi")], false);
+
+  if (accepts_start.any()) {
+    static size_t const MAX_REPORTED = 8;
+    std::unordered_set<size_t> const accepts_start_set = pmt::base::DynamicBitsetConverter::to_unordered_set(accepts_start);
+    std::string msg;
+    std::string delim;
+    for (size_t i = 1; size_t const accept_nr : accepts_start_set) {
+      msg += std::exchange(delim, ", ");
+      if (i <= MAX_REPORTED) {
+        msg += context_._terminal_names[context_._accepts[accept_nr]];
+      } else {
+        msg += "...";
+        break;
+      }
+    }
+    throw std::runtime_error("Initial state accepts terminal(s): " + msg);
+  }
 }
 
 void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::Fa const& fa_) {
@@ -519,7 +565,11 @@ void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::Fa const& f
   }
 
   std::ofstream file(DOT_FILE_PREFIX + std::to_string(context_._dot_file_count++) + ".dot");
-  GraphWriter::write_dot(file, fa_, [](size_t accepts_) { return "..."; });
+  GraphWriter::write_dot(file, fa_, [&context_](size_t accepts_) { return accepts_to_label(context_, accepts_); });
+}
+
+auto ParserBuilder::accepts_to_label(Context& context_, size_t accept_idx_) -> std::string {
+  return context_._terminal_names[context_._accepts[accept_idx_]];
 }
 
 auto ParserBuilder::Context::try_find_terminal_definition(std::string const& name_) -> pmt::util::parsert::GenericAst::AstPositionConst {
