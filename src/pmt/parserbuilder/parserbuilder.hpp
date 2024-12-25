@@ -40,6 +40,7 @@ class ParserBuilder {
   static void step_10(Context& context_);
   static void step_11(Context& context_);
   static void step_12(Context& context_);
+  static void step_13(Context& context_);
 
   static void write_dot(Context& context_, pmt::util::parsect::Fa const& fa_);
 

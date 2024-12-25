@@ -239,6 +239,12 @@ void ParserBuilder::step_02(Context& context_) {
   context_._terminal_case_sensitive_present.push_back(CASE_SENSITIVITY_DEFAULT);
   context_._terminal_case_sensitive_values.push_back(CASE_SENSITIVITY_DEFAULT);
   context_._terminal_definitions.push_back(GenericAst::AstPositionConst{nullptr, 0});
+
+  context_._terminal_names.push_back("@start");
+  context_._terminal_id_names.push_back(GenericId::id_to_string(GenericId::IdReserved1));
+  context_._terminal_case_sensitive_present.push_back(CASE_SENSITIVITY_DEFAULT);
+  context_._terminal_case_sensitive_values.push_back(CASE_SENSITIVITY_DEFAULT);
+  context_._terminal_definitions.push_back(GenericAst::AstPositionConst{nullptr, 0});
 }
 
 void ParserBuilder::step_03(Context& context_) {
@@ -330,9 +336,17 @@ void ParserBuilder::step_05(Context& context_) {
 
 void ParserBuilder::step_06(Context& context_) {
   context_._terminal_accepts.resize(context_._terminal_names.size(), std::nullopt);
-  size_t const index_eoi = *pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
-  context_._terminal_accepts[index_eoi] = context_._accepts.size();
-  context_._accepts.push_back(index_eoi);
+
+  {
+    size_t const index_eoi = *pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
+    context_._terminal_accepts[index_eoi] = context_._accepts.size();
+    context_._accepts.push_back(index_eoi);
+  }
+  {
+    size_t const index_start = *pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start");
+    context_._terminal_accepts[index_start] = context_._accepts.size();
+    context_._accepts.push_back(index_start);
+  }
 
   std::stack<GenericAst::AstPositionConst> stack;
   std::unordered_set<GenericAst::AstPositionConst> visited;
@@ -406,7 +420,7 @@ void ParserBuilder::step_07(Context& context_) {
   }
 
   for (size_t i = 0; i < context_._terminal_accepts.size(); ++i) {
-    if (!context_._terminal_accepts[i].has_value() || context_._terminal_names[i] == "@eoi") {
+    if (!context_._terminal_accepts[i].has_value() || context_._terminal_names[i] == "@eoi" || context_._terminal_names[i] == "@start") {
       continue;
     }
 
@@ -504,12 +518,18 @@ void ParserBuilder::step_09(Context& context_) {
 
 void ParserBuilder::step_10(Context& context_) {
   Fa::StateNrType const state_nr_start = 0;
+  Fa::State& state_start = context_._fa._states[state_nr_start];
+  state_start._accepts.resize(context_._accepts.size(), false);
+  std::optional<size_t> const index_start = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start");
+  state_start._accepts.set(*context_._terminal_accepts[*index_start], true);
+
   Fa::StateNrType const state_nr_eoi = context_._fa.get_unused_state_nr();
   Fa::State& state_eoi = context_._fa._states[state_nr_eoi];
   state_eoi._accepts.resize(context_._accepts.size(), false);
   std::optional<size_t> const index_eoi = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
   state_eoi._accepts.set(*context_._terminal_accepts[*index_eoi], true);
-  context_._fa._states.find(state_nr_start)->second._transitions._symbol_transitions.insert_or_assign(GenericTablesBase::SYMBOL_EOI, state_nr_eoi);
+
+  state_start._transitions._symbol_transitions.insert_or_assign(GenericTablesBase::SYMBOL_EOI, state_nr_eoi);
 }
 
 void ParserBuilder::step_11(Context& context_) {
@@ -536,7 +556,9 @@ void ParserBuilder::step_12(Context& context_) {
   context_._fa.determinize();
   context_._fa.minimize();
 
-  pmt::base::DynamicBitset const accepts_start = context_._fa._states.find(0)->second._accepts;
+  pmt::base::DynamicBitset accepts_start = context_._fa._states.find(0)->second._accepts;
+  size_t const index_start = *context_._terminal_accepts[*pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start")];
+  accepts_start.set(index_start, false);
 
   if (accepts_start.any()) {
     static size_t const MAX_REPORTED = 8;
@@ -554,6 +576,21 @@ void ParserBuilder::step_12(Context& context_) {
     }
     throw std::runtime_error("Initial state accepts terminal(s): " + msg);
   }
+
+  size_t accepts_start_count = 0;
+  for (auto const& [state_nr, state] : context_._fa._states) {
+    if (state._accepts.size() == 0) {
+      continue;
+    }
+    accepts_start_count += state._accepts.get(index_start) == true ? 1 : 0;
+  }
+
+  if (accepts_start_count != 1) {
+    throw std::runtime_error("Error during building, there are " + std::to_string(accepts_start_count) + " starting states");
+  }
+}
+
+void ParserBuilder::step_13(Context& context_) {
 }
 
 void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::Fa const& fa_) {
