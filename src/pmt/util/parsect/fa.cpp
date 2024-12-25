@@ -3,12 +3,14 @@
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
 #include "pmt/util/parsect/fa_sink_wrapper.hpp"
+#include "pmt/util/parsert/generic_tables_base.hpp"
 
 #include <climits>
 #include <vector>
 
 namespace pmt::util::parsect {
 using namespace pmt::base;
+using namespace pmt::util::parsert;
 
 void Fa::prune(StateNrType state_nr_from_, StateNrType state_nr_from_new_, bool renumber_) {
   std::vector<StateNrType> pending;
@@ -229,7 +231,7 @@ void Fa::hopcroft() {
     DynamicBitset a = *w.begin();
     w.erase(w.begin());
 
-    for (Fa::SymbolType c = 0; c < UCHAR_MAX; ++c) {
+    for (Fa::SymbolType c = 0; c <= GenericTablesBase::SYMBOL_EOI; ++c) {
       DynamicBitset x(fa_with_sink.get_size(), false);
       for (size_t i = 0; i < fa_with_sink.get_size(); ++i) {
         Fa::StateNrType const state_nr_next = fa_with_sink.get_state_nr_next(i, c);
@@ -321,7 +323,7 @@ void Fa::hopcroft() {
       }
 
       // Set up the transitions
-      for (Fa::SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
+      for (Fa::SymbolType symbol = 0; symbol <= GenericTablesBase::SYMBOL_EOI; ++symbol) {
         Fa::StateNrType const state_nr_next_old = fa_with_sink.get_state_nr_next(state_nr_old, symbol);
 
         if (state_nr_next_old == fa_with_sink.get_state_nr_sink()) {

@@ -11,6 +11,7 @@
 #include "pmt/util/parsect/graph_writer.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
 #include "pmt/util/parsert/generic_ast_printer.hpp"
+#include "pmt/util/parsert/generic_tables_base.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -508,7 +509,7 @@ void ParserBuilder::step_10(Context& context_) {
   state_eoi._accepts.resize(context_._accepts.size(), false);
   std::optional<size_t> const index_eoi = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
   state_eoi._accepts.set(*context_._terminal_accepts[*index_eoi], true);
-  context_._fa._states.find(state_nr_start)->second._transitions._epsilon_transitions.insert(state_nr_eoi);
+  context_._fa._states.find(state_nr_start)->second._transitions._symbol_transitions.insert_or_assign(GenericTablesBase::SYMBOL_EOI, state_nr_eoi);
 }
 
 void ParserBuilder::step_11(Context& context_) {
@@ -535,10 +536,7 @@ void ParserBuilder::step_12(Context& context_) {
   context_._fa.determinize();
   context_._fa.minimize();
 
-  pmt::base::DynamicBitset accepts_start = context_._fa._states.find(0)->second._accepts;
-
-  // Eoi is allowed
-  accepts_start.set(*context_._terminal_accepts[*base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi")], false);
+  pmt::base::DynamicBitset const accepts_start = context_._fa._states.find(0)->second._accepts;
 
   if (accepts_start.any()) {
     static size_t const MAX_REPORTED = 8;

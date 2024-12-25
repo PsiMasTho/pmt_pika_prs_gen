@@ -1,8 +1,11 @@
 #include "pmt/util/parsect/fa_sink_wrapper.hpp"
 
+#include "pmt/util/parsert/generic_tables_base.hpp"
+
 #include <cassert>
 
 namespace pmt::util::parsect {
+using namespace pmt::util::parsert;
 
 FaSinkWrapper::FaSinkWrapper(Fa const& fa_)
  : _fa(fa_) {
@@ -36,7 +39,7 @@ auto FaSinkWrapper::get_size() const -> size_t {
 void FaSinkWrapper::refresh() {
   _has_sink = false;
   for (auto const& [state_nr, state] : _fa._states) {
-    for (Fa::SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
+    for (Fa::SymbolType symbol = 0; symbol < GenericTablesBase::SYMBOL_EOI; ++symbol) {
       if (!state._transitions._symbol_transitions.contains(symbol)) {
         _has_sink = true;
         return;

@@ -1,12 +1,13 @@
 #include "pmt/parserbuilder/fa_to_fa_state_tables.hpp"
 
+#include "pmt/util/parsert/generic_tables_base.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <limits>
 #include <utility>
-#include "pmt/util/parsert/generic_fa_state_tables.hpp"
 
 namespace pmt::parserbuilder {
 using namespace pmt::util::parsect;
@@ -42,8 +43,8 @@ void FaToFaStateTables::step_1(Context& context_) {
   for (size_t i = 0; i < width * width; ++i) {
     auto const [j1, j2] = index_1d_to_2d(i, width);
 
-    context_._diff_mat_2d.emplace_back(UCHAR_MAX, false);
-    for (Fa::SymbolType k = 0; k < UCHAR_MAX; ++k) {
+    context_._diff_mat_2d.emplace_back(GenericTablesBase::SYMBOL_EOI + 1, false);
+    for (Fa::SymbolType k = 0; k <= GenericTablesBase::SYMBOL_EOI; ++k) {
       context_._diff_mat_2d.back().set(k, context_._fa_with_sink.get_state_nr_next(j1, k) != context_._fa_with_sink.get_state_nr_next(j2, k));
     }
   }
@@ -154,7 +155,7 @@ void FaToFaStateTables::step_4(Context& context_) {
     }
   }
 
-  context_._tables._compressed_transition_entries.resize(shift_max + UCHAR_MAX, {context_._tables._state_nr_sink, context_._tables._state_nr_sink});
+  context_._tables._compressed_transition_entries.resize(shift_max + GenericTablesBase::SYMBOL_EOI + 1, {context_._tables._state_nr_sink, context_._tables._state_nr_sink});
 
   for (auto const& [i, shift] : shifts) {
     context_._tables._state_transition_entries[i]._shift = shift;
