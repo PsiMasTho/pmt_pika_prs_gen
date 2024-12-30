@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pmt/fw_decl.hpp"
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/parsert/generic_ast_path.hpp"
 
 #include <memory>
 #include <stack>
@@ -11,6 +11,7 @@
 
 PMT_FW_DECL_NS_CLASS(pmt::parserbuilder, FaPart);
 PMT_FW_DECL_NS_CLASS(pmt::util::parsect, Fa);
+PMT_FW_DECL_NS_CLASS(pmt::util::parsert, GenericAst);
 
 namespace pmt::parserbuilder {
 
@@ -21,13 +22,13 @@ class ExpressionToFaPartFrameBase : public std::enable_shared_from_this<Expressi
 
   class Captures;
 
-  explicit ExpressionToFaPartFrameBase(pmt::util::parsert::GenericAst::AstPositionConst ast_position_);
+  explicit ExpressionToFaPartFrameBase(pmt::util::parsert::GenericAstPath const& path_);
   virtual ~ExpressionToFaPartFrameBase() = default;
 
   virtual void process(CallstackType& callstack_, Captures& captures_) = 0;
 
  protected:
-  pmt::util::parsert::GenericAst::AstPositionConst _ast_position;
+  pmt::util::parsert::GenericAstPath _path;
 };
 
 class ExpressionToFaPartFrameBase::Captures {
@@ -35,8 +36,9 @@ class ExpressionToFaPartFrameBase::Captures {
   FaPart& _ret_part;
   pmt::util::parsect::Fa& _result;
   std::vector<std::string> const& _terminal_names;
-  std::vector<pmt::util::parsert::GenericAst::AstPositionConst> const& _terminal_definitions;
+  std::vector<pmt::util::parsert::GenericAstPath> const& _terminal_definitions;
   std::unordered_set<std::string>& _terminal_stack_contents;
   std::vector<std::string>& _terminal_stack;
+  pmt::util::parsert::GenericAst const& _ast;
 };
 }  // namespace pmt::parserbuilder

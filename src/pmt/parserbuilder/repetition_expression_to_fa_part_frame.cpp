@@ -4,12 +4,12 @@
 #include "pmt/parserbuilder/expression_to_fa_part_frame_factory.hpp"
 
 namespace pmt::parserbuilder {
+using namespace pmt::base;
 using namespace pmt::util::parsect;
 using namespace pmt::util::parsert;
 
-RepetitionExpressionToFaPartFrame::RepetitionExpressionToFaPartFrame(GenericAst::AstPositionConst ast_position_)
- : ExpressionToFaPartFrameBase({ast_position_.first->get_child_at(ast_position_.second), 0})
- , _range(GrmNumber::get_repetition_range(*ast_position_.first->get_child_at(ast_position_.second)->get_child_at(1))) {
+RepetitionExpressionToFaPartFrame::RepetitionExpressionToFaPartFrame(GenericAstPath const& path_)
+ : ExpressionToFaPartFrameBase(path_) {
 }
 
 void RepetitionExpressionToFaPartFrame::process(CallstackType& callstack_, Captures& captures_) {
@@ -18,7 +18,7 @@ void RepetitionExpressionToFaPartFrame::process(CallstackType& callstack_, Captu
       process_stage_0(callstack_, captures_);
       break;
     case 1:
-      process_stage_1(callstack_);
+      process_stage_1(callstack_, captures_);
       break;
     case 2:
       process_stage_2(callstack_, captures_);
@@ -27,6 +27,8 @@ void RepetitionExpressionToFaPartFrame::process(CallstackType& callstack_, Captu
 }
 
 void RepetitionExpressionToFaPartFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
+  _range = GrmNumber::get_repetition_range(*_path.clone_push(1).resolve(captures_._ast));
+
   if (_range.second == 0) {
     captures_._ret_part = EpsilonExpressionToFaPartFrame::make_epsilon(captures_._result);
     return;
@@ -49,11 +51,11 @@ void RepetitionExpressionToFaPartFrame::process_stage_0(CallstackType& callstack
   ++_stage;
 }
 
-void RepetitionExpressionToFaPartFrame::process_stage_1(CallstackType& callstack_) {
+void RepetitionExpressionToFaPartFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
   callstack_.push(shared_from_this());
   ++_stage;
 
-  callstack_.push(ExpressionToFaPartFrameFactory::construct(_ast_position));
+  callstack_.push(ExpressionToFaPartFrameFactory::construct(captures_._ast, _path.clone_push(0)));
 }
 
 void RepetitionExpressionToFaPartFrame::process_stage_2(CallstackType& callstack_, Captures& captures_) {

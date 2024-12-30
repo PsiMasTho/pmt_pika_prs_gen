@@ -6,7 +6,7 @@ namespace pmt::parserbuilder {
 
 class ExpressionToFaPartFrameFactory {
  public:
-  static auto construct(pmt::util::parsert::GenericAst::AstPositionConst position_) -> ExpressionToFaPartFrameBase::FrameHandle;
+  static auto construct(pmt::util::parsert::GenericAst const& ast_, pmt::util::parsert::GenericAstPath const& path_) -> ExpressionToFaPartFrameBase::FrameHandle;
 };
 
 }  // namespace pmt::parserbuilder

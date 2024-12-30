@@ -1,7 +1,6 @@
 #include "pmt/util/parsert/generic_ast.hpp"
 
 #include "pmt/asserts.hpp"
-#include "pmt/base/hash.hpp"
 
 #include <cassert>
 #include <iterator>
@@ -101,16 +100,14 @@ auto GenericAst::get_children_size() const -> std::size_t {
   return std::get_if<ChildrenType>(&_data)->size();
 }
 
-auto GenericAst::get_child_at(std::size_t index_) -> GenericAst* {
+auto GenericAst::get_child_at(size_t index_) -> GenericAst* {
   assert(get_tag() == Tag::Children);
-  assert(index_ < get_children_size());
-  return (*std::get_if<ChildrenType>(&_data))[index_];
+  return (index_ >= get_children_size()) ? nullptr : (*std::get_if<ChildrenType>(&_data))[index_];
 }
 
-auto GenericAst::get_child_at(std::size_t index_) const -> GenericAst const* {
+auto GenericAst::get_child_at(size_t index_) const -> GenericAst const* {
   assert(get_tag() == Tag::Children);
-  assert(index_ < get_children_size());
-  return (*std::get_if<ChildrenType>(&_data))[index_];
+  return (index_ >= get_children_size()) ? nullptr : (*std::get_if<ChildrenType>(&_data))[index_];
 }
 
 auto GenericAst::get_child_at_front() -> GenericAst* {
@@ -129,7 +126,7 @@ auto GenericAst::get_child_at_back() const -> GenericAst const* {
   return get_child_at(get_children_size() - 1);
 }
 
-auto GenericAst::take_child_at(std::size_t index_) -> UniqueHandle {
+auto GenericAst::take_child_at(size_t index_) -> UniqueHandle {
   assert(get_tag() == Tag::Children);
   assert(index_ < get_children_size());
   ChildrenType& children = *std::get_if<ChildrenType>(&_data);
@@ -138,7 +135,7 @@ auto GenericAst::take_child_at(std::size_t index_) -> UniqueHandle {
   return result;
 }
 
-void GenericAst::give_child_at(std::size_t index_, UniqueHandle child_) {
+void GenericAst::give_child_at(size_t index_, UniqueHandle child_) {
   assert(get_tag() == Tag::Children);
   assert(index_ <= get_children_size());
   ChildrenType& children = *std::get_if<ChildrenType>(&_data);
@@ -214,12 +211,3 @@ GenericAst::GenericAst(Tag tag_, GenericId::IdType id_)
 }
 
 }  // namespace pmt::util::parsert
-
-namespace std {
-auto hash<pmt::util::parsert::GenericAst::AstPositionConst>::operator()(pmt::util::parsert::GenericAst::AstPositionConst const& ast_position_) const -> size_t {
-  size_t seed = 0;
-  pmt::base::Hash::combine(ast_position_.first, seed);
-  pmt::base::Hash::combine(ast_position_.second, seed);
-  return seed;
-}
-}  // namespace std

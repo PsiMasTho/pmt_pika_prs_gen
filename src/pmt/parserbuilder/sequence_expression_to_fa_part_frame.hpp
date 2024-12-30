@@ -11,7 +11,7 @@ class SequenceExpressionToFaPartFrame : public ExpressionToFaPartFrameBase {
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:
-  void process_stage_0(CallstackType& callstack_);
+  void process_stage_0(CallstackType& callstack_, Captures& captures_);
   void process_stage_1(CallstackType& callstack_, Captures& captures_);
 
   FaPart _sub_part;

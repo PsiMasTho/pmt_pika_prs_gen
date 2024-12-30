@@ -65,6 +65,8 @@ class GrmAst {
     NtRuleDefinition,
     NtRuleSequence,
     NtRuleChoices,
+    NtRuleRepetition,
+    NtRuleRepetitionRange,
     // - Grammar properties
     NtGrammarProperty,
     NtGrammarPropertyWhitespace,

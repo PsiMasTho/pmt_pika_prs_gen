@@ -4,6 +4,7 @@
 #include "pmt/base/algo.hpp"
 #include "pmt/parserbuilder/expression_to_fa_part_frame_factory.hpp"
 #include "pmt/parserbuilder/fa_part.hpp"
+#include "pmt/util/parsert/generic_ast.hpp"
 
 #include <utility>
 
@@ -21,7 +22,7 @@ void TerminalIdentifierExpressionToFaPart::process(CallstackType& callstack_, Ca
 }
 
 void TerminalIdentifierExpressionToFaPart::process_stage_0(CallstackType& callstack_, Captures& captures_) {
-  _terminal_name = &_ast_position.first->get_child_at(_ast_position.second)->get_string();
+  _terminal_name = &_path.resolve(captures_._ast)->get_string();
 
   captures_._terminal_stack.push_back(*_terminal_name);
   if (!captures_._terminal_stack_contents.insert(*_terminal_name).second) {
@@ -37,7 +38,7 @@ void TerminalIdentifierExpressionToFaPart::process_stage_0(CallstackType& callst
   callstack_.push(shared_from_this());
 
   if (std::optional<size_t> const index = pmt::base::binary_find_index(captures_._terminal_names.begin(), captures_._terminal_names.end(), *_terminal_name); index.has_value()) {
-    _ast_position = captures_._terminal_definitions[*index];
+    _path = captures_._terminal_definitions[*index];
   } else {
     throw std::runtime_error("Terminal '" + *_terminal_name + "' not defined");
   }
@@ -45,7 +46,7 @@ void TerminalIdentifierExpressionToFaPart::process_stage_0(CallstackType& callst
   _state_nr_reference = captures_._result.get_unused_state_nr();
   _transitions_reference = &captures_._result._states[_state_nr_reference]._transitions;
 
-  callstack_.push(ExpressionToFaPartFrameFactory::construct(_ast_position));
+  callstack_.push(ExpressionToFaPartFrameFactory::construct(captures_._ast, _path));
 }
 
 void TerminalIdentifierExpressionToFaPart::process_stage_1(Captures& captures_) {

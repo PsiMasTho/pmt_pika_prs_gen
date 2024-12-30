@@ -95,6 +95,10 @@ auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::str
       return "NtRuleSequence";
     case NtRuleChoices:
       return "NtRuleChoices";
+    case NtRuleRepetition:
+      return "NtRuleRepetition";
+    case NtRuleRepetitionRange:
+      return "NtRuleRepetitionRange";
     case NtGrammarProperty:
       return "NtGrammarProperty";
     case NtGrammarPropertyWhitespace:

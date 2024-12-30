@@ -1,14 +1,16 @@
 #include "pmt/parserbuilder/sequence_expression_to_fa_part_frame.hpp"
 
 #include "pmt/parserbuilder/expression_to_fa_part_frame_factory.hpp"
+#include "pmt/util/parsert/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
+using namespace pmt::base;
 using namespace pmt::util::parsert;
 
 void SequenceExpressionToFaPartFrame::process(CallstackType& callstack_, Captures& captures_) {
   switch (_stage) {
     case 0:
-      process_stage_0(callstack_);
+      process_stage_0(callstack_, captures_);
       break;
     case 1:
       process_stage_1(callstack_, captures_);
@@ -16,12 +18,11 @@ void SequenceExpressionToFaPartFrame::process(CallstackType& callstack_, Capture
   }
 }
 
-void SequenceExpressionToFaPartFrame::process_stage_0(CallstackType& callstack_) {
+void SequenceExpressionToFaPartFrame::process_stage_0(CallstackType& callstack_, Captures& captures_) {
   callstack_.push(shared_from_this());
   ++_stage;
 
-  GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
-  callstack_.push(ExpressionToFaPartFrameFactory::construct(GenericAst::AstPositionConst{&cur_expr, _idx}));
+  callstack_.push(ExpressionToFaPartFrameFactory::construct(captures_._ast, _path.clone_push(_idx)));
 }
 
 void SequenceExpressionToFaPartFrame::process_stage_1(CallstackType& callstack_, Captures& captures_) {
@@ -37,7 +38,7 @@ void SequenceExpressionToFaPartFrame::process_stage_1(CallstackType& callstack_,
   }
 
   // If is last
-  if (_idx == _ast_position.first->get_child_at(_ast_position.second)->get_children_size()) {
+  if (_idx == _path.resolve(captures_._ast)->get_children_size()) {
     captures_._ret_part = _sub_part;
   } else {
     callstack_.push(shared_from_this());

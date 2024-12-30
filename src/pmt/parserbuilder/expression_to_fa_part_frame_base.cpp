@@ -4,8 +4,8 @@ namespace pmt::parserbuilder {
 
 using namespace pmt::util::parsert;
 
-ExpressionToFaPartFrameBase::ExpressionToFaPartFrameBase(GenericAst::AstPositionConst ast_position_)
- : _ast_position(std::move(ast_position_)) {
+ExpressionToFaPartFrameBase::ExpressionToFaPartFrameBase(GenericAstPath const& path_)
+ : _path(path_) {
 }
 
 }  // namespace pmt::parserbuilder

@@ -12,9 +12,6 @@ namespace pmt::util::parsert {
 class GenericAst {
  public:
   using StringType = std::string;
-  using ChildrenType = std::vector<GenericAst*>;
-  using AstPosition = std::pair<GenericAst*, size_t>;
-  using AstPositionConst = std::pair<GenericAst const*, size_t>;
 
   enum class Tag {
     String,
@@ -26,8 +23,9 @@ class GenericAst {
     void operator()(GenericAst* self_) const;
   };
 
-  static void destruct(GenericAst* self_);
   using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
+
+  static void destruct(GenericAst* self_);
   static auto construct(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized) -> UniqueHandle;
 
   static auto clone(GenericAst const& other_) -> UniqueHandle;
@@ -70,15 +68,10 @@ class GenericAst {
  private:
   explicit GenericAst(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized);
 
+  using ChildrenType = std::vector<GenericAst*>;
+
   std::variant<StringType, ChildrenType> _data;
   GenericId::IdType _id;
 };
 
 }  // namespace pmt::util::parsert
-
-namespace std {
-template <>
-struct hash<pmt::util::parsert::GenericAst::AstPositionConst> {
-  auto operator()(pmt::util::parsert::GenericAst::AstPositionConst const& ast_position_) const -> size_t;
-};
-}  // namespace std

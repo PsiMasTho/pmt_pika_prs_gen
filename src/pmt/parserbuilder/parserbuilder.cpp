@@ -89,6 +89,9 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   std::cout << "Rule unpack values: " << DynamicBitsetConverter::to_string(context._rule_unpack_values) << std::endl;
   std::cout << "Rule hide values: " << DynamicBitsetConverter::to_string(context._rule_hide_values) << std::endl;
 
+  std::cout << "Ast after: " << std::endl;
+  printer.print(*context._ast, std::cout);
+
   write_dot(context, context._fa);
 }
 
@@ -97,22 +100,22 @@ void ParserBuilder::step_01(Context& context_) {
     GenericAst const& child = *context_._ast->get_child_at(i);
     switch (child.get_id()) {
       case GrmAst::NtGrammarProperty:
-        step_01_handle_grammar_property(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
+        step_01_handle_grammar_property(context_, {i});
         break;
       case GrmAst::NtTerminalProduction:
-        step_01_handle_terminal_production(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
+        step_01_handle_terminal_production(context_, {i});
         break;
       case GrmAst::NtRuleProduction:
-        step_01_handle_rule_production(context_, GenericAst::AstPositionConst{context_._ast.get(), i});
+        step_01_handle_rule_production(context_, {i});
         break;
     }
   }
 }
 
-void ParserBuilder::step_01_handle_grammar_property(Context& context_, GenericAst::AstPositionConst position_) {
-  GenericAst const& grammar_property = *position_.first->get_child_at(position_.second);
+void ParserBuilder::step_01_handle_grammar_property(Context& context_, GenericAstPath const& path_) {
+  GenericAst const& grammar_property = *path_.resolve(*context_._ast);
   GenericAst const& property_name = *grammar_property.get_child_at(0);
-  GenericAst::AstPositionConst const property_value_position(&grammar_property, 1);
+  GenericAstPath const property_value_position = path_.clone_push(1);
   switch (property_name.get_id()) {
     case GrmAst::TkGrammarPropertyCaseSensitive:
       step_01_handle_grammar_property_case_sensitive(context_, property_value_position);
@@ -131,38 +134,37 @@ void ParserBuilder::step_01_handle_grammar_property(Context& context_, GenericAs
   }
 }
 
-void ParserBuilder::step_01_handle_grammar_property_case_sensitive(Context& context_, GenericAst::AstPositionConst position_) {
-  GenericAst const& value = *position_.first->get_child_at(position_.second);
+void ParserBuilder::step_01_handle_grammar_property_case_sensitive(Context& context_, GenericAstPath const& path_) {
+  GenericAst const& value = *path_.resolve(*context_._ast);
   assert(value.get_id() == GrmAst::TkBooleanLiteral);
   context_._case_sensitive = value.get_string() == "true";
 }
 
-void ParserBuilder::step_01_handle_grammar_property_start(Context& context_, GenericAst::AstPositionConst position_) {
-  GenericAst const& value = *position_.first->get_child_at(position_.second);
+void ParserBuilder::step_01_handle_grammar_property_start(Context& context_, GenericAstPath const& path_) {
+  GenericAst const& value = *path_.resolve(*context_._ast);
   assert(value.get_id() == GrmAst::TkRuleIdentifier);
   context_._start_symbol = value.get_string();
 }
 
-void ParserBuilder::step_01_handle_grammar_property_whitespace(Context& context_, GenericAst::AstPositionConst position_) {
-  context_._whitespace_definition = position_;
+void ParserBuilder::step_01_handle_grammar_property_whitespace(Context& context_, GenericAstPath const& path_) {
+  context_._whitespace_definition = path_;
 }
 
-void ParserBuilder::step_01_handle_grammar_property_comment(Context& context_, GenericAst::AstPositionConst position_) {
-  GenericAst const& terminal_definition_pair_list = *position_.first->get_child_at(position_.second);
+void ParserBuilder::step_01_handle_grammar_property_comment(Context& context_, GenericAstPath const& path_) {
+  GenericAst const& terminal_definition_pair_list = *path_.resolve(*context_._ast);
   for (size_t i = 0; i < terminal_definition_pair_list.get_children_size(); ++i) {
-    GenericAst const& terminal_definition_pair = *terminal_definition_pair_list.get_child_at(i);
-    context_._comment_open_definitions.push_back(GenericAst::AstPositionConst{&terminal_definition_pair, 0});
-    context_._comment_close_definitions.push_back(GenericAst::AstPositionConst{&terminal_definition_pair, 1});
+    context_._comment_open_definitions.push_back(path_.clone_push({i, 0}));
+    context_._comment_close_definitions.push_back(path_.clone_push({i, 1}));
   }
 }
 
-void ParserBuilder::step_01_handle_terminal_production(Context& context_, GenericAst::AstPositionConst position_) {
-  GenericAst const& terminal_production = *position_.first->get_child_at(position_.second);
+void ParserBuilder::step_01_handle_terminal_production(Context& context_, GenericAstPath const& path_) {
+  GenericAst const& terminal_production = *path_.resolve(*context_._ast);
   std::string terminal_name = terminal_production.get_child_at(0)->get_string();
 
   std::string terminal_id_name = GenericId::id_to_string(GenericId::IdDefault);
   std::optional<bool> terminal_case_sensitive;
-  GenericAst::AstPositionConst terminal_definition_position(nullptr, 0);
+  GenericAstPath terminal_definition_position = path_.clone_push(0);
 
   for (size_t i = 1; i < terminal_production.get_children_size(); ++i) {
     GenericAst const& child = *terminal_production.get_child_at(i);
@@ -178,7 +180,8 @@ void ParserBuilder::step_01_handle_terminal_production(Context& context_, Generi
         }
       } break;
       case GrmAst::NtTerminalDefinition:
-        terminal_definition_position = GenericAst::AstPositionConst{&terminal_production, i};
+        terminal_definition_position.inplace_pop();
+        terminal_definition_position.inplace_push(i);
         break;
     }
   }
@@ -190,15 +193,15 @@ void ParserBuilder::step_01_handle_terminal_production(Context& context_, Generi
   context_._terminal_definitions.push_back(terminal_definition_position);
 }
 
-void ParserBuilder::step_01_handle_rule_production(Context& context_, GenericAst::AstPositionConst position_) {
-  GenericAst const& rule_production = *position_.first->get_child_at(position_.second);
+void ParserBuilder::step_01_handle_rule_production(Context& context_, GenericAstPath const& path_) {
+  GenericAst const& rule_production = *path_.resolve(*context_._ast);
   std::string rule_name = rule_production.get_child_at(0)->get_string();
 
   std::string rule_id_name = GenericId::id_to_string(GenericId::IdDefault);
   bool rule_merge = MERGE_DEFAULT;
   bool rule_unpack = UNPACK_DEFAULT;
   bool rule_hide = HIDE_DEFAULT;
-  GenericAst::AstPositionConst rule_definition_position(nullptr, 0);
+  GenericAstPath rule_definition_position = path_.clone_push(0);
 
   for (size_t i = 1; i < rule_production.get_children_size(); ++i) {
     GenericAst const& child = *rule_production.get_child_at(i);
@@ -220,7 +223,8 @@ void ParserBuilder::step_01_handle_rule_production(Context& context_, GenericAst
         }
       } break;
       case GrmAst::NtRuleDefinition:
-        rule_definition_position = GenericAst::AstPositionConst{&rule_production, i};
+        rule_definition_position.inplace_pop();
+        rule_definition_position.inplace_push(i);
         break;
     }
   }
@@ -234,43 +238,31 @@ void ParserBuilder::step_01_handle_rule_production(Context& context_, GenericAst
 }
 
 void ParserBuilder::step_02(Context& context_) {
-  context_._terminal_names.push_back("@eoi");
-  context_._terminal_id_names.push_back(GenericId::id_to_string(GenericId::IdEoi));
-  context_._terminal_case_sensitive_present.push_back(CASE_SENSITIVITY_DEFAULT);
-  context_._terminal_case_sensitive_values.push_back(CASE_SENSITIVITY_DEFAULT);
-  context_._terminal_definitions.push_back(GenericAst::AstPositionConst{nullptr, 0});
+  context_._terminal_accepts.resize(context_._terminal_names.size(), std::nullopt);
 
+  size_t const index_start = context_._terminal_names.size();
   context_._terminal_names.push_back("@start");
   context_._terminal_id_names.push_back(GenericId::id_to_string(GenericId::IdReserved1));
   context_._terminal_case_sensitive_present.push_back(CASE_SENSITIVITY_DEFAULT);
   context_._terminal_case_sensitive_values.push_back(CASE_SENSITIVITY_DEFAULT);
-  context_._terminal_definitions.push_back(GenericAst::AstPositionConst{nullptr, 0});
+  context_._terminal_definitions.emplace_back();
+  context_._terminal_accepts.push_back(context_._accepts.size());
+  context_._accepts.push_back(index_start);
+
+  size_t const index_eoi = context_._terminal_names.size();
+  context_._terminal_names.push_back("@eoi");
+  context_._terminal_id_names.push_back(GenericId::id_to_string(GenericId::IdEoi));
+  context_._terminal_case_sensitive_present.push_back(CASE_SENSITIVITY_DEFAULT);
+  context_._terminal_case_sensitive_values.push_back(CASE_SENSITIVITY_DEFAULT);
+  context_._terminal_definitions.emplace_back();
+  context_._terminal_accepts.push_back(context_._accepts.size());
+  context_._accepts.push_back(index_eoi);
+
+  sort_terminals_by_name(context_);
+  sort_rules_by_name(context_);
 }
 
 void ParserBuilder::step_03(Context& context_) {
-  // Sort the terminals by name
-  std::vector<size_t> ordering;
-  std::generate_n(std::back_inserter(ordering), context_._terminal_names.size(), [i = 0]() mutable { return i++; });
-  std::ranges::sort(ordering, [&context_](size_t lhs_, size_t rhs_) { return context_._terminal_names[lhs_] < context_._terminal_names[rhs_]; });
-  apply_permutation(context_._terminal_names.begin(), context_._terminal_names.end(), ordering.begin());
-  apply_permutation(context_._terminal_id_names.begin(), context_._terminal_id_names.end(), ordering.begin());
-  apply_permutation(context_._terminal_case_sensitive_present, ordering.begin());
-  apply_permutation(context_._terminal_case_sensitive_values, ordering.begin());
-  apply_permutation(context_._terminal_definitions.begin(), context_._terminal_definitions.end(), ordering.begin());
-
-  // Sort the rules by name
-  ordering.clear();
-  std::generate_n(std::back_inserter(ordering), context_._rule_names.size(), [i = 0]() mutable { return i++; });
-  std::ranges::sort(ordering, [&context_](size_t lhs_, size_t rhs_) { return context_._rule_names[lhs_] < context_._rule_names[rhs_]; });
-  apply_permutation(context_._rule_names.begin(), context_._rule_names.end(), ordering.begin());
-  apply_permutation(context_._rule_id_names.begin(), context_._rule_id_names.end(), ordering.begin());
-  apply_permutation(context_._rule_merge_values, ordering.begin());
-  apply_permutation(context_._rule_unpack_values, ordering.begin());
-  apply_permutation(context_._rule_hide_values, ordering.begin());
-  apply_permutation(context_._rule_definitions.begin(), context_._rule_definitions.end(), ordering.begin());
-}
-
-void ParserBuilder::step_04(Context& context_) {
   // Check that the terminal names are unique
   if (auto const itr = std::adjacent_find(context_._terminal_names.begin(), context_._terminal_names.end()); itr != context_._terminal_names.end()) {
     throw std::runtime_error("Terminal defined more than once: " + *itr);
@@ -293,13 +285,99 @@ void ParserBuilder::step_04(Context& context_) {
   }
 }
 
+void ParserBuilder::step_04(Context& context_) {
+  std::stack<GenericAstPath> stack;
+  std::unordered_set<GenericAstPath> visited;
+  std::vector<std::string> terminals_direct_names;
+  std::vector<GenericAstPath> terminals_direct_definitions;
+
+  auto const push_and_visit = [&stack, &visited](GenericAstPath const& path_) {
+    if (visited.contains(path_)) {
+      return;
+    }
+
+    stack.push(path_);
+    visited.insert(path_);
+  };
+
+  push_and_visit(context_.try_find_rule_definition(context_._start_symbol));
+
+  while (!stack.empty()) {
+    GenericAstPath const path_cur = stack.top();
+    stack.pop();
+
+    switch (path_cur.resolve(*context_._ast)->get_id()) {
+      case GrmAst::TkTerminalIdentifier: {
+        std::string const& name = path_cur.resolve(*context_._ast)->get_string();
+        std::optional<size_t> const index = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), name);
+        if (!index.has_value()) {
+          throw std::runtime_error("Terminal not found: " + name);
+        }
+        context_._terminal_accepts[*index] = context_._accepts.size();
+        context_._accepts.push_back(*index);
+      } break;
+      case GrmAst::TkRuleIdentifier:
+        push_and_visit(context_.try_find_rule_definition(path_cur.resolve(*context_._ast)->get_string()));
+        break;
+      case GrmAst::NtTerminalDefinition:
+      case GrmAst::NtRuleDefinition:
+      case GrmAst::NtTerminalChoices:
+      case GrmAst::NtTerminalSequence:
+      case GrmAst::NtRuleChoices:
+      case GrmAst::NtRuleSequence:
+        for (size_t i = 0; i < path_cur.resolve(*context_._ast)->get_children_size(); ++i) {
+          push_and_visit(path_cur.clone_push(i));
+        }
+        break;
+      case GrmAst::NtTerminalRepetition:
+        push_and_visit(path_cur.clone_push(0));
+        break;
+      case GrmAst::TkStringLiteral:
+      case GrmAst::TkIntegerLiteral: {
+        std::string const terminal_direct_name = "@direct_" + std::to_string(terminals_direct_names.size());
+        terminals_direct_names.push_back(terminal_direct_name);
+
+        GenericAst::UniqueHandle terminal_direct_production = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtTerminalProduction);
+        GenericAst::UniqueHandle terminal_direct_production_name = GenericAst::construct(GenericAst::Tag::String, GrmAst::TkTerminalIdentifier);
+        terminal_direct_production_name->set_string(terminal_direct_name);
+        terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_name));
+        GenericAst::UniqueHandle terminal_direct_production_definition = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtTerminalDefinition);
+        terminal_direct_production_definition->give_child_at_back(GenericAst::clone(*path_cur.resolve(*context_._ast)));
+        terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_definition));
+        context_._ast->give_child_at_back(std::move(terminal_direct_production));
+
+        GenericAstPath const path_direct_definition({context_._ast->get_children_size() - 1, 1});
+        terminals_direct_definitions.push_back(path_direct_definition);
+        path_cur.resolve(*context_._ast)->set_string(terminal_direct_name);
+        path_cur.resolve(*context_._ast)->set_id(GrmAst::TkTerminalIdentifier);
+      } break;
+    }
+  }
+
+  while (!terminals_direct_names.empty()) {
+    size_t const index_direct = context_._terminal_names.size();
+    context_._terminal_names.push_back(terminals_direct_names.back());
+    context_._terminal_id_names.push_back(GenericId::id_to_string(GenericId::IdDefault));
+    context_._terminal_case_sensitive_present.push_back(true);
+    context_._terminal_case_sensitive_values.push_back(true);
+    context_._terminal_definitions.push_back(terminals_direct_definitions.back());
+    context_._terminal_accepts.push_back(context_._accepts.size());
+    context_._accepts.push_back(index_direct);
+
+    terminals_direct_names.pop_back();
+    terminals_direct_definitions.pop_back();
+  }
+
+  sort_terminals_by_name(context_);
+}
+
 void ParserBuilder::step_05(Context& context_) {
-  if (context_._whitespace_definition.first == nullptr) {
+  if (context_._whitespace_definition.empty()) {
     return;
   }
 
   Fa fa_whitespace;
-  FaPart fa_part_whitespace = TerminalDefinitionToFaPart::convert(fa_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions);
+  FaPart fa_part_whitespace = TerminalDefinitionToFaPart::convert(fa_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions, *context_._ast);
   Fa::StateNrType const state_nr_end = fa_whitespace.get_unused_state_nr();
   fa_whitespace._states[state_nr_end];
   fa_part_whitespace.connect_outgoing_transitions_to(state_nr_end, fa_whitespace);
@@ -335,73 +413,9 @@ void ParserBuilder::step_05(Context& context_) {
 }
 
 void ParserBuilder::step_06(Context& context_) {
-  context_._terminal_accepts.resize(context_._terminal_names.size(), std::nullopt);
-
-  {
-    size_t const index_eoi = *pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
-    context_._terminal_accepts[index_eoi] = context_._accepts.size();
-    context_._accepts.push_back(index_eoi);
-  }
-  {
-    size_t const index_start = *pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start");
-    context_._terminal_accepts[index_start] = context_._accepts.size();
-    context_._accepts.push_back(index_start);
-  }
-
-  std::stack<GenericAst::AstPositionConst> stack;
-  std::unordered_set<GenericAst::AstPositionConst> visited;
-
-  auto const push_and_visit = [&stack, &visited](GenericAst::AstPositionConst position_) {
-    if (visited.contains(position_)) {
-      return;
-    }
-
-    stack.push(position_);
-    visited.insert(position_);
-  };
-
-  push_and_visit(context_.try_find_rule_definition(context_._start_symbol));
-
-  while (!stack.empty()) {
-    GenericAst::AstPositionConst const position_cur = stack.top();
-    stack.pop();
-
-    GenericAst const& cur = *position_cur.first->get_child_at(position_cur.second);
-
-    switch (cur.get_id()) {
-      case GrmAst::TkTerminalIdentifier: {
-        std::string const& name = cur.get_string();
-        std::optional<size_t> const index = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), name);
-        if (!index.has_value()) {
-          throw std::runtime_error("Terminal not found: " + name);
-        }
-        context_._terminal_accepts[*index] = context_._accepts.size();
-        context_._accepts.push_back(*index);
-      } break;
-      case GrmAst::TkRuleIdentifier:
-        push_and_visit(context_.try_find_rule_definition(cur.get_string()));
-        break;
-      case GrmAst::NtTerminalDefinition:
-      case GrmAst::NtRuleDefinition:
-      case GrmAst::NtTerminalChoices:
-      case GrmAst::NtTerminalSequence:
-      case GrmAst::NtRuleChoices:
-      case GrmAst::NtRuleSequence:
-        for (size_t i = 0; i < cur.get_children_size(); ++i) {
-          push_and_visit(GenericAst::AstPositionConst{&cur, i});
-        }
-        break;
-      case GrmAst::NtTerminalRepetition:
-        push_and_visit(GenericAst::AstPositionConst{&cur, 0});
-        break;
-    }
-  }
-}
-
-void ParserBuilder::step_07(Context& context_) {
   for (size_t i = 0; i < context_._comment_open_definitions.size(); ++i) {
     Fa fa_comment_open;
-    FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(fa_comment_open, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions);
+    FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(fa_comment_open, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
     Fa::StateNrType const state_nr_end = fa_comment_open.get_unused_state_nr();
     fa_comment_open._states[state_nr_end]._accepts.resize(1, true);
     fa_part_rule_open.connect_outgoing_transitions_to(state_nr_end, fa_comment_open);
@@ -411,7 +425,7 @@ void ParserBuilder::step_07(Context& context_) {
 
   for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
     Fa fa_comment_close;
-    FaPart fa_part_rule_close = TerminalDefinitionToFaPart::convert(fa_comment_close, "@comment_close_" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions);
+    FaPart fa_part_rule_close = TerminalDefinitionToFaPart::convert(fa_comment_close, "@comment_close_" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
     Fa::StateNrType const state_nr_end = fa_comment_close.get_unused_state_nr();
     fa_comment_close._states[state_nr_end]._accepts.resize(1, true);
     fa_part_rule_close.connect_outgoing_transitions_to(state_nr_end, fa_comment_close);
@@ -425,7 +439,7 @@ void ParserBuilder::step_07(Context& context_) {
     }
 
     Fa fa_terminal;
-    FaPart fa_part_terminal = TerminalDefinitionToFaPart::convert(fa_terminal, context_._terminal_id_names[i], context_._terminal_definitions[i], context_._terminal_names, context_._terminal_definitions);
+    FaPart fa_part_terminal = TerminalDefinitionToFaPart::convert(fa_terminal, context_._terminal_id_names[i], context_._terminal_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
     Fa::StateNrType const state_nr_end = fa_terminal.get_unused_state_nr();
     Fa::State& state_end = fa_terminal._states[state_nr_end];
     state_end._accepts.resize(context_._accepts.size(), false);
@@ -436,7 +450,7 @@ void ParserBuilder::step_07(Context& context_) {
   }
 }
 
-void ParserBuilder::step_08(Context& context_) {
+void ParserBuilder::step_07(Context& context_) {
   for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
     Fa& fa_comment_close = context_._comment_close_fas[i];
 
@@ -474,7 +488,7 @@ void ParserBuilder::step_08(Context& context_) {
   }
 }
 
-void ParserBuilder::step_09(Context& context_) {
+void ParserBuilder::step_08(Context& context_) {
   Fa::StateNrType const state_nr_start = 0;
   context_._fa._states[state_nr_start];
 
@@ -516,7 +530,7 @@ void ParserBuilder::step_09(Context& context_) {
   }
 }
 
-void ParserBuilder::step_10(Context& context_) {
+void ParserBuilder::step_09(Context& context_) {
   Fa::StateNrType const state_nr_start = 0;
   Fa::State& state_start = context_._fa._states[state_nr_start];
   state_start._accepts.resize(context_._accepts.size(), false);
@@ -532,7 +546,7 @@ void ParserBuilder::step_10(Context& context_) {
   state_start._transitions._symbol_transitions.insert_or_assign(GenericTablesBase::SYMBOL_EOI, state_nr_eoi);
 }
 
-void ParserBuilder::step_11(Context& context_) {
+void ParserBuilder::step_10(Context& context_) {
   Fa::StateNrType const state_nr_start = 0;
 
   for (size_t i = 0; i < context_._terminal_fas.size(); ++i) {
@@ -552,7 +566,7 @@ void ParserBuilder::step_11(Context& context_) {
   }
 }
 
-void ParserBuilder::step_12(Context& context_) {
+void ParserBuilder::step_11(Context& context_) {
   context_._fa.determinize();
   context_._fa.minimize();
 
@@ -590,7 +604,9 @@ void ParserBuilder::step_12(Context& context_) {
   }
 }
 
-void ParserBuilder::step_13(Context& context_) {
+void ParserBuilder::step_12(Context& context_) {
+  for (size_t i = 0; i < context_._rule_definitions.size(); ++i) {
+  }
 }
 
 void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::Fa const& fa_) {
@@ -607,7 +623,35 @@ auto ParserBuilder::accepts_to_label(Context& context_, size_t accept_idx_) -> s
   return context_._terminal_names[context_._accepts[accept_idx_]];
 }
 
-auto ParserBuilder::Context::try_find_terminal_definition(std::string const& name_) -> pmt::util::parsert::GenericAst::AstPositionConst {
+void ParserBuilder::sort_terminals_by_name(Context& context_) {
+  std::vector<size_t> ordering;
+  std::generate_n(std::back_inserter(ordering), context_._terminal_names.size(), [i = 0]() mutable { return i++; });
+  std::ranges::sort(ordering, [&context_](size_t lhs_, size_t rhs_) { return context_._terminal_names[lhs_] < context_._terminal_names[rhs_]; });
+
+  apply_permutation(context_._terminal_names.begin(), context_._terminal_names.end(), ordering.begin());
+  apply_permutation(context_._terminal_id_names.begin(), context_._terminal_id_names.end(), ordering.begin());
+  apply_permutation(context_._terminal_accepts.begin(), context_._terminal_accepts.end(), ordering.begin());
+  apply_permutation(context_._terminal_case_sensitive_present, ordering.begin());
+  apply_permutation(context_._terminal_case_sensitive_values, ordering.begin());
+  apply_permutation(context_._terminal_definitions.begin(), context_._terminal_definitions.end(), ordering.begin());
+
+  std::transform(context_._accepts.begin(), context_._accepts.end(), context_._accepts.begin(), [&ordering](size_t i_) { return ordering[i_]; });
+}
+
+void ParserBuilder::sort_rules_by_name(Context& context_) {
+  std::vector<size_t> ordering;
+  std::generate_n(std::back_inserter(ordering), context_._rule_names.size(), [i = 0]() mutable { return i++; });
+  std::ranges::sort(ordering, [&context_](size_t lhs_, size_t rhs_) { return context_._rule_names[lhs_] < context_._rule_names[rhs_]; });
+
+  apply_permutation(context_._rule_names.begin(), context_._rule_names.end(), ordering.begin());
+  apply_permutation(context_._rule_id_names.begin(), context_._rule_id_names.end(), ordering.begin());
+  apply_permutation(context_._rule_merge_values, ordering.begin());
+  apply_permutation(context_._rule_unpack_values, ordering.begin());
+  apply_permutation(context_._rule_hide_values, ordering.begin());
+  apply_permutation(context_._rule_definitions.begin(), context_._rule_definitions.end(), ordering.begin());
+}
+
+auto ParserBuilder::Context::try_find_terminal_definition(std::string const& name_) -> pmt::util::parsert::GenericAstPath {
   std::optional<size_t> const index = base::binary_find_index(_terminal_names.begin(), _terminal_names.end(), name_);
   if (!index.has_value()) {
     throw std::runtime_error("Terminal not found: " + name_);
@@ -616,7 +660,7 @@ auto ParserBuilder::Context::try_find_terminal_definition(std::string const& nam
   return _terminal_definitions[*index];
 }
 
-auto ParserBuilder::Context::try_find_rule_definition(std::string const& name_) -> pmt::util::parsert::GenericAst::AstPositionConst {
+auto ParserBuilder::Context::try_find_rule_definition(std::string const& name_) -> pmt::util::parsert::GenericAstPath {
   std::optional<size_t> const index = base::binary_find_index(_rule_names.begin(), _rule_names.end(), name_);
   if (!index.has_value()) {
     throw std::runtime_error("Rule not found: " + name_);

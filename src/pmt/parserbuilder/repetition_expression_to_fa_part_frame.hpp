@@ -4,18 +4,17 @@
 #include "pmt/parserbuilder/fa_part.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
 #include "pmt/util/parsect/fa.hpp"
-#include "pmt/util/parsert/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 
 class RepetitionExpressionToFaPartFrame : public ExpressionToFaPartFrameBase {
  public:
-  explicit RepetitionExpressionToFaPartFrame(pmt::util::parsert::GenericAst::AstPositionConst ast_position_);
+  explicit RepetitionExpressionToFaPartFrame(pmt::util::parsert::GenericAstPath const& path_);
   void process(CallstackType& callstack_, Captures& captures_) final;
 
  private:
   void process_stage_0(CallstackType& callstack_, Captures& captures_);
-  void process_stage_1(CallstackType& callstack_);
+  void process_stage_1(CallstackType& callstack_, Captures& captures_);
   void process_stage_2(CallstackType& callstack_, Captures& captures_);
 
   auto is_last() const -> bool;

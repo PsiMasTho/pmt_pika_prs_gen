@@ -359,8 +359,106 @@ rule_expression(A) ::= TOKEN_TERMINAL_IDENTIFIER(B). {
  A = std::move(B);
 }
 
+rule_expression(A) ::= TOKEN_STRING_LITERAL(B). {
+ A = std::move(B);
+}
+
+rule_expression(A) ::= TOKEN_INTEGER_LITERAL(B). {
+ A = std::move(B);
+}
+
 rule_expression(A) ::= TOKEN_EPSILON(B). {
  A = std::move(B);
+}
+
+rule_expression(A) ::= TOKEN_OPEN_PAREN rule_choices(B) TOKEN_CLOSE_PAREN. {
+ A = std::move(B);
+}
+
+rule_expression(A) ::= rule_expression(B) TOKEN_QUESTION. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetition);
+ A->give_child_at_back(std::move(B));
+
+ // Add repetition info: "," "1"
+ auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+
+ auto comma = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkComma);
+ comma->set_string(",");
+ repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
+ 
+ auto rhs = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkIntegerLiteral);
+ rhs->set_string("10#1");
+ repetition_info->give_child_at_back(std::move(rhs));
+
+ A->give_child_at_back(std::move(repetition_info));
+}
+
+rule_expression(A) ::= rule_expression(B) TOKEN_STAR. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetition);
+ A->give_child_at_back(std::move(B));
+
+ // Add repetition info: ","
+ auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+
+ auto comma = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkComma);
+ comma->set_string(",");
+
+ repetition_info->give_child_at_back(std::move(comma));
+ A->give_child_at_back(std::move(repetition_info));
+}
+
+rule_expression(A) ::= rule_expression(B) TOKEN_PLUS. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetition);
+ A->give_child_at_back(std::move(B));
+
+ // Add repetition info: "1" ","
+ auto repetition_info = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+
+ auto lhs = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkIntegerLiteral);
+ lhs->set_string("10#1");
+ repetition_info->give_child_at(repetition_info->get_children_size(), std::move(lhs));
+
+ auto comma = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::String, pmt::parserbuilder::GrmAst::TkComma);
+ comma->set_string(",");
+ repetition_info->give_child_at(repetition_info->get_children_size(), std::move(comma));
+
+ A->give_child_at_back(std::move(repetition_info));
+}
+
+rule_expression(A) ::= rule_expression(B) rule_repetition_range(C). {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetition);
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+}
+
+// - RULE_REPETITION_RANGE -
+rule_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_COMMA(B) TOKEN_CLOSE_BRACE. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+ A->give_child_at_back(std::move(B));
+}
+
+rule_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_COMMA(C) TOKEN_CLOSE_BRACE. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+}
+
+rule_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_COMMA(B) TOKEN_INTEGER_LITERAL(C) TOKEN_CLOSE_BRACE. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+}
+
+rule_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_COMMA(C) TOKEN_INTEGER_LITERAL(D) TOKEN_CLOSE_BRACE. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+ A->give_child_at_back(std::move(B));
+ A->give_child_at_back(std::move(C));
+ A->give_child_at_back(std::move(D));
+}
+
+rule_repetition_range(A) ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL(B) TOKEN_CLOSE_BRACE. {
+ A = pmt::util::parsert::GenericAst::construct(pmt::util::parsert::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtRuleRepetitionRange);
+ A->give_child_at_back(std::move(B));
 }
 
 // - GRAMMAR_PROPERTY -

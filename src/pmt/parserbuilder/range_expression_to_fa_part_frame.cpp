@@ -3,6 +3,7 @@
 #include "pmt/parserbuilder/fa_part.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
 #include "pmt/util/parsect/fa.hpp"
+#include "pmt/util/parsert/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 using namespace pmt::util::parsect;
@@ -14,7 +15,7 @@ void RangeExpressionToFaPartFrame::process(CallstackType&, Captures& captures_) 
   captures_._result._states[state_nr_incoming];
   captures_._ret_part.set_incoming_state_nr(state_nr_incoming);
 
-  GenericAst const& cur_expr = *_ast_position.first->get_child_at(_ast_position.second);
+  GenericAst const& cur_expr = *_path.resolve(captures_._ast);
 
   Fa::SymbolType const min = GrmNumber::single_char_as_value(*cur_expr.get_child_at(0));
   Fa::SymbolType const max = GrmNumber::single_char_as_value(*cur_expr.get_child_at(1));
