@@ -635,7 +635,9 @@ void ParserBuilder::sort_terminals_by_name(Context& context_) {
   apply_permutation(context_._terminal_case_sensitive_values, ordering.begin());
   apply_permutation(context_._terminal_definitions.begin(), context_._terminal_definitions.end(), ordering.begin());
 
-  std::transform(context_._accepts.begin(), context_._accepts.end(), context_._accepts.begin(), [&ordering](size_t i_) { return ordering[i_]; });
+  std::vector<size_t> const ordering_inverse = inverse_permutation(ordering.begin(), ordering.end());
+
+  std::transform(context_._accepts.begin(), context_._accepts.end(), context_._accepts.begin(), [&ordering_inverse](size_t i_) { return ordering_inverse[i_]; });
 }
 
 void ParserBuilder::sort_rules_by_name(Context& context_) {
