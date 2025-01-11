@@ -42,7 +42,7 @@ class ParserBuilder {
   static void step_12(Context& context_);
 
   template <pmt::util::parsect::IsStateTag TAG_>
-  static void write_dot(Context& context_, pmt::util::parsect::StateMachine<TAG_> const& state_machine_);
+  static void write_dot(Context& context_, pmt::util::parsect::StateMachine const& state_machine_);
 
   static auto accepts_to_label(Context& context_, size_t accept_idx_) -> std::string;
 
@@ -98,7 +98,7 @@ class ParserBuilder::Context {
 
   std::optional<bool> _case_sensitive;
   std::string _start_symbol;
-  std::set<pmt::util::parsect::StateBase::SymbolType> _whitespace;
+  std::set<pmt::util::parsect::Symbol::ValueType> _whitespace;
 
   size_t _dot_file_count = 0;
 };

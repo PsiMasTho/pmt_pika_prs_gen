@@ -5,20 +5,27 @@
 namespace pmt::util::parsect {
 
 class StateMachine {
+ private:
+  // -$ Data $-
+  std::vector<State::StateNrType> _state_nrs;
+  std::vector<State> _states;
+
  public:
-  // - Public functions -
-  // -- Other --
+  // -$ Functions $-
+  // --$ Other $--
   auto get_state(State::StateNrType state_nr_) -> State*;
   auto get_state(State::StateNrType state_nr_) const -> State const*;
+
+  auto get_states() const -> std::vector<State> const&;
+  auto get_state_nrs() const -> std::vector<State::StateNrType> const&;
 
   auto get_or_create_state(State::StateNrType state_nr_) -> State&;
   auto get_unused_state_nr() const -> State::StateNrType;
   auto create_new_state() -> State::StateNrType;
 
-  auto size() const -> size_t;
+  void remove_state(State::StateNrType state_nr_);
 
- private:
-  std::unordered_map<State::StateNrType, State> _states;
+  auto get_state_count() const -> size_t;
 };
 
 }  // namespace pmt::util::parsect

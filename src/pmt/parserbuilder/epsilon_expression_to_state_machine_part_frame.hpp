@@ -10,7 +10,7 @@ class EpsilonExpressionToFaPartFrame : public ExpressionToStateMachinePartFrameB
   using ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase;
   void process(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_) final;
 
-  static auto make_epsilon(pmt::util::parsect::StateMachine<TAG_>& state_machine_) -> pmt::util::parsect::State::StateNrType;
+  static auto make_epsilon(pmt::util::parsect::StateMachine& state_machine_) -> pmt::util::parsect::State::StateNrType;
 };
 
 }  // namespace pmt::parserbuilder

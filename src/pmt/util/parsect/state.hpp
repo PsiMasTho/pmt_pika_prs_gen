@@ -3,7 +3,7 @@
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/util/parsect/symbol.hpp"
 
-#include <optional>
+#include <limits>
 #include <unordered_set>
 #include <vector>
 
@@ -13,6 +13,10 @@ class State {
  public:
   // -$ Types / Constants $-
   using StateNrType = size_t;
+
+  enum : StateNrType {
+    StateNrSink = std::numeric_limits<StateNrType>::max(),
+  };
 
  private:
   // -$ Data $-
@@ -30,12 +34,11 @@ class State {
   void remove_epsilon_transition(StateNrType state_nr_);
   void remove_symbol_transition(Symbol symbol_);
 
-  void add_accept(size_t accept_nr_);
-  void remove_accept(size_t accept_nr_);
-  auto has_accept(size_t accept_nr_) const -> bool;
+  auto get_accepts() const -> pmt::base::DynamicBitset const&;
+  auto get_accepts() -> pmt::base::DynamicBitset&;
 
   auto get_epsilon_transitions() const -> std::unordered_set<StateNrType> const&;
-  auto get_symbol_transition(Symbol symbol_) const -> std::optional<StateNrType>;
+  auto get_symbol_transition(Symbol symbol_) const -> StateNrType;
 
   auto get_symbols(Symbol::KindType kind_) const -> std::vector<Symbol> const&;
   auto get_symbol_kinds() const -> std::vector<Symbol::KindType>;

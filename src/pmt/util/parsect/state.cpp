@@ -11,22 +11,20 @@ void State::add_epsilon_transition(StateNrType state_nr_) {
 }
 
 void State::add_symbol_transition(Symbol symbol_, StateNrType state_nr_) {
-  std::optional<size_t> const index_outer = binary_find_index(_symbols.begin(), _symbols.end(), symbol_._kind, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_kind_lt(lhs_, rhs_);
-  });
+  std::optional<size_t> const index_outer = binary_find_index(_symbols.begin(), _symbols.end(), symbol_._kind, [](auto const& lhs_, auto const& rhs_) { return symbol_kind_lt(lhs_, rhs_); });
 
   if (!index_outer.has_value()) {
-   _symbols.emplace(_symbols.begin() + *index_outer);
+    _symbols.emplace(_symbols.begin() + *index_outer);
     _symbol_transitions.emplace(_symbol_transitions.begin() + *index_outer);
   }
 
-  std::optional<size_t> const index_inner = binary_find_index(_symbols[*index_outer].begin(), _symbols[*index_outer].end(), symbol_._value, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_value_lt(lhs_, rhs_);
-  });
+  std::optional<size_t> const index_inner = binary_find_index(_symbols[*index_outer].begin(), _symbols[*index_outer].end(), symbol_._value, [](auto const& lhs_, auto const& rhs_) { return symbol_value_lt(lhs_, rhs_); });
 
   if (!index_inner.has_value()) {
     _symbols[*index_outer].emplace(_symbols[*index_outer].begin() + *index_inner, symbol_);
     _symbol_transitions[*index_outer].emplace(_symbol_transitions[*index_outer].begin() + *index_inner, state_nr_);
+  } else {
+    _symbol_transitions[*index_outer][*index_inner] = state_nr_;
   }
 }
 
@@ -35,17 +33,13 @@ void State::remove_epsilon_transition(StateNrType state_nr_) {
 }
 
 void State::remove_symbol_transition(Symbol symbol_) {
- std::optional<size_t> const index_outer = binary_find_index(_symbols.begin(), _symbols.end(), symbol_._kind, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_kind_lt(lhs_, rhs_);
-  });
+  std::optional<size_t> const index_outer = binary_find_index(_symbols.begin(), _symbols.end(), symbol_._kind, [](auto const& lhs_, auto const& rhs_) { return symbol_kind_lt(lhs_, rhs_); });
 
   if (!index_outer.has_value()) {
     return;
   }
 
-  std::optional<size_t> const index_inner = binary_find_index(_symbols[*index_outer].begin(), _symbols[*index_outer].end(), symbol_._value, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_value_lt(lhs_, rhs_);
-  });
+  std::optional<size_t> const index_inner = binary_find_index(_symbols[*index_outer].begin(), _symbols[*index_outer].end(), symbol_._value, [](auto const& lhs_, auto const& rhs_) { return symbol_value_lt(lhs_, rhs_); });
 
   if (!index_inner.has_value()) {
     return;
@@ -60,48 +54,32 @@ void State::remove_symbol_transition(Symbol symbol_) {
   }
 }
 
-void State::add_accept(size_t accept_nr_) {
-  if (accept_nr_ >= _accepts.size()) {
-    _accepts.resize(accept_nr_ + 1, false);
-  }
-
-  _accepts.set(accept_nr_, true);
+auto State::get_accepts() const -> pmt::base::DynamicBitset const& {
+  return _accepts;
 }
 
-void State::remove_accept(size_t accept_nr_) {
-  if (accept_nr_ < _accepts.size()) {
-    _accepts.set(accept_nr_, false);
-  }
-}
-
-auto State::has_accept(size_t accept_nr_) const -> bool {
-  return accept_nr_ < _accepts.size() && _accepts.get(accept_nr_);
+auto State::get_accepts() -> pmt::base::DynamicBitset& {
+  return _accepts;
 }
 
 auto State::get_epsilon_transitions() const -> std::unordered_set<StateNrType> const& {
   return _epsilon_transitions;
 }
 
-auto State::get_symbol_transition(Symbol symbol_) const -> std::optional<StateNrType> {
-  std::optional<size_t> const index_outer = binary_find_index(_symbols.begin(), _symbols.end(), symbol_._kind, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_kind_lt(lhs_, rhs_);
-  });
+auto State::get_symbol_transition(Symbol symbol_) const -> StateNrType {
+  std::optional<size_t> const index_outer = binary_find_index(_symbols.begin(), _symbols.end(), symbol_._kind, [](auto const& lhs_, auto const& rhs_) { return symbol_kind_lt(lhs_, rhs_); });
 
   if (!index_outer.has_value()) {
-    return std::nullopt;
+    return StateNrSink;
   }
 
-  std::optional<size_t> const index_inner = binary_find_index(_symbols[*index_outer].begin(), _symbols[*index_outer].end(), symbol_._value, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_value_lt(lhs_, rhs_);
-  });
+  std::optional<size_t> const index_inner = binary_find_index(_symbols[*index_outer].begin(), _symbols[*index_outer].end(), symbol_._value, [](auto const& lhs_, auto const& rhs_) { return symbol_value_lt(lhs_, rhs_); });
 
-  return index_inner.has_value() ? _symbol_transitions[*index_outer][*index_inner] : std::optional<StateNrType>{};
+  return index_inner.has_value() ? _symbol_transitions[*index_outer][*index_inner] : StateNrSink;
 }
 
 auto State::get_symbols(Symbol::KindType kind_) const -> std::vector<Symbol> const& {
-  std::optional<size_t> const index = binary_find_index(_symbols.begin(), _symbols.end(), kind_, [](auto const& lhs_, auto const& rhs_) {
-    return symbol_kind_lt(lhs_, rhs_);
-  });
+  std::optional<size_t> const index = binary_find_index(_symbols.begin(), _symbols.end(), kind_, [](auto const& lhs_, auto const& rhs_) { return symbol_kind_lt(lhs_, rhs_); });
 
   if (index.has_value()) {
     return _symbols[*index];

@@ -1,21 +1,20 @@
-// clang-format off
-#ifdef __INTELLISENSE__
- #include "pmt/util/parsect/state_machine_determinizer.hpp"
-#endif
-// clang-format on
+#include "pmt/util/parsect/state_machine_determinizer.hpp"
 
 #include "pmt/base/dynamic_bitset_converter.hpp"
 
 namespace pmt::util::parsect {
 using namespace pmt::base;
 
-template <IsStateTag TAG_>
-void StateMachineDeterminizer<TAG_>::determinize(StateMachine<TAG_>& state_machine_) {
+void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
+  if (state_machine_.get_state_count() == 0) {
+    return;
+  }
+
   std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>> e_closure_cache;
   std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>> new_to_old;
   std::unordered_map<DynamicBitset, State::StateNrType> old_to_new;
   std::vector<State::StateNrType> pending;
-  StateMachine<TAG_> result;
+  StateMachine result;
 
   auto const take = [&pending]() {
     State::StateNrType ret = pending.back();
@@ -24,7 +23,7 @@ void StateMachineDeterminizer<TAG_>::determinize(StateMachine<TAG_>& state_machi
   };
 
   auto const push_and_visit = [&](std::unordered_set<State::StateNrType> state_nr_set_) -> State::StateNrType {
-    DynamicBitset const state_nr_set_bitset = DynamicBitsetConverter::from_unordered_set(state_nr_set_, state_machine_.size());
+    DynamicBitset const state_nr_set_bitset = DynamicBitsetConverter::from_unordered_set(state_nr_set_, state_machine_.get_state_nrs().back());
     if (auto const itr = old_to_new.find(state_nr_set_bitset); itr != old_to_new.end()) {
       return itr->second;
     }
@@ -41,34 +40,34 @@ void StateMachineDeterminizer<TAG_>::determinize(StateMachine<TAG_>& state_machi
 
   while (!pending.empty()) {
     State::StateNrType const state_nr_cur = take();
-    State<TAG_>& state_cur = result.get_or_create_state(state_nr_cur);
+    State& state_cur = result.get_or_create_state(state_nr_cur);
     std::unordered_set<State::StateNrType> const& state_nr_set_cur = new_to_old.find(state_nr_cur)->second;
 
     // Set up the accepts
     for (State::StateNrType const state_nr_old : state_nr_set_cur) {
-      State<TAG_> const& state_old = state_machine_.get_or_create_state(state_nr_old);
-      if (state_old._accepts.empty()) {
+      State const& state_old = state_machine_.get_or_create_state(state_nr_old);
+      DynamicBitset const& accepts_old = state_old.get_accepts();
+      if (accepts_old.empty()) {
         continue;
       }
 
-      state_cur._accepts.resize(state_old._accepts.size(), false);
-      state_cur._accepts.inplace_or(state_old._accepts);
+      DynamicBitset& accepts_cur = state_cur.get_accepts();
+      accepts_cur.resize(accepts_old.size(), false);
+      accepts_cur.inplace_or(accepts_old);
     }
 
     // Set up the transitions
     std::unordered_set<Symbol> const symbols = get_symbols(state_machine_, state_nr_set_cur);
     for (Symbol const& symbol : symbols) {
       std::unordered_set<State::StateNrType> state_nr_set_next = get_e_closure(state_machine_, get_moves(state_machine_, state_nr_set_cur, symbol), e_closure_cache);
-      State::StateNrType const state_nr_next = push_and_visit(std::move(state_nr_set_next));
-      state_cur._symbol_transitions[symbol._symbol_kind].insert_or_assign(symbol, state_nr_next);
+      state_cur.add_symbol_transition(symbol, push_and_visit(std::move(state_nr_set_next)));
     }
   }
 
   state_machine_ = std::move(result);
 }
 
-template <IsStateTag TAG_>
-auto StateMachineDeterminizer<TAG_>::get_e_closure(StateMachine<TAG_> const& state_machine_, State::StateNrType state_nr_from_, std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>>& cache_) -> std::unordered_set<State::StateNrType> {
+auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_, State::StateNrType state_nr_from_, std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>>& cache_) -> std::unordered_set<State::StateNrType> {
   std::unordered_set<State::StateNrType> ret;
   std::vector<State::StateNrType> pending;
   pending.push_back(state_nr_from_);
@@ -83,8 +82,8 @@ auto StateMachineDeterminizer<TAG_>::get_e_closure(StateMachine<TAG_> const& sta
       continue;
     }
 
-    State<TAG_> const& state_cur = *state_machine_.get_state(state_nr_cur);
-    for (State::StateNrType state_nr_next : state_cur._epsilon_transitions) {
+    State const& state_cur = *state_machine_.get_state(state_nr_cur);
+    for (State::StateNrType const state_nr_next : state_cur.get_epsilon_transitions()) {
       if (ret.insert(state_nr_next).second) {
         pending.push_back(state_nr_next);
       }
@@ -97,8 +96,7 @@ auto StateMachineDeterminizer<TAG_>::get_e_closure(StateMachine<TAG_> const& sta
   return ret;
 }
 
-template <IsStateTag TAG_>
-auto StateMachineDeterminizer<TAG_>::get_e_closure(StateMachine<TAG_> const& state_machine_, std::unordered_set<State::StateNrType> const& state_nrs_from_, std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>>& cache_) -> std::unordered_set<State::StateNrType> {
+auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_, std::unordered_set<State::StateNrType> const& state_nrs_from_, std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>>& cache_) -> std::unordered_set<State::StateNrType> {
   std::unordered_set<State::StateNrType> ret;
 
   for (State::StateNrType const state_nr_from : state_nrs_from_) {
@@ -108,29 +106,27 @@ auto StateMachineDeterminizer<TAG_>::get_e_closure(StateMachine<TAG_> const& sta
   return ret;
 }
 
-template <IsStateTag TAG_>
-auto StateMachineDeterminizer<TAG_>::get_moves(StateMachine<TAG_> const& state_machine_, std::unordered_set<State::StateNrType> const& state_nrs_from_, Symbol symbol_) -> std::unordered_set<State::StateNrType> {
+auto StateMachineDeterminizer::get_moves(StateMachine const& state_machine_, std::unordered_set<State::StateNrType> const& state_nrs_from_, Symbol symbol_) -> std::unordered_set<State::StateNrType> {
   std::unordered_set<State::StateNrType> ret;
 
   for (State::StateNrType const state_nr_from : state_nrs_from_) {
-    State<TAG_> const& state_from = *state_machine_.get_state(state_nr_from);
-    auto const itr = state_from._symbol_transitions[symbol_._symbol_kind].find(symbol_);
-    if (itr != state_from._symbol_transitions[symbol_._symbol_kind].end()) {
-      ret.insert(itr->second);
+    State const& state_from = *state_machine_.get_state(state_nr_from);
+    State::StateNrType const state_nr_next = state_from.get_symbol_transition(symbol_);
+    if (state_nr_next != State::StateNrSink) {
+      ret.insert(state_nr_next);
     }
   }
 
   return ret;
 }
 
-template <IsStateTag TAG_>
-auto StateMachineDeterminizer<TAG_>::get_symbols(StateMachine<TAG_> const& state_machine_, std::unordered_set<State::StateNrType> const& state_nrs_from_) -> std::unordered_set<Symbol> {
+auto StateMachineDeterminizer::get_symbols(StateMachine const& state_machine_, std::unordered_set<State::StateNrType> const& state_nrs_from_) -> std::unordered_set<Symbol> {
   std::unordered_set<Symbol> ret;
 
   for (State::StateNrType const state_nr_from : state_nrs_from_) {
-    State<TAG_> const& state_from = *state_machine_.get_state(state_nr_from);
-    for (auto const& map : state_from._symbol_transitions) {
-      for (auto const& [symbol, state_nr_next] : map) {
+    State const& state_from = *state_machine_.get_state(state_nr_from);
+    for (Symbol::KindType const kind : state_from.get_symbol_kinds()) {
+      for (Symbol const& symbol : state_from.get_symbols(kind)) {
         ret.insert(symbol);
       }
     }

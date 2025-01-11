@@ -15,7 +15,7 @@ class StateMachineToTransitionTables {
   class Context;
 
  public:
-  static auto convert(pmt::util::parsect::StateMachine<TAG_> const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_) -> pmt::util::parsert::TransitionTables;
+  static auto convert(pmt::util::parsect::StateMachine const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_) -> pmt::util::parsert::TransitionTables;
 
  private:
   static void step_1(Context& context_);
@@ -33,9 +33,9 @@ class StateMachineToTransitionTables {
 template <pmt::util::parsect::IsStateTag TAG_>
 class StateMachineToTransitionTables<TAG_>::Context {
  public:
-  Context(pmt::util::parsect::StateMachine<TAG_> const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_);
+  Context(pmt::util::parsect::StateMachine const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_);
 
-  std::pair<pmt::util::parsect::StateBase::SymbolType, pmt::util::parsect::StateBase::SymbolType> _alphabet_limits;
+  std::pair<pmt::util::parsect::Symbol::ValueType, pmt::util::parsect::Symbol::ValueType> _alphabet_limits;
   pmt::util::parsect::StateMachineSinkWrapper<TAG_> _state_machine_with_sink;
   std::vector<pmt::util::parsect::State::StateNrType> _ordering;
   std::vector<pmt::base::DynamicBitset> _diff_mat_2d;

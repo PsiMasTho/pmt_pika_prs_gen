@@ -17,7 +17,7 @@ class ExpressionToStateMachinePartFrameBaseCaptures {
   std::unordered_set<std::string> _name_stack_contents;
   std::vector<std::string> _name_stack;
 
-  pmt::util::parsect::StateMachine<TAG_>& _dest_state_machine;
+  pmt::util::parsect::StateMachine& _dest_state_machine;
   std::vector<std::string> const& _names;
   std::vector<pmt::util::parsert::GenericAstPath> const& _definitions;
   pmt::util::parsert::GenericAst const& _ast;

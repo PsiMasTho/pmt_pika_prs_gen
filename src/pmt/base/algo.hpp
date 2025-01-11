@@ -25,8 +25,8 @@ template <typename T_>
   requires(std::is_integral_v<typename T_::value_type>)
 auto inverse_permutation(T_ indices_begin_, T_ indices_end_) -> std::vector<typename T_::value_type>;
 
-template <typename T_, typename CMP_ = std::less<>>
-auto binary_find_index(T_ begin_, T_ end_, typename T_::value_type const& value_, CMP_ cmp_ = CMP_{}) -> std::optional<size_t>;
+template <typename T_, typename U_, typename CMP_ = std::less<>>
+auto binary_find_index(T_ begin_, T_ end_, U_ const& value_, CMP_ cmp_ = CMP_{}) -> std::optional<size_t>;
 
 }  // namespace pmt::base
 

@@ -1,36 +1,28 @@
-// clang-format off
-#ifdef __INTELLISENSE__
- #include "pmt/util/parsect/state_machine_minimizer.hpp"
-#endif
-// clang-format on
+#include "pmt/util/parsect/state_machine_minimizer.hpp"
 
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
 #include "pmt/util/parsect/alphabet_limits.hpp"
-#include "pmt/util/parsect/state_machine_sink_wrapper.hpp"
 
 namespace pmt::util::parsect {
-template <IsStateTag TAG_>
-void StateMachineMinimizer<TAG_>::minimize(StateMachine<TAG_>& state_machine_) {
-  // Determine the alphabet limits
-  AlphabetLimits<TAG_> alphabet_limits(state_machine_);
 
-  // Create a wrapper to mimic having a sink state
-  StateMachineSinkWrapper<TAG_> state_machine_with_sink(state_machine_, alphabet_limits);
+void StateMachineMinimizer::minimize(StateMachine& state_machine_) {
+  // Determine the alphabet limits
+  AlphabetLimits alphabet_limits(state_machine_);
 
   // Initialize partitions
   std::unordered_map<pmt::base::DynamicBitset, pmt::base::DynamicBitset> by_accepts;
 
-  for (State::StateNrType state_nr = 0; state_nr < state_machine_with_sink.size(); ++state_nr) {
-    if (state_nr == state_machine_with_sink.get_state_nr_sink()) {
-      by_accepts.insert_or_assign(pmt::base::DynamicBitset(state_machine_with_sink.size(), false), DynamicBitset(state_machine_with_sink.size(), false));
+  for (State::StateNrType state_nr = 0; state_nr < state_machine_.size(); ++state_nr) {
+    if (state_nr == state_machine_.get_state_nr_sink()) {
+      by_accepts.insert_or_assign(pmt::base::DynamicBitset(state_machine_.size(), false), DynamicBitset(state_machine_.size(), false));
       continue;
     }
 
-    State<TAG_> const& state = *state_machine_.get_state(state_nr);
+    State const& state = *state_machine_.get_state(state_nr);
     auto itr = by_accepts.find(state._accepts);
     if (itr == by_accepts.end()) {
-      itr = by_accepts.insert_or_assign(state._accepts, DynamicBitset(state_machine_with_sink.size(), false)).first;
+      itr = by_accepts.insert_or_assign(state._accepts, DynamicBitset(state_machine_.size(), false)).first;
     }
     itr->second.set(state_nr, true);
   }
@@ -47,16 +39,16 @@ void StateMachineMinimizer<TAG_>::minimize(StateMachine<TAG_>& state_machine_) {
     pmt::base::DynamicBitset a = *w.begin();
     w.erase(w.begin());
 
-    for (size_t i = 0; i < StateTraits<TAG_>::SymbolKindCount; ++i) {
-      std::optional<std::pair<StateBase::SymbolType, StateBase::SymbolType>> const& limits = alphabet_limits.get_limit(i);
+    for (size_t i = 0; i < StateTraits::SymbolKindCount; ++i) {
+      std::optional<std::pair<Symbol::ValueType, Symbol::ValueType>> const& limits = alphabet_limits.get_limit(i);
       if (!limits.has_value()) {
         continue;
       }
 
-      for (StateBase::SymbolType j = limits->first; j <= limits->second; ++j) {
-        pmt::base::DynamicBitset x(state_machine_with_sink.size(), false);
-        for (size_t k = 0; k < state_machine_with_sink.size(); ++k) {
-          State::StateNrType const state_nr_next = state_machine_with_sink.get_state_nr_next(k, i, j);
+      for (Symbol::ValueType j = limits->first; j <= limits->second; ++j) {
+        pmt::base::DynamicBitset x(state_machine_.size(), false);
+        for (size_t k = 0; k < state_machine_.size(); ++k) {
+          State::StateNrType const state_nr_next = state_machine_.get_state_nr_next(k, i, j);
           if (a.get(state_nr_next)) {
             x.set(k, true);
           }
@@ -97,7 +89,7 @@ void StateMachineMinimizer<TAG_>::minimize(StateMachine<TAG_>& state_machine_) {
   std::unordered_map<State::StateNrType, pmt::base::DynamicBitset const*> state_nr_to_equiv_class;
 
   for (pmt::base::DynamicBitset const& equivalence_class : p) {
-    for (State::StateNrType state_nr = 0; state_nr < state_machine_with_sink.size(); ++state_nr) {
+    for (State::StateNrType state_nr = 0; state_nr < state_machine_.size(); ++state_nr) {
       if (equivalence_class.get(state_nr)) {
         state_nr_to_equiv_class.insert_or_assign(state_nr, &equivalence_class);
       }
@@ -106,7 +98,7 @@ void StateMachineMinimizer<TAG_>::minimize(StateMachine<TAG_>& state_machine_) {
 
   std::vector<pmt::base::DynamicBitset const*> pending;
   std::unordered_map<pmt::base::DynamicBitset const*, State::StateNrType> visited;
-  StateMachine<TAG_> result;
+  StateMachine result;
 
   auto const take = [&pending]() {
     pmt::base::DynamicBitset const* ret = pending.back();
@@ -133,7 +125,7 @@ void StateMachineMinimizer<TAG_>::minimize(StateMachine<TAG_>& state_machine_) {
   while (!pending.empty()) {
     pmt::base::DynamicBitset const* bitset_cur = take();
     State::StateNrType const state_nr_cur = visited.find(bitset_cur)->second;
-    State<TAG_>& state_cur = result._states.find(state_nr_cur)->second;
+    State& state_cur = result._states.find(state_nr_cur)->second;
 
     // Set up the accepts
     std::unordered_set<State::StateNrType> const state_nrs_cur = pmt::base::DynamicBitsetConverter::to_unordered_set<State::StateNrType>(*bitset_cur);
@@ -146,16 +138,16 @@ void StateMachineMinimizer<TAG_>::minimize(StateMachine<TAG_>& state_machine_) {
       }
 
       // Set up the transitions
-      for (size_t i = 0; i < StateTraits<TAG_>::SymbolKindCount; ++i) {
-        std::optional<std::pair<StateBase::SymbolType, StateBase::SymbolType>> const& limits = alphabet_limits.get_limit(i);
+      for (size_t i = 0; i < StateTraits::SymbolKindCount; ++i) {
+        std::optional<std::pair<Symbol::ValueType, Symbol::ValueType>> const& limits = alphabet_limits.get_limit(i);
         if (!limits.has_value()) {
           continue;
         }
 
-        for (StateBase::SymbolType j = limits->first; j <= limits->second; ++j) {
-          State::StateNrType const state_nr_next_old = state_machine_with_sink.get_state_nr_next(state_nr_old, i, j);
+        for (Symbol::ValueType j = limits->first; j <= limits->second; ++j) {
+          State::StateNrType const state_nr_next_old = state_machine_.get_state_nr_next(state_nr_old, i, j);
 
-          if (state_nr_next_old == state_machine_with_sink.get_state_nr_sink()) {
+          if (state_nr_next_old == state_machine_.get_state_nr_sink()) {
             continue;
           }
 

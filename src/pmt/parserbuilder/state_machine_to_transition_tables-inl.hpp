@@ -14,10 +14,10 @@
 namespace pmt::parserbuilder {
 
 template <pmt::util::parsect::IsStateTag TAG_>
-auto StateMachineToTransitionTables<TAG_>::convert(pmt::util::parsect::StateMachine<TAG_> const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_) -> pmt::util::parsert::TransitionTables {
+auto StateMachineToTransitionTables<TAG_>::convert(pmt::util::parsect::StateMachine const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_) -> pmt::util::parsert::TransitionTables {
   Context context(state_machine_, alphabet_limits_, symbol_kind_);
 
-  std::optional<std::pair<pmt::util::parsect::StateBase::SymbolType, pmt::util::parsect::StateBase::SymbolType>> const limits = context._alphabet_limits.get_limit(context._symbol_kind);
+  std::optional<std::pair<pmt::util::parsect::Symbol::ValueType, pmt::util::parsect::Symbol::ValueType>> const limits = context._alphabet_limits.get_limit(context._symbol_kind);
   if (!limits.has_value()) {
     return context._tables;
   }
@@ -44,7 +44,7 @@ void StateMachineToTransitionTables<TAG_>::step_1(Context& context_) {
     auto const [j1, j2] = index_1d_to_2d(i, width);
 
     context_._diff_mat_2d.emplace_back(context_._alphabet_limits.second - context_._alphabet_limits.first + 1, false);
-    for (pmt::util::parsect::StateBase::SymbolType k = context_._alphabet_limits.first; k <= context_._alphabet_limits.second; ++k) {
+    for (pmt::util::parsect::Symbol::ValueType k = context_._alphabet_limits.first; k <= context_._alphabet_limits.second; ++k) {
       context_._diff_mat_2d.back().set(k, context_._fa_with_sink.get_state_nr_next(j1, k) != context_._fa_with_sink.get_state_nr_next(j2, k));
     }
   }
@@ -234,7 +234,7 @@ auto StateMachineToTransitionTables<TAG_>::index_1d_to_2d(size_t i_, size_t widt
 }
 
 template <pmt::util::parsect::IsStateTag TAG_>
-StateMachineToTransitionTables<TAG_>::Context::Context(pmt::util::parsect::StateMachine<TAG_> const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_)
+StateMachineToTransitionTables<TAG_>::Context::Context(pmt::util::parsect::StateMachine const& state_machine_, pmt::util::parsect::AlphabetLimits<TAG_> alphabet_limits_, size_t symbol_kind_)
  : _alphabet_limits(alphabet_limits_)
  , _state_machine_with_sink(state_machine_, alphabet_limits_) {
 }

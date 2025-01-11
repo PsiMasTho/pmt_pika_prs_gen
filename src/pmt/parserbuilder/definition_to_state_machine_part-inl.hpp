@@ -11,7 +11,7 @@
 namespace pmt::parserbuilder {
 
 template <util::parsect::IsStateTag TAG_>
-auto DefinitionToStateMachinePart<TAG_>::convert(pmt::util::parsect::StateMachine<TAG_>& dest_state_machine_, std::string const& name_, pmt::util::parsert::GenericAstPath const& definition_, std::vector<std::string> const& names_, std::vector<pmt::util::parsert::GenericAstPath> const& definitions_, pmt::util::parsert::GenericAst const& ast_root_) -> pmt::util::parsect::StateMachinePart<TAG_> {
+auto DefinitionToStateMachinePart<TAG_>::convert(pmt::util::parsect::StateMachine& dest_state_machine_, std::string const& name_, pmt::util::parsert::GenericAstPath const& definition_, std::vector<std::string> const& names_, std::vector<pmt::util::parsert::GenericAstPath> const& definitions_, pmt::util::parsert::GenericAst const& ast_root_) -> pmt::util::parsect::StateMachinePart<TAG_> {
   ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType callstack;
   ExpressionToStateMachinePartFrameBaseCaptures<TAG_> captures{._dest_state_machine = dest_state_machine_, ._names = names_, ._definitions = definitions_, ._ast = ast_root_};
 

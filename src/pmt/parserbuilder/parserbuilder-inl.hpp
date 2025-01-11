@@ -12,7 +12,7 @@
 namespace pmt::parserbuilder {
 
 template <pmt::util::parsect::IsStateTag TAG_>
-void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::StateMachine<TAG_> const& state_machine_) {
+void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::StateMachine const& state_machine_) {
   if (state_machine_.size() > DOT_FILE_MAX_STATES) {
     std::cerr << "Skipping dot file write, too many states\n";
     return;
