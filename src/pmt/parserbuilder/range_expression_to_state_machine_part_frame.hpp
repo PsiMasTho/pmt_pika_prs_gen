@@ -1,0 +1,16 @@
+#pragma once
+
+#include "pmt/parserbuilder/expression_to_state_machine_part_frame_base.hpp"
+
+namespace pmt::parserbuilder {
+
+template <pmt::util::parsect::IsStateTag TAG_>
+class RangeExpressionToStateMachinePartFrame : public ExpressionToStateMachinePartFrameBase<TAG_> {
+ public:
+  using ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase;
+  void process(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_) final;
+};
+
+}  // namespace pmt::parserbuilder
+
+#include "pmt/parserbuilder/range_expression_to_state_machine_part_frame-inl.hpp"

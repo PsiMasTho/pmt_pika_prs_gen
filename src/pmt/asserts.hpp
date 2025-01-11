@@ -2,7 +2,7 @@
 
 namespace pmt {
 
-[[noreturn]] static inline void pmt_unreachable();
+[[noreturn]] static inline void unreachable();
 
 };  // namespace pmt
 

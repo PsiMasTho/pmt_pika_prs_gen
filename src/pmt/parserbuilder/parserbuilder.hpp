@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/util/parsect/fa.hpp"
+#include "pmt/util/parsect/state_machine.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
 #include "pmt/util/parsert/generic_ast_path.hpp"
 
@@ -41,7 +41,8 @@ class ParserBuilder {
   static void step_11(Context& context_);
   static void step_12(Context& context_);
 
-  static void write_dot(Context& context_, pmt::util::parsect::Fa const& fa_);
+  template <pmt::util::parsect::IsStateTag TAG_>
+  static void write_dot(Context& context_, pmt::util::parsect::StateMachine<TAG_> const& state_machine_);
 
   static auto accepts_to_label(Context& context_, size_t accept_idx_) -> std::string;
 
@@ -80,11 +81,12 @@ class ParserBuilder::Context {
 
   pmt::util::parsert::GenericAstPath _whitespace_definition;
 
-  pmt::util::parsect::Fa _fa;
+  pmt::util::parsect::StateMachine<pmt::util::parsect::StateTagFsm> _fsm;
+  pmt::util::parsect::StateMachine<pmt::util::parsect::StateTagPdm> _pdm;
 
-  std::vector<pmt::util::parsect::Fa> _terminal_fas;
-  std::vector<pmt::util::parsect::Fa> _comment_open_fas;
-  std::vector<pmt::util::parsect::Fa> _comment_close_fas;
+  std::vector<pmt::util::parsect::StateMachine<pmt::util::parsect::StateTagFsm>> _terminal_fsms;
+  std::vector<pmt::util::parsect::StateMachine<pmt::util::parsect::StateTagFsm>> _comment_open_fsms;
+  std::vector<pmt::util::parsect::StateMachine<pmt::util::parsect::StateTagFsm>> _comment_close_fsms;
 
   std::vector<std::string> _rule_names;
   std::vector<std::string> _rule_id_names;
@@ -96,9 +98,11 @@ class ParserBuilder::Context {
 
   std::optional<bool> _case_sensitive;
   std::string _start_symbol;
-  std::set<pmt::util::parsect::Fa::SymbolType> _whitespace;
+  std::set<pmt::util::parsect::StateBase::SymbolType> _whitespace;
 
   size_t _dot_file_count = 0;
 };
 
 }  // namespace pmt::parserbuilder
+
+#include "pmt/parserbuilder/parserbuilder-inl.hpp"

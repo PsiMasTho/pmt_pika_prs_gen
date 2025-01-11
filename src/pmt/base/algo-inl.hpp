@@ -60,10 +60,10 @@ auto inverse_permutation(T_ indices_begin_, T_ indices_end_) -> std::vector<type
   return ret;
 }
 
-template <typename T_, typename CMP_>
-auto binary_find_index(T_ begin_, T_ end_, typename T_::value_type const& value_, CMP_ cmp_) -> std::optional<size_t> {
+template <typename T_, typename U_, typename CMP_>
+auto binary_find_index(T_ begin_, T_ end_, U_ const& value_, CMP_ cmp_) -> std::optional<size_t> {
   auto const itr = std::lower_bound(begin_, end_, value_, cmp_);
-  if (itr == end_ || *itr != value_) {
+  if (itr == end_ || cmp_(value_, *itr)) {
     return std::nullopt;
   }
   return NumericCast::cast<size_t>(std::distance(begin_, itr));

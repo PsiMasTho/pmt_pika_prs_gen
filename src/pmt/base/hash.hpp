@@ -6,6 +6,8 @@ namespace pmt::base {
 
 class Hash {
  public:
+  // -$ Functions $-
+  // --$ Other $--
   static auto fnv1a(unsigned char const* data_, size_t size_) -> size_t;
 
   static void combine(size_t hash_, size_t& seed_);

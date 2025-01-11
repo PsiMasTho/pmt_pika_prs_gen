@@ -5,13 +5,15 @@
 
 namespace pmt::base {
 
+template <typename T_>
 class Cloneable {
  public:
-  auto clone() const -> std::unique_ptr<Cloneable>;
   virtual ~Cloneable() = default;
 
- private:
-  virtual auto v_clone() const -> std::unique_ptr<Cloneable>;
+  virtual auto clone() const -> std::unique_ptr<T_>;
+
+ protected:
+  Cloneable() = default;
 };
 
 class CloneError : public std::logic_error {
@@ -20,14 +22,23 @@ class CloneError : public std::logic_error {
 };
 
 template <typename CRTP_, typename BASE_>
-class InheritWithVClone : public BASE_ {
-  static_assert(std::derived_from<BASE_, Cloneable>);
+class InheritWithClone : public BASE_ {
+  static_assert(std::derived_from<BASE_, Cloneable<BASE_>>);
 
  public:
   using BASE_::BASE_;
 
- private:
-  auto v_clone() const -> std::unique_ptr<Cloneable> override;
+  auto clone() const -> std::unique_ptr<BASE_> override;
+};
+
+template <typename CRTP_, typename BASE_>
+class VirtualInheritWithClone : virtual public BASE_ {
+  static_assert(std::derived_from<BASE_, Cloneable<BASE_>>);
+
+ public:
+  using BASE_::BASE_;
+
+  auto clone() const -> std::unique_ptr<BASE_> override;
 };
 
 }  // namespace pmt::base

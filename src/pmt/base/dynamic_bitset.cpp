@@ -62,6 +62,22 @@ auto DynamicBitset::operator=(DynamicBitset&& other_) noexcept -> DynamicBitset&
   return *this;
 }
 
+auto DynamicBitset::operator==(const DynamicBitset& other_) const -> bool {
+  return _size == other_._size && std::equal(_data.get(), _data.get() + get_required_chunk_count(_size), other_._data.get());
+}
+
+auto DynamicBitset::operator!=(const DynamicBitset& other_) const -> bool {
+  return !(*this == other_);
+}
+
+auto DynamicBitset::hash() const -> size_t {
+  size_t seed = 0;
+  for (size_t i = 0; i < get_required_chunk_count(size()); ++i) {
+    pmt::base::Hash::combine(_data.get()[i], seed);
+  }
+  return seed;
+}
+
 auto DynamicBitset::size() const -> size_t {
   return _size;
 }
@@ -180,14 +196,6 @@ auto DynamicBitset::get_chunk_count() const -> size_t {
 
 auto DynamicBitset::get_required_chunk_count(size_t size_) -> size_t {
   return (size_ + CHUNK_BIT - 1) / CHUNK_BIT;
-}
-
-auto DynamicBitset::operator==(const DynamicBitset& other_) const -> bool {
-  return _size == other_._size && std::equal(_data.get(), _data.get() + get_required_chunk_count(_size), other_._data.get());
-}
-
-auto DynamicBitset::operator!=(const DynamicBitset& other_) const -> bool {
-  return !(*this == other_);
 }
 
 auto DynamicBitset::any() const -> bool {
@@ -384,14 +392,6 @@ auto DynamicBitset::clone_asymmetric_difference(const DynamicBitset& other_) con
   }
   ret.set_trailing_chunk(DEFAULT_VALUE);
   return ret;
-}
-
-auto DynamicBitset::hash() const -> size_t {
-  size_t seed = 0;
-  for (size_t i = 0; i < get_required_chunk_count(size()); ++i) {
-    pmt::base::Hash::combine(_data.get()[i], seed);
-  }
-  return seed;
 }
 
 void DynamicBitset::set_trailing_chunk(bool value_) {

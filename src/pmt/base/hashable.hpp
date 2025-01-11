@@ -2,19 +2,19 @@
 
 #include <cstddef>
 #include <functional>
-#include <type_traits>
 
 namespace pmt::base {
 
 template <typename CRTP_>
 class Hashable {
+  Hashable() = default;
+  ~Hashable() = default;
+  friend CRTP_;
+
  public:
-  auto operator<=>(Hashable const&) const = default;
+  auto operator<=>(const Hashable& other_) const -> bool = default;
 
   auto hash() const -> size_t;
-
- protected:
-  Hashable() = default;
 };
 
 }  // namespace pmt::base

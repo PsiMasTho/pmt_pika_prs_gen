@@ -11,17 +11,19 @@ namespace pmt::base {
 
 class DynamicBitsetConverter {
  public:
-  // - String conversion -
+  // -$ Functions $-
+  // --$ Other $--
+  // --- String Conversion ---
   static auto to_string(DynamicBitset const& bitset_) -> std::string;
   static auto from_string(std::string const& str_) -> DynamicBitset;
 
-  // - Set conversion -
+  // --- Set Conversion ---
   template <std::integral T_ = size_t>
   static auto to_set(DynamicBitset const& bitset_) -> std::set<T_>;
   template <std::integral T_ = size_t>
   static auto from_set(std::set<T_> const& set_, size_t size_) -> DynamicBitset;
 
-  // - Unordered set conversion -
+  // --- Unordered Set Conversion ---
   template <std::integral T_ = size_t>
   static auto to_unordered_set(DynamicBitset const& bitset_) -> std::unordered_set<T_>;
   template <std::integral T_ = size_t>

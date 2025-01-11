@@ -4,18 +4,19 @@
 #include "pmt/base/algo.hpp"
 #include "pmt/base/dynamic_bitset.hpp"
 #include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/parserbuilder/definition_to_state_machine_part.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
-#include "pmt/parserbuilder/terminal_definition_to_fa_part.hpp"
-#include "pmt/util/parsect/graph_writer.hpp"
+#include "pmt/util/parsect/state_base.hpp"
+#include "pmt/util/parsect/state_machine_determinizer.hpp"
+#include "pmt/util/parsect/state_machine_part.hpp"
+#include "pmt/util/parsect/state_tag.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
 #include "pmt/util/parsert/generic_ast_printer.hpp"
-#include "pmt/util/parsert/generic_tables_base.hpp"
+#include "pmt/util/parsert/tables_base.hpp"
 
 #include <algorithm>
-#include <fstream>
-#include <iostream>
 #include <stack>
 #include <utility>
 
@@ -92,7 +93,7 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   std::cout << "Ast after: " << std::endl;
   printer.print(*context._ast, std::cout);
 
-  write_dot(context, context._fa);
+  write_dot(context, context._fsm);
 }
 
 void ParserBuilder::step_01(Context& context_) {
@@ -376,17 +377,16 @@ void ParserBuilder::step_05(Context& context_) {
     return;
   }
 
-  Fa fa_whitespace;
-  FaPart fa_part_whitespace = TerminalDefinitionToFaPart::convert(fa_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions, *context_._ast);
-  Fa::StateNrType const state_nr_end = fa_whitespace.get_unused_state_nr();
-  fa_whitespace._states[state_nr_end];
-  fa_part_whitespace.connect_outgoing_transitions_to(state_nr_end, fa_whitespace);
-  fa_whitespace.determinize();
+  StateMachine<StateTagFsm> fsm_whitespace;
+  StateMachinePart<StateTagFsm> fsm_part_whitespace = DefinitionToStateMachinePart<StateTagFsm>::convert(fsm_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions, *context_._ast);
+  State::StateNrType const state_nr_end = fsm_whitespace.create_new_state();
+  fsm_part_whitespace.connect_outgoing_transitions_to(state_nr_end, fsm_whitespace);
+  StateMachineDeterminizer<StateTagFsm>::determinize(fsm_whitespace);
 
-  std::stack<std::pair<Fa::StateNrType, size_t>> stack;
-  DynamicBitset visited(fa_whitespace._states.size(), false);
+  std::stack<std::pair<State::StateNrType, size_t>> stack;
+  DynamicBitset visited(fsm_whitespace.size(), false);
 
-  auto const push_and_visit = [&stack, &visited](Fa::StateNrType state_nr_, size_t depth_) {
+  auto const push_and_visit = [&stack, &visited](State::StateNrType state_nr_, size_t depth_) {
     if (visited.get(state_nr_)) {
       return;
     }
@@ -401,11 +401,13 @@ void ParserBuilder::step_05(Context& context_) {
     auto const [state_nr_cur, depth_cur] = stack.top();
     stack.pop();
 
-    if (depth_cur > 0 && !fa_whitespace._states.find(state_nr_cur)->second._transitions._symbol_transitions.empty()) {
+    State<StateTagFsm> const& state_cur = *fsm_whitespace.get_state(state_nr_cur);
+
+    if (depth_cur > 0 && !state_cur._symbol_transitions[StateTraits<StateTagFsm>::CharacterSymbolKind].empty()) {
       throw std::runtime_error("Whitespace definition too deep");
     }
 
-    for (auto const& [symbol, state_nr_next] : fa_whitespace._states.find(state_nr_cur)->second._transitions._symbol_transitions) {
+    for (auto const& [symbol, state_nr_next] : state_cur._symbol_transitions[StateTraits<StateTagFsm>::CharacterSymbolKind]) {
       context_._whitespace.insert(symbol);
       push_and_visit(state_nr_next, depth_cur + 1);
     }
@@ -605,18 +607,13 @@ void ParserBuilder::step_11(Context& context_) {
 }
 
 void ParserBuilder::step_12(Context& context_) {
-  for (size_t i = 0; i < context_._rule_definitions.size(); ++i) {
-  }
-}
+  size_t const index_start = *binary_find_index(context_._rule_names.begin(), context_._rule_names.end(), context_._start_symbol);
 
-void ParserBuilder::write_dot(Context& context_, pmt::util::parsect::Fa const& fa_) {
-  if (fa_._states.size() > DOT_FILE_MAX_STATES) {
-    std::cerr << "Skipping dot file write, too many states\n";
-    return;
-  }
-
-  std::ofstream file(DOT_FILE_PREFIX + std::to_string(context_._dot_file_count++) + ".dot");
-  GraphWriter::write_dot(file, fa_, [&context_](size_t accepts_) { return accepts_to_label(context_, accepts_); });
+  Pda pda;
+  PdaPart pda_part = RuleDefinitionToPdaPart::convert(pda, context_._start_symbol, context_._rule_definitions[index_start], context_._rule_names, context_._rule_definitions, *context_._ast);
+  Pda::StateNrType const state_nr_eoi = pda.get_unused_state_nr();
+  pda._states[state_nr_eoi];
+  pda_part.connect_outgoing_transitions_to(state_nr_eoi, pda);
 }
 
 auto ParserBuilder::accepts_to_label(Context& context_, size_t accept_idx_) -> std::string {

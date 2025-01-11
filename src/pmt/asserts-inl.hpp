@@ -8,7 +8,7 @@
 
 namespace pmt {
 
-static inline void pmt_unreachable() {
+static inline void unreachable() {
 #if !defined NDEBUG || defined _DEBUG
   assert(false && "UNREACHABLE");
 #endif
