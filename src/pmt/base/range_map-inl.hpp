@@ -8,22 +8,26 @@ namespace pmt::base {
 
 template <typename KEY_, typename VALUE_, typename KEY_CMP_, typename VALUE_EQ_>
 template <typename KEY_T_1_, typename KEY_T_2_, typename VALUE_T_>
-void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::insert(KEY_T_1_ lower_, KEY_T_2_ upper_, VALUE_T_ value_) {
+  requires std::same_as<std::decay_t<KEY_T_1_>, KEY_> && std::same_as<std::decay_t<KEY_T_2_>, KEY_> && std::same_as<std::decay_t<VALUE_T_>, VALUE_>
+void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::insert(KEY_T_1_&& lower_, KEY_T_2_&& upper_, VALUE_T_&& value_) {
 }
 
 template <typename KEY_, typename VALUE_, typename KEY_CMP_, typename VALUE_EQ_>
 template <typename KEY_T_, typename VALUE_T_>
-void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::insert(KEY_T_ key_, VALUE_T_ value_) {
+  requires std::same_as<std::decay_t<KEY_T_>, KEY_> && std::same_as<std::decay_t<VALUE_T_>, VALUE_>
+void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::insert(KEY_T_&& key_, VALUE_T_&& value_) {
 }
 
 template <typename KEY_, typename VALUE_, typename KEY_CMP_, typename VALUE_EQ_>
 template <typename KEY_T_1_, typename KEY_T_2_, typename... ARGS_>
-void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::emplace(KEY_T_1_ lower_, KEY_T_2_ upper_, ARGS_&&... args_) {
+  requires std::same_as<std::decay_t<KEY_T_1_>, KEY_> && std::same_as<std::decay_t<KEY_T_2_>, KEY_>
+void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::emplace(KEY_T_1_&& lower_, KEY_T_2_&& upper_, ARGS_&&... args_) {
 }
 
 template <typename KEY_, typename VALUE_, typename KEY_CMP_, typename VALUE_EQ_>
 template <typename KEY_T_, typename... ARGS_>
-void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::emplace(KEY_T_ key_, ARGS_&&... args_) {
+  requires std::same_as<std::decay_t<KEY_T_>, KEY_>
+void RangeMap<KEY_, VALUE_, KEY_CMP_, VALUE_EQ_>::emplace(KEY_T_&& key_, ARGS_&&... args_) {
 }
 
 template <typename KEY_, typename VALUE_, typename KEY_CMP_, typename VALUE_EQ_>

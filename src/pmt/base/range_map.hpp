@@ -1,7 +1,9 @@
 #pragma once
 
+#include <concepts>
 #include <functional>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 namespace pmt::base {
@@ -31,16 +33,20 @@ class RangeMap {
 
   // --$ Other $--
   template <typename KEY_T_1_, typename KEY_T_2_, typename VALUE_T_>
-  void insert(KEY_T_1_ lower_, KEY_T_2_ upper_, VALUE_T_ value_);
+    requires std::same_as<std::decay_t<KEY_T_1_>, KEY_> && std::same_as<std::decay_t<KEY_T_2_>, KEY_> && std::same_as<std::decay_t<VALUE_T_>, VALUE_>
+  void insert(KEY_T_1_&& lower_, KEY_T_2_&& upper_, VALUE_T_&& value_);
 
   template <typename KEY_T_, typename VALUE_T_>
-  void insert(KEY_T_ key_, VALUE_T_ value_);
+    requires std::same_as<std::decay_t<KEY_T_>, KEY_> && std::same_as<std::decay_t<VALUE_T_>, VALUE_>
+  void insert(KEY_T_&& key_, VALUE_T_&& value_);
 
   template <typename KEY_T_1_, typename KEY_T_2_, typename... ARGS_>
-  void emplace(KEY_T_1_ lower_, KEY_T_2_ upper_, ARGS_&&... args_);
+    requires std::same_as<std::decay_t<KEY_T_1_>, KEY_> && std::same_as<std::decay_t<KEY_T_2_>, KEY_>
+  void emplace(KEY_T_1_&& lower_, KEY_T_2_&& upper_, ARGS_&&... args_);
 
   template <typename KEY_T_, typename... ARGS_>
-  void emplace(KEY_T_ key_, ARGS_&&... args_);
+    requires std::same_as<std::decay_t<KEY_T_>, KEY_>
+  void emplace(KEY_T_&& key_, ARGS_&&... args_);
 
   void erase(KEY_ const& lower_, KEY_ const& upper_);
   void erase(KEY_ const& key_);
@@ -58,4 +64,4 @@ class RangeMap {
 
 }  // namespace pmt::base
 
-#include "range_map-inl.hpp"
+#include "pmt/base/range_map-inl.hpp"
