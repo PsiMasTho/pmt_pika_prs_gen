@@ -5,6 +5,7 @@
 
 #include <concepts>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 
@@ -35,6 +36,11 @@ class DynamicBitsetConverter {
   static auto to_interval_set(DynamicBitset const& bitset_) -> IntervalSet<T_>;
   template <std::integral T_ = size_t>
   static auto from_interval_set(IntervalSet<T_> const& interval_set_) -> DynamicBitset;
+};
+
+class DynamicBitsetConverterError : public std::logic_error {
+ public:
+  DynamicBitsetConverterError();
 };
 
 }  // namespace pmt::base

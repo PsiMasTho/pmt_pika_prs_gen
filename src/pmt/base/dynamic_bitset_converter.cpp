@@ -19,4 +19,8 @@ auto DynamicBitsetConverter::from_string(std::string const& str_) -> DynamicBits
   return ret;
 }
 
+DynamicBitsetConverterError::DynamicBitsetConverterError()
+ : std::logic_error("invalid dynamic bitset conversion") {
+}
+
 }  // namespace pmt::base
