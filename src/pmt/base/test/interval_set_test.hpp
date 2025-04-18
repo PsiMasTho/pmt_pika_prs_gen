@@ -2,7 +2,7 @@
 
 namespace pmt::base::test {
 
-class RangeSetTest {
+class IntervalSetTest {
  public:
   static void run();
 

@@ -71,7 +71,7 @@ auto DynamicBitset::operator!=(const DynamicBitset& other_) const -> bool {
 }
 
 auto DynamicBitset::hash() const -> size_t {
-  size_t seed = 0;
+  size_t seed = Hash::Phi64;
   for (size_t i = 0; i < get_required_chunk_count(size()); ++i) {
     pmt::base::Hash::combine(_data.get()[i], seed);
   }

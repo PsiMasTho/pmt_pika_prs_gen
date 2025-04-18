@@ -1,0 +1,73 @@
+// clang-format off
+#ifdef __INTELLISENSE__
+    #include "pmt/base/interval_container_common.hpp"
+#endif
+// clang-format on
+
+#include <algorithm>
+#include <cassert>
+
+namespace pmt::base {
+
+template <std::integral T_>
+Interval<T_>::Interval(T_ value_)
+ : Interval(value_, value_) {
+}
+
+template <std::integral T_>
+Interval<T_>::Interval(T_ lower_, T_ upper_)
+ : _lower(lower_)
+ , _upper(upper_) {
+  assert(lower_ <= upper_);
+}
+
+template <std::integral T_>
+auto Interval<T_>::get_lower() const -> T_ {
+  return _lower;
+}
+
+template <std::integral T_>
+auto Interval<T_>::get_upper() const -> T_ {
+  return _upper;
+}
+
+template <std::integral T_>
+auto find_interval_index(IntegralSpanConst<T_> lowers_, IntegralSpanConst<T_> uppers_, T_ key_, size_t lskip_idx_) -> IntervalIndex {
+  assert(lowers_.size() == uppers_.size());
+
+  lskip_idx_ = std::min(lowers_.size(), lskip_idx_);
+
+  size_t const idx = [&]() {
+    auto const itr = std::lower_bound(lowers_.begin() + lskip_idx_, lowers_.end(), key_);
+    return std::distance(lowers_.begin(), itr);
+  }();
+
+  if (idx == lowers_.size()) {
+    if (idx == 0 || key_ > uppers_[idx - 1]) {
+      return IntervalIndex{._idx = idx, ._inside = false};
+    }
+    return IntervalIndex{._idx = idx - 1, ._inside = true};
+  }
+
+  if (key_ < lowers_[idx]) {
+    if (idx == 0) {
+      return IntervalIndex{._idx = 0, ._inside = false};
+    }
+    if (key_ <= uppers_[idx - 1]) {
+      return IntervalIndex{._idx = idx - 1, ._inside = true};
+    }
+    return IntervalIndex{._idx = idx, ._inside = false};
+  }
+
+  return IntervalIndex{._idx = idx, ._inside = true};
+}
+
+template <std::integral T_>
+auto find_interval_index_pair(IntegralSpanConst<T_> lowers_, IntegralSpanConst<T_> uppers_, Interval<T_> interval_) -> IntervalIndexPair {
+  IntervalIndexPair ret;
+  ret.first = find_interval_index(lowers_, uppers_, interval_.get_lower());
+  ret.second = find_interval_index(lowers_, uppers_, interval_.get_upper(), ret.first._idx);
+  return ret;
+}
+
+}  // namespace pmt::base

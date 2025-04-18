@@ -2,7 +2,7 @@
 
 namespace pmt::base::test {
 
-class RangeMapTest {
+class IntervalMapTest {
  public:
   static void run();
 
