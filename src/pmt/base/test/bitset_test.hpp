@@ -2,7 +2,7 @@
 
 namespace pmt::base::test {
 
-class DynamicBitsetTest {
+class BitsetTest {
  public:
   static void run();
 

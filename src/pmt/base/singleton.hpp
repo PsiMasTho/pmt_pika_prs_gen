@@ -7,12 +7,12 @@
 
 namespace pmt::base {
 
-template <std::default_initializable T_, uint64_t ID_ = NamespaceId::SHARED_NAMESPACE_ID, uint64_t EXTRA_ = 0>
+template <std::default_initializable T_, uint64_t ID_ = NamespaceId::SharedNamespaceId, uint64_t EXTRA_ = 0>
 class Singleton {
  public:
-  using value_type = T_;
-  using shared_handle = std::shared_ptr<value_type>;
-  static auto instance() -> shared_handle;
+  using ValueType = T_;
+  using SharedHandle = std::shared_ptr<ValueType>;
+  static auto instance() -> SharedHandle;
   ~Singleton() = default;
 
  private:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 #include "pmt/util/parsect/symbol.hpp"
 
 #include <limits>
@@ -23,7 +23,7 @@ class State {
   std::unordered_set<StateNrType> _epsilon_transitions;
   std::vector<std::vector<StateNrType>> _symbol_transitions;
   std::vector<std::vector<Symbol>> _symbols;
-  pmt::base::DynamicBitset _accepts;
+  pmt::base::Bitset _accepts;
 
  public:
   // -$ Functions $-
@@ -34,8 +34,8 @@ class State {
   void remove_epsilon_transition(StateNrType state_nr_);
   void remove_symbol_transition(Symbol symbol_);
 
-  auto get_accepts() const -> pmt::base::DynamicBitset const&;
-  auto get_accepts() -> pmt::base::DynamicBitset&;
+  auto get_accepts() const -> pmt::base::Bitset const&;
+  auto get_accepts() -> pmt::base::Bitset&;
 
   auto get_epsilon_transitions() const -> std::unordered_set<StateNrType> const&;
   auto get_symbol_transition(Symbol symbol_) const -> StateNrType;

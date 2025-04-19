@@ -1,8 +1,8 @@
-#include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/base/bitset_converter.hpp"
 
 namespace pmt::base {
 
-auto DynamicBitsetConverter::to_string(DynamicBitset const& bitset_) -> std::string {
+auto BitsetConverter::to_string(Bitset const& bitset_) -> std::string {
   std::string ret;
   ret.reserve(bitset_.size());
   for (size_t i = 0; i < bitset_.size(); ++i) {
@@ -11,15 +11,15 @@ auto DynamicBitsetConverter::to_string(DynamicBitset const& bitset_) -> std::str
   return ret;
 }
 
-auto DynamicBitsetConverter::from_string(std::string const& str_) -> DynamicBitset {
-  DynamicBitset ret(str_.size());
+auto BitsetConverter::from_string(std::string const& str_) -> Bitset {
+  Bitset ret(str_.size());
   for (size_t i = 0; i < str_.size(); ++i) {
     ret.set(i, str_[i] == '1');
   }
   return ret;
 }
 
-DynamicBitsetConverterError::DynamicBitsetConverterError()
+BitsetConverterError::BitsetConverterError()
  : std::logic_error("invalid dynamic bitset conversion") {
 }
 

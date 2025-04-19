@@ -2,8 +2,8 @@
 
 #include "pmt/asserts.hpp"
 #include "pmt/base/algo.hpp"
-#include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/base/bitset.hpp"
+#include "pmt/base/bitset_converter.hpp"
 #include "pmt/parserbuilder/definition_to_state_machine_part.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
@@ -63,8 +63,8 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   }
   std::cout << std::endl;
 
-  std::cout << "Terminal case sensitive values: " << DynamicBitsetConverter::to_string(context._terminal_case_sensitive_values) << std::endl;
-  std::cout << "Terminal case sensitive present: " << DynamicBitsetConverter::to_string(context._terminal_case_sensitive_present) << std::endl;
+  std::cout << "Terminal case sensitive values: " << BitsetConverter::to_string(context._terminal_case_sensitive_values) << std::endl;
+  std::cout << "Terminal case sensitive present: " << BitsetConverter::to_string(context._terminal_case_sensitive_present) << std::endl;
 
   std::cout << "Start symbol: " << context._start_symbol << std::endl;
   std::cout << "Case sensitive: " << *context._case_sensitive << std::endl;
@@ -86,9 +86,9 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   }
   std::cout << std::endl;
 
-  std::cout << "Rule merge values: " << DynamicBitsetConverter::to_string(context._rule_merge_values) << std::endl;
-  std::cout << "Rule unpack values: " << DynamicBitsetConverter::to_string(context._rule_unpack_values) << std::endl;
-  std::cout << "Rule hide values: " << DynamicBitsetConverter::to_string(context._rule_hide_values) << std::endl;
+  std::cout << "Rule merge values: " << BitsetConverter::to_string(context._rule_merge_values) << std::endl;
+  std::cout << "Rule unpack values: " << BitsetConverter::to_string(context._rule_unpack_values) << std::endl;
+  std::cout << "Rule hide values: " << BitsetConverter::to_string(context._rule_hide_values) << std::endl;
 
   std::cout << "Ast after: " << std::endl;
   printer.print(*context._ast, std::cout);
@@ -384,7 +384,7 @@ void ParserBuilder::step_05(Context& context_) {
   StateMachineDeterminizer<StateTagFsm>::determinize(fsm_whitespace);
 
   std::stack<std::pair<State::StateNrType, size_t>> stack;
-  DynamicBitset visited(fsm_whitespace.size(), false);
+  Bitset visited(fsm_whitespace.size(), false);
 
   auto const push_and_visit = [&stack, &visited](State::StateNrType state_nr_, size_t depth_) {
     if (visited.get(state_nr_)) {
@@ -572,13 +572,13 @@ void ParserBuilder::step_11(Context& context_) {
   context_._fa.determinize();
   context_._fa.minimize();
 
-  pmt::base::DynamicBitset accepts_start = context_._fa._states.find(0)->second._accepts;
+  pmt::base::Bitset accepts_start = context_._fa._states.find(0)->second._accepts;
   size_t const index_start = *context_._terminal_accepts[*pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start")];
   accepts_start.set(index_start, false);
 
   if (accepts_start.any()) {
     static size_t const MAX_REPORTED = 8;
-    std::unordered_set<size_t> const accepts_start_set = pmt::base::DynamicBitsetConverter::to_unordered_set(accepts_start);
+    std::unordered_set<size_t> const accepts_start_set = pmt::base::BitsetConverter::to_unordered_set(accepts_start);
     std::string msg;
     std::string delim;
     for (size_t i = 1; size_t const accept_nr : accepts_start_set) {

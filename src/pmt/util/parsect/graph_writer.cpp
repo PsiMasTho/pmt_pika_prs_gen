@@ -1,7 +1,7 @@
 #include "pmt/util/parsect/graph_writer.hpp"
 
-#include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/base/bitset.hpp"
+#include "pmt/base/bitset_converter.hpp"
 
 #include <ios>
 #include <iostream>
@@ -73,7 +73,7 @@ void GraphWriter::write_dot(std::ostream& os_, Fa const& fa_, AcceptsToLabel acc
   // Accepts
   std::unordered_map<size_t, std::set<Fa::StateNrType>> accepts;
   for (auto const& [state_nr, state] : fa_._states) {
-    std::set<size_t> const accepts_set = pmt::base::DynamicBitsetConverter::to_set(state._accepts);
+    std::set<size_t> const accepts_set = pmt::base::BitsetConverter::to_set(state._accepts);
     for (size_t accept : accepts_set) {
       accepts[accept].insert(state_nr);
     }

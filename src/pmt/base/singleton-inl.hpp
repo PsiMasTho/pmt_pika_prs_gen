@@ -9,7 +9,7 @@
 namespace pmt::base {
 
 template <std::default_initializable T_, uint64_t ID_, uint64_t EXTRA_>
-auto Singleton<T_, ID_, EXTRA_>::instance() -> shared_handle {
+auto Singleton<T_, ID_, EXTRA_>::instance() -> SharedHandle {
   static std::weak_ptr<T_> instance;
   static std::mutex mutex;
 
@@ -18,7 +18,7 @@ auto Singleton<T_, ID_, EXTRA_>::instance() -> shared_handle {
   if (!instance.expired())
     return instance.lock();
 
-  shared_handle ret = std::make_shared<T_>();
+  SharedHandle ret = std::make_shared<T_>();
   instance = ret;
   return ret;
 }

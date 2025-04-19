@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 #include "pmt/fw_decl.hpp"
 #include "pmt/util/parsert/generic_lexer_tables.hpp"
 
@@ -33,7 +33,7 @@ class TableWriter {
 
   void write_single_entries(std::vector<std::string> const& entries_, std::string const& label_);
 
-  void write_single_entries(std::vector<pmt::base::DynamicBitset> const& entries_, std::string const& label_);
+  void write_single_entries(std::vector<pmt::base::Bitset> const& entries_, std::string const& label_);
 
   static auto as_hex(std::integral auto value_, bool hex_prefix_ = true) -> std::string;
 

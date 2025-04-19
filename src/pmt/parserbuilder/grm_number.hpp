@@ -13,7 +13,7 @@ namespace pmt::parserbuilder {
 
 class GrmNumber {
  public:
-  using NumberType = std::uint64_t;
+  using NumberType = uint64_t;
   using RepetitionRangeType = std::pair<NumberType, std::optional<NumberType>>;
 
   static auto single_char_as_value(pmt::util::parsert::GenericAst const &ast_) -> NumberType;

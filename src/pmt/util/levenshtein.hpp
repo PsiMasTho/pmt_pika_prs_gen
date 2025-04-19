@@ -7,10 +7,10 @@ namespace pmt {
 
 class Levenshtein {
  public:
-  [[nodiscard]] auto distance(std::string_view lhs_, std::string_view rhs_) -> std::size_t;
+  [[nodiscard]] auto distance(std::string_view lhs_, std::string_view rhs_) -> size_t;
 
  private:
-  std::vector<std::size_t> _matrix;
+  std::vector<size_t> _matrix;
 };
 
 }  // namespace pmt

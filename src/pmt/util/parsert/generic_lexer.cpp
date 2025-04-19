@@ -25,7 +25,7 @@ auto GenericLexer::lex() -> LexReturn {
   return lex(_accepts_all);
 }
 
-auto GenericLexer::lex(DynamicBitset const& accepts_) -> LexReturn {
+auto GenericLexer::lex(Bitset const& accepts_) -> LexReturn {
   LexReturn ret;
 
   GenericId::IdType id = GenericId::IdUninitialized;

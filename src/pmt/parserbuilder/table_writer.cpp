@@ -136,7 +136,7 @@ void TableWriter::write_single_entries(std::vector<std::string> const& entries_,
   _os_source << "\n};\n";
 }
 
-void TableWriter::write_single_entries(std::vector<pmt::base::DynamicBitset> const& entries_, std::string const& label_) {
+void TableWriter::write_single_entries(std::vector<pmt::base::Bitset> const& entries_, std::string const& label_) {
 }
 
 auto TableWriter::as_hex(std::integral auto value_, bool hex_prefix_) -> std::string {

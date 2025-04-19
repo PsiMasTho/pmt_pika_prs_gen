@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 #include "pmt/util/parsect/state_machine.hpp"
 #include "pmt/util/parsert/generic_ast.hpp"
 #include "pmt/util/parsert/generic_ast_path.hpp"
@@ -69,8 +69,8 @@ class ParserBuilder::Context {
   std::vector<std::string> _terminal_names;
   std::vector<std::string> _terminal_id_names;
   std::vector<std::optional<size_t>> _terminal_accepts;
-  pmt::base::DynamicBitset _terminal_case_sensitive_values;
-  pmt::base::DynamicBitset _terminal_case_sensitive_present;
+  pmt::base::Bitset _terminal_case_sensitive_values;
+  pmt::base::Bitset _terminal_case_sensitive_present;
 
   std::vector<size_t> _accepts;
 
@@ -90,9 +90,9 @@ class ParserBuilder::Context {
 
   std::vector<std::string> _rule_names;
   std::vector<std::string> _rule_id_names;
-  pmt::base::DynamicBitset _rule_merge_values;
-  pmt::base::DynamicBitset _rule_unpack_values;
-  pmt::base::DynamicBitset _rule_hide_values;
+  pmt::base::Bitset _rule_merge_values;
+  pmt::base::Bitset _rule_unpack_values;
+  pmt::base::Bitset _rule_hide_values;
 
   std::vector<pmt::util::parsert::GenericAstPath> _rule_definitions;
 

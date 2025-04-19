@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 #include "pmt/util/parsert/generic_lexer_tables.hpp"
 #include "pmt/util/parsert/token.hpp"
 
@@ -23,13 +23,13 @@ class GenericLexer {
 
   // -- Tokenization --
   auto lex() -> LexReturn;
-  auto lex(pmt::base::DynamicBitset const& accepts_) -> LexReturn;
+  auto lex(pmt::base::Bitset const& accepts_) -> LexReturn;
 
  private:
   // - Data -
   GenericLexerTables _tables;
-  pmt::base::DynamicBitset _accepts_valid;
-  pmt::base::DynamicBitset _accepts_all;
+  pmt::base::Bitset _accepts_valid;
+  pmt::base::Bitset _accepts_all;
   char const* _buffer = nullptr;
   size_t _buffer_size = 0;
   size_t _cursor = 0;

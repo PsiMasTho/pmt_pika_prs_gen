@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pmt/base/amortized_growth.hpp"
-#include "pmt/base/hashable.hpp"
 #include "pmt/base/interval_container_common.hpp"
 
 #include <concepts>
@@ -9,11 +8,17 @@
 
 namespace pmt::base {
 
-template <std::integral KEY_>
-class IntervalSet : Hashable<IntervalSet<KEY_>> {
+template <std::integral KEY_, typename VALUE_>
+class IntervalMap {
  public:
   // -$ Types / Constants $-
+  struct Entry {
+    Interval<KEY_> _interval;
+    VALUE_ const& _value;
+  };
+
   using KeyType = KEY_;
+  using ValueType = VALUE_;
 
  private:
   enum : size_t {
@@ -22,33 +27,31 @@ class IntervalSet : Hashable<IntervalSet<KEY_>> {
 
   // -$ Data $-
   std::unique_ptr<KEY_[]> _intervals = nullptr;
+  std::unique_ptr<VALUE_[]> _values = nullptr;
   size_t _size : AmortizedGrowth::MaxCapacityBitWidth = 0;
   size_t _capacity_idx : AmortizedGrowth::MaxCapacityIdxBitWidth = 0;
 
  public:
   // -$ Functions $-
   // --$ Lifetime $--
-  IntervalSet() = default;
-  IntervalSet(IntervalSet const&);
-  IntervalSet(IntervalSet&&) noexcept = default;
-  ~IntervalSet() = default;
+  IntervalMap() = default;
+  IntervalMap(IntervalMap const&);
+  IntervalMap(IntervalMap&&) noexcept = default;
+  ~IntervalMap() = default;
 
   // --$ Operators $--
-  auto operator=(IntervalSet const&) -> IntervalSet&;
-  auto operator=(IntervalSet&&) noexcept -> IntervalSet& = default;
-  auto operator==(IntervalSet const&) const -> bool;
-  auto operator!=(IntervalSet const&) const -> bool;
-
-  // --$ Inherited: pmt::base::Hashable $--
-  auto hash() const -> size_t;
+  auto operator=(IntervalMap const&) -> IntervalMap&;
+  auto operator=(IntervalMap&&) noexcept -> IntervalMap& = default;
+  auto operator==(IntervalMap const&) const -> bool;
+  auto operator!=(IntervalMap const&) const -> bool;
 
   // --$ Other $--
-  void insert(Interval<KEY_> interval_);
+  void insert(Interval<KEY_> interval_, VALUE_ value_);
   void erase(Interval<KEY_> interval_);
   void clear();
   auto contains(KEY_ key_) const -> bool;
-  auto overlap(IntervalSet const& other_) const -> IntervalSet;
-  auto get_by_index(size_t index_) const -> Interval<KEY_>;
+  auto get_by_index(size_t index_) const -> Entry;
+  auto find(KEY_ key_) const -> VALUE_ const*;
   auto size() const -> size_t;
   auto capacity() const -> size_t;
   auto empty() const -> bool;
@@ -63,10 +66,8 @@ class IntervalSet : Hashable<IntervalSet<KEY_>> {
   auto get_lowers() -> IntegralSpan<KEY_>;
   auto get_uppers() const -> IntegralSpanConst<KEY_>;
   auto get_uppers() -> IntegralSpan<KEY_>;
-
-  auto find_and_expand_interval_indices(Interval<KEY_> interval_) -> IntervalIndexPair;
 };
 
 }  // namespace pmt::base
 
-#include "pmt/base/interval_set-inl.hpp"
+#include "pmt/base/interval_map-inl.hpp"

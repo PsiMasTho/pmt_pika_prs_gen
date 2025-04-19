@@ -1,6 +1,6 @@
 #include "pmt/util/parsect/state_machine_determinizer.hpp"
 
-#include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/base/bitset_converter.hpp"
 
 namespace pmt::util::parsect {
 using namespace pmt::base;
@@ -12,7 +12,7 @@ void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
 
   std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>> e_closure_cache;
   std::unordered_map<State::StateNrType, std::unordered_set<State::StateNrType>> new_to_old;
-  std::unordered_map<DynamicBitset, State::StateNrType> old_to_new;
+  std::unordered_map<Bitset, State::StateNrType> old_to_new;
   std::vector<State::StateNrType> pending;
   StateMachine result;
 
@@ -23,7 +23,7 @@ void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
   };
 
   auto const push_and_visit = [&](std::unordered_set<State::StateNrType> state_nr_set_) -> State::StateNrType {
-    DynamicBitset const state_nr_set_bitset = DynamicBitsetConverter::from_unordered_set(state_nr_set_, state_machine_.get_state_nrs().back());
+    Bitset const state_nr_set_bitset = BitsetConverter::from_unordered_set(state_nr_set_, state_machine_.get_state_nrs().back());
     if (auto const itr = old_to_new.find(state_nr_set_bitset); itr != old_to_new.end()) {
       return itr->second;
     }
@@ -46,12 +46,12 @@ void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
     // Set up the accepts
     for (State::StateNrType const state_nr_old : state_nr_set_cur) {
       State const& state_old = state_machine_.get_or_create_state(state_nr_old);
-      DynamicBitset const& accepts_old = state_old.get_accepts();
+      Bitset const& accepts_old = state_old.get_accepts();
       if (accepts_old.empty()) {
         continue;
       }
 
-      DynamicBitset& accepts_cur = state_cur.get_accepts();
+      Bitset& accepts_cur = state_cur.get_accepts();
       accepts_cur.resize(accepts_old.size(), false);
       accepts_cur.inplace_or(accepts_old);
     }

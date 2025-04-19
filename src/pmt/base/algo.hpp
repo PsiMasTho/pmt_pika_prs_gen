@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 
 #include <functional>
 #include <memory>
@@ -16,7 +16,7 @@ void apply_permutation(T_ data_begin_, T_ data_end_, U_ indices_begin_);
 
 template <typename T_>
   requires(std::is_integral_v<typename T_::value_type>)
-void apply_permutation(DynamicBitset& data_, T_ indices_begin_);
+void apply_permutation(Bitset& data_, T_ indices_begin_);
 
 template <typename T_, typename U_>
   requires(std::is_integral_v<typename T_::value_type> && std::is_integral_v<typename U_::value_type>)

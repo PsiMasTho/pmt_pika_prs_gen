@@ -126,7 +126,7 @@ void StateMachineToTransitionTables<TAG_>::step_4(Context& context_) {
   std::unordered_map<size_t, std::pair<pmt::util::parsect::State::StateNrType, pmt::util::parsect::State::StateNrType>> occupied;  // <index, which state filled it, state_nr_to>
   size_t shift_max = 0;
   for (pmt::util::parsect::State::StateNrType state_nr_i : context_._ordering) {
-    pmt::base::DynamicBitset const& keep = context_._diff_mat_2d[index_2d_to_1d(state_nr_i, context_._tables._state_transition_entries[state_nr_i]._default, context_._fa_with_sink.get_size())];
+    pmt::base::Bitset const& keep = context_._diff_mat_2d[index_2d_to_1d(state_nr_i, context_._tables._state_transition_entries[state_nr_i]._default, context_._fa_with_sink.get_size())];
     std::unordered_map<size_t, pmt::util::parsect::State::StateNrType> kept;
     for (size_t j = context_._alphabet_limits.first; j <= context_._alphabet_limits.second; ++j) {
       if (!keep.get(j)) {

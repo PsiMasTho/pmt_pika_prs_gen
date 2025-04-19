@@ -10,8 +10,35 @@
 namespace pmt::base {
 
 template <std::integral KEY_>
+IntervalSet<KEY_>::IntervalSet(IntervalSet const& other_)
+ : _intervals(nullptr)
+ , _size(other_._size)
+ , _capacity_idx(0) {
+  reserve(other_._size);
+  std::copy(other_._intervals.get(), other_._intervals.get(), _intervals.get());
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::operator=(IntervalSet const& other_) -> IntervalSet& {
+  if (this == &other_) {
+    return *this;
+  }
+
+  IntervalSet tmp(other_);
+  _intervals = std::move(tmp._intervals);
+  _size = tmp._size;
+  _capacity_idx = tmp._capacity_idx;
+  return *this;
+}
+
+template <std::integral KEY_>
 auto IntervalSet<KEY_>::operator==(IntervalSet const& other_) const -> bool {
   return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers());
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::operator!=(IntervalSet const& other_) const -> bool {
+  return !(*this == other_);
 }
 
 template <std::integral KEY_>
@@ -115,7 +142,7 @@ void IntervalSet<KEY_>::clear() {
 
 template <std::integral KEY_>
 auto IntervalSet<KEY_>::contains(KEY_ key_) const -> bool {
-  return find_interval_index(get_lowers().begin(), get_uppers().begin(), key_)._inside;
+  return find_interval_index<KEY_>(get_lowers(), get_uppers(), key_)._inside;
 }
 
 template <std::integral KEY_>
@@ -126,30 +153,27 @@ auto IntervalSet<KEY_>::overlap(IntervalSet const& other_) const -> IntervalSet 
 
   IntervalSet ret;
 
-  IntegralSpan<KEY_> const rhs_lowers = rhs.get_lowers();
-  IntegralSpan<KEY_> const rhs_uppers = rhs.get_uppers();
+  IntegralSpanConst<KEY_> const rhs_lowers = rhs.get_lowers();
+  IntegralSpanConst<KEY_> const rhs_uppers = rhs.get_uppers();
 
   size_t i = 0;
   for (size_t j = 0; j < lhs.size(); ++j) {
-    Interval const lhs_interval = lhs.get(j);
+    Interval<KEY_> const lhs_interval = lhs.get_by_index(j);
 
     /* Search in rhs from where we left off */
-    IntervalIndex const rhs_index = find_interval_index(rhs_lowers, rhs_uppers, i, lhs_interval._lower);
+    IntervalIndex const rhs_index = find_interval_index<KEY_>(rhs_lowers, rhs_uppers, lhs_interval.get_lower(), i);
     i = rhs_index._idx;
 
     while (i < rhs.size()) {
-      Interval rhs_interval = rhs.get(i);
+      Interval<KEY_> rhs_interval = rhs.get_by_index(i);
 
-      if (rhs_interval._lower > lhs_interval._upper) {
+      if (rhs_interval.get_lower() > lhs_interval.get_upper()) {
         /* Step back once in case the previous i would have overlapped with the next j */
         i = (i == 0) ? 0 : i - 1;
         break;
       }
 
-      rhs_interval._lower = std::max(lhs_interval._lower, rhs_interval._lower);
-      rhs_interval._upper = std::min(lhs_interval._upper, rhs_interval._upper);
-
-      ret.insert(rhs_interval);
+      ret.insert(Interval<KEY_>(std::max(lhs_interval.get_lower(), rhs_interval.get_lower()), std::min(lhs_interval.get_upper(), rhs_interval.get_upper())));
       ++i;
     }
   }
@@ -158,7 +182,7 @@ auto IntervalSet<KEY_>::overlap(IntervalSet const& other_) const -> IntervalSet 
 }
 
 template <std::integral KEY_>
-auto IntervalSet<KEY_>::get(size_t index_) const -> Interval<KEY_> {
+auto IntervalSet<KEY_>::get_by_index(size_t index_) const -> Interval<KEY_> {
   return Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]);
 }
 
@@ -197,29 +221,41 @@ void IntervalSet<KEY_>::reserve(size_t new_capacity_) {
 }
 
 template <std::integral KEY_>
-auto IntervalSet<KEY_>::get_lowers() const -> std::span<KEY_ const> {
-  return std::span<KEY_ const>(_intervals.get(), _size);
+auto IntervalSet<KEY_>::lowest() const -> KEY_ {
+  assert(!empty());
+  return get_lowers()[0];
 }
 
 template <std::integral KEY_>
-auto IntervalSet<KEY_>::get_lowers() -> std::span<KEY_> {
-  return std::span<KEY_>(_intervals.get(), _size);
+auto IntervalSet<KEY_>::highest() const -> KEY_ {
+  assert(!empty());
+  return get_uppers()[size() - 1];
 }
 
 template <std::integral KEY_>
-auto IntervalSet<KEY_>::get_uppers() const -> std::span<KEY_ const> {
-  return std::span<KEY_ const>(_intervals.get() + capacity(), _size);
+auto IntervalSet<KEY_>::get_lowers() const -> IntegralSpanConst<KEY_> {
+  return IntegralSpanConst<KEY_>(_intervals.get(), _size);
 }
 
 template <std::integral KEY_>
-auto IntervalSet<KEY_>::get_uppers() -> std::span<KEY_> {
-  return std::span<KEY_>(_intervals.get() + capacity(), _size);
+auto IntervalSet<KEY_>::get_lowers() -> IntegralSpan<KEY_> {
+  return IntegralSpan<KEY_>(_intervals.get(), _size);
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::get_uppers() const -> IntegralSpanConst<KEY_> {
+  return IntegralSpanConst<KEY_>(_intervals.get() + capacity(), _size);
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::get_uppers() -> IntegralSpan<KEY_> {
+  return IntegralSpan<KEY_>(_intervals.get() + capacity(), _size);
 }
 
 template <std::integral KEY_>
 auto IntervalSet<KEY_>::find_and_expand_interval_indices(Interval<KEY_> interval_) -> IntervalIndexPair {
-  std::span<KEY_> const lowers = get_lowers();
-  std::span<KEY_> const uppers = get_uppers();
+  IntegralSpan<KEY_> const lowers = get_lowers();
+  IntegralSpan<KEY_> const uppers = get_uppers();
   IntervalIndexPair indices = find_interval_index_pair<KEY_>(lowers, uppers, interval_);
 
   if (!indices.first._inside && indices.first._idx != 0) {

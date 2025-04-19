@@ -1,5 +1,6 @@
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 
+#include "pmt/base/algo.hpp"
 #include "pmt/base/hash.hpp"
 
 #include <algorithm>
@@ -10,67 +11,50 @@
 
 namespace pmt::base {
 
-DynamicBitset::DynamicBitset(size_t size_, bool value_)
+Bitset::Bitset(size_t size_, bool value_)
  : _data(nullptr)
- , _size(size_)
- , _capacity(round_up_to_chunk_size(_size)) {
-  if (_size == 0) {
+ , _size(0)
+ , _capacity_idx(0) {
+  if (size_ == 0) {
     return;
   }
 
-  _data = std::make_unique_for_overwrite<ChunkType[]>(get_required_chunk_count(_capacity));
+  reserve(size_);
+  _size = size_;
   std::fill(_data.get(), _data.get() + get_required_chunk_count(_size), ALL_SET_MASKS[value_]);
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-DynamicBitset::DynamicBitset(const DynamicBitset& other_)
+Bitset::Bitset(const Bitset& other_)
  : _data(nullptr)
  , _size(other_._size)
- , _capacity(round_up_to_chunk_size(_size)) {
-  _data = std::make_unique_for_overwrite<ChunkType[]>(get_required_chunk_count(_capacity));
+ , _capacity_idx(0) {
+  reserve(other_._size);
   std::copy(other_._data.get(), other_._data.get() + get_required_chunk_count(_size), _data.get());
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-DynamicBitset::DynamicBitset(DynamicBitset&& other_) noexcept
- : _data(std::move(other_._data))
- , _size(std::exchange(other_._size, 0))
- , _capacity(std::exchange(other_._capacity, 0)) {
-}
-
-auto DynamicBitset::operator=(const DynamicBitset& other_) -> DynamicBitset& {
+auto Bitset::operator=(const Bitset& other_) -> Bitset& {
   if (this == &other_) {
     return *this;
   }
 
-  DynamicBitset tmp(other_);
+  Bitset tmp(other_);
   _data = std::move(tmp._data);
   _size = tmp._size;
-  _capacity = tmp._capacity;
+  _capacity_idx = tmp._capacity_idx;
   return *this;
 }
 
-auto DynamicBitset::operator=(DynamicBitset&& other_) noexcept -> DynamicBitset& {
-  if (this == &other_) {
-    return *this;
-  }
-
-  DynamicBitset tmp(std::move(other_));
-  _data = std::move(tmp._data);
-  _size = tmp._size;
-  _capacity = tmp._capacity;
-  return *this;
-}
-
-auto DynamicBitset::operator==(const DynamicBitset& other_) const -> bool {
+auto Bitset::operator==(const Bitset& other_) const -> bool {
   return _size == other_._size && std::equal(_data.get(), _data.get() + get_required_chunk_count(_size), other_._data.get());
 }
 
-auto DynamicBitset::operator!=(const DynamicBitset& other_) const -> bool {
+auto Bitset::operator!=(const Bitset& other_) const -> bool {
   return !(*this == other_);
 }
 
-auto DynamicBitset::hash() const -> size_t {
+auto Bitset::hash() const -> size_t {
   size_t seed = Hash::Phi64;
   for (size_t i = 0; i < get_required_chunk_count(size()); ++i) {
     pmt::base::Hash::combine(_data.get()[i], seed);
@@ -78,28 +62,28 @@ auto DynamicBitset::hash() const -> size_t {
   return seed;
 }
 
-auto DynamicBitset::size() const -> size_t {
+auto Bitset::size() const -> size_t {
   return _size;
 }
 
-auto DynamicBitset::capacity() const -> size_t {
-  return _capacity;
+auto Bitset::capacity() const -> size_t {
+  return _data ? AmortizedGrowth::idx_to_size(_capacity_idx) * ChunkBit : 0;
 }
 
-auto DynamicBitset::empty() const -> bool {
+auto Bitset::empty() const -> bool {
   return _size == 0;
 }
 
-void DynamicBitset::clear() {
+void Bitset::clear() {
   _size = 0;
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::resize(size_t size_, bool value_) {
+void Bitset::resize(size_t size_, bool value_) {
   if (_size < size_) {
     size_t const initial_chunks = get_required_chunk_count(_size);
     size_t const required_chunks = get_required_chunk_count(size_);
-    reserve(required_chunks * CHUNK_BIT);
+    reserve(required_chunks * ChunkBit);
     set_trailing_chunk(value_);
     ChunkType* const start = _data.get() + initial_chunks;
     ChunkType* const end = _data.get() + required_chunks;
@@ -111,30 +95,31 @@ void DynamicBitset::resize(size_t size_, bool value_) {
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::reserve(size_t capacity_) {
-  capacity_ = round_up_to_chunk_size(capacity_);
-  if (_capacity >= capacity_) {
+void Bitset::reserve(size_t new_capacity_) {
+  new_capacity_ = std::max(new_capacity_, size());
+
+  size_t const new_capacity_idx = round_up_to_capacity_idx(new_capacity_);
+
+  if (_data && new_capacity_idx == _capacity_idx) {
     return;
   }
 
-  std::unique_ptr<ChunkType[]> new_data = std::make_unique_for_overwrite<ChunkType[]>(capacity_);
-  if (_data.get() != nullptr) {
-    std::copy(_data.get(), _data.get() + get_required_chunk_count(_size), new_data.get());
-  }
-  _data = std::move(new_data);
-  _capacity = capacity_;
+  new_capacity_ = AmortizedGrowth::idx_to_size(new_capacity_idx) * ChunkBit;
+  size_t const old_capacity = capacity();
+  _capacity_idx = new_capacity_idx;
+  realloc_unique_ptr(_data, get_required_chunk_count(old_capacity), get_required_chunk_count(new_capacity_));
 }
 
-void DynamicBitset::push_back(bool value_) {
-  if (_size == _capacity) {
-    reserve(get_next_capacity(_capacity));
+void Bitset::push_back(bool value_) {
+  if (size() == capacity()) {
+    reserve(size() + 1);
   }
 
   set(_size++, value_);
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::pop_back() {
+void Bitset::pop_back() {
   if (_size == 0) {
     return;
   }
@@ -142,13 +127,13 @@ void DynamicBitset::pop_back() {
   --_size;
 }
 
-auto DynamicBitset::get(size_t index_) const -> bool {
+auto Bitset::get(size_t index_) const -> bool {
   size_t const chunk_index = get_chunk_index(index_);
   size_t const bit_index = get_bit_index(index_);
   return (_data[chunk_index] & (ChunkType(1) << bit_index)) != 0;
 }
 
-auto DynamicBitset::set(size_t index_, bool value_) -> bool {
+auto Bitset::set(size_t index_, bool value_) -> bool {
   assert(index_ < _size);
 
   size_t const chunk_index = get_chunk_index(index_);
@@ -160,7 +145,7 @@ auto DynamicBitset::set(size_t index_, bool value_) -> bool {
   return old_value;
 }
 
-auto DynamicBitset::toggle(size_t index_) -> bool {
+auto Bitset::toggle(size_t index_) -> bool {
   assert(index_ < _size);
 
   size_t const chunk_index = get_chunk_index(index_);
@@ -172,41 +157,41 @@ auto DynamicBitset::toggle(size_t index_) -> bool {
   return old_value;
 }
 
-void DynamicBitset::set_all(bool value_) {
+void Bitset::set_all(bool value_) {
   ChunkType const mask = ALL_SET_MASKS[value_];
   std::fill(_data.get(), _data.get() + get_required_chunk_count(_size), mask);
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::toggle_all() {
+void Bitset::toggle_all() {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~_data[i];
   }
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-auto DynamicBitset::get_chunk(size_t index_) const -> ChunkType {
+auto Bitset::get_chunk(size_t index_) const -> ChunkType {
   assert(index_ < get_required_chunk_count(_size));
   return _data[index_];
 }
 
-auto DynamicBitset::get_chunk_count() const -> size_t {
+auto Bitset::get_chunk_count() const -> size_t {
   return get_required_chunk_count(_size);
 }
 
-auto DynamicBitset::get_required_chunk_count(size_t size_) -> size_t {
-  return (size_ + CHUNK_BIT - 1) / CHUNK_BIT;
+auto Bitset::get_required_chunk_count(size_t size_) -> size_t {
+  return (size_ + ChunkBit - 1) / ChunkBit;
 }
 
-auto DynamicBitset::any() const -> bool {
+auto Bitset::any() const -> bool {
   return std::any_of(_data.get(), _data.get() + get_required_chunk_count(_size), [](ChunkType chunk_) { return chunk_ != ALL_SET_MASKS[0]; });
 }
 
-auto DynamicBitset::none() const -> bool {
+auto Bitset::none() const -> bool {
   return std::all_of(_data.get(), _data.get() + get_required_chunk_count(_size), [](ChunkType chunk_) { return chunk_ == ALL_SET_MASKS[0]; });
 }
 
-auto DynamicBitset::all() const -> bool {
+auto Bitset::all() const -> bool {
   size_t max = get_required_chunk_count(_size) - 1;
   bool const lhs = std::all_of(_data.get(), _data.get() + max, [](ChunkType chunk_) { return chunk_ == ALL_SET_MASKS[1]; });
   if (!lhs) {
@@ -215,11 +200,11 @@ auto DynamicBitset::all() const -> bool {
   return static_cast<size_t>(std::popcount(_data[max])) == get_bit_index(_size);
 }
 
-auto DynamicBitset::popcnt() const -> size_t {
+auto Bitset::popcnt() const -> size_t {
   return std::accumulate(_data.get(), _data.get() + get_required_chunk_count(_size), 0, [](size_t acc_, ChunkType chunk_) { return acc_ + std::popcount(chunk_); });
 }
 
-auto DynamicBitset::countl(bool value_) const -> size_t {
+auto Bitset::countl(bool value_) const -> size_t {
   size_t const max = get_required_chunk_count(_size);
   auto const fn = value_ ? &std::countr_one<ChunkType> : &std::countr_zero<ChunkType>;
 
@@ -227,13 +212,13 @@ auto DynamicBitset::countl(bool value_) const -> size_t {
   for (size_t i = 0; i < max; ++i) {
     ChunkType chunk = _data[i];
 
-    if (i == max - 1 && _size % CHUNK_BIT != 0) {
+    if (i == max - 1 && _size % ChunkBit != 0) {
       set_mask(chunk, get_trailing_mask(_size), !value_);
     }
 
     size_t const incr = fn(chunk);
     total += incr;
-    if (incr != CHUNK_BIT) {
+    if (incr != ChunkBit) {
       break;
     }
   }
@@ -241,7 +226,7 @@ auto DynamicBitset::countl(bool value_) const -> size_t {
   return total;
 }
 
-auto DynamicBitset::countr(bool value_) const -> size_t {
+auto Bitset::countr(bool value_) const -> size_t {
   size_t const max = get_required_chunk_count(_size) - 1;
   auto const fn = value_ ? &std::countl_one<ChunkType> : &std::countl_zero<ChunkType>;
 
@@ -249,10 +234,10 @@ auto DynamicBitset::countr(bool value_) const -> size_t {
   size_t i = max;
   while (true) {
     ChunkType chunk = _data[i];
-    size_t breakout = CHUNK_BIT;
+    size_t breakout = ChunkBit;
     if (i == max) {
       breakout = get_bit_index(_size);
-      chunk <<= CHUNK_BIT - breakout;
+      chunk <<= ChunkBit - breakout;
     }
 
     size_t const incr = std::min(breakout, static_cast<size_t>(fn(chunk)));
@@ -266,24 +251,24 @@ auto DynamicBitset::countr(bool value_) const -> size_t {
   return total;
 }
 
-void DynamicBitset::swap(size_t lhs_, size_t rhs_) {
+void Bitset::swap(size_t lhs_, size_t rhs_) {
   set(lhs_, exchange(rhs_, get(lhs_)));
 }
 
-auto DynamicBitset::exchange(size_t index_, bool value_) -> bool {
+auto Bitset::exchange(size_t index_, bool value_) -> bool {
   bool const old_value = get(index_);
   set(index_, value_);
   return old_value;
 }
 
-void DynamicBitset::inplace_not() {
+void Bitset::inplace_not() {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~_data[i];
   }
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::inplace_or(const DynamicBitset& other_) {
+void Bitset::inplace_or(const Bitset& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] |= other_._data[i];
@@ -291,15 +276,22 @@ void DynamicBitset::inplace_or(const DynamicBitset& other_) {
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::inplace_and(const DynamicBitset& other_) {
-  assert(_size == other_._size);
-  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
+void Bitset::inplace_and(const Bitset& other_) {
+  size_t const smaller_size = std::min(_size, other_._size);
+  for (size_t i = 0; i < get_required_chunk_count(smaller_size); ++i) {
     _data[i] &= other_._data[i];
   }
+
+  // Set the remaining chunks to DEFAULT_VALUE
+  size_t const bigger_size = std::max(_size, other_._size);
+  for (size_t i = get_required_chunk_count(smaller_size); i < get_required_chunk_count(bigger_size); ++i) {
+    _data[i] = DEFAULT_VALUE;
+  }
+
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::inplace_xor(const DynamicBitset& other_) {
+void Bitset::inplace_xor(const Bitset& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] ^= other_._data[i];
@@ -307,7 +299,7 @@ void DynamicBitset::inplace_xor(const DynamicBitset& other_) {
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-void DynamicBitset::inplace_nor(const DynamicBitset& other_) {
+void Bitset::inplace_nor(const Bitset& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~(_data[i] | other_._data[i]);
@@ -315,8 +307,8 @@ void DynamicBitset::inplace_nor(const DynamicBitset& other_) {
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-auto DynamicBitset::clone_not() const -> DynamicBitset {
-  DynamicBitset ret;
+auto Bitset::clone_not() const -> Bitset {
+  Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
@@ -326,9 +318,9 @@ auto DynamicBitset::clone_not() const -> DynamicBitset {
   return ret;
 }
 
-auto DynamicBitset::clone_or(const DynamicBitset& other_) const -> DynamicBitset {
+auto Bitset::clone_or(const Bitset& other_) const -> Bitset {
   assert(_size == other_._size);
-  DynamicBitset ret;
+  Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
@@ -338,21 +330,29 @@ auto DynamicBitset::clone_or(const DynamicBitset& other_) const -> DynamicBitset
   return ret;
 }
 
-auto DynamicBitset::clone_and(const DynamicBitset& other_) const -> DynamicBitset {
-  assert(_size == other_._size);
-  DynamicBitset ret;
+auto Bitset::clone_and(const Bitset& other_) const -> Bitset {
+  Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
-  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
+
+  size_t const smaller_size = std::min(_size, other_._size);
+  for (size_t i = 0; i < get_required_chunk_count(smaller_size); ++i) {
     ret._data[i] = _data[i] & other_._data[i];
   }
+
+  // Set the remaining chunks to DEFAULT_VALUE
+  size_t const bigger_size = std::max(_size, other_._size);
+  for (size_t i = get_required_chunk_count(smaller_size); i < get_required_chunk_count(bigger_size); ++i) {
+    ret._data[i] = DEFAULT_VALUE;
+  }
+
   ret.set_trailing_chunk(DEFAULT_VALUE);
   return ret;
 }
 
-auto DynamicBitset::clone_xor(const DynamicBitset& other_) const -> DynamicBitset {
+auto Bitset::clone_xor(const Bitset& other_) const -> Bitset {
   assert(_size == other_._size);
-  DynamicBitset ret;
+  Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
@@ -362,9 +362,9 @@ auto DynamicBitset::clone_xor(const DynamicBitset& other_) const -> DynamicBitse
   return ret;
 }
 
-auto DynamicBitset::clone_nor(const DynamicBitset& other_) const -> DynamicBitset {
+auto Bitset::clone_nor(const Bitset& other_) const -> Bitset {
   assert(_size == other_._size);
-  DynamicBitset ret;
+  Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
@@ -374,7 +374,7 @@ auto DynamicBitset::clone_nor(const DynamicBitset& other_) const -> DynamicBitse
   return ret;
 }
 
-void DynamicBitset::inplace_assymetric_difference(const DynamicBitset& other_) {
+void Bitset::inplace_assymetric_difference(const Bitset& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~(~_data[i] | other_._data[i]);
@@ -382,9 +382,9 @@ void DynamicBitset::inplace_assymetric_difference(const DynamicBitset& other_) {
   set_trailing_chunk(DEFAULT_VALUE);
 }
 
-auto DynamicBitset::clone_asymmetric_difference(const DynamicBitset& other_) const -> DynamicBitset {
+auto Bitset::clone_asymmetric_difference(const Bitset& other_) const -> Bitset {
   assert(_size == other_._size);
-  DynamicBitset ret;
+  Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
@@ -394,8 +394,8 @@ auto DynamicBitset::clone_asymmetric_difference(const DynamicBitset& other_) con
   return ret;
 }
 
-void DynamicBitset::set_trailing_chunk(bool value_) {
-  if (_size % CHUNK_BIT == 0) {
+void Bitset::set_trailing_chunk(bool value_) {
+  if (_size % ChunkBit == 0) {
     return;
   }
 
@@ -404,19 +404,19 @@ void DynamicBitset::set_trailing_chunk(bool value_) {
   set_mask(_data[get_chunk_index(_size)], trailing_mask, value_);
 }
 
-auto DynamicBitset::get_bit_index(size_t index_) -> size_t {
-  return index_ % CHUNK_BIT;
+auto Bitset::get_bit_index(size_t index_) -> size_t {
+  return index_ % ChunkBit;
 }
 
-auto DynamicBitset::get_chunk_index(size_t index_) -> size_t {
-  return index_ / CHUNK_BIT;
+auto Bitset::get_chunk_index(size_t index_) -> size_t {
+  return index_ / ChunkBit;
 }
 
-auto DynamicBitset::get_trailing_mask(size_t size_) -> ChunkType {
+auto Bitset::get_trailing_mask(size_t size_) -> ChunkType {
   return ~ChunkType(0) << get_bit_index(size_);
 }
 
-void DynamicBitset::set_mask(ChunkType& dest_, ChunkType mask_, bool value_) {
+void Bitset::set_mask(ChunkType& dest_, ChunkType mask_, bool value_) {
   if (value_) {
     dest_ |= mask_;
   } else {
@@ -424,26 +424,10 @@ void DynamicBitset::set_mask(ChunkType& dest_, ChunkType mask_, bool value_) {
   }
 }
 
-auto DynamicBitset::round_up_to_chunk_size(size_t size_) -> size_t {
-  return (size_ + CHUNK_BIT - 1) / CHUNK_BIT * CHUNK_BIT;
-}
-
-auto DynamicBitset::get_next_capacity(size_t capacity_) -> size_t {
-  static size_t const FIRST_CAPACITY = std::max(INITIAL_CAPACITY, size_t(1));
-  static size_t const LAST_CAPACITY = std::numeric_limits<size_t>::max();
-
-  if (capacity_ < FIRST_CAPACITY) {
-    return FIRST_CAPACITY;
-  }
-
-  size_t const scaled_capacity = capacity_ * GrowthRate::type::num;
-
-  // Overflow check
-  if (scaled_capacity / GrowthRate::type::num != capacity_) {
-    return LAST_CAPACITY;
-  }
-
-  return scaled_capacity / GrowthRate::type::den;
+auto Bitset::round_up_to_capacity_idx(size_t size_) -> size_t {
+  size_ += ChunkBit - 1;
+  size_ /= ChunkBit;
+  return AmortizedGrowth::size_to_idx(size_);
 }
 
 }  // namespace pmt::base

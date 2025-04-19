@@ -1,6 +1,6 @@
 #include "pmt/util/parsect/state_machine_pruner.hpp"
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 
 namespace pmt::util::parsect {
 using namespace pmt::base;

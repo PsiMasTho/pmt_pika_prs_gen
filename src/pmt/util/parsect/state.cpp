@@ -54,11 +54,11 @@ void State::remove_symbol_transition(Symbol symbol_) {
   }
 }
 
-auto State::get_accepts() const -> pmt::base::DynamicBitset const& {
+auto State::get_accepts() const -> pmt::base::Bitset const& {
   return _accepts;
 }
 
-auto State::get_accepts() -> pmt::base::DynamicBitset& {
+auto State::get_accepts() -> pmt::base::Bitset& {
   return _accepts;
 }
 

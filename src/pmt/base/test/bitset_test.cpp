@@ -1,13 +1,13 @@
-#include "pmt/base/test/dynamic_bitset_test.hpp"
+#include "pmt/base/test/bitset_test.hpp"
 
-#include "pmt/base/dynamic_bitset.hpp"
-#include "pmt/base/dynamic_bitset_converter.hpp"
+#include "pmt/base/bitset.hpp"
+#include "pmt/base/bitset_converter.hpp"
 
 #include <cassert>
 
 namespace pmt::base::test {
 
-void DynamicBitsetTest::run() {
+void BitsetTest::run() {
   test_lifetime_functions();
   test_capacity_functions();
   test_single_bit_access_functions();
@@ -22,18 +22,17 @@ void DynamicBitsetTest::run() {
   test_all();
 }
 
-void DynamicBitsetTest::test_lifetime_functions() {
-  DynamicBitset b1 = DynamicBitset(10, true);
-  DynamicBitset b2 = DynamicBitset(b1);
-  DynamicBitset b3 = DynamicBitset(20, false);
+void BitsetTest::test_lifetime_functions() {
+  Bitset b1 = Bitset(10, true);
+  Bitset b2 = Bitset(b1);
+  Bitset b3 = Bitset(20, false);
 
   assert(b1.size() == 10);
   assert(b2.size() == 10);
   assert(b3.size() == 20);
 
-  DynamicBitset b4 = std::move(b1);
+  Bitset b4 = std::move(b1);
   assert(b4.size() == 10);
-  assert(b1.size() == 0);
 
   b1 = b2;
   assert(b1.size() == 10);
@@ -41,11 +40,10 @@ void DynamicBitsetTest::test_lifetime_functions() {
 
   b1 = std::move(b2);
   assert(b1.size() == 10);
-  assert(b2.size() == 0);
 }
 
-void DynamicBitsetTest::test_capacity_functions() {
-  DynamicBitset b1 = DynamicBitset(10, true);
+void BitsetTest::test_capacity_functions() {
+  Bitset b1 = Bitset(10, true);
   assert(b1.size() == 10);
   assert(b1.capacity() >= 10);
 
@@ -78,7 +76,7 @@ void DynamicBitsetTest::test_capacity_functions() {
   }
   assert(b1.size() == 1034);
 
-  DynamicBitset b2;
+  Bitset b2;
   b2.push_back(true);
   assert(b2.size() == 1);
   assert(b2.popcnt() == 1);
@@ -90,7 +88,7 @@ void DynamicBitsetTest::test_capacity_functions() {
   assert(b2.size() == 0);
   assert(b2.empty());
 
-  DynamicBitset b3(512, false);
+  Bitset b3(512, false);
   assert(b3.size() == 512);
   assert(b3.popcnt() == 0);
 
@@ -99,8 +97,8 @@ void DynamicBitsetTest::test_capacity_functions() {
   assert(b3.popcnt() == 512);
 }
 
-void DynamicBitsetTest::test_single_bit_access_functions() {
-  DynamicBitset b1 = DynamicBitset(10, true);
+void BitsetTest::test_single_bit_access_functions() {
+  Bitset b1 = Bitset(10, true);
   for (size_t i = 0; i < 10; ++i) {
     assert(b1.get(i) == true);
   }
@@ -120,11 +118,11 @@ void DynamicBitsetTest::test_single_bit_access_functions() {
   assert(b1.popcnt() == 999);
 }
 
-void DynamicBitsetTest::test_equality() {
-  DynamicBitset b1 = DynamicBitset(10, true);
-  DynamicBitset b2 = DynamicBitset(10, true);
-  DynamicBitset b3 = DynamicBitset(10, false);
-  DynamicBitset b4 = DynamicBitset(20, true);
+void BitsetTest::test_equality() {
+  Bitset b1 = Bitset(10, true);
+  Bitset b2 = Bitset(10, true);
+  Bitset b3 = Bitset(10, false);
+  Bitset b4 = Bitset(20, true);
 
   assert(b1 == b2);
   assert(b1 != b3);
@@ -141,35 +139,35 @@ void DynamicBitsetTest::test_equality() {
   assert(b1 == b4);
 }
 
-void DynamicBitsetTest::test_bitwise_operations() {
-  DynamicBitset b1 = DynamicBitsetConverter::from_string("11010");
-  DynamicBitset b2 = DynamicBitsetConverter::from_string("01011");
+void BitsetTest::test_bitwise_operations() {
+  Bitset b1 = BitsetConverter::from_string("11010");
+  Bitset b2 = BitsetConverter::from_string("01011");
 
-  DynamicBitset b3 = b1.clone_not();
-  assert(b3 == DynamicBitsetConverter::from_string("00101"));
+  Bitset b3 = b1.clone_not();
+  assert(b3 == BitsetConverter::from_string("00101"));
 
-  DynamicBitset b4 = b1.clone_or(b2);
-  assert(b4 == DynamicBitsetConverter::from_string("11011"));
+  Bitset b4 = b1.clone_or(b2);
+  assert(b4 == BitsetConverter::from_string("11011"));
 
-  DynamicBitset b5 = b1.clone_and(b2);
-  assert(b5 == DynamicBitsetConverter::from_string("01010"));
+  Bitset b5 = b1.clone_and(b2);
+  assert(b5 == BitsetConverter::from_string("01010"));
 
-  DynamicBitset b6 = b1.clone_xor(b2);
-  assert(b6 == DynamicBitsetConverter::from_string("10001"));
+  Bitset b6 = b1.clone_xor(b2);
+  assert(b6 == BitsetConverter::from_string("10001"));
 
-  DynamicBitset b7 = b1.clone_nor(b2);
-  assert(b7 == DynamicBitsetConverter::from_string("00100"));
+  Bitset b7 = b1.clone_nor(b2);
+  assert(b7 == BitsetConverter::from_string("00100"));
 
-  DynamicBitset b8 = b1.clone_asymmetric_difference(b2);
-  assert(b8 == DynamicBitsetConverter::from_string("10000"));
+  Bitset b8 = b1.clone_asymmetric_difference(b2);
+  assert(b8 == BitsetConverter::from_string("10000"));
 }
 
-void DynamicBitsetTest::test_countl() {
+void BitsetTest::test_countl() {
   static size_t const SIZE = 1234;
 
   // Test countl true
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    Bitset b1 = Bitset(SIZE, false);
     for (size_t j = 0; j < i; ++j) {
       b1.set(j, true);
     }
@@ -179,7 +177,7 @@ void DynamicBitsetTest::test_countl() {
 
   // Test countl false
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    Bitset b1 = Bitset(SIZE, true);
     for (size_t j = 0; j < i; ++j) {
       b1.set(j, false);
     }
@@ -188,12 +186,12 @@ void DynamicBitsetTest::test_countl() {
   }
 }
 
-void DynamicBitsetTest::test_countr() {
+void BitsetTest::test_countr() {
   static size_t const SIZE = 1234;
 
   // Test countr true
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    Bitset b1 = Bitset(SIZE, false);
     for (size_t j = 0; j < i; ++j) {
       b1.set(SIZE - 1 - j, true);
     }
@@ -203,7 +201,7 @@ void DynamicBitsetTest::test_countr() {
 
   // Test countr false
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    Bitset b1 = Bitset(SIZE, true);
     for (size_t j = 0; j < i; ++j) {
       b1.set(SIZE - 1 - j, false);
     }
@@ -212,80 +210,80 @@ void DynamicBitsetTest::test_countr() {
   }
 }
 
-void DynamicBitsetTest::test_swap() {
-  DynamicBitset b1 = DynamicBitsetConverter::from_string("11010");
+void BitsetTest::test_swap() {
+  Bitset b1 = BitsetConverter::from_string("11010");
   b1.swap(0, 1);
-  assert(b1 == DynamicBitsetConverter::from_string("11010"));
+  assert(b1 == BitsetConverter::from_string("11010"));
   b1.swap(1, 2);
-  assert(b1 == DynamicBitsetConverter::from_string("10110"));
+  assert(b1 == BitsetConverter::from_string("10110"));
   b1.swap(2, 3);
-  assert(b1 == DynamicBitsetConverter::from_string("10110"));
+  assert(b1 == BitsetConverter::from_string("10110"));
   b1.swap(3, 4);
-  assert(b1 == DynamicBitsetConverter::from_string("10101"));
+  assert(b1 == BitsetConverter::from_string("10101"));
   b1.swap(4, 0);
-  assert(b1 == DynamicBitsetConverter::from_string("10101"));
+  assert(b1 == BitsetConverter::from_string("10101"));
 }
 
-void DynamicBitsetTest::test_exchange() {
-  DynamicBitset b1 = DynamicBitsetConverter::from_string("11010");
+void BitsetTest::test_exchange() {
+  Bitset b1 = BitsetConverter::from_string("11010");
   assert(b1.exchange(0, true) == true);
-  assert(b1 == DynamicBitsetConverter::from_string("11010"));
+  assert(b1 == BitsetConverter::from_string("11010"));
   assert(b1.exchange(1, false) == true);
-  assert(b1 == DynamicBitsetConverter::from_string("10010"));
+  assert(b1 == BitsetConverter::from_string("10010"));
   assert(b1.exchange(2, true) == false);
-  assert(b1 == DynamicBitsetConverter::from_string("10110"));
+  assert(b1 == BitsetConverter::from_string("10110"));
   assert(b1.exchange(3, false) == true);
-  assert(b1 == DynamicBitsetConverter::from_string("10100"));
+  assert(b1 == BitsetConverter::from_string("10100"));
   assert(b1.exchange(4, true) == false);
-  assert(b1 == DynamicBitsetConverter::from_string("10101"));
+  assert(b1 == BitsetConverter::from_string("10101"));
 }
 
-void DynamicBitsetTest::test_any() {
+void BitsetTest::test_any() {
   static size_t const SIZE = 1234;
 
   // positive test
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    Bitset b1 = Bitset(SIZE, false);
     b1.set(i / 7, true);
     assert(b1.any());
   }
 
   // negative test
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    Bitset b1 = Bitset(SIZE, false);
     assert(!b1.any());
   }
 }
 
-void DynamicBitsetTest::test_none() {
+void BitsetTest::test_none() {
   static size_t const SIZE = 1234;
 
   // positive test
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    Bitset b1 = Bitset(SIZE, false);
     assert(b1.none());
   }
 
   // negative test
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, false);
+    Bitset b1 = Bitset(SIZE, false);
     b1.set(i / 7, true);
     assert(!b1.none());
   }
 }
 
-void DynamicBitsetTest::test_all() {
+void BitsetTest::test_all() {
   static size_t const SIZE = 1234;
 
   // positive test
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    Bitset b1 = Bitset(SIZE, true);
     assert(b1.all());
   }
 
   // negative test
   for (size_t i = 0; i < SIZE; ++i) {
-    DynamicBitset b1 = DynamicBitset(SIZE, true);
+    Bitset b1 = Bitset(SIZE, true);
     b1.set(i / 7, false);
     assert(!b1.all());
   }

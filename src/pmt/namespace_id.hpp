@@ -11,13 +11,14 @@ enum NamespaceId : NamespaceIdType {
   OFFSET = std::numeric_limits<NamespaceIdType>::max() / 0x100000000ULL,
 
   // clang-format off
- SHARED_NAMESPACE_ID =  0 * OFFSET,
+  SharedNamespaceId   =  0 * OFFSET,
  
- PMT                 =  1 * OFFSET,
- PMT_BASE            =  2 * OFFSET, 
- PMT_GENERATOR       =  3 * OFFSET,
- PMT_UTIL            =  4 * OFFSET,
- PMT_UTIL_PARSE      =  5 * OFFSET,
+  Pmt                 =  1 * OFFSET,
+  PmtBase             =  2 * OFFSET, 
+  PmtBaseTest         =  6 * OFFSET,
+  PmtGenerator        =  3 * OFFSET,
+  PmtUtil             =  4 * OFFSET,
+  PmtUtilParse        =  5 * OFFSET,
 
   // clang-format on
 };

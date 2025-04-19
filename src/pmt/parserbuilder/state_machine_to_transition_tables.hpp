@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 #include "pmt/util/parsect/alphabet_limits.hpp"
 #include "pmt/util/parsect/state_machine.hpp"
 #include "pmt/util/parsect/state_machine_sink_wrapper.hpp"
@@ -38,7 +38,7 @@ class StateMachineToTransitionTables<TAG_>::Context {
   std::pair<pmt::util::parsect::Symbol::ValueType, pmt::util::parsect::Symbol::ValueType> _alphabet_limits;
   pmt::util::parsect::StateMachineSinkWrapper<TAG_> _state_machine_with_sink;
   std::vector<pmt::util::parsect::State::StateNrType> _ordering;
-  std::vector<pmt::base::DynamicBitset> _diff_mat_2d;
+  std::vector<pmt::base::Bitset> _diff_mat_2d;
   pmt::util::parsert::TransitionTables _tables;
   size_t _symbol_kind;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/base/dynamic_bitset.hpp"
+#include "pmt/base/bitset.hpp"
 #include "pmt/util/parsert/generic_id.hpp"
 #include "pmt/util/parsert/tables_base.hpp"
 #include "pmt/util/parsert/transition_tables.hpp"
@@ -17,8 +17,8 @@ class GenericLexerTables : public TablesBase {
   TransitionTables _transition_tables;
 
   // -- Accepts --
-  std::vector<pmt::base::DynamicBitset> _accepts;  // size: _state_count, all the same width
-  std::vector<GenericId::IdType> _accept_ids;      // size: _accepts_width
+  std::vector<pmt::base::Bitset> _accepts;     // size: _state_count, all the same width
+  std::vector<GenericId::IdType> _accept_ids;  // size: _accepts_width
 
   // -- Strings --
   std::vector<std::string> _terminal_names;  // size: _accepts_width

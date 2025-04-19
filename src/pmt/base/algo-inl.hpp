@@ -14,7 +14,7 @@ template <typename T_, typename U_>
   requires(std::is_integral_v<typename U_::value_type>)
 void apply_permutation(T_ data_begin_, T_ data_end_, U_ indices_begin_) {
   size_t const size = NumericCast::cast<size_t>(std::distance(data_begin_, data_end_));
-  DynamicBitset visited(size, false);
+  Bitset visited(size, false);
   for (size_t i = 0; i < size; ++i) {
     size_t current = i;
     while (!visited.get(current) && !visited.get(indices_begin_[current])) {
@@ -29,8 +29,8 @@ void apply_permutation(T_ data_begin_, T_ data_end_, U_ indices_begin_) {
 
 template <typename T_>
   requires(std::is_integral_v<typename T_::value_type>)
-void apply_permutation(DynamicBitset& data_, T_ indices_begin_) {
-  DynamicBitset visited(data_.size(), false);
+void apply_permutation(Bitset& data_, T_ indices_begin_) {
+  Bitset visited(data_.size(), false);
   for (size_t i = 0; i < data_.size(); ++i) {
     size_t current = i;
     while (!visited.get(current) && !visited.get(indices_begin_[current])) {
