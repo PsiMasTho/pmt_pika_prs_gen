@@ -27,6 +27,9 @@ class IntervalMap {
 
   // -$ Data $-
   std::unique_ptr<KEY_[]> _intervals = nullptr;
+
+  // TODO: do not use unique_ptr for _values because for non-trivial types it will still default construct
+  // the entire capacity
   std::unique_ptr<VALUE_[]> _values = nullptr;
   size_t _size : AmortizedGrowth::MaxCapacityBitWidth = 0;
   size_t _capacity_idx : AmortizedGrowth::MaxCapacityIdxBitWidth = 0;
