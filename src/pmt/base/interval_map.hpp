@@ -66,6 +66,8 @@ class IntervalMap {
   auto get_lowers() -> IntegralSpan<KEY_>;
   auto get_uppers() const -> IntegralSpanConst<KEY_>;
   auto get_uppers() -> IntegralSpan<KEY_>;
+
+  auto find_and_expand_interval_indices(Interval<KEY_> interval_, VALUE_ const& value_) -> IntervalIndexPair;
 };
 
 }  // namespace pmt::base

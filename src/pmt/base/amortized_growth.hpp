@@ -2,6 +2,7 @@
 
 #include <array>
 #include <bit>
+#include <cstdint>
 #include <stdexcept>
 
 namespace pmt::base {

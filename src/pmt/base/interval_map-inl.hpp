@@ -44,55 +44,51 @@ auto IntervalMap<KEY_, VALUE_>::operator!=(IntervalMap const& other_) const -> b
 
 template <std::integral KEY_, typename VALUE_>
 void IntervalMap<KEY_, VALUE_>::insert(Interval<KEY_> interval_, VALUE_ value_) {
-  IntervalIndexPair indices = find_interval_index_pair<KEY_>(get_lowers(), get_uppers(), interval_);
+  IntervalIndexPair indices = find_and_expand_interval_indices(interval_, value_);
 
-  /* left side expansion */
-  if (!indices.first._inside && indices.first._idx != 0) {
-    KEY_ const adjusted_left = interval_.get_lower() - 1;
-    if (get_uppers()[indices.first._idx - 1] == adjusted_left && _values[indices.first._idx - 1] == value_) {
-      --indices.first._idx;
-      indices.first._inside = true;
-      ++get_uppers()[indices.first._idx];
-    }
-  }
-
-  /* right side expansion */
-  if (!indices.second._inside && indices.second._idx != size()) {
-    KEY_ const adjusted_right = interval_.get_upper() + 1;
-    if (get_lowers()[indices.second._idx] == adjusted_right && _values[indices.second._idx] == value_) {
-      indices.second._inside = true;
-      --get_lowers()[indices.second._idx];
-    }
-  }
+  bool const split_left = indices.first._inside && _values[indices.first._idx] != value_;
+  bool const split_right = indices.second._inside && _values[indices.second._idx] != value_;
+  bool const same_index = indices.first._idx == indices.second._idx;
 
   int net = 1;
 
-  if (indices.first._idx == indices.second._idx && indices.first._inside && indices.second._inside && _values[indices.first._idx] != value_ && _values[indices.second._idx] != value_) {
+  if (split_left && split_right && same_index) {
     if (interval_.get_lower() != get_lowers()[indices.first._idx] && interval_.get_upper() != get_uppers()[indices.second._idx]) {
-      net = 2; /* range inserted in the middle of an existing one */
+      // range inserted in the middle of an existing one
+      net = 2;
     } else if (interval_.get_lower() == get_lowers()[indices.first._idx] && interval_.get_upper() == get_uppers()[indices.second._idx]) {
-      net = 0; /* existing range overwritten exactly */
+      // existing range overwritten exactly
+      net = 0;
     } else {
-      net = 1; /* one side of an existing range is overwritten */
+      // one side of an existing range is overwritten
+      net = 1;
       indices.first._inside = false;
       indices.second._inside = false;
       if (interval_.get_lower() == get_lowers()[indices.first._idx]) {
+        // the left side is overwritten
         get_lowers()[indices.first._idx] = interval_.get_upper() + 1;
       } else {
+        // the right side is overwritten
         get_uppers()[indices.second._idx] = interval_.get_lower() - 1;
         ++indices.first._idx;
         ++indices.second._idx;
       }
     }
   } else {
-    if (indices.first._inside && _values[indices.first._idx] != value_ && get_lowers()[indices.first._idx] != interval_.get_lower()) {
-      get_uppers()[indices.first._idx] = interval_.get_lower() - 1;
-      indices.first._inside = false;
-      ++indices.first._idx;
+    if (split_left) {
+      // Nothing needs to happen otherwise because then the whole interval can be overwritten
+      if (get_lowers()[indices.first._idx] != interval_.get_lower()) {
+        get_uppers()[indices.first._idx] = interval_.get_lower() - 1;
+        indices.first._inside = false;
+        ++indices.first._idx;
+      }
     }
-    if (indices.second._inside && _values[indices.second._idx] != value_ && get_uppers()[indices.second._idx] != interval_.get_upper()) {
-      get_lowers()[indices.second._idx] = interval_.get_upper() + 1;
-      indices.second._inside = false;
+    if (split_right) {
+      // Nothing needs to happen otherwise because then the whole interval can be overwritten
+      if (get_uppers()[indices.second._idx] != interval_.get_upper()) {
+        get_lowers()[indices.second._idx] = interval_.get_upper() + 1;
+        indices.second._inside = false;
+      }
     }
 
     if (indices.first._idx != indices.second._idx || indices.first._inside || indices.second._inside) {
@@ -112,12 +108,14 @@ void IntervalMap<KEY_, VALUE_>::insert(Interval<KEY_> interval_, VALUE_ value_) 
     move_bidir(_values.get() + indices.first._idx, _values.get() + indices.first._idx + remaining, _values.get() + indices.first._idx + net);
 
     if (net == 2) {
+      get_lowers()[indices.first._idx] = get_lowers()[indices.first._idx + 2];
       get_uppers()[indices.first._idx] = interval_.get_lower() - 1;
       get_lowers()[indices.first._idx + 1] = interval_.get_lower();
       get_uppers()[indices.first._idx + 1] = interval_.get_upper();
       get_lowers()[indices.first._idx + 2] = interval_.get_upper() + 1;
 
       _values[indices.first._idx + 1] = std::move(value_);
+      _values[indices.first._idx] = _values[indices.first._idx + 2];  // copy
     } else {
       get_lowers()[indices.first._idx] = interval_.get_lower();
       get_uppers()[indices.first._idx] = interval_.get_upper();
@@ -229,6 +227,30 @@ auto IntervalMap<KEY_, VALUE_>::get_uppers() const -> IntegralSpanConst<KEY_> {
 template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::get_uppers() -> IntegralSpan<KEY_> {
   return IntegralSpan<KEY_>(_intervals.get() + capacity(), _size);
+}
+
+template <std::integral KEY_, typename VALUE_>
+auto IntervalMap<KEY_, VALUE_>::find_and_expand_interval_indices(Interval<KEY_> interval_, VALUE_ const& value_) -> IntervalIndexPair {
+  IntegralSpan<KEY_> const lowers = get_lowers();
+  IntegralSpan<KEY_> const uppers = get_uppers();
+  IntervalIndexPair indices = find_interval_index_pair<KEY_>(lowers, uppers, interval_);
+
+  if (!indices.first._inside && indices.first._idx != 0) {
+    if (uppers[indices.first._idx - 1] == interval_.get_lower() - 1 && _values[indices.first._idx - 1] == value_) {
+      --indices.first._idx;
+      indices.first._inside = true;
+      ++uppers[indices.first._idx];
+    }
+  }
+
+  if (!indices.second._inside && indices.second._idx != size()) {
+    if (lowers[indices.second._idx] == interval_.get_upper() + 1 && _values[indices.second._idx] == value_) {
+      indices.second._inside = true;
+      --lowers[indices.second._idx];
+    }
+  }
+
+  return indices;
 }
 
 }  // namespace pmt::base

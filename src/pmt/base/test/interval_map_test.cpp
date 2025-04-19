@@ -5,8 +5,8 @@
 #include <cassert>
 #include <iostream>
 #include <random>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace pmt::base::test {
 
@@ -44,7 +44,7 @@ auto TestMapPair<T_>::is_equal() const -> bool {
     if ((itr_unordered_map != _unordered_map.end()) != (val_interval_map != nullptr)) {
       return false;
     }
-    
+
     if (val_interval_map != nullptr && itr_unordered_map->second != *val_interval_map) {
       return false;
     }
@@ -120,14 +120,13 @@ void IntervalMapTest::test_insert() {
   static size_t const TEST_CASE_COUNT = 50;
 
   for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
-    static size_t const range = 64;
-    static float const density = 0.6f;
+    static size_t const range = 2048;
+    static float const density = 0.7f;
     static size_t const max_step = 16;
     static size_t const value_max = 6;
     static size_t const prefill_spacing = 8;
 
     TestMapPair<size_t> test_map_pair = make_rng_filled_maps<size_t>(range, density, max_step, value_max, prefill_spacing);
-    debug_print(test_map_pair._interval_map);
 
     assert(test_map_pair.is_equal());
   }
