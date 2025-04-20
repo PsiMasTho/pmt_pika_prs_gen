@@ -53,7 +53,7 @@ auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap const& other_) -> Interval
 
 template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::operator==(IntervalMap const& other_) const -> bool {
-  return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers()) && std::ranges::equal(_values, _values + _size, other_._values.get());
+  return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers()) && std::ranges::equal(_values, _values + _size, other_._values);
 }
 
 template <std::integral KEY_, typename VALUE_>

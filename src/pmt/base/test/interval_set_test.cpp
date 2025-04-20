@@ -103,6 +103,14 @@ void test_insert_impl() {
   }
 }
 
+void equalize_bitset_sizes(Bitset& lhs_, Bitset& rhs_) {
+  if (lhs_.size() > rhs_.size()) {
+    lhs_.resize(rhs_.size());
+  } else if (rhs_.size() > lhs_.size()) {
+    rhs_.resize(lhs_.size());
+  }
+}
+
 }  // namespace
 
 void IntervalSetTest::run() {
@@ -146,11 +154,8 @@ void IntervalSetTest::test_and() {
     Bitset unordered_set_overlap_bs = unordered_set_bs.clone_and(unordered_set_bs2);
 
     // The bitsets should be of the same size before comparison, so shrink the larger one
-    if (overlap_is_bs.size() > unordered_set_overlap_bs.size()) {
-      overlap_is_bs.resize(unordered_set_overlap_bs.size());
-    } else if (unordered_set_overlap_bs.size() > overlap_is_bs.size()) {
-      unordered_set_overlap_bs.resize(overlap_is_bs.size());
-    }
+    equalize_bitset_sizes(overlap_is_bs, unordered_set_overlap_bs);
+
     assert(overlap_is_bs == unordered_set_overlap_bs);
   }
 }
@@ -188,7 +193,7 @@ void IntervalSetTest::test_erase() {
 }
 
 void IntervalSetTest::test_popcnt() {
- size_t const test_case_count = 32;
+  size_t const test_case_count = 32;
 
   for (size_t i = 0; i < test_case_count; ++i) {
     static size_t const range = 512;
@@ -206,7 +211,7 @@ void IntervalSetTest::test_popcnt() {
 }
 
 void IntervalSetTest::test_asymmetric_difference() {
- size_t const test_case_count = 32;
+  size_t const test_case_count = 32;
 
   for (size_t i = 0; i < test_case_count; ++i) {
     static size_t const range = 512;
@@ -219,19 +224,15 @@ void IntervalSetTest::test_asymmetric_difference() {
     assert(test_set_pair1.is_equal());
     assert(test_set_pair2.is_equal());
 
-    Bitset const unordered_set_bs1 = BitsetConverter::from_unordered_set(test_set_pair1._unordered_set);
-    Bitset const unordered_set_bs2 = BitsetConverter::from_unordered_set(test_set_pair2._unordered_set);
+    Bitset unordered_set_bs1 = BitsetConverter::from_unordered_set(test_set_pair1._unordered_set);
+    Bitset unordered_set_bs2 = BitsetConverter::from_unordered_set(test_set_pair2._unordered_set);
+    equalize_bitset_sizes(unordered_set_bs1, unordered_set_bs2);
     Bitset unordered_set_asymmetric_difference_bs = unordered_set_bs1.clone_asymmetric_difference(unordered_set_bs2);
 
     IntervalSet<size_t> const asymmetric_difference_is = test_set_pair1._interval_set.clone_asymmetric_difference(test_set_pair2._interval_set);
     Bitset asymmetric_difference_is_bs = BitsetConverter::from_interval_set(asymmetric_difference_is);
-    
-    // The bitsets should be of the same size before comparison, so shrink the larger one
-    if (unordered_set_asymmetric_difference_bs.size() > asymmetric_difference_is_bs.size()) {
-      unordered_set_asymmetric_difference_bs.resize(asymmetric_difference_is_bs.size());
-    } else if (asymmetric_difference_is_bs.size() > unordered_set_asymmetric_difference_bs.size()) {
-      asymmetric_difference_is_bs.resize(unordered_set_asymmetric_difference_bs.size());
-    }
+
+    equalize_bitset_sizes(unordered_set_asymmetric_difference_bs, asymmetric_difference_is_bs);
 
     assert(unordered_set_asymmetric_difference_bs == asymmetric_difference_is_bs);
   }

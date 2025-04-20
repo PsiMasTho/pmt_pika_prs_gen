@@ -56,7 +56,7 @@ class IntervalSet : public Hashable<IntervalSet<KEY_>> {
   // bitwise operations
   auto popcnt() const -> size_t;
   void inplace_or(IntervalSet const& other_);
-
+  void inplace_asymmetric_difference(IntervalSet const& other_);
 
   auto clone_and(IntervalSet const& other_) const -> IntervalSet;
   auto clone_asymmetric_difference(IntervalSet const& other_) const -> IntervalSet;

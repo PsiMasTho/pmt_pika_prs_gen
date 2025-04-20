@@ -131,7 +131,7 @@ void ParserBuilder::step_01_handle_grammar_property(Context& context_, GenericAs
       step_01_handle_grammar_property_comment(context_, property_value_position);
       break;
     default:
-      pmt_unreachable();
+      pmt::unreachable();
   }
 }
 

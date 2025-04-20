@@ -15,7 +15,8 @@ IntervalSet<KEY_>::IntervalSet(IntervalSet const& other_)
  , _size(other_._size)
  , _capacity_idx(0) {
   reserve(other_._size);
-  std::copy(other_._intervals.get(), other_._intervals.get(), _intervals.get());
+  std::copy(other_.get_lowers().begin(), other_.get_lowers().end(), get_lowers().begin());
+  std::copy(other_.get_uppers().begin(), other_.get_uppers().end(), get_uppers().begin());
 }
 
 template <std::integral KEY_>
@@ -201,6 +202,13 @@ void IntervalSet<KEY_>::inplace_or(IntervalSet const& other_) {
 }
 
 template <std::integral KEY_>
+void IntervalSet<KEY_>::inplace_asymmetric_difference(IntervalSet const& other_) {
+  for (size_t i = 0; i < other_.size(); ++i) {
+    erase(other_.get_by_index(i));
+  }
+}
+
+template <std::integral KEY_>
 auto IntervalSet<KEY_>::clone_and(IntervalSet const& other_) const -> IntervalSet {
   // Make sure lhs is smaller or equal
   IntervalSet const& lhs = (size() <= other_.size()) ? *this : other_;
@@ -238,7 +246,9 @@ auto IntervalSet<KEY_>::clone_and(IntervalSet const& other_) const -> IntervalSe
 
 template <std::integral KEY_>
 auto IntervalSet<KEY_>::clone_asymmetric_difference(IntervalSet const& other_) const -> IntervalSet {
- 
+  IntervalSet ret = *this;
+  ret.inplace_asymmetric_difference(other_);
+  return ret;
 }
 
 template <std::integral KEY_>
