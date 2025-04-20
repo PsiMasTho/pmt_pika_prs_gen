@@ -3,7 +3,7 @@
 #include "pmt/parserbuilder/grm_parser-inl.hpp"
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parsert;
+using namespace pmt::util::smrt;
 
 auto GrmParser::parse(GrmLexer& lexer_) -> GenericAst::UniqueHandle {
   GenericAst::UniqueHandle ret = GenericAst::construct(GenericAst::Tag::Children);

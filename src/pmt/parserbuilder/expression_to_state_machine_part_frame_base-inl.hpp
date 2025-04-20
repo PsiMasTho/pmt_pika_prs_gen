@@ -6,8 +6,8 @@
 
 namespace pmt::parserbuilder {
 
-template <util::parsect::IsStateTag TAG_>
-ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase(pmt::util::parsert::GenericAstPath const& path_)
+template <util::smct::IsStateTag TAG_>
+ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase(pmt::util::smrt::GenericAstPath const& path_)
  : _path(path_) {
 }
 

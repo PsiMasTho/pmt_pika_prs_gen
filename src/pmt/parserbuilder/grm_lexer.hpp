@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 #include <string_view>
 
@@ -8,7 +8,7 @@ namespace pmt::parserbuilder {
 class GrmLexer {
  public:
   GrmLexer(std::string_view input_);
-  auto next_token() -> pmt::util::parsert::GenericAst::UniqueHandle;
+  auto next_token() -> pmt::util::smrt::GenericAst::UniqueHandle;
   auto is_eof() const -> bool;
 
  private:

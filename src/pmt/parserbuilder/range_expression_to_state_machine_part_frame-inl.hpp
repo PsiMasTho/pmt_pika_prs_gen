@@ -6,11 +6,11 @@
 
 #include "pmt/parserbuilder/grm_number.hpp"
 
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 
-template <pmt::util::parsect::IsStateTag TAG_>
+template <pmt::util::smct::IsStateTag TAG_>
 void RangeExpressionToStateMachinePartFrame::process(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType&, ExpressionToStateMachinePartFrameBaseCaptures& captures_) {
   // Create a new incoming state
   Fa::StateNrType state_nr_incoming = captures_._result.get_unused_state_nr();
@@ -19,10 +19,10 @@ void RangeExpressionToStateMachinePartFrame::process(ExpressionToStateMachinePar
 
   GenericAst const& cur_expr = *_path.resolve(captures_._ast);
 
-  pmt::util::parsect::Symbol::ValueType const min = GrmNumber::single_char_as_value(*cur_expr.get_child_at(0));
-  pmt::util::parsect::Symbol::ValueType const max = GrmNumber::single_char_as_value(*cur_expr.get_child_at(1));
+  pmt::util::smct::Symbol::ValueType const min = GrmNumber::single_char_as_value(*cur_expr.get_child_at(0));
+  pmt::util::smct::Symbol::ValueType const max = GrmNumber::single_char_as_value(*cur_expr.get_child_at(1));
 
-  for (pmt::util::parsect::Symbol::ValueType i = min; i <= max; ++i) {
+  for (pmt::util::smct::Symbol::ValueType i = min; i <= max; ++i) {
     captures_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, StateTraits<StateTagFsm>::CharacterSymbolKind, i);
   }
 }

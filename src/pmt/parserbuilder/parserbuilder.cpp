@@ -9,20 +9,20 @@
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
 
-#include "pmt/util/parsect/state_machine_determinizer.hpp"
-#include "pmt/util/parsect/state_machine_part.hpp"
+#include "pmt/util/smct/state_machine_determinizer.hpp"
+#include "pmt/util/smct/state_machine_part.hpp"
 
-#include "pmt/util/parsert/generic_ast.hpp"
-#include "pmt/util/parsert/generic_ast_printer.hpp"
-#include "pmt/util/parsert/tables_base.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast_printer.hpp"
+#include "pmt/util/smrt/tables_base.hpp"
 
 #include <algorithm>
 #include <stack>
 #include <utility>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parsert;
-using namespace pmt::util::parsect;
+using namespace pmt::util::smrt;
+using namespace pmt::util::smct;
 using namespace pmt::base;
 
 void ParserBuilder::build(std::string_view input_grammar_path_) {
@@ -650,7 +650,7 @@ void ParserBuilder::sort_rules_by_name(Context& context_) {
   apply_permutation(context_._rule_definitions.begin(), context_._rule_definitions.end(), ordering.begin());
 }
 
-auto ParserBuilder::Context::try_find_terminal_definition(std::string const& name_) -> pmt::util::parsert::GenericAstPath {
+auto ParserBuilder::Context::try_find_terminal_definition(std::string const& name_) -> pmt::util::smrt::GenericAstPath {
   std::optional<size_t> const index = base::binary_find_index(_terminal_names.begin(), _terminal_names.end(), name_);
   if (!index.has_value()) {
     throw std::runtime_error("Terminal not found: " + name_);
@@ -659,7 +659,7 @@ auto ParserBuilder::Context::try_find_terminal_definition(std::string const& nam
   return _terminal_definitions[*index];
 }
 
-auto ParserBuilder::Context::try_find_rule_definition(std::string const& name_) -> pmt::util::parsert::GenericAstPath {
+auto ParserBuilder::Context::try_find_rule_definition(std::string const& name_) -> pmt::util::smrt::GenericAstPath {
   std::optional<size_t> const index = base::binary_find_index(_rule_names.begin(), _rule_names.end(), name_);
   if (!index.has_value()) {
     throw std::runtime_error("Rule not found: " + name_);

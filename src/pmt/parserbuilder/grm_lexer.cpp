@@ -34,7 +34,7 @@ static const int GrmLexer_en_main = 68;
 }  // namespace
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parsert;
+using namespace pmt::util::smrt;
 
 GrmLexer::GrmLexer(std::string_view input_)
  : _p{input_.data()}

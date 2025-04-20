@@ -5,8 +5,8 @@
 
 namespace pmt::parserbuilder {
 using namespace pmt::base;
-using namespace pmt::util::parsect;
-using namespace pmt::util::parsert;
+using namespace pmt::util::smct;
+using namespace pmt::util::smrt;
 
 RepetitionExpressionToFaPartFrame::RepetitionExpressionToFaPartFrame(GenericAstPath const& path_)
  : ExpressionToStateMachinePartFrameBase(path_) {

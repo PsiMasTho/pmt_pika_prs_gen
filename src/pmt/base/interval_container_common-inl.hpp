@@ -4,6 +4,8 @@
 #endif
 // clang-format on
 
+#include "pmt/base/hash.hpp"
+
 #include <algorithm>
 #include <cassert>
 
@@ -29,6 +31,14 @@ auto Interval<T_>::get_lower() const -> T_ {
 template <std::integral T_>
 auto Interval<T_>::get_upper() const -> T_ {
   return _upper;
+}
+
+template <std::integral T_>
+auto Interval<T_>::hash() const -> size_t {
+  size_t seed = Hash::Phi64;
+  Hash::combine(get_lower(), seed);
+  Hash::combine(get_upper(), seed);
+  return seed;
 }
 
 template <std::integral T_>

@@ -57,6 +57,14 @@ auto IntervalSet<KEY_>::hash() const -> size_t {
 }
 
 template <std::integral KEY_>
+void IntervalSet<KEY_>::merge(IntervalSet const& other_) {
+  for (size_t i = 0; i < other_.size(); ++i) {
+    ;
+    insert(other_.get_by_index(i));
+  }
+}
+
+template <std::integral KEY_>
 void IntervalSet<KEY_>::insert(Interval<KEY_> interval_) {
   IntervalIndexPair indices = find_and_expand_interval_indices(interval_);
 

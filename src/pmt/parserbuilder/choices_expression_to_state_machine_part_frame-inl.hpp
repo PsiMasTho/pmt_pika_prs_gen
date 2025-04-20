@@ -5,12 +5,12 @@
 #endif
 // clang-format on
 
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 using namespace pmt::base;
-using namespace pmt::util::parsect;
-using namespace pmt::util::parsert;
+using namespace pmt::util::smct;
+using namespace pmt::util::smrt;
 
 void ChoicesExpressionToFaPartFrame::process(CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_) {
   switch (_stage) {

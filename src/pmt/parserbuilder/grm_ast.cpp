@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 namespace pmt::parserbuilder {
-auto GrmAst::id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string {
+auto GrmAst::id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string {
   switch (id_) {
     case TkStringLiteral:
       return "TkStringLiteral";

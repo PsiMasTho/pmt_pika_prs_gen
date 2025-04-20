@@ -13,13 +13,13 @@
 #include "pmt/parserbuilder/sequence_expression_to_state_machine_part_frame.hpp"
 #include "pmt/parserbuilder/string_literal_expression_to_state_machine_part_frame.hpp"
 #include "pmt/parserbuilder/terminal_identifier_expression_to_state_machine_part_frame.hpp"
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 
-template <util::parsect::IsStateTag TAG_>
-auto ExpressionToStateMachinePartFrameFactory<TAG_>::construct(pmt::util::parsert::GenericAst const& ast_, pmt::util::parsert::GenericAstPath const& path_) -> ExpressionToStateMachinePartFrameBase<TAG_>::FrameHandle {
-  pmt::util::parsert::GenericId::IdType const id = path_.resolve(ast_)->get_id();
+template <util::smct::IsStateTag TAG_>
+auto ExpressionToStateMachinePartFrameFactory<TAG_>::construct(pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) -> ExpressionToStateMachinePartFrameBase<TAG_>::FrameHandle {
+  pmt::util::smrt::GenericId::IdType const id = path_.resolve(ast_)->get_id();
   switch (id) {
     case GrmAst::NtTerminalSequence:
       return std::make_shared<SequenceExpressionToStateMachinePartFrame>(path_);

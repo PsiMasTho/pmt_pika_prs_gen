@@ -2,18 +2,18 @@
 
 #include "pmt/base/bitset.hpp"
 #include "pmt/fw_decl.hpp"
-#include "pmt/util/parsert/generic_lexer_tables.hpp"
+#include "pmt/util/smrt/generic_lexer_tables.hpp"
 
 #include <ostream>
 #include <string>
 
-PMT_FW_DECL_NS_CLASS(pmt::util::parsert, GenericLexerTables);
+PMT_FW_DECL_NS_CLASS(pmt::util::smrt, GenericLexerTables);
 
 namespace pmt::parserbuilder {
 
 class TableWriter {
  public:
-  TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string header_path_, std::string namespace_name_, std::string class_name_, pmt::util::parsert::GenericLexerTables const& tables_);
+  TableWriter(std::ostream& os_header_, std::ostream& os_source_, std::string header_path_, std::string namespace_name_, std::string class_name_, pmt::util::smrt::GenericLexerTables const& tables_);
 
   void write();
 
@@ -42,7 +42,7 @@ class TableWriter {
 
   std::ostream& _os_header;
   std::ostream& _os_source;
-  pmt::util::parsert::GenericLexerTables const& _tables;
+  pmt::util::smrt::GenericLexerTables const& _tables;
   std::string _header_path;
   std::string _namespace_name;
   std::string _class_name;

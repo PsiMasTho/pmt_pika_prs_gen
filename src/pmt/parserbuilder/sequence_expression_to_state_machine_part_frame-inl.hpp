@@ -1,11 +1,11 @@
 #include "pmt/parserbuilder/sequence_expression_to_fa_part_frame.hpp"
 
 #include "pmt/parserbuilder/expression_to_fa_part_frame_factory.hpp"
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 using namespace pmt::base;
-using namespace pmt::util::parsert;
+using namespace pmt::util::smrt;
 
 void SequenceExpressionToFaPartFrame::process(CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_) {
   switch (_stage) {

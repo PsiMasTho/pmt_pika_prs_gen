@@ -5,13 +5,13 @@
 // clang-format on
 
 #include "pmt/base/algo.hpp"
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 #include <utility>
 
 namespace pmt::parserbuilder {
 
-template <pmt::util::parsect::IsStateTag TAG_>
+template <pmt::util::smct::IsStateTag TAG_>
 void TerminalIdentifierExpressionToStateMachinePart<TAG_>::process(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_) {
   switch (_stage) {
     case 0:
@@ -23,7 +23,7 @@ void TerminalIdentifierExpressionToStateMachinePart<TAG_>::process(ExpressionToS
   }
 }
 
-template <pmt::util::parsect::IsStateTag TAG_>
+template <pmt::util::smct::IsStateTag TAG_>
 void TerminalIdentifierExpressionToStateMachinePart<TAG_>::process_stage_0(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_) {
   _terminal_name = &_path.resolve(captures_._ast)->get_string();
 
@@ -52,7 +52,7 @@ void TerminalIdentifierExpressionToStateMachinePart<TAG_>::process_stage_0(Expre
   callstack_.push(ExpressionToFaPartFrameFactory::construct(captures_._ast, _path));
 }
 
-template <pmt::util::parsect::IsStateTag TAG_>
+template <pmt::util::smct::IsStateTag TAG_>
 void TerminalIdentifierExpressionToStateMachinePart<TAG_>::process_stage_1(ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_) {
   _transitions_reference->_epsilon_transitions.insert(*captures_._ret_part.get_incoming_state_nr());
   captures_._ret_part.set_incoming_state_nr(_state_nr_reference);

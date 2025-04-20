@@ -4,7 +4,7 @@
 
 namespace pmt::parserbuilder {
 
-template <util::parsect::IsStateTag TAG_>
+template <util::smct::IsStateTag TAG_>
 class IntegerLiteralExpressionToFaPartFrame : public ExpressionToStateMachinePartFrameBase<TAG_> {
  public:
   using ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase;

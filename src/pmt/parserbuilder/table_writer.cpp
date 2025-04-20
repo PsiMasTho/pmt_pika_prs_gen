@@ -1,12 +1,12 @@
 #include "pmt/parserbuilder/table_writer.hpp"
 
-#include "pmt/util/parsert/generic_lexer_tables.hpp"
+#include "pmt/util/smrt/generic_lexer_tables.hpp"
 
 #include <sstream>
 #include <utility>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parsert;
+using namespace pmt::util::smrt;
 
 namespace {}  // namespace
 
@@ -28,17 +28,17 @@ void TableWriter::write_header() {
   // clang-format off
   _os_header << "#pragma once\n"
   "\n"
-  R"(#include "pmt/util/parsert/generic_id.hpp")"
+  R"(#include "pmt/util/smrt/generic_id.hpp")"
   "\n"
-  R"(#include "pmt/util/parsert/generic_lexer_tables.hpp")"
+  R"(#include "pmt/util/smrt/generic_lexer_tables.hpp")"
   "\n"
   "\n";
   _os_header << _namespace_name << " {\n"
   "\n"
   "class " << _class_name << " {\n"
   " public:\n"
-  "  auto id_to_string(pmt::util::parsert::GenericId::IdType id_) -> std::string_view;\n"
-  "  auto as_generic_lexer_tables() const -> pmt::util::parsert::GenericLexerTables;\n"
+  "  auto id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string_view;\n"
+  "  auto as_generic_lexer_tables() const -> pmt::util::smrt::GenericLexerTables;\n"
   "\n";
   write_header_id_enum();
   _os_header << "};\n";
@@ -51,7 +51,7 @@ void TableWriter::write_source() {
   _os_source << "#include \"" << _header_path << "\"\n"
   "\n"
   "namespace " << _namespace_name << " {\n"
-  "using namespace pmt::util::parsert;\n"
+  "using namespace pmt::util::smrt;\n"
   "namespace {\n"
   "GenericLexerTables::TableIndexType const STATE_NR_SINK = " << as_hex(_tables._fa_state_tables._state_nr_sink) << ";\n"
   "GenericLexerTables::TableIndexType const PADDING_L = " << as_hex(_tables._fa_state_tables._padding_l) << ";\n"

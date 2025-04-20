@@ -1,8 +1,8 @@
 #pragma once
 
-#include "pmt/util/parsect/state_machine.hpp"
-#include "pmt/util/parsect/state_machine_part.hpp"
-#include "pmt/util/parsert/generic_ast_path.hpp"
+#include "pmt/util/smct/state_machine.hpp"
+#include "pmt/util/smct/state_machine_part.hpp"
+#include "pmt/util/smrt/generic_ast_path.hpp"
 
 #include <string>
 #include <unordered_set>
@@ -10,17 +10,17 @@
 
 namespace pmt::parserbuilder {
 
-template <pmt::util::parsect::IsStateTag TAG_>
+template <pmt::util::smct::IsStateTag TAG_>
 class ExpressionToStateMachinePartFrameBaseCaptures {
  public:
-  pmt::util::parsect::StateMachinePart<TAG_> _ret_part;
+  pmt::util::smct::StateMachinePart<TAG_> _ret_part;
   std::unordered_set<std::string> _name_stack_contents;
   std::vector<std::string> _name_stack;
 
-  pmt::util::parsect::StateMachine& _dest_state_machine;
+  pmt::util::smct::StateMachine& _dest_state_machine;
   std::vector<std::string> const& _names;
-  std::vector<pmt::util::parsert::GenericAstPath> const& _definitions;
-  pmt::util::parsert::GenericAst const& _ast;
+  std::vector<pmt::util::smrt::GenericAstPath> const& _definitions;
+  pmt::util::smrt::GenericAst const& _ast;
 };
 
 }  // namespace pmt::parserbuilder

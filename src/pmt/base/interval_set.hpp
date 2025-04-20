@@ -10,7 +10,7 @@
 namespace pmt::base {
 
 template <std::integral KEY_>
-class IntervalSet : Hashable<IntervalSet<KEY_>> {
+class IntervalSet : public Hashable<IntervalSet<KEY_>> {
  public:
   // -$ Types / Constants $-
   using KeyType = KEY_;
@@ -43,6 +43,7 @@ class IntervalSet : Hashable<IntervalSet<KEY_>> {
   auto hash() const -> size_t;
 
   // --$ Other $--
+  void merge(IntervalSet const& other_);
   void insert(Interval<KEY_> interval_);
   void erase(Interval<KEY_> interval_);
   void clear();

@@ -1,14 +1,14 @@
 #include "pmt/parserbuilder/grm_number.hpp"
 
 #include "pmt/parserbuilder/grm_ast.hpp"
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <unordered_map>
 
 namespace pmt::parserbuilder {
-using namespace pmt::util::parsert;
+using namespace pmt::util::smrt;
 
 auto GrmNumber::single_char_as_value(GenericAst const& ast_) -> NumberType {
   if (ast_.get_id() == GrmAst::TkStringLiteral) {

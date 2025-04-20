@@ -16,9 +16,6 @@ enum NamespaceId : NamespaceIdType {
   Pmt                 =  1 * OFFSET,
   PmtBase             =  2 * OFFSET, 
   PmtBaseTest         =  6 * OFFSET,
-  PmtGenerator        =  3 * OFFSET,
-  PmtUtil             =  4 * OFFSET,
-  PmtUtilParse        =  5 * OFFSET,
 
   // clang-format on
 };

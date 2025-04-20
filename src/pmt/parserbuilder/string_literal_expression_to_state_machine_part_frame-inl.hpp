@@ -4,18 +4,18 @@
 #endif
 // clang-format on
 
-#include "pmt/util/parsert/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast.hpp"
 
 namespace pmt::parserbuilder {
 
-template <util::parsect::IsStateTag TAG_>
+template <util::smct::IsStateTag TAG_>
 void StringLiteralExpressionToStateMachinePartFrame<TAG_>::process(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType&, ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_) {
   // Create a new incoming state
-  pmt::util::parsect::State::StateNrType state_nr_prev = captures_._result.get_unused_state_nr();
-  pmt::util::parsect::State<TAG_>* state_prev = &captures_._dest_state_machine.get_state(state_nr_prev);
+  pmt::util::smct::State::StateNrType state_nr_prev = captures_._result.get_unused_state_nr();
+  pmt::util::smct::State<TAG_>* state_prev = &captures_._dest_state_machine.get_state(state_nr_prev);
   captures_._ret_part.set_incoming_state_nr(state_nr_prev);
 
-  pmt::util::parsert::GenericAst const& cur_expr = *_path.resolve(captures_._ast);
+  pmt::util::smrt::GenericAst const& cur_expr = *_path.resolve(captures_._ast);
 
   for (size_t i = 1; i < cur_expr.get_string().size(); ++i) {
     pmt::util::parse::State::StateNrType state_nr_cur = captures_._result.get_unused_state_nr();

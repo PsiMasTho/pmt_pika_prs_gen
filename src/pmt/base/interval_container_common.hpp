@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pmt/base/hashable.hpp"
+
 #include <concepts>
 #include <cstddef>
 #include <span>
@@ -21,7 +23,7 @@ template <std::integral T_>
 using IntegralSpanConst = std::span<T_ const>;
 
 template <std::integral T_>
-class Interval {
+class Interval : public Hashable<Interval<T_>> {
   // -$ Data $-
   T_ _lower;
   T_ _upper;
@@ -38,6 +40,9 @@ class Interval {
 
   // --$ Operators $--
   auto operator==(Interval const& _) const -> bool = default;
+
+  // --$ Inherited: pmt::base::Hashable $--
+  auto hash() const -> size_t;
 };
 
 template <std::integral T_>

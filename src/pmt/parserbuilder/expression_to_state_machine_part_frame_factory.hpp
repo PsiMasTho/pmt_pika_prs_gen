@@ -4,10 +4,10 @@
 
 namespace pmt::parserbuilder {
 
-template <util::parsect::IsStateTag TAG_>
+template <util::smct::IsStateTag TAG_>
 class ExpressionToStateMachinePartFrameFactory {
  public:
-  static auto construct(pmt::util::parsert::GenericAst const& ast_, pmt::util::parsert::GenericAstPath const& path_) -> ExpressionToStateMachinePartFrameBase<TAG_>::FrameHandle;
+  static auto construct(pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) -> ExpressionToStateMachinePartFrameBase<TAG_>::FrameHandle;
 };
 
 }  // namespace pmt::parserbuilder
