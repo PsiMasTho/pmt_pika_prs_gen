@@ -10,98 +10,100 @@ using namespace pmt::base;
 namespace {
 auto get_alphabet(StateMachine const& state_machine_) -> IntervalSet<Symbol::UnderlyingType> {
   IntervalSet<Symbol::UnderlyingType> alphabet;
-  IntervalSet<State::StateNrType> const state_nrs = state_machine_.get_state_nrs();
 
+  IntervalSet<State::StateNrType> const state_nrs = state_machine_.get_state_nrs();
   for (size_t i = 0; i < state_nrs.size(); ++i) {
     Interval<State::StateNrType> const& interval = state_nrs.get_by_index(i);
     for (State::StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
       State const& state = *state_machine_.get_state(state_nr);
       IntervalSet<Symbol::UnderlyingType> const symbols = state.get_symbols();
-      alphabet.merge(symbols);
+      alphabet.inplace_or(symbols);
     }
   }
 
   return alphabet;
 }
 
-auto get_partitions(StateMachine const& state_machine_) -> std::unordered_set<Bitset> {
+auto get_partitions(StateMachine const& state_machine_) -> std::unordered_set<IntervalSet<State::StateNrType>> {
   // Initialize partitions where a partition is a set of states that have the same combination of accepts
-  std::unordered_map<IntervalSet<State::StateNrType>, Bitset> by_accepts;
+  std::unordered_map<Bitset, IntervalSet<State::StateNrType>> by_accepts;
 
-  for (State::StateNrType state_nr = 0; state_nr < state_machine_.size(); ++state_nr) {
-    if (state_nr == state_machine_.get_state_nr_sink()) {
-      by_accepts.insert_or_assign(Bitset(state_machine_.size(), false), Bitset(state_machine_.size(), false));
-      continue;
+  IntervalSet<State::StateNrType> const state_nrs = state_machine_.get_state_nrs();
+  for (size_t i = 0; i < state_nrs.size(); ++i) {
+    Interval<State::StateNrType> const& interval = state_nrs.get_by_index(i);
+    for (State::StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
+      State const& state = *state_machine_.get_state(state_nr);
+      auto itr = by_accepts.find(state.get_accepts());
+      if (itr == by_accepts.end()) {
+        itr = by_accepts.insert_or_assign(state.get_accepts(), IntervalSet<State::StateNrType>()).first;
+      }
+      itr->second.insert(Interval<State::StateNrType>(state_nr));
     }
-
-    State const& state = *state_machine_.get_state(state_nr);
-    auto itr = by_accepts.find(state._accepts);
-    if (itr == by_accepts.end()) {
-      itr = by_accepts.insert_or_assign(state._accepts, Bitset(state_machine_.size(), false)).first;
-    }
-    itr->second.set(state_nr, true);
   }
 
-  std::unordered_set<Bitset> p;
+  std::unordered_set<IntervalSet<State::StateNrType>> ret;
 
-  for (auto const& [accepts, state_nrs] : by_accepts) {
-    p.insert(std::move(state_nrs));
+  for (auto& [accepts, state_nrs] : by_accepts) {
+    ret.insert(std::move(state_nrs));
   }
+
+  return ret;
 }
 }  // namespace
 
 void StateMachineMinimizer::minimize(StateMachine& state_machine_) {
   IntervalSet<Symbol::UnderlyingType> alphabet = get_alphabet(state_machine_);
 
-  std::unordered_set<Bitset> p = get_partitions(state_machine_);
-  std::unordered_set<Bitset> w = p;
+  std::unordered_set<IntervalSet<State::StateNrType>> p = get_partitions(state_machine_);
+  std::unordered_set<IntervalSet<State::StateNrType>> w = p;
+
+  IntervalSet<State::StateNrType> const state_nrs = state_machine_.get_state_nrs();
 
   while (!w.empty()) {
-    Bitset a = *w.begin();
+    IntervalSet<State::StateNrType> a = *w.begin();
     w.erase(w.begin());
 
-    for (size_t i = 0; i < StateTraits::SymbolKindCount; ++i) {
-      std::optional<std::pair<Symbol::ValueType, Symbol::ValueType>> const& limits = alphabet_limits.get_limit(i);
-      if (!limits.has_value()) {
-        continue;
-      }
-
-      for (Symbol::ValueType j = limits->first; j <= limits->second; ++j) {
-        Bitset x(state_machine_.size(), false);
-        for (size_t k = 0; k < state_machine_.size(); ++k) {
-          State::StateNrType const state_nr_next = state_machine_.get_state_nr_next(k, i, j);
-          if (a.get(state_nr_next)) {
-            x.set(k, true);
+    for (size_t i = 0; i < alphabet.size(); ++i) {
+      Interval<Symbol::UnderlyingType> const& interval = alphabet.get_by_index(i);
+      for (Symbol::UnderlyingType j = interval.get_lower(); j <= interval.get_upper(); ++j) {
+        IntervalSet<State::StateNrType> x;
+        for (size_t k = 0; k < state_nrs.size(); ++k) {
+          Interval<State::StateNrType> const& interval = state_nrs.get_by_index(k);
+          for (State::StateNrType l = interval.get_lower(); l <= interval.get_upper(); ++l) {
+            State::StateNrType const state_nr_next = state_machine_.get_state(l)->get_symbol_transition(Symbol(j));
+            if (a.contains(state_nr_next)) {
+              x.insert(Interval<State::StateNrType>(l));
+            }
           }
+
+          std::unordered_set<IntervalSet<State::StateNrType>> p_new;
+          for (IntervalSet<State::StateNrType> const& y : p) {
+            IntervalSet<State::StateNrType> const x_intersect_y = x.clone_and(y);
+            IntervalSet<State::StateNrType> const x_diff_y = y.clone_asymmetric_difference(x);
+
+            size_t const popcnt_x_intersect_y = x_intersect_y.popcnt();
+            size_t const popcnt_x_diff_y = x_diff_y.popcnt();
+
+            if (popcnt_x_intersect_y == 0 || popcnt_x_diff_y == 0) {
+              p_new.insert(y);
+              continue;
+            }
+
+            p_new.insert(x_intersect_y);
+            p_new.insert(x_diff_y);
+
+            auto const itr = w.find(y);
+            if (itr != w.end()) {
+              w.erase(itr);
+              w.insert(x_intersect_y);
+              w.insert(x_diff_y);
+            } else {
+              (popcnt_x_intersect_y <= popcnt_x_diff_y) ? w.insert(x_intersect_y) : w.insert(x_diff_y);
+            }
+          }
+
+          p = std::move(p_new);
         }
-
-        std::unordered_set<Bitset> p_new;
-        for (Bitset const& y : p) {
-          Bitset const x_intersect_y = x.clone_and(y);
-          Bitset const x_diff_y = y.clone_asymmetric_difference(x);
-
-          size_t const popcnt_x_intersect_y = x_intersect_y.popcnt();
-          size_t const popcnt_x_diff_y = x_diff_y.popcnt();
-
-          if (popcnt_x_intersect_y == 0 || popcnt_x_diff_y == 0) {
-            p_new.insert(y);
-            continue;
-          }
-
-          p_new.insert(x_intersect_y);
-          p_new.insert(x_diff_y);
-
-          auto const itr = w.find(y);
-          if (itr != w.end()) {
-            w.erase(itr);
-            w.insert(x_intersect_y);
-            w.insert(x_diff_y);
-          } else {
-            (popcnt_x_intersect_y <= popcnt_x_diff_y) ? w.insert(x_intersect_y) : w.insert(x_diff_y);
-          }
-        }
-
-        p = std::move(p_new);
       }
     }
   }

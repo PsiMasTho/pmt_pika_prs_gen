@@ -89,9 +89,9 @@ auto make_rng_filled_sets(size_t range_, float density_, size_t max_step_, std::
 
 template <std::integral T_>
 void test_insert_impl() {
-  static size_t const TEST_CASE_COUNT = 50;
+  static size_t const test_case_count = 50;
 
-  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+  for (size_t i = 0; i < test_case_count; ++i) {
     static size_t const range = std::min<size_t>(2048, std::numeric_limits<T_>::max());
     static float const density = 0.7f;
     static size_t const max_step = 16;
@@ -107,8 +107,10 @@ void test_insert_impl() {
 
 void IntervalSetTest::run() {
   test_insert();
-  test_overlap();
+  test_and();
   test_erase();
+  test_popcnt();
+  test_asymmetric_difference();
 }
 
 void IntervalSetTest::test_insert() {
@@ -124,10 +126,10 @@ void IntervalSetTest::test_insert() {
   test_insert_impl<uintmax_t>();
 }
 
-void IntervalSetTest::test_overlap() {
-  static size_t const TEST_CASE_COUNT = 50;
+void IntervalSetTest::test_and() {
+  static size_t const test_case_count = 50;
 
-  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+  for (size_t i = 0; i < test_case_count; ++i) {
     static size_t const range = 1000;
     static float const density = 0.6f;
     static size_t const max_step = 32;
@@ -136,7 +138,7 @@ void IntervalSetTest::test_overlap() {
     TestSetPair<size_t> test_set_pair = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
     TestSetPair<size_t> test_set_pair2 = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
 
-    IntervalSet<size_t> const overlap_is = test_set_pair._interval_set.overlap(test_set_pair2._interval_set);
+    IntervalSet<size_t> const overlap_is = test_set_pair._interval_set.clone_and(test_set_pair2._interval_set);
     Bitset overlap_is_bs = BitsetConverter::from_interval_set(overlap_is);
 
     Bitset const unordered_set_bs = BitsetConverter::from_unordered_set(test_set_pair._unordered_set);
@@ -154,9 +156,9 @@ void IntervalSetTest::test_overlap() {
 }
 
 void IntervalSetTest::test_erase() {
-  static size_t const TEST_CASE_COUNT = 50;
+  static size_t const test_case_count = 50;
 
-  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+  for (size_t i = 0; i < test_case_count; ++i) {
     static size_t const range = 1000;
     static float const density = 0.8f;
     static size_t const max_step = 32;
@@ -182,6 +184,56 @@ void IntervalSetTest::test_erase() {
     }
 
     assert(test_set_pair.is_equal());
+  }
+}
+
+void IntervalSetTest::test_popcnt() {
+ size_t const test_case_count = 32;
+
+  for (size_t i = 0; i < test_case_count; ++i) {
+    static size_t const range = 512;
+    static float const density = 0.8f;
+    static size_t const max_step = 32;
+    static size_t const prefill_spacing = 26;
+
+    TestSetPair<size_t> test_set_pair = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
+
+    assert(test_set_pair.is_equal());
+
+    size_t const popcnt = test_set_pair._interval_set.popcnt();
+    assert(popcnt == test_set_pair._unordered_set.size());
+  }
+}
+
+void IntervalSetTest::test_asymmetric_difference() {
+ size_t const test_case_count = 32;
+
+  for (size_t i = 0; i < test_case_count; ++i) {
+    static size_t const range = 512;
+    static float const density = 0.8f;
+    static size_t const max_step = 32;
+    static size_t const prefill_spacing = 26;
+
+    TestSetPair<size_t> test_set_pair1 = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
+    TestSetPair<size_t> test_set_pair2 = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
+    assert(test_set_pair1.is_equal());
+    assert(test_set_pair2.is_equal());
+
+    Bitset const unordered_set_bs1 = BitsetConverter::from_unordered_set(test_set_pair1._unordered_set);
+    Bitset const unordered_set_bs2 = BitsetConverter::from_unordered_set(test_set_pair2._unordered_set);
+    Bitset unordered_set_asymmetric_difference_bs = unordered_set_bs1.clone_asymmetric_difference(unordered_set_bs2);
+
+    IntervalSet<size_t> const asymmetric_difference_is = test_set_pair1._interval_set.clone_asymmetric_difference(test_set_pair2._interval_set);
+    Bitset asymmetric_difference_is_bs = BitsetConverter::from_interval_set(asymmetric_difference_is);
+    
+    // The bitsets should be of the same size before comparison, so shrink the larger one
+    if (unordered_set_asymmetric_difference_bs.size() > asymmetric_difference_is_bs.size()) {
+      unordered_set_asymmetric_difference_bs.resize(asymmetric_difference_is_bs.size());
+    } else if (asymmetric_difference_is_bs.size() > unordered_set_asymmetric_difference_bs.size()) {
+      asymmetric_difference_is_bs.resize(unordered_set_asymmetric_difference_bs.size());
+    }
+
+    assert(unordered_set_asymmetric_difference_bs == asymmetric_difference_is_bs);
   }
 }
 

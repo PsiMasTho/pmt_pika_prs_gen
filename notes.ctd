@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cherrytree>
+  <bookmarks list=""/>
+  <node name="IntervalContainer" unique_id="2" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161357" ts_lastsave="1745161415">
+    <rich_text>  0INSIDE    1INSIDE    2INSIDE
+0 [a0, b0] 1 [a1, b1] 2 [a2, b2] 3
+ 
+LOWERS = [a0, a1, a2, ...]
+UPPERS = [b0, b1, b2, ...]</rich_text>
+  </node>
+  <node name="CodeGuidelines" unique_id="6" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161695" ts_lastsave="1745161695">
+    <node name="Sections" unique_id="5" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161469" ts_lastsave="1745161534">
+      <rich_text>// -$ Types / Constants $-
+
+// -$ Data $-
+
+// -$ Functions $-
+// --$ Lifetime $--
+// --$ Operators $--
+// --$ Inherited: foo::bar::Baz $--
+// --$ Other $--</rich_text>
+    </node>
+    <node name="Conventions" unique_id="7" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161743" ts_lastsave="1745161748">
+      <rich_text>Concepts in a nested ccpt namespace
+
+type traits in a nested trait namespace,
+
+private use things that are forced to be in headers, should be in a detail namespace
+
+class type aliases should end in "Type"
+
+declare and define getters before setters if possible
+
+boolean functions start with "is_"</rich_text>
+    </node>
+  </node>
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745179245">
+    <rich_text>Rename:
+parsert: smrt
+parsect: smct
+
+State machine runtime (GenericStateMachine?) should take a CRTP interface, specifies a std::integral parameter
+-&gt;Generated state machines inherit from this, can use the least needed width integer
+-&gt;StateMachine class used for building also inherits from this with uint64_t and thus can also be dynamically run
+
+smrt should provide shallow bitsets
+
+-----------------------------------------------
+add some way to iterate over the interval numbers in the interval_{map,set}
++ rename overlap to "clone_and" + "inplace_and", then implement other bitwise operations
++ rename "merge" to "clone_or" + "inplace_or"
++ implement "clone_not" + "inplace_not" &lt;- test this against an interval_set&lt;uint8_t&gt; and a bitset with a size of uint8t_max
++ implement "popcnt"
+
+-----------------------------------------------
+minimizer may not be handling sink state properly now</rich_text>
+  </node>
+</cherrytree>

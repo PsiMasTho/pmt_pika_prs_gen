@@ -84,9 +84,9 @@ auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_,
     pending.pop_back();
 
     if (auto const itr = cache_.find(state_nr_cur); itr != cache_.end()) {
-      // Already cached, merge
+      // Already cached, inplace_or
       IntervalSet<State::StateNrType> const& cached = itr->second;
-      ret.merge(cached);
+      ret.inplace_or(cached);
       continue;
     }
 
@@ -114,7 +114,7 @@ auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_,
   for (size_t i = 0; i < state_nrs_from_.size(); ++i) {
     Interval<State::StateNrType> const& interval = state_nrs_from_.get_by_index(i);
     for (State::StateNrType state_nr_from = interval.get_lower(); state_nr_from <= interval.get_upper(); ++state_nr_from) {
-      ret.merge(get_e_closure(state_machine_, state_nr_from, cache_));
+      ret.inplace_or(get_e_closure(state_machine_, state_nr_from, cache_));
     }
   }
 
@@ -145,7 +145,7 @@ auto StateMachineDeterminizer::get_symbols(StateMachine const& state_machine_, I
     for (State::StateNrType state_nr_from = interval.get_lower(); state_nr_from <= interval.get_upper(); ++state_nr_from) {
       State const& state_from = *state_machine_.get_state(state_nr_from);
       IntervalSet<Symbol::UnderlyingType> const symbols = state_from.get_symbols();
-      ret.merge(symbols);
+      ret.inplace_or(symbols);
     }
   }
 

@@ -57,14 +57,6 @@ auto IntervalSet<KEY_>::hash() const -> size_t {
 }
 
 template <std::integral KEY_>
-void IntervalSet<KEY_>::merge(IntervalSet const& other_) {
-  for (size_t i = 0; i < other_.size(); ++i) {
-    ;
-    insert(other_.get_by_index(i));
-  }
-}
-
-template <std::integral KEY_>
 void IntervalSet<KEY_>::insert(Interval<KEY_> interval_) {
   IntervalIndexPair indices = find_and_expand_interval_indices(interval_);
 
@@ -154,42 +146,6 @@ auto IntervalSet<KEY_>::contains(KEY_ key_) const -> bool {
 }
 
 template <std::integral KEY_>
-auto IntervalSet<KEY_>::overlap(IntervalSet const& other_) const -> IntervalSet {
-  // Make sure lhs is smaller or equal
-  IntervalSet const& lhs = (size() <= other_.size()) ? *this : other_;
-  IntervalSet const& rhs = (this == &lhs) ? other_ : *this;
-
-  IntervalSet ret;
-
-  IntegralSpanConst<KEY_> const rhs_lowers = rhs.get_lowers();
-  IntegralSpanConst<KEY_> const rhs_uppers = rhs.get_uppers();
-
-  size_t i = 0;
-  for (size_t j = 0; j < lhs.size(); ++j) {
-    Interval<KEY_> const lhs_interval = lhs.get_by_index(j);
-
-    /* Search in rhs from where we left off */
-    IntervalIndex const rhs_index = find_interval_index<KEY_>(rhs_lowers, rhs_uppers, lhs_interval.get_lower(), i);
-    i = rhs_index._idx;
-
-    while (i < rhs.size()) {
-      Interval<KEY_> rhs_interval = rhs.get_by_index(i);
-
-      if (rhs_interval.get_lower() > lhs_interval.get_upper()) {
-        /* Step back once in case the previous i would have overlapped with the next j */
-        i = (i == 0) ? 0 : i - 1;
-        break;
-      }
-
-      ret.insert(Interval<KEY_>(std::max(lhs_interval.get_lower(), rhs_interval.get_lower()), std::min(lhs_interval.get_upper(), rhs_interval.get_upper())));
-      ++i;
-    }
-  }
-
-  return ret;
-}
-
-template <std::integral KEY_>
 auto IntervalSet<KEY_>::get_by_index(size_t index_) const -> Interval<KEY_> {
   return Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]);
 }
@@ -226,6 +182,63 @@ void IntervalSet<KEY_>::reserve(size_t new_capacity_) {
 
   /* Shift up the upper bounds */
   std::move(_intervals.get() + old_capacity, _intervals.get() + old_capacity + _size, _intervals.get() + new_capacity_);
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::popcnt() const -> size_t {
+  size_t count = 0;
+  for (size_t i = 0; i < size(); ++i) {
+    count += get_uppers()[i] - get_lowers()[i] + 1;
+  }
+  return count;
+}
+
+template <std::integral KEY_>
+void IntervalSet<KEY_>::inplace_or(IntervalSet const& other_) {
+  for (size_t i = 0; i < other_.size(); ++i) {
+    insert(other_.get_by_index(i));
+  }
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::clone_and(IntervalSet const& other_) const -> IntervalSet {
+  // Make sure lhs is smaller or equal
+  IntervalSet const& lhs = (size() <= other_.size()) ? *this : other_;
+  IntervalSet const& rhs = (this == &lhs) ? other_ : *this;
+
+  IntervalSet ret;
+
+  IntegralSpanConst<KEY_> const rhs_lowers = rhs.get_lowers();
+  IntegralSpanConst<KEY_> const rhs_uppers = rhs.get_uppers();
+
+  size_t i = 0;
+  for (size_t j = 0; j < lhs.size(); ++j) {
+    Interval<KEY_> const lhs_interval = lhs.get_by_index(j);
+
+    /* Search in rhs from where we left off */
+    IntervalIndex const rhs_index = find_interval_index<KEY_>(rhs_lowers, rhs_uppers, lhs_interval.get_lower(), i);
+    i = rhs_index._idx;
+
+    while (i < rhs.size()) {
+      Interval<KEY_> rhs_interval = rhs.get_by_index(i);
+
+      if (rhs_interval.get_lower() > lhs_interval.get_upper()) {
+        /* Step back once in case the previous i would have overlapped with the next j */
+        i = (i == 0) ? 0 : i - 1;
+        break;
+      }
+
+      ret.insert(Interval<KEY_>(std::max(lhs_interval.get_lower(), rhs_interval.get_lower()), std::min(lhs_interval.get_upper(), rhs_interval.get_upper())));
+      ++i;
+    }
+  }
+
+  return ret;
+}
+
+template <std::integral KEY_>
+auto IntervalSet<KEY_>::clone_asymmetric_difference(IntervalSet const& other_) const -> IntervalSet {
+ 
 }
 
 template <std::integral KEY_>

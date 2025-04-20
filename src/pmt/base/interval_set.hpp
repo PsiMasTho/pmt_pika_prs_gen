@@ -43,17 +43,23 @@ class IntervalSet : public Hashable<IntervalSet<KEY_>> {
   auto hash() const -> size_t;
 
   // --$ Other $--
-  void merge(IntervalSet const& other_);
   void insert(Interval<KEY_> interval_);
   void erase(Interval<KEY_> interval_);
   void clear();
   auto contains(KEY_ key_) const -> bool;
-  auto overlap(IntervalSet const& other_) const -> IntervalSet;
   auto get_by_index(size_t index_) const -> Interval<KEY_>;
   auto size() const -> size_t;
   auto capacity() const -> size_t;
   auto empty() const -> bool;
   void reserve(size_t new_capacity_);
+
+  // bitwise operations
+  auto popcnt() const -> size_t;
+  void inplace_or(IntervalSet const& other_);
+
+
+  auto clone_and(IntervalSet const& other_) const -> IntervalSet;
+  auto clone_asymmetric_difference(IntervalSet const& other_) const -> IntervalSet;
 
   // undefined behavior if the container is empty
   auto lowest() const -> KEY_;
