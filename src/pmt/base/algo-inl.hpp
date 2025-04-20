@@ -71,7 +71,7 @@ auto binary_find_index(T_ begin_, T_ end_, U_ const& value_, CMP_ cmp_) -> std::
 
 template <typename T_>
 void realloc_unique_ptr(std::unique_ptr<T_[]>& ptr_, size_t old_size_, size_t new_size_) {
-  auto new_ptr = std::make_unique<T_[]>(new_size_);
+  auto new_ptr = std::make_unique_for_overwrite<T_[]>(new_size_);
   std::copy(ptr_.get(), ptr_.get() + std::min(old_size_, new_size_), new_ptr.get());
   ptr_ = std::move(new_ptr);
 }

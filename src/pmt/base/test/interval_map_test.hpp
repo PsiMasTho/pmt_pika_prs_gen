@@ -8,6 +8,7 @@ class IntervalMapTest {
 
  private:
   static void test_insert();
+  static void test_erase();
 };
 
 };  // namespace pmt::base::test

@@ -110,26 +110,88 @@ void debug_print(IntervalMap<T_, U_> const& interval_map_) {
   }
 }
 
-}  // namespace
-
-void IntervalMapTest::run() {
-  test_insert();
-}
-
-void IntervalMapTest::test_insert() {
+template <std::integral T_>
+void test_insert_impl() {
   static size_t const TEST_CASE_COUNT = 50;
 
   for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
-    static size_t const range = 2048;
+    static size_t const range = std::min<size_t>(2048, std::numeric_limits<T_>::max());
     static float const density = 0.7f;
     static size_t const max_step = 16;
     static size_t const value_max = 6;
     static size_t const prefill_spacing = 8;
 
-    TestMapPair<size_t> test_map_pair = make_rng_filled_maps<size_t>(range, density, max_step, value_max, prefill_spacing);
+    TestMapPair<T_> test_map_pair = make_rng_filled_maps<T_>(range, density, max_step, value_max, prefill_spacing);
 
     assert(test_map_pair.is_equal());
   }
+}
+
+template <typename T_>
+void test_erase_impl() {
+  static size_t const TEST_CASE_COUNT = 50;
+
+  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+    static size_t const range = std::min<size_t>(2048, std::numeric_limits<T_>::max());
+    static float const density = 0.8f;
+    static size_t const max_step = 32;
+    static size_t const value_max = 6;
+    static size_t const prefill_spacing = 25;
+
+    TestMapPair<T_> test_set_pair = make_rng_filled_maps<T_>(range, density, max_step, value_max, prefill_spacing);
+
+    assert(test_set_pair.is_equal());
+
+    float const density_after_erase = 0.2f;
+    size_t const count_after_erase = static_cast<size_t>(test_set_pair._unordered_map.size() * density_after_erase);
+
+    while (test_set_pair._unordered_map.size() > count_after_erase) {
+      T_ const idx = std::uniform_int_distribution<T_>(0, range - 1)(get_rng());
+      T_ const step = std::uniform_int_distribution<T_>(1, max_step)(get_rng());
+      T_ const end = std::min<size_t>(idx + step, range - 1);
+
+      for (T_ j = idx; j <= end; ++j) {
+        test_set_pair._unordered_map.erase(j);
+      }
+
+      test_set_pair._interval_map.erase(Interval<T_>(idx, end));
+    }
+
+    assert(test_set_pair.is_equal());
+  }
+}
+
+}  // namespace
+
+void IntervalMapTest::run() {
+  test_insert();
+  test_erase();
+}
+
+void IntervalMapTest::test_insert() {
+  test_insert_impl<int8_t>();
+  test_insert_impl<uint8_t>();
+  test_insert_impl<int16_t>();
+  test_insert_impl<uint16_t>();
+  test_insert_impl<int32_t>();
+  test_insert_impl<uint32_t>();
+  test_insert_impl<int64_t>();
+  test_insert_impl<uint64_t>();
+  test_insert_impl<uintptr_t>();
+  test_insert_impl<uintmax_t>();
+}
+
+void IntervalMapTest::test_erase() {
+  test_erase_impl<int8_t>();
+  test_erase_impl<uint8_t>();
+  test_erase_impl<int16_t>();
+  test_erase_impl<uint16_t>();
+  test_erase_impl<int32_t>();
+  test_erase_impl<uint32_t>();
+  test_erase_impl<int64_t>();
+  test_erase_impl<uint64_t>();
+  test_erase_impl<uintptr_t>();
+  test_erase_impl<uintmax_t>();
 }
 
 }  // namespace pmt::base::test

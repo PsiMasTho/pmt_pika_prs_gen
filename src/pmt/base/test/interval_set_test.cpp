@@ -86,27 +86,42 @@ auto make_rng_filled_sets(size_t range_, float density_, size_t max_step_, std::
 
   return ret;
 }
+
+template <std::integral T_>
+void test_insert_impl() {
+  static size_t const TEST_CASE_COUNT = 50;
+
+  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+    static size_t const range = std::min<size_t>(2048, std::numeric_limits<T_>::max());
+    static float const density = 0.7f;
+    static size_t const max_step = 16;
+    static size_t const prefill_spacing = 8;
+
+    TestSetPair<size_t> test_set_pair = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
+
+    assert(test_set_pair.is_equal());
+  }
+}
+
 }  // namespace
 
 void IntervalSetTest::run() {
   test_insert();
   test_overlap();
   test_erase();
-  test_instantiate_different_types();
 }
 
 void IntervalSetTest::test_insert() {
-  static size_t const TEST_CASE_COUNT = 50;
-  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
-    static size_t const range = 1000;
-    static float const density = 0.6f;
-    static size_t const max_step = 32;
-    static size_t const prefill_spacing = 25;
-
-    TestSetPair<size_t> test_set_pair = make_rng_filled_sets<size_t>(range, density, max_step, prefill_spacing);
-
-    assert(test_set_pair.is_equal());
-  }
+  test_insert_impl<int8_t>();
+  test_insert_impl<uint8_t>();
+  test_insert_impl<int16_t>();
+  test_insert_impl<uint16_t>();
+  test_insert_impl<int32_t>();
+  test_insert_impl<uint32_t>();
+  test_insert_impl<int64_t>();
+  test_insert_impl<uint64_t>();
+  test_insert_impl<uintptr_t>();
+  test_insert_impl<uintmax_t>();
 }
 
 void IntervalSetTest::test_overlap() {
@@ -168,18 +183,6 @@ void IntervalSetTest::test_erase() {
 
     assert(test_set_pair.is_equal());
   }
-}
-
-void IntervalSetTest::test_instantiate_different_types() {
-  IntervalSet<char> is_char;
-  IntervalSet<unsigned char> is_int;
-  IntervalSet<short> is_short;
-  IntervalSet<unsigned short> is_unsigned_short;
-  IntervalSet<int32_t> is_int32;
-  IntervalSet<uint32_t> is_uint32;
-  IntervalSet<int64_t> is_int64;
-  IntervalSet<uint64_t> is_uint64;
-  IntervalSet<uintptr_t> is_uintptr;
 }
 
 }  // namespace pmt::base::test

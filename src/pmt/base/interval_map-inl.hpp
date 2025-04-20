@@ -15,7 +15,26 @@ IntervalMap<KEY_, VALUE_>::IntervalMap(IntervalMap const& other_)
  , _capacity_idx(0) {
   reserve(other_._size);
   std::copy(other_._intervals.get(), other_._intervals.get(), _intervals.get());
-  std::copy(other_._values.get(), other_._values.get(), _values.get());
+  for (size_t i = 0; i < _size; ++i) {
+    new (_values + i) VALUE_(other_._values[i]);
+  }
+}
+
+template <std::integral KEY_, typename VALUE_>
+IntervalMap<KEY_, VALUE_>::IntervalMap(IntervalMap&& other_) noexcept
+ : _intervals(std::move(other_._intervals))
+ , _values(other_._values)
+ , _size(other_._size)
+ , _capacity_idx(other_._capacity_idx) {
+  other_._size = 0;
+  other_._capacity_idx = 0;
+  other_._values = nullptr;
+}
+
+template <std::integral KEY_, typename VALUE_>
+IntervalMap<KEY_, VALUE_>::~IntervalMap() {
+  clear();
+  ::operator delete[](_values);
 }
 
 template <std::integral KEY_, typename VALUE_>
@@ -34,7 +53,7 @@ auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap const& other_) -> Interval
 
 template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::operator==(IntervalMap const& other_) const -> bool {
-  return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers()) && std::ranges::equal(_values.get(), _values.get() + _size, other_._values.get());
+  return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers()) && std::ranges::equal(_values, _values + _size, other_._values.get());
 }
 
 template <std::integral KEY_, typename VALUE_>
@@ -105,7 +124,8 @@ void IntervalMap<KEY_, VALUE_>::insert(Interval<KEY_> interval_, VALUE_ value_) 
     size_t const remaining = size() - indices.first._idx;
     move_bidir(get_lowers().begin() + indices.first._idx, get_lowers().begin() + indices.first._idx + remaining, get_lowers().begin() + indices.first._idx + net);
     move_bidir(get_uppers().begin() + indices.first._idx, get_uppers().begin() + indices.first._idx + remaining, get_uppers().begin() + indices.first._idx + net);
-    move_bidir(_values.get() + indices.first._idx, _values.get() + indices.first._idx + remaining, _values.get() + indices.first._idx + net);
+    std::uninitialized_default_construct(_values + _size, _values + _size + net);
+    move_bidir(_values + indices.first._idx, _values + indices.first._idx + remaining, _values + indices.first._idx + net);
 
     if (net == 2) {
       get_lowers()[indices.first._idx] = get_lowers()[indices.first._idx + 2];
@@ -131,7 +151,10 @@ void IntervalMap<KEY_, VALUE_>::insert(Interval<KEY_> interval_, VALUE_ value_) 
 
     move_bidir(get_lowers().begin() + indices.first._idx + (1 - net), get_lowers().begin() + indices.first._idx + (1 - net) + shift, get_lowers().begin() + indices.first._idx + 1);
     move_bidir(get_uppers().begin() + indices.first._idx + (1 - net), get_uppers().begin() + indices.first._idx + (1 - net) + shift, get_uppers().begin() + indices.first._idx + 1);
-    move_bidir(_values.get() + indices.first._idx + (1 - net), _values.get() + indices.first._idx + (1 - net) + shift, _values.get() + indices.first._idx + 1);
+    move_bidir(_values + indices.first._idx + (1 - net), _values + indices.first._idx + (1 - net) + shift, _values + indices.first._idx + 1);
+
+    // Destroy any trailing values
+    std::destroy(_values + _size + net, _values + _size);
   }
 
   _size += net;
@@ -180,9 +203,12 @@ void IntervalMap<KEY_, VALUE_>::erase(Interval<KEY_> interval_) {
 
     if (between != 0) {
       size_t const remaining = size() - indices.second._idx;
+
+      std::destroy(_values + lhs_adjusted, _values + lhs_adjusted + between);
+
       std::move(lowers.begin() + indices.second._idx, lowers.begin() + indices.second._idx + remaining, lowers.begin() + lhs_adjusted);
       std::move(uppers.begin() + indices.second._idx, uppers.begin() + indices.second._idx + remaining, uppers.begin() + lhs_adjusted);
-      std::move(_values.get() + indices.second._idx, _values.get() + indices.second._idx + remaining, _values.get() + lhs_adjusted);
+      std::move(_values + indices.second._idx, _values + indices.second._idx + remaining, _values + lhs_adjusted);
       _size -= between;
     }
   }
@@ -190,6 +216,7 @@ void IntervalMap<KEY_, VALUE_>::erase(Interval<KEY_> interval_) {
 
 template <std::integral KEY_, typename VALUE_>
 void IntervalMap<KEY_, VALUE_>::clear() {
+  std::destroy(_values, _values + _size);
   _size = 0;
 }
 
@@ -238,7 +265,14 @@ void IntervalMap<KEY_, VALUE_>::reserve(size_t new_capacity_) {
   new_capacity_ = AmortizedGrowth::idx_to_size(new_capacity_idx);
   _capacity_idx = new_capacity_idx;
   realloc_unique_ptr(_intervals, old_capacity * 2, new_capacity_ * 2);
-  realloc_unique_ptr(_values, old_capacity, new_capacity_);
+
+  VALUE_* new_vals = static_cast<VALUE_*>(::operator new[](sizeof(VALUE_) * new_capacity_));
+  for (size_t i = 0; i < _size; ++i) {
+    new (&new_vals[i]) VALUE_(std::move(_values[i]));
+    _values[i].~VALUE_();
+  }
+  ::operator delete[](_values);
+  _values = new_vals;
 
   /* Shift up the upper bounds */
   std::move(_intervals.get() + old_capacity, _intervals.get() + old_capacity + _size, _intervals.get() + new_capacity_);

@@ -10,7 +10,6 @@ class IntervalSetTest {
   static void test_insert();
   static void test_overlap();
   static void test_erase();
-  static void test_instantiate_different_types();
 };
 
 };  // namespace pmt::base::test

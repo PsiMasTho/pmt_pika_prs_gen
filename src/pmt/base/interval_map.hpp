@@ -27,10 +27,7 @@ class IntervalMap {
 
   // -$ Data $-
   std::unique_ptr<KEY_[]> _intervals = nullptr;
-
-  // TODO: do not use unique_ptr for _values because for non-trivial types it will still default construct
-  // the entire capacity
-  std::unique_ptr<VALUE_[]> _values = nullptr;
+  VALUE_* _values = nullptr;
   size_t _size : AmortizedGrowth::MaxCapacityBitWidth = 0;
   size_t _capacity_idx : AmortizedGrowth::MaxCapacityIdxBitWidth = 0;
 
@@ -39,12 +36,12 @@ class IntervalMap {
   // --$ Lifetime $--
   IntervalMap() = default;
   IntervalMap(IntervalMap const&);
-  IntervalMap(IntervalMap&&) noexcept = default;
-  ~IntervalMap() = default;
+  IntervalMap(IntervalMap&&) noexcept;
+  ~IntervalMap();
 
   // --$ Operators $--
   auto operator=(IntervalMap const&) -> IntervalMap&;
-  auto operator=(IntervalMap&&) noexcept -> IntervalMap& = default;
+  auto operator=(IntervalMap&&) noexcept -> IntervalMap&;
   auto operator==(IntervalMap const&) const -> bool;
   auto operator!=(IntervalMap const&) const -> bool;
 
