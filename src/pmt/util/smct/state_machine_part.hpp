@@ -22,7 +22,7 @@ class StateMachinePart {
   // -$ Functions $-
   // --$ Lifetime $--
   StateMachinePart() = default;
-  StateMachinePart(pmt::util::smrt::StateNrType incoming_state_nr_);
+  explicit StateMachinePart(pmt::util::smrt::StateNrType incoming_state_nr_);
 
   // --$ Other $--
   void set_incoming_state_nr(pmt::util::smrt::StateNrType incoming_state_nr_);
