@@ -119,6 +119,8 @@ void IntervalSetTest::run() {
   test_erase();
   test_popcnt();
   test_asymmetric_difference();
+  test_empty();
+  test_copy();
 }
 
 void IntervalSetTest::test_insert() {
@@ -149,8 +151,11 @@ void IntervalSetTest::test_and() {
     IntervalSet<size_t> const overlap_is = test_set_pair._interval_set.clone_and(test_set_pair2._interval_set);
     Bitset overlap_is_bs = BitsetConverter::from_interval_set(overlap_is);
 
-    Bitset const unordered_set_bs = BitsetConverter::from_unordered_set(test_set_pair._unordered_set);
-    Bitset const unordered_set_bs2 = BitsetConverter::from_unordered_set(test_set_pair2._unordered_set);
+    Bitset unordered_set_bs = BitsetConverter::from_unordered_set(test_set_pair._unordered_set);
+    Bitset unordered_set_bs2 = BitsetConverter::from_unordered_set(test_set_pair2._unordered_set);
+
+    equalize_bitset_sizes(unordered_set_bs2, unordered_set_bs);
+
     Bitset unordered_set_overlap_bs = unordered_set_bs.clone_and(unordered_set_bs2);
 
     // The bitsets should be of the same size before comparison, so shrink the larger one
@@ -236,6 +241,26 @@ void IntervalSetTest::test_asymmetric_difference() {
 
     assert(unordered_set_asymmetric_difference_bs == asymmetric_difference_is_bs);
   }
+}
+
+void IntervalSetTest::test_empty() {
+  IntervalSet<size_t> is;
+  assert(is.size() == 0);
+  is.insert(Interval<size_t>(22, 44));
+  assert(is.size() == 1);
+  is.clear();
+  assert(is.size() == 0);
+}
+
+void IntervalSetTest::test_copy() {
+  IntervalSet<size_t> is;
+  is.insert(Interval<size_t>(22, 44));
+  is.insert(Interval<size_t>(55, 134));
+  is.insert(Interval<size_t>(444, 445));
+  is.insert(Interval<size_t>(2222, 44553));
+
+  IntervalSet<size_t> is2 = is;
+  assert(is == is2);
 }
 
 }  // namespace pmt::base::test

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pmt/base/bitset.hpp"
-#include "pmt/util/smrt/generic_lexer_tables.hpp"
+#include "pmt/util/smrt/state_machine_tables_base.hpp"
 #include "pmt/util/smrt/token.hpp"
 
 #include <string_view>
@@ -10,29 +10,28 @@ namespace pmt::util::smrt {
 
 class GenericLexer {
  public:
-  // - Types -
+  // -$ Types / Constants $-
   class LexReturn {
    public:
     Token _token;
-    GenericLexerTables::TableIndexType _accepted;
+    size_t _accepted;
   };
 
-  // - Member functions -
-  // -- Lifetime --
-  GenericLexer(std::string_view input_, GenericLexerTables tables_);
-
-  // -- Tokenization --
-  auto lex() -> LexReturn;
-  auto lex(pmt::base::Bitset const& accepts_) -> LexReturn;
-
  private:
-  // - Data -
-  GenericLexerTables _tables;
-  pmt::base::Bitset _accepts_valid;
+  // -$ Data $-
   pmt::base::Bitset _accepts_all;
-  char const* _buffer = nullptr;
-  size_t _buffer_size = 0;
-  size_t _cursor = 0;
+  StateMachineTablesBase const& _tables;
+  std::string_view _input;
+  size_t _cursor;
+
+ public:
+  // -$ Functions $-
+  // --$ Lifetime $--
+  GenericLexer(std::string_view input_, StateMachineTablesBase const& tables_);
+
+  // --$ Other $--
+  auto lex() -> LexReturn;
+  auto lex(pmt::base::Bitset::ChunkSpanConst accepts_) -> LexReturn;
 };
 
 }  // namespace pmt::util::smrt

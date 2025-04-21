@@ -1,5 +1,7 @@
 #include "pmt/parserbuilder/table_writer.hpp"
 
+#if 0
+
 #include "pmt/util/smrt/generic_lexer_tables.hpp"
 
 #include <sstream>
@@ -149,3 +151,5 @@ auto TableWriter::as_hex(std::integral auto value_, bool hex_prefix_) -> std::st
 }
 
 };  // namespace pmt::parserbuilder
+
+#endif

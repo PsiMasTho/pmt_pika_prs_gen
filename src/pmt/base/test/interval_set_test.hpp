@@ -12,6 +12,8 @@ class IntervalSetTest {
   static void test_erase();
   static void test_popcnt();
   static void test_asymmetric_difference();
+  static void test_empty();
+  static void test_copy();
 };
 
 };  // namespace pmt::base::test

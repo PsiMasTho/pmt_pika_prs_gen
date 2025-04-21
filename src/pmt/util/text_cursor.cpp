@@ -128,7 +128,7 @@ auto conversion_fn(TextCursor::FatCodepointType codepoint_) -> TextCursor::FatCo
   else if constexpr (WIDTH_ == 4)
     return codepoint_;
   else
-    pmt_unreachable();
+    pmt::unreachable();
 }
 
 }  // namespace
@@ -157,7 +157,7 @@ TextCursor::TextCursor(std::string_view str_, TextEncoding encoding_)
       _conversion_fn = conversion_fn<4>;
       break;
     default:
-      pmt_unreachable();
+      pmt::unreachable();
   }
 }
 

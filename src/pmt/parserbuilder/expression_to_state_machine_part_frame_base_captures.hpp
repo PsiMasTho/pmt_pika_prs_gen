@@ -10,10 +10,9 @@
 
 namespace pmt::parserbuilder {
 
-template <pmt::util::smct::IsStateTag TAG_>
 class ExpressionToStateMachinePartFrameBaseCaptures {
  public:
-  pmt::util::smct::StateMachinePart<TAG_> _ret_part;
+  pmt::util::smct::StateMachinePart _ret_part;
   std::unordered_set<std::string> _name_stack_contents;
   std::vector<std::string> _name_stack;
 

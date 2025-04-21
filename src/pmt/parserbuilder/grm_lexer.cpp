@@ -67,14 +67,14 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
     if (p == pe)
       goto _test_eof;
     switch (cs) {
-    tr0:
+    tr0 :
 #line 227 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       { p = ((te)) - 1; }
       { throw std::runtime_error("lexer error"); }
     }
       goto st68;
-    tr2:
+    tr2 :
 #line 59 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -90,13 +90,13 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr7:
+    tr7 :
 #line 224 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
     }
       goto st68;
-    tr24:
+    tr24 :
 #line 216 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -111,7 +111,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr29:
+    tr29 :
 #line 210 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -126,7 +126,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr33:
+    tr33 :
 #line 198 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -141,7 +141,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr42:
+    tr42 :
 #line 204 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -156,7 +156,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr54:
+    tr54 :
 #line 193 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -170,7 +170,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr59:
+    tr59 :
 #line 88 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -184,7 +184,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr62:
+    tr62 :
 #line 71 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -198,7 +198,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr64:
+    tr64 :
 #line 178 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -212,7 +212,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr67:
+    tr67 :
 #line 183 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -226,7 +226,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr71:
+    tr71 :
 #line 173 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -240,20 +240,20 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr72:
+    tr72 :
 #line 227 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
       { throw std::runtime_error("lexer error"); }
     }
       goto st68;
-    tr73:
+    tr73 :
 #line 222 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
     }
       goto st68;
-    tr77:
+    tr77 :
 #line 118 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -267,7 +267,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr78:
+    tr78 :
 #line 123 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -281,7 +281,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr79:
+    tr79 :
 #line 163 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -295,7 +295,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr80:
+    tr80 :
 #line 158 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -309,7 +309,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr81:
+    tr81 :
 #line 108 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -323,7 +323,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr85:
+    tr85 :
 #line 98 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -337,7 +337,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr86:
+    tr86 :
 #line 148 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -351,7 +351,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr87:
+    tr87 :
 #line 103 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -365,7 +365,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr88:
+    tr88 :
 #line 153 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -379,7 +379,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr89:
+    tr89 :
 #line 168 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -393,7 +393,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr91:
+    tr91 :
 #line 138 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -407,7 +407,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr92:
+    tr92 :
 #line 143 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -421,7 +421,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr101:
+    tr101 :
 #line 128 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -435,7 +435,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr102:
+    tr102 :
 #line 93 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -449,7 +449,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr103:
+    tr103 :
 #line 133 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -463,7 +463,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr104:
+    tr104 :
 #line 227 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
@@ -471,7 +471,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       { throw std::runtime_error("lexer error"); }
     }
       goto st68;
-    tr106:
+    tr106 :
 #line 76 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
@@ -487,7 +487,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr108:
+    tr108 :
 #line 82 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
@@ -503,7 +503,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr109:
+    tr109 :
 #line 113 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -517,14 +517,14 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr111:
+    tr111 :
 #line 223 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
       p--;
     }
       goto st68;
-    tr112:
+    tr112 :
 #line 66 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p;
@@ -539,7 +539,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    tr120:
+    tr120 :
 #line 188 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"
     {
       te = p + 1;
@@ -553,7 +553,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
       goto st68;
-    st68:
+    st68 :
 #line 1 "NONE"
     {
       ts = 0;
@@ -634,7 +634,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         } else if ((*p) >= 9)
           goto tr73;
         goto tr72;
-      tr74:
+      tr74 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -665,7 +665,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         } else if ((*p) >= 32)
           goto st0;
         goto tr0;
-      tr75:
+      tr75 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -714,7 +714,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         } else
           goto st71;
         goto tr106;
-      tr76:
+      tr76 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -770,7 +770,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 46)
           goto tr109;
         goto tr104;
-      tr83:
+      tr83 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -809,7 +809,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 10)
           goto tr111;
         goto st76;
-      tr84:
+      tr84 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -860,7 +860,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if (48 <= (*p) && (*p) <= 57)
           goto st6;
         goto tr0;
-      tr90:
+      tr90 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1101,7 +1101,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 101)
           goto tr42;
         goto tr0;
-      tr93:
+      tr93 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1199,7 +1199,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 101)
           goto tr54;
         goto tr0;
-      tr94:
+      tr94 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1248,7 +1248,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 110)
           goto tr59;
         goto tr0;
-      tr95:
+      tr95 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1283,7 +1283,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 101)
           goto tr62;
         goto tr0;
-      tr96:
+      tr96 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1318,7 +1318,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 100)
           goto tr120;
         goto tr104;
-      tr98:
+      tr98 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1353,7 +1353,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 101)
           goto tr67;
         goto tr0;
-      tr99:
+      tr99 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1374,7 +1374,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
         if ((*p) == 117)
           goto st57;
         goto tr0;
-      tr100:
+      tr100 :
 #line 1 "NONE"
       {
         te = p + 1;
@@ -1682,7 +1682,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
     cs = 67;
     goto _test_eof;
 
-  _test_eof: {}
+  _test_eof : {}
     if (p == eof) {
       switch (cs) {
         case 69:
@@ -1862,7 +1862,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       }
     }
 
-  _out: {}
+  _out : {}
   }
 
 #line 260 "/home/pmt/repos/pmt/grammars/grm_lexer.rl"

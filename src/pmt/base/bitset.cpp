@@ -22,19 +22,35 @@ Bitset::Bitset(size_t size_, bool value_)
   reserve(size_);
   _size = size_;
   std::fill(_data.get(), _data.get() + get_required_chunk_count(_size), ALL_SET_MASKS[value_]);
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
-Bitset::Bitset(const Bitset& other_)
+Bitset::Bitset(ChunkSpanConst span_)
+ : _data(nullptr)
+ , _size(0)
+ , _capacity_idx(0) {
+  if (span_.empty()) {
+    return;
+  }
+
+  size_t const size = span_.size() * ChunkBit;
+  reserve(size);
+  _size = size;
+  std::copy(span_.begin(), span_.end(), _data.get());
+  // Note: There should be no trailing bits in the span
+  // set_trailing_bits(DEFAULT_VALUE);
+}
+
+Bitset::Bitset(Bitset const& other_)
  : _data(nullptr)
  , _size(other_._size)
  , _capacity_idx(0) {
   reserve(other_._size);
   std::copy(other_._data.get(), other_._data.get() + get_required_chunk_count(_size), _data.get());
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
-auto Bitset::operator=(const Bitset& other_) -> Bitset& {
+auto Bitset::operator=(Bitset const& other_) -> Bitset& {
   if (this == &other_) {
     return *this;
   }
@@ -46,11 +62,11 @@ auto Bitset::operator=(const Bitset& other_) -> Bitset& {
   return *this;
 }
 
-auto Bitset::operator==(const Bitset& other_) const -> bool {
+auto Bitset::operator==(Bitset const& other_) const -> bool {
   return _size == other_._size && std::equal(_data.get(), _data.get() + get_required_chunk_count(_size), other_._data.get());
 }
 
-auto Bitset::operator!=(const Bitset& other_) const -> bool {
+auto Bitset::operator!=(Bitset const& other_) const -> bool {
   return !(*this == other_);
 }
 
@@ -76,7 +92,7 @@ auto Bitset::empty() const -> bool {
 
 void Bitset::clear() {
   _size = 0;
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
 void Bitset::resize(size_t size_, bool value_) {
@@ -84,7 +100,7 @@ void Bitset::resize(size_t size_, bool value_) {
     size_t const initial_chunks = get_required_chunk_count(_size);
     size_t const required_chunks = get_required_chunk_count(size_);
     reserve(required_chunks * ChunkBit);
-    set_trailing_chunk(value_);
+    set_trailing_bits(value_);
     ChunkType* const start = _data.get() + initial_chunks;
     ChunkType* const end = _data.get() + required_chunks;
     if (start < end) {
@@ -92,7 +108,7 @@ void Bitset::resize(size_t size_, bool value_) {
     }
   }
   _size = size_;
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
 void Bitset::reserve(size_t new_capacity_) {
@@ -116,7 +132,7 @@ void Bitset::push_back(bool value_) {
   }
 
   set(_size++, value_);
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
 void Bitset::pop_back() {
@@ -160,14 +176,18 @@ auto Bitset::toggle(size_t index_) -> bool {
 void Bitset::set_all(bool value_) {
   ChunkType const mask = ALL_SET_MASKS[value_];
   std::fill(_data.get(), _data.get() + get_required_chunk_count(_size), mask);
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
 void Bitset::toggle_all() {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~_data[i];
   }
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
+}
+
+auto Bitset::get_chunks() const -> ChunkSpanConst {
+  return std::span<ChunkType const>(_data.get(), get_required_chunk_count(_size));
 }
 
 auto Bitset::get_chunk(size_t index_) const -> ChunkType {
@@ -265,46 +285,47 @@ void Bitset::inplace_not() {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~_data[i];
   }
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
-void Bitset::inplace_or(const Bitset& other_) {
+void Bitset::inplace_or(Bitset const& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] |= other_._data[i];
   }
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
-void Bitset::inplace_and(const Bitset& other_) {
-  size_t const smaller_size = std::min(_size, other_._size);
-  for (size_t i = 0; i < get_required_chunk_count(smaller_size); ++i) {
+void Bitset::inplace_and(Bitset const& other_) {
+  assert(_size == other_._size);
+  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] &= other_._data[i];
   }
-
-  // Set the remaining chunks to DEFAULT_VALUE
-  size_t const bigger_size = std::max(_size, other_._size);
-  for (size_t i = get_required_chunk_count(smaller_size); i < get_required_chunk_count(bigger_size); ++i) {
-    _data[i] = DEFAULT_VALUE;
-  }
-
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
-void Bitset::inplace_xor(const Bitset& other_) {
+void Bitset::inplace_xor(Bitset const& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] ^= other_._data[i];
   }
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
-void Bitset::inplace_nor(const Bitset& other_) {
+void Bitset::inplace_nor(Bitset const& other_) {
   assert(_size == other_._size);
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     _data[i] = ~(_data[i] | other_._data[i]);
   }
-  set_trailing_chunk(DEFAULT_VALUE);
+  set_trailing_bits(DEFAULT_VALUE);
+}
+
+void Bitset::inplace_assymetric_difference(Bitset const& other_) {
+  assert(_size == other_._size);
+  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
+    _data[i] = ~(~_data[i] | other_._data[i]);
+  }
+  set_trailing_bits(DEFAULT_VALUE);
 }
 
 auto Bitset::clone_not() const -> Bitset {
@@ -314,11 +335,11 @@ auto Bitset::clone_not() const -> Bitset {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     ret._data[i] = ~_data[i];
   }
-  ret.set_trailing_chunk(DEFAULT_VALUE);
+  ret.set_trailing_bits(DEFAULT_VALUE);
   return ret;
 }
 
-auto Bitset::clone_or(const Bitset& other_) const -> Bitset {
+auto Bitset::clone_or(Bitset const& other_) const -> Bitset {
   assert(_size == other_._size);
   Bitset ret;
   ret.reserve(_size);
@@ -326,31 +347,23 @@ auto Bitset::clone_or(const Bitset& other_) const -> Bitset {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     ret._data[i] = _data[i] | other_._data[i];
   }
-  ret.set_trailing_chunk(DEFAULT_VALUE);
+  ret.set_trailing_bits(DEFAULT_VALUE);
   return ret;
 }
 
-auto Bitset::clone_and(const Bitset& other_) const -> Bitset {
+auto Bitset::clone_and(Bitset const& other_) const -> Bitset {
+  assert(_size == other_._size);
   Bitset ret;
   ret.reserve(_size);
   ret._size = _size;
-
-  size_t const smaller_size = std::min(_size, other_._size);
-  for (size_t i = 0; i < get_required_chunk_count(smaller_size); ++i) {
+  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     ret._data[i] = _data[i] & other_._data[i];
   }
-
-  // Set the remaining chunks to DEFAULT_VALUE
-  size_t const bigger_size = std::max(_size, other_._size);
-  for (size_t i = get_required_chunk_count(smaller_size); i < get_required_chunk_count(bigger_size); ++i) {
-    ret._data[i] = DEFAULT_VALUE;
-  }
-
-  ret.set_trailing_chunk(DEFAULT_VALUE);
+  ret.set_trailing_bits(DEFAULT_VALUE);
   return ret;
 }
 
-auto Bitset::clone_xor(const Bitset& other_) const -> Bitset {
+auto Bitset::clone_xor(Bitset const& other_) const -> Bitset {
   assert(_size == other_._size);
   Bitset ret;
   ret.reserve(_size);
@@ -358,11 +371,11 @@ auto Bitset::clone_xor(const Bitset& other_) const -> Bitset {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     ret._data[i] = _data[i] ^ other_._data[i];
   }
-  ret.set_trailing_chunk(DEFAULT_VALUE);
+  ret.set_trailing_bits(DEFAULT_VALUE);
   return ret;
 }
 
-auto Bitset::clone_nor(const Bitset& other_) const -> Bitset {
+auto Bitset::clone_nor(Bitset const& other_) const -> Bitset {
   assert(_size == other_._size);
   Bitset ret;
   ret.reserve(_size);
@@ -370,19 +383,11 @@ auto Bitset::clone_nor(const Bitset& other_) const -> Bitset {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     ret._data[i] = ~(_data[i] | other_._data[i]);
   }
-  ret.set_trailing_chunk(DEFAULT_VALUE);
+  ret.set_trailing_bits(DEFAULT_VALUE);
   return ret;
 }
 
-void Bitset::inplace_assymetric_difference(const Bitset& other_) {
-  assert(_size == other_._size);
-  for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
-    _data[i] = ~(~_data[i] | other_._data[i]);
-  }
-  set_trailing_chunk(DEFAULT_VALUE);
-}
-
-auto Bitset::clone_asymmetric_difference(const Bitset& other_) const -> Bitset {
+auto Bitset::clone_asymmetric_difference(Bitset const& other_) const -> Bitset {
   assert(_size == other_._size);
   Bitset ret;
   ret.reserve(_size);
@@ -390,11 +395,11 @@ auto Bitset::clone_asymmetric_difference(const Bitset& other_) const -> Bitset {
   for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
     ret._data[i] = ~(~_data[i] | other_._data[i]);
   }
-  ret.set_trailing_chunk(DEFAULT_VALUE);
+  ret.set_trailing_bits(DEFAULT_VALUE);
   return ret;
 }
 
-void Bitset::set_trailing_chunk(bool value_) {
+void Bitset::set_trailing_bits(bool value_) {
   if (_size % ChunkBit == 0) {
     return;
   }

@@ -4,19 +4,22 @@
 #include "pmt/base/algo.hpp"
 #include "pmt/base/bitset.hpp"
 #include "pmt/base/bitset_converter.hpp"
+#include "pmt/base/interval_set.hpp"
 #include "pmt/parserbuilder/definition_to_state_machine_part.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
-
+#include "pmt/util/smct/graph_writer.hpp"
 #include "pmt/util/smct/state_machine_determinizer.hpp"
+#include "pmt/util/smct/state_machine_minimizer.hpp"
 #include "pmt/util/smct/state_machine_part.hpp"
-
+#include "pmt/util/smct/state_machine_pruner.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
 #include "pmt/util/smrt/generic_ast_printer.hpp"
-#include "pmt/util/smrt/tables_base.hpp"
 
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 #include <stack>
 #include <utility>
 
@@ -48,7 +51,6 @@ void ParserBuilder::build(std::string_view input_grammar_path_) {
   step_09(context);
   step_10(context);
   step_11(context);
-  step_12(context);
 
   // Debug print everything...
   std::cout << "Terminal names: ";
@@ -377,62 +379,68 @@ void ParserBuilder::step_05(Context& context_) {
     return;
   }
 
-  StateMachine<StateTagFsm> fsm_whitespace;
-  StateMachinePart<StateTagFsm> fsm_part_whitespace = DefinitionToStateMachinePart<StateTagFsm>::convert(fsm_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions, *context_._ast);
-  State::StateNrType const state_nr_end = fsm_whitespace.create_new_state();
+  StateMachine fsm_whitespace;
+  StateMachinePart fsm_part_whitespace = DefinitionToStateMachinePart::convert(fsm_whitespace, "@whitespace", context_._whitespace_definition, context_._terminal_names, context_._terminal_definitions, *context_._ast);
+  StateNrType const state_nr_end = fsm_whitespace.create_new_state();
   fsm_part_whitespace.connect_outgoing_transitions_to(state_nr_end, fsm_whitespace);
-  StateMachineDeterminizer<StateTagFsm>::determinize(fsm_whitespace);
+  StateMachineDeterminizer::determinize(fsm_whitespace);
 
-  std::stack<std::pair<State::StateNrType, size_t>> stack;
-  Bitset visited(fsm_whitespace.size(), false);
+  std::stack<std::pair<StateNrType, size_t>> stack;
+  IntervalSet<StateNrType> visited;
 
-  auto const push_and_visit = [&stack, &visited](State::StateNrType state_nr_, size_t depth_) {
-    if (visited.get(state_nr_)) {
+  auto const push_and_visit = [&stack, &visited](StateNrType state_nr_, size_t depth_) {
+    if (visited.contains(state_nr_)) {
       return;
     }
 
     stack.push({state_nr_, depth_});
-    visited.set(state_nr_, true);
+    visited.insert(Interval<StateNrType>(state_nr_));
   };
 
-  push_and_visit(0, 0);
+  push_and_visit(StateNrStart, 0);
 
   while (!stack.empty()) {
     auto const [state_nr_cur, depth_cur] = stack.top();
     stack.pop();
 
-    State<StateTagFsm> const& state_cur = *fsm_whitespace.get_state(state_nr_cur);
+    State const& state_cur = *fsm_whitespace.get_state(state_nr_cur);
 
-    if (depth_cur > 0 && !state_cur._symbol_transitions[StateTraits<StateTagFsm>::CharacterSymbolKind].empty()) {
+    IntervalSet<SymbolType> const symbols = state_cur.get_symbols();
+
+    if (depth_cur > 0 && !symbols.empty()) {
       throw std::runtime_error("Whitespace definition too deep");
     }
 
-    for (auto const& [symbol, state_nr_next] : state_cur._symbol_transitions[StateTraits<StateTagFsm>::CharacterSymbolKind]) {
-      context_._whitespace.insert(symbol);
-      push_and_visit(state_nr_next, depth_cur + 1);
+    for (size_t i = 0; i < symbols.size(); ++i) {
+      Interval<SymbolType> const symbol_interval = symbols.get_by_index(i);
+      for (SymbolType symbol = symbol_interval.get_lower(); symbol <= symbol_interval.get_upper(); ++symbol) {
+        context_._whitespace.insert(symbol);
+        StateNrType const state_nr_next = state_cur.get_symbol_transition(Symbol(symbol));
+        push_and_visit(state_nr_next, depth_cur + 1);
+      }
     }
   }
 }
 
 void ParserBuilder::step_06(Context& context_) {
   for (size_t i = 0; i < context_._comment_open_definitions.size(); ++i) {
-    Fa fa_comment_open;
-    FaPart fa_part_rule_open = TerminalDefinitionToFaPart::convert(fa_comment_open, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
-    Fa::StateNrType const state_nr_end = fa_comment_open.get_unused_state_nr();
-    fa_comment_open._states[state_nr_end]._accepts.resize(1, true);
-    fa_part_rule_open.connect_outgoing_transitions_to(state_nr_end, fa_comment_open);
-    fa_comment_open.determinize();
-    context_._comment_open_fas.push_back(std::move(fa_comment_open));
+    StateMachine state_machine_comment_open;
+    StateMachinePart state_machine_part_rule_open = DefinitionToStateMachinePart::convert(state_machine_comment_open, "@comment_open_" + std::to_string(i), context_._comment_open_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
+    StateNrType const state_nr_end = state_machine_comment_open.create_new_state();
+    state_machine_comment_open.get_state(state_nr_end)->get_accepts().resize(1, true);
+    state_machine_part_rule_open.connect_outgoing_transitions_to(state_nr_end, state_machine_comment_open);
+    StateMachineDeterminizer::determinize(state_machine_comment_open);
+    context_._comment_open_fsms.push_back(std::move(state_machine_comment_open));
   }
 
   for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
-    Fa fa_comment_close;
-    FaPart fa_part_rule_close = TerminalDefinitionToFaPart::convert(fa_comment_close, "@comment_close_" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
-    Fa::StateNrType const state_nr_end = fa_comment_close.get_unused_state_nr();
-    fa_comment_close._states[state_nr_end]._accepts.resize(1, true);
-    fa_part_rule_close.connect_outgoing_transitions_to(state_nr_end, fa_comment_close);
-    fa_comment_close.determinize();
-    context_._comment_close_fas.push_back(std::move(fa_comment_close));
+    StateMachine state_machine_comment_close;
+    StateMachinePart state_machine_part_rule_close = DefinitionToStateMachinePart::convert(state_machine_comment_close, "@comment_close_" + std::to_string(i), context_._comment_close_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
+    StateNrType const state_nr_end = state_machine_comment_close.create_new_state();
+    state_machine_comment_close.get_state(state_nr_end)->get_accepts().resize(1, true);
+    state_machine_part_rule_close.connect_outgoing_transitions_to(state_nr_end, state_machine_comment_close);
+    StateMachineDeterminizer::determinize(state_machine_comment_close);
+    context_._comment_close_fsms.push_back(std::move(state_machine_comment_close));
   }
 
   for (size_t i = 0; i < context_._terminal_accepts.size(); ++i) {
@@ -440,26 +448,26 @@ void ParserBuilder::step_06(Context& context_) {
       continue;
     }
 
-    Fa fa_terminal;
-    FaPart fa_part_terminal = TerminalDefinitionToFaPart::convert(fa_terminal, context_._terminal_id_names[i], context_._terminal_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
-    Fa::StateNrType const state_nr_end = fa_terminal.get_unused_state_nr();
-    Fa::State& state_end = fa_terminal._states[state_nr_end];
-    state_end._accepts.resize(context_._accepts.size(), false);
-    state_end._accepts.set(*context_._terminal_accepts[i], true);
-    fa_part_terminal.connect_outgoing_transitions_to(state_nr_end, fa_terminal);
-    fa_terminal.determinize();
-    context_._terminal_fas.push_back(std::move(fa_terminal));
+    StateMachine state_machine_terminal;
+    StateMachinePart state_machine_part_terminal = DefinitionToStateMachinePart::convert(state_machine_terminal, context_._terminal_id_names[i], context_._terminal_definitions[i], context_._terminal_names, context_._terminal_definitions, *context_._ast);
+    StateNrType const state_nr_end = state_machine_terminal.create_new_state();
+    State& state_end = *state_machine_terminal.get_state(state_nr_end);
+    state_end.get_accepts().resize(context_._accepts.size(), false);
+    state_end.get_accepts().set(*context_._terminal_accepts[i], true);
+    state_machine_part_terminal.connect_outgoing_transitions_to(state_nr_end, state_machine_terminal);
+    StateMachineDeterminizer::determinize(state_machine_terminal);
+    context_._terminal_fsms.push_back(std::move(state_machine_terminal));
   }
 }
 
 void ParserBuilder::step_07(Context& context_) {
   for (size_t i = 0; i < context_._comment_close_definitions.size(); ++i) {
-    Fa& fa_comment_close = context_._comment_close_fas[i];
+    StateMachine& state_machine_comment_close = context_._comment_close_fsms[i];
 
-    std::vector<Fa::StateNrType> pending;
-    std::unordered_set<Fa::StateNrType> visited;
+    std::vector<StateNrType> pending;
+    std::unordered_set<StateNrType> visited;
 
-    auto const push_and_visit = [&pending, &visited](Fa::StateNrType state_nr_) {
+    auto const push_and_visit = [&pending, &visited](StateNrType state_nr_) {
       if (visited.contains(state_nr_)) {
         return;
       }
@@ -468,21 +476,21 @@ void ParserBuilder::step_07(Context& context_) {
       visited.insert(state_nr_);
     };
 
-    push_and_visit(0);
+    push_and_visit(StateNrStart);
 
     while (!pending.empty()) {
-      Fa::StateNrType const state_nr_cur = pending.back();
+      StateNrType const state_nr_cur = pending.back();
       pending.pop_back();
 
-      Fa::State& state_cur = fa_comment_close._states.find(state_nr_cur)->second;
+      State& state_cur = *state_machine_comment_close.get_state(state_nr_cur);
 
-      if (state_cur._accepts.popcnt() == 0) {
-        for (Fa::SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
-          auto const itr = state_cur._transitions._symbol_transitions.find(symbol);
-          if (itr != state_cur._transitions._symbol_transitions.end()) {
-            push_and_visit(itr->second);
+      if (state_cur.get_accepts().popcnt() == 0) {
+        for (SymbolType symbol = 0; symbol < UCHAR_MAX; ++symbol) {
+          StateNrType const state_nr_next = state_cur.get_symbol_transition(Symbol(symbol));
+          if (state_nr_next != StateNrSink) {
+            push_and_visit(state_nr_next);
           } else {
-            state_cur._transitions._symbol_transitions.insert_or_assign(symbol, 0);
+            state_cur.add_symbol_transition(Symbol(symbol), StateNrStart);
           }
         }
       }
@@ -491,88 +499,120 @@ void ParserBuilder::step_07(Context& context_) {
 }
 
 void ParserBuilder::step_08(Context& context_) {
-  Fa::StateNrType const state_nr_start = 0;
-  context_._fa._states[state_nr_start];
+  context_._fsm.get_or_create_state(StateNrStart);
 
-  for (size_t i = 0; i < context_._comment_open_fas.size(); ++i) {
-    Fa& fa_comment_open = context_._comment_open_fas[i];
-    Fa::StateNrType const state_nr_comment_open = context_._fa._states.size();
-    fa_comment_open.prune(0, state_nr_comment_open, true);
+  for (size_t i = 0; i < context_._comment_open_fsms.size(); ++i) {
+    StateMachine& state_machine_comment_open = context_._comment_open_fsms[i];
+    StateNrType const state_nr_comment_open = context_._fsm.create_new_state();
+    StateMachinePruner::prune(state_machine_comment_open, StateNrStart, state_nr_comment_open, true);
 
-    Fa& fa_comment_close = context_._comment_close_fas[i];
-    Fa::StateNrType const state_nr_comment_close = state_nr_comment_open + fa_comment_close._states.size();
-    fa_comment_close.prune(0, state_nr_comment_close, true);
+    StateMachine& state_machine_comment_close = context_._comment_close_fsms[i];
+    StateNrType const state_nr_comment_close = state_nr_comment_open + state_machine_comment_close.get_state_count();
+    StateMachinePruner::prune(state_machine_comment_close, StateNrStart, state_nr_comment_close, true);
 
-    context_._fa._states[state_nr_start]._transitions._epsilon_transitions.insert(state_nr_comment_open);
+    context_._fsm.get_state(StateNrStart)->add_epsilon_transition(state_nr_comment_open);
 
-    for (auto& [state_nr, state] : fa_comment_open._states) {
-      if (state._accepts.popcnt() == 0) {
-        continue;
+    {
+      IntervalSet<StateNrType> const state_nrs = state_machine_comment_open.get_state_nrs();
+
+      for (size_t j = 0; j < state_nrs.size(); ++j) {
+        Interval<StateNrType> const interval = state_nrs.get_by_index(j);
+        for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
+          State& state = *state_machine_comment_open.get_state(state_nr);
+
+          if (state.get_accepts().popcnt() != 0) {
+            state.get_accepts().clear();
+            state.add_epsilon_transition(state_nr_comment_close);
+          }
+
+          context_._fsm.get_or_create_state(state_nr) = state;
+        }
       }
-      state._accepts.clear();
-      state._transitions._epsilon_transitions.insert(state_nr_comment_close);
     }
-    context_._fa._states.merge(fa_comment_open._states);
 
-    for (auto& [state_nr, state] : fa_comment_close._states) {
-      if (state._accepts.popcnt() == 0) {
-        continue;
+    {
+      IntervalSet<StateNrType> const state_nrs = state_machine_comment_close.get_state_nrs();
+
+      for (size_t j = 0; j < state_nrs.size(); ++j) {
+        Interval<StateNrType> const interval = state_nrs.get_by_index(j);
+        for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
+          State& state = *state_machine_comment_close.get_state(state_nr);
+
+          if (state.get_accepts().popcnt() != 0) {
+            state.get_accepts().clear();
+            state.add_epsilon_transition(StateNrStart);
+          }
+
+          context_._fsm.get_or_create_state(state_nr) = state;
+        }
       }
-      state._accepts.clear();
-      state._transitions._epsilon_transitions.insert(state_nr_start);
     }
-    context_._fa._states.merge(fa_comment_close._states);
 
-    for (Fa::SymbolType const symbol : context_._whitespace) {
-      if (context_._fa._states[state_nr_comment_open]._transitions._symbol_transitions.contains(symbol)) {
+    State& state_comment_open = *context_._fsm.get_state(state_nr_comment_open);
+
+    for (SymbolType const symbol : context_._whitespace) {
+      if (state_comment_open.get_symbol_transition(Symbol(symbol)) != StateNrSink) {
         throw std::runtime_error("Comment open conflicts with whitespace");
       }
-      context_._fa._states[state_nr_comment_open]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_start);
+
+      state_comment_open.add_symbol_transition(Symbol(symbol), StateNrStart);
     }
   }
 }
 
 void ParserBuilder::step_09(Context& context_) {
-  Fa::StateNrType const state_nr_start = 0;
-  Fa::State& state_start = context_._fa._states[state_nr_start];
-  state_start._accepts.resize(context_._accepts.size(), false);
+  State& state_start = context_._fsm.get_or_create_state(StateNrStart);
+  state_start.get_accepts().resize(context_._accepts.size(), false);
   std::optional<size_t> const index_start = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start");
-  state_start._accepts.set(*context_._terminal_accepts[*index_start], true);
+  state_start.get_accepts().set(*context_._terminal_accepts[*index_start], true);
 
-  Fa::StateNrType const state_nr_eoi = context_._fa.get_unused_state_nr();
-  Fa::State& state_eoi = context_._fa._states[state_nr_eoi];
-  state_eoi._accepts.resize(context_._accepts.size(), false);
+  StateNrType const state_nr_eoi = context_._fsm.create_new_state();
+  State& state_eoi = *context_._fsm.get_state(state_nr_eoi);
+  state_eoi.get_accepts().resize(context_._accepts.size(), false);
   std::optional<size_t> const index_eoi = base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@eoi");
-  state_eoi._accepts.set(*context_._terminal_accepts[*index_eoi], true);
+  state_eoi.get_accepts().set(*context_._terminal_accepts[*index_eoi], true);
 
-  state_start._transitions._symbol_transitions.insert_or_assign(GenericTablesBase::SYMBOL_EOI, state_nr_eoi);
+  state_start.add_symbol_transition(Symbol(SymbolEoi), state_nr_eoi);
 }
 
 void ParserBuilder::step_10(Context& context_) {
-  Fa::StateNrType const state_nr_start = 0;
+  State& state_start = *context_._fsm.get_state(StateNrStart);
 
-  for (size_t i = 0; i < context_._terminal_fas.size(); ++i) {
-    Fa& fa_terminal = context_._terminal_fas[i];
-    Fa::StateNrType const state_nr_terminal = context_._fa.get_unused_state_nr();
-    fa_terminal.prune(0, state_nr_terminal, true);
-    context_._fa._states.merge(fa_terminal._states);
+  for (size_t i = 0; i < context_._terminal_fsms.size(); ++i) {
+    StateMachine& state_machine_terminal = context_._terminal_fsms[i];
+    StateNrType const state_nr_terminal = context_._fsm.get_unused_state_nr();
+    StateMachinePruner::prune(state_machine_terminal, StateNrStart, state_nr_terminal, true);
 
-    context_._fa._states[state_nr_start]._transitions._epsilon_transitions.insert(state_nr_terminal);
+    {
+      IntervalSet<StateNrType> const state_nrs = state_machine_terminal.get_state_nrs();
+      for (size_t j = 0; j < state_nrs.size(); ++j) {
+        Interval<StateNrType> const interval = state_nrs.get_by_index(j);
+        for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
+          context_._fsm.get_or_create_state(state_nr) = *state_machine_terminal.get_state(state_nr);
+        }
+      }
+    }
 
-    for (Fa::SymbolType const symbol : context_._whitespace) {
-      if (context_._fa._states[state_nr_terminal]._transitions._symbol_transitions.contains(symbol)) {
+    state_start.add_epsilon_transition(state_nr_terminal);
+
+    State& state_terminal = *context_._fsm.get_state(state_nr_terminal);
+
+    for (SymbolType const symbol : context_._whitespace) {
+      if (state_terminal.get_symbol_transition(Symbol(symbol)) != StateNrSink) {
         throw std::runtime_error("Terminal conflicts with whitespace");
       }
-      context_._fa._states[state_nr_terminal]._transitions._symbol_transitions.insert_or_assign(symbol, state_nr_start);
+
+      state_terminal.add_symbol_transition(Symbol(symbol), StateNrStart);
     }
   }
 }
 
 void ParserBuilder::step_11(Context& context_) {
-  context_._fa.determinize();
-  context_._fa.minimize();
+  StateMachineDeterminizer::determinize(context_._fsm);
+  StateMachineMinimizer::minimize(context_._fsm);
 
-  pmt::base::Bitset accepts_start = context_._fa._states.find(0)->second._accepts;
+  Bitset accepts_start = context_._fsm.get_state(StateNrStart)->get_accepts();
+
   size_t const index_start = *context_._terminal_accepts[*pmt::base::binary_find_index(context_._terminal_names.begin(), context_._terminal_names.end(), "@start")];
   accepts_start.set(index_start, false);
 
@@ -594,11 +634,16 @@ void ParserBuilder::step_11(Context& context_) {
   }
 
   size_t accepts_start_count = 0;
-  for (auto const& [state_nr, state] : context_._fa._states) {
-    if (state._accepts.size() == 0) {
-      continue;
+  IntervalSet<StateNrType> const state_nrs = context_._fsm.get_state_nrs();
+  for (size_t j = 0; j < state_nrs.size(); ++j) {
+    Interval<StateNrType> const interval = state_nrs.get_by_index(j);
+    for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
+      State const& state = *context_._fsm.get_state(state_nr);
+      if (state.get_accepts().size() == 0) {
+        continue;
+      }
+      accepts_start_count += state.get_accepts().get(index_start) == true ? 1 : 0;
     }
-    accepts_start_count += state._accepts.get(index_start) == true ? 1 : 0;
   }
 
   if (accepts_start_count != 1) {
@@ -606,14 +651,14 @@ void ParserBuilder::step_11(Context& context_) {
   }
 }
 
-void ParserBuilder::step_12(Context& context_) {
-  size_t const index_start = *binary_find_index(context_._rule_names.begin(), context_._rule_names.end(), context_._start_symbol);
+void ParserBuilder::write_dot(Context& context_, pmt::util::smct::StateMachine const& state_machine_) {
+  if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
+    std::cerr << "Skipping dot file write, too many states\n";
+    return;
+  }
 
-  Pda pda;
-  PdaPart pda_part = RuleDefinitionToPdaPart::convert(pda, context_._start_symbol, context_._rule_definitions[index_start], context_._rule_names, context_._rule_definitions, *context_._ast);
-  Pda::StateNrType const state_nr_eoi = pda.get_unused_state_nr();
-  pda._states[state_nr_eoi];
-  pda_part.connect_outgoing_transitions_to(state_nr_eoi, pda);
+  std::ofstream file(DOT_FILE_PREFIX + std::to_string(context_._dot_file_count++) + ".dot");
+  GraphWriter::write_dot(file, state_machine_, [&context_](size_t accepts_) { return accepts_to_label(context_, accepts_); });
 }
 
 auto ParserBuilder::accepts_to_label(Context& context_, size_t accept_idx_) -> std::string {

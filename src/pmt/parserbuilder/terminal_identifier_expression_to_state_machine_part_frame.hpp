@@ -6,22 +6,19 @@
 
 namespace pmt::parserbuilder {
 
-template <pmt::util::smct::IsStateTag TAG_>
-class TerminalIdentifierExpressionToStateMachinePart : public ExpressionToStateMachinePartFrameBase<TAG_> {
+class TerminalIdentifierExpressionToStateMachinePart : public ExpressionToStateMachinePartFrameBase {
  public:
-  using ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase;
-  void process(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_) final;
+  using ExpressionToStateMachinePartFrameBase::ExpressionToStateMachinePartFrameBase;
+  void process(ExpressionToStateMachinePartFrameBase::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_) final;
 
  private:
-  void process_stage_0(ExpressionToStateMachinePartFrameBase<TAG_>::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_);
-  void process_stage_1(ExpressionToStateMachinePartFrameBaseCaptures<TAG_>& captures_);
+  void process_stage_0(ExpressionToStateMachinePartFrameBase::CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_);
+  void process_stage_1(ExpressionToStateMachinePartFrameBaseCaptures& captures_);
 
   std::string const* _terminal_name = nullptr;
-  pmt::util::smct::State<TAG_>* _state_reference = nullptr;
-  pmt::util::smct::State::StateNrType _state_nr_reference = std::numeric_limits<pmt::util::smct::State::StateNrType>::max();
+  pmt::util::smct::State* _state_reference = nullptr;
+  pmt::util::smrt::StateNrType _state_nr_reference = std::numeric_limits<pmt::util::smrt::StateNrType>::max();
   size_t _stage = 0;
 };
 
 }  // namespace pmt::parserbuilder
-
-#include "pmt/parserbuilder/terminal_identifier_expression_to_state_machine_part_frame-inl.hpp"

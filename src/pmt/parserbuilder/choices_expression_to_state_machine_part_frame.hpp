@@ -4,10 +4,9 @@
 
 namespace pmt::parserbuilder {
 
-template <pmt::util::smct::IsStateTag TAG_>
-class ChoicesExpressionToFaPartFrame : public ExpressionToStateMachinePartFrameBase<TAG_> {
+class ChoicesExpressionToStateMachinePartFrame : public ExpressionToStateMachinePartFrameBase {
  public:
-  using ExpressionToStateMachinePartFrameBase<TAG_>::ExpressionToStateMachinePartFrameBase;
+  using ExpressionToStateMachinePartFrameBase::ExpressionToStateMachinePartFrameBase;
   void process(CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_) final;
 
  private:
@@ -15,8 +14,8 @@ class ChoicesExpressionToFaPartFrame : public ExpressionToStateMachinePartFrameB
   void process_stage_1(CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_);
   void process_stage_2(CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_);
 
-  pmt::util::smct::StateMachinePart<TAG_> _sub_part;
-  pmt::util::smct::State<TAG_>* _state_cur = nullptr;
+  pmt::util::smct::StateMachinePart _sub_part;
+  pmt::util::smct::State* _state_cur = nullptr;
   size_t _stage = 0;
   size_t _idx = 0;
 };

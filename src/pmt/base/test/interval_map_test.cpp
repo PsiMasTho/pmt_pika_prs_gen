@@ -166,6 +166,7 @@ void test_erase_impl() {
 void IntervalMapTest::run() {
   test_insert();
   test_erase();
+  test_copy();
 }
 
 void IntervalMapTest::test_insert() {
@@ -192,6 +193,24 @@ void IntervalMapTest::test_erase() {
   test_erase_impl<uint64_t>();
   test_erase_impl<uintptr_t>();
   test_erase_impl<uintmax_t>();
+}
+
+void IntervalMapTest::test_copy() {
+  static size_t const TEST_CASE_COUNT = 50;
+
+  for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+    static size_t const range = 200;
+    static float const density = 0.8f;
+    static size_t const max_step = 32;
+    static size_t const value_max = 6;
+    static size_t const prefill_spacing = 25;
+
+    TestMapPair<size_t> test_set_pair = make_rng_filled_maps<size_t>(range, density, max_step, value_max, prefill_spacing);
+
+    IntervalMap<size_t, std::string> interval_map_copy = test_set_pair._interval_map;
+
+    assert(interval_map_copy == test_set_pair._interval_map);
+  }
 }
 
 }  // namespace pmt::base::test

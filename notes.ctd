@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cherrytree>
   <bookmarks list=""/>
-  <node unique_id="2" master_id="0" name="IntervalContainer" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161357" ts_lastsave="1745161415">
+  <node name="IntervalContainer" unique_id="2" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161357" ts_lastsave="1745161415">
     <rich_text>  0INSIDE    1INSIDE    2INSIDE
 0 [a0, b0] 1 [a1, b1] 2 [a2, b2] 3
  
 LOWERS = [a0, a1, a2, ...]
 UPPERS = [b0, b1, b2, ...]</rich_text>
   </node>
-  <node unique_id="6" master_id="0" name="CodeGuidelines" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161695" ts_lastsave="1745161695">
-    <node unique_id="5" master_id="0" name="Sections" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161469" ts_lastsave="1745161534">
+  <node name="CodeGuidelines" unique_id="6" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161695" ts_lastsave="1745161695">
+    <node name="Sections" unique_id="5" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161469" ts_lastsave="1745161534">
       <rich_text>// -$ Types / Constants $-
 
 // -$ Data $-
@@ -20,7 +20,7 @@ UPPERS = [b0, b1, b2, ...]</rich_text>
 // --$ Inherited: foo::bar::Baz $--
 // --$ Other $--</rich_text>
     </node>
-    <node unique_id="7" master_id="0" name="Conventions" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161743" ts_lastsave="1745161748">
+    <node name="Conventions" unique_id="7" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1745161743" ts_lastsave="1745161748">
       <rich_text>Concepts in a nested ccpt namespace
 
 type traits in a nested trait namespace,
@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node unique_id="4" master_id="0" name="ScratchPad" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745185189">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745259679">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -58,6 +58,9 @@ bitset or needs to increase size if needed just like and needs to decrease it
 minimizer may not be handling sink state properly now
 -----------------------------------------------
 for accept bitsets we should not rely on them being the same size, should be possible because and + or may be all we need
-+ countl_zero can be wrapped to handle an empty bitset diffrently</rich_text>
++ countl_zero can be wrapped to handle an empty bitset diffrently
+
+-
+for handling comment loopbacks, refator out function, take a range of min max, create a huge interval, erase from it all intervals in current state, loop over the remainig and point to 0</rich_text>
   </node>
 </cherrytree>

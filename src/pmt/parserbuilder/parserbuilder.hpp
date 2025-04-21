@@ -4,6 +4,7 @@
 #include "pmt/util/smct/state_machine.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
 #include "pmt/util/smrt/generic_ast_path.hpp"
+#include "pmt/util/smrt/state_machine_primitives.hpp"
 
 #include <optional>
 #include <set>
@@ -39,9 +40,7 @@ class ParserBuilder {
   static void step_09(Context& context_);
   static void step_10(Context& context_);
   static void step_11(Context& context_);
-  static void step_12(Context& context_);
 
-  template <pmt::util::smct::IsStateTag TAG_>
   static void write_dot(Context& context_, pmt::util::smct::StateMachine const& state_machine_);
 
   static auto accepts_to_label(Context& context_, size_t accept_idx_) -> std::string;
@@ -81,12 +80,12 @@ class ParserBuilder::Context {
 
   pmt::util::smrt::GenericAstPath _whitespace_definition;
 
-  pmt::util::smct::StateMachine<pmt::util::smct::StateTagFsm> _fsm;
-  pmt::util::smct::StateMachine<pmt::util::smct::StateTagPdm> _pdm;
+  pmt::util::smct::StateMachine _fsm;
+  pmt::util::smct::StateMachine _pdm;
 
-  std::vector<pmt::util::smct::StateMachine<pmt::util::smct::StateTagFsm>> _terminal_fsms;
-  std::vector<pmt::util::smct::StateMachine<pmt::util::smct::StateTagFsm>> _comment_open_fsms;
-  std::vector<pmt::util::smct::StateMachine<pmt::util::smct::StateTagFsm>> _comment_close_fsms;
+  std::vector<pmt::util::smct::StateMachine> _terminal_fsms;
+  std::vector<pmt::util::smct::StateMachine> _comment_open_fsms;
+  std::vector<pmt::util::smct::StateMachine> _comment_close_fsms;
 
   std::vector<std::string> _rule_names;
   std::vector<std::string> _rule_id_names;
@@ -98,11 +97,9 @@ class ParserBuilder::Context {
 
   std::optional<bool> _case_sensitive;
   std::string _start_symbol;
-  std::set<pmt::util::smct::Symbol::ValueType> _whitespace;
+  std::set<pmt::util::smrt::SymbolType> _whitespace;
 
   size_t _dot_file_count = 0;
 };
 
 }  // namespace pmt::parserbuilder
-
-#include "pmt/parserbuilder/parserbuilder-inl.hpp"

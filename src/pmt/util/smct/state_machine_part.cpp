@@ -3,16 +3,17 @@
 #include "pmt/util/smct/state_machine.hpp"
 
 namespace pmt::util::smct {
+using namespace pmt::util::smrt;
 
-StateMachinePart::StateMachinePart(State::StateNrType incoming_state_nr_)
+StateMachinePart::StateMachinePart(StateNrType incoming_state_nr_)
  : _incoming_state_nr(incoming_state_nr_) {
 }
 
-void StateMachinePart::set_incoming_state_nr(State::StateNrType incoming_state_nr_) {
+void StateMachinePart::set_incoming_state_nr(StateNrType incoming_state_nr_) {
   _incoming_state_nr = incoming_state_nr_;
 }
 
-auto StateMachinePart::get_incoming_state_nr() const -> std::optional<State::StateNrType> {
+auto StateMachinePart::get_incoming_state_nr() const -> std::optional<StateNrType> {
   return _incoming_state_nr;
 }
 
@@ -20,11 +21,11 @@ void StateMachinePart::clear_incoming_state_nr() {
   _incoming_state_nr.reset();
 }
 
-void StateMachinePart::add_outgoing_symbol_transition(State::StateNrType state_nr_from_, Symbol symbol_) {
+void StateMachinePart::add_outgoing_symbol_transition(StateNrType state_nr_from_, Symbol symbol_) {
   _outgoing_symbol_transitions[state_nr_from_].insert(symbol_);
 }
 
-void StateMachinePart::add_outgoing_epsilon_transition(State::StateNrType state_nr_from_) {
+void StateMachinePart::add_outgoing_epsilon_transition(StateNrType state_nr_from_) {
   _outgoing_epsilon_transitions.insert(state_nr_from_);
 }
 
@@ -43,7 +44,7 @@ void StateMachinePart::merge_outgoing_transitions(StateMachinePart& other_) {
   other_.clear_outgoing_transitions();
 }
 
-void StateMachinePart::connect_outgoing_transitions_to(State::StateNrType state_nr_to_, StateMachine& state_machine_) {
+void StateMachinePart::connect_outgoing_transitions_to(StateNrType state_nr_to_, StateMachine& state_machine_) {
   state_machine_.get_or_create_state(state_nr_to_);
 
   for (auto const& [state_nr_from, symbols] : _outgoing_symbol_transitions) {

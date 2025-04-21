@@ -1,8 +1,4 @@
-// clang-format off
-#ifdef __INTELLISENSE__
- #include "pmt/parserbuilder/expression_to_state_machine_part_frame_factory.hpp"
-#endif
-// clang-format on
+#include "pmt/parserbuilder/expression_to_state_machine_part_frame_factory.hpp"
 
 #include "pmt/parserbuilder/choices_expression_to_state_machine_part_frame.hpp"
 #include "pmt/parserbuilder/epsilon_expression_to_state_machine_part_frame.hpp"
@@ -17,8 +13,7 @@
 
 namespace pmt::parserbuilder {
 
-template <util::smct::IsStateTag TAG_>
-auto ExpressionToStateMachinePartFrameFactory<TAG_>::construct(pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) -> ExpressionToStateMachinePartFrameBase<TAG_>::FrameHandle {
+auto ExpressionToStateMachinePartFrameFactory::construct(pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) -> ExpressionToStateMachinePartFrameBase::FrameHandle {
   pmt::util::smrt::GenericId::IdType const id = path_.resolve(ast_)->get_id();
   switch (id) {
     case GrmAst::NtTerminalSequence:
@@ -44,15 +39,5 @@ auto ExpressionToStateMachinePartFrameFactory<TAG_>::construct(pmt::util::smrt::
     }
   }
 }
-
-/*
-    case GrmAst::NtRuleSequence:
-    case GrmAst::NtRuleChoices:
-    case GrmAst::NtRuleRepetition:
-    case GrmAst::TkEpsilon:
-    case GrmAst::TkTerminalIdentifier:
-    case GrmAst::TkRuleIdentifier:
-    case GrmAst::NtRuleDefinition:
-*/
 
 }  // namespace pmt::parserbuilder

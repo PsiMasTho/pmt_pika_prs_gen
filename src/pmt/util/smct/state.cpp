@@ -2,13 +2,14 @@
 
 namespace pmt::util::smct {
 using namespace pmt::base;
+using namespace pmt::util::smrt;
 
 void State::add_epsilon_transition(StateNrType state_nr_) {
   _epsilon_transitions.insert(Interval<StateNrType>(state_nr_));
 }
 
 void State::add_symbol_transition(Symbol symbol_, StateNrType state_nr_) {
-  _symbol_transitions.insert(Interval<StateNrType>(state_nr_), symbol_.get_combined());
+  _symbol_transitions.insert(Interval<StateNrType>(symbol_.get_combined()), state_nr_);
 }
 
 void State::remove_epsilon_transition(StateNrType state_nr_) {
@@ -32,13 +33,13 @@ auto State::get_epsilon_transitions() const -> IntervalSet<StateNrType> const& {
 }
 
 auto State::get_symbol_transition(Symbol symbol_) const -> StateNrType {
-  Symbol::UnderlyingType const combined = symbol_.get_combined();
+  SymbolType const combined = symbol_.get_combined();
   StateNrType const* ret = _symbol_transitions.find(combined);
   return ret ? *ret : StateNrSink;
 }
 
-auto State::get_symbols() const -> IntervalSet<Symbol::UnderlyingType> {
-  IntervalSet<Symbol::UnderlyingType> ret;
+auto State::get_symbols() const -> IntervalSet<SymbolType> {
+  IntervalSet<SymbolType> ret;
   for (size_t i = 0; i < _symbol_transitions.size(); ++i) {
     auto const entry = _symbol_transitions.get_by_index(i);
     ret.insert(entry._interval);

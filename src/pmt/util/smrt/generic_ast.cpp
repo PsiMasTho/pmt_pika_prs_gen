@@ -77,7 +77,7 @@ auto GenericAst::get_tag() const -> Tag {
   else if (std::holds_alternative<ChildrenType>(_data))
     return Tag::Children;
   else
-    pmt_unreachable();
+    pmt::unreachable();
 }
 
 auto GenericAst::get_string() -> StringType& {
@@ -204,7 +204,7 @@ GenericAst::GenericAst(Tag tag_, GenericId::IdType id_)
      case Tag::Children:
        return ChildrenType{};
      default:
-       pmt_unreachable();
+       pmt::unreachable();
    }
  }()}
  , _id(id_) {

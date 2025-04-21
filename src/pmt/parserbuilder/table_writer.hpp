@@ -2,7 +2,6 @@
 
 #include "pmt/base/bitset.hpp"
 #include "pmt/fw_decl.hpp"
-#include "pmt/util/smrt/generic_lexer_tables.hpp"
 
 #include <ostream>
 #include <string>

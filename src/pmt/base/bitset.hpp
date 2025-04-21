@@ -5,6 +5,7 @@
 
 #include <array>
 #include <memory>
+#include <span>
 
 namespace pmt::base {
 
@@ -12,6 +13,8 @@ class Bitset : public Hashable<Bitset> {
  public:
   // -$ Types / Constants $-
   using ChunkType = uint64_t;
+  using ChunkSpan = std::span<ChunkType>;
+  using ChunkSpanConst = std::span<ChunkType const>;
 
   enum : size_t {
     ChunkBit = sizeof(ChunkType) * CHAR_BIT,
@@ -31,13 +34,14 @@ class Bitset : public Hashable<Bitset> {
   // -$ Functions $-
   // --$ Lifetime $--
   explicit Bitset(size_t size_ = 0, bool value_ = false);
+  explicit Bitset(ChunkSpanConst span_);
   Bitset(Bitset const& other_);
-  Bitset(Bitset&& other_) noexcept = default;
+  Bitset(Bitset&&) noexcept = default;
   ~Bitset() = default;
 
   // --$ Operators $--
   auto operator=(Bitset const& other_) -> Bitset&;
-  auto operator=(Bitset&& other_) noexcept -> Bitset& = default;
+  auto operator=(Bitset&&) noexcept -> Bitset& = default;
   auto operator==(Bitset const& other_) const -> bool;
   auto operator!=(Bitset const& other_) const -> bool;
 
@@ -61,6 +65,7 @@ class Bitset : public Hashable<Bitset> {
   void set_all(bool value_);
   void toggle_all();
 
+  auto get_chunks() const -> ChunkSpanConst;
   auto get_chunk(size_t index_) const -> ChunkType;
   auto get_chunk_count() const -> size_t;
   static auto get_required_chunk_count(size_t size_) -> size_t;
@@ -79,19 +84,17 @@ class Bitset : public Hashable<Bitset> {
   void inplace_and(Bitset const& other_);  // Intersection
   void inplace_xor(Bitset const& other_);  // Symmetric difference
   void inplace_nor(Bitset const& other_);
+  void inplace_assymetric_difference(Bitset const& other_);  // in this but not in other
 
   auto clone_not() const -> Bitset;
   auto clone_or(Bitset const& other_) const -> Bitset;   // Union
   auto clone_and(Bitset const& other_) const -> Bitset;  // Intersection
   auto clone_xor(Bitset const& other_) const -> Bitset;  // Symmetric difference
   auto clone_nor(Bitset const& other_) const -> Bitset;
-
-  void inplace_assymetric_difference(Bitset const& other_);  // in this but not in other
-
   auto clone_asymmetric_difference(Bitset const& other_) const -> Bitset;  // in this but not in other
 
  private:
-  void set_trailing_chunk(bool value_);
+  void set_trailing_bits(bool value_);
 
   static auto get_bit_index(size_t index_) -> size_t;
   static auto get_chunk_index(size_t index_) -> size_t;

@@ -11,13 +11,13 @@ template <std::integral KEY_, typename VALUE_>
 IntervalMap<KEY_, VALUE_>::IntervalMap(IntervalMap const& other_)
  : _intervals(nullptr)
  , _values(nullptr)
- , _size(other_._size)
+ , _size(0)
  , _capacity_idx(0) {
   reserve(other_._size);
-  std::copy(other_._intervals.get(), other_._intervals.get(), _intervals.get());
-  for (size_t i = 0; i < _size; ++i) {
-    new (_values + i) VALUE_(other_._values[i]);
-  }
+  _size = other_.size();  // NOLINT
+  std::copy(other_.get_lowers().begin(), other_.get_lowers().end(), get_lowers().begin());
+  std::copy(other_.get_uppers().begin(), other_.get_uppers().end(), get_uppers().begin());
+  std::uninitialized_copy_n(other_._values, size(), _values);
 }
 
 template <std::integral KEY_, typename VALUE_>
@@ -45,15 +45,32 @@ auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap const& other_) -> Interval
 
   IntervalMap tmp(other_);
   _intervals = std::move(tmp._intervals);
-  _values = std::move(tmp._values);
+  _values = std::exchange(tmp._values, nullptr);
   _size = tmp._size;
+  tmp._size = 0;
   _capacity_idx = tmp._capacity_idx;
+  tmp._capacity_idx = 0;
+  return *this;
+}
+
+template <std::integral KEY_, typename VALUE_>
+auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap&& other_) noexcept -> IntervalMap& {
+  if (this == &other_) {
+    return *this;
+  }
+
+  _intervals = std::move(other_._intervals);
+  _values = std::exchange(other_._values, nullptr);
+  _size = other_._size;
+  other_._size = 0;
+  _capacity_idx = other_._capacity_idx;
+  other_._capacity_idx = 0;
   return *this;
 }
 
 template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::operator==(IntervalMap const& other_) const -> bool {
-  return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers()) && std::ranges::equal(_values, _values + _size, other_._values);
+  return std::ranges::equal(get_lowers(), other_.get_lowers()) && std::ranges::equal(get_uppers(), other_.get_uppers()) && std::equal(_values, _values + size(), other_._values);
 }
 
 template <std::integral KEY_, typename VALUE_>
@@ -204,7 +221,7 @@ void IntervalMap<KEY_, VALUE_>::erase(Interval<KEY_> interval_) {
     if (between != 0) {
       size_t const remaining = size() - indices.second._idx;
 
-      std::destroy(_values + lhs_adjusted, _values + lhs_adjusted + between);
+      std::destroy_n(_values + lhs_adjusted, between);
 
       std::move(lowers.begin() + indices.second._idx, lowers.begin() + indices.second._idx + remaining, lowers.begin() + lhs_adjusted);
       std::move(uppers.begin() + indices.second._idx, uppers.begin() + indices.second._idx + remaining, uppers.begin() + lhs_adjusted);
@@ -216,7 +233,7 @@ void IntervalMap<KEY_, VALUE_>::erase(Interval<KEY_> interval_) {
 
 template <std::integral KEY_, typename VALUE_>
 void IntervalMap<KEY_, VALUE_>::clear() {
-  std::destroy(_values, _values + _size);
+  std::destroy_n(_values, _size);
   _size = 0;
 }
 
@@ -267,10 +284,10 @@ void IntervalMap<KEY_, VALUE_>::reserve(size_t new_capacity_) {
   realloc_unique_ptr(_intervals, old_capacity * 2, new_capacity_ * 2);
 
   VALUE_* new_vals = static_cast<VALUE_*>(::operator new[](sizeof(VALUE_) * new_capacity_));
-  for (size_t i = 0; i < _size; ++i) {
-    new (&new_vals[i]) VALUE_(std::move(_values[i]));
-    _values[i].~VALUE_();
-  }
+
+  std::uninitialized_copy_n(_values, size(), new_vals);
+  std::destroy_n(_values, size());
+
   ::operator delete[](_values);
   _values = new_vals;
 

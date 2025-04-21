@@ -2,14 +2,13 @@
 
 #include "pmt/parserbuilder/expression_to_state_machine_part_frame_base.hpp"
 #include "pmt/parserbuilder/grm_number.hpp"
-#include "pmt/util/smct/fa.hpp"
-#include "pmt/util/smct/fa_part.hpp"
+#include "pmt/util/smct/state_machine_part.hpp"
 
 namespace pmt::parserbuilder {
 
-class RepetitionExpressionToFaPartFrame : public ExpressionToStateMachinePartFrameBase<TAG_> {
+class RepetitionExpressionToStateMachinePartFrame : public ExpressionToStateMachinePartFrameBase {
  public:
-  explicit RepetitionExpressionToFaPartFrame(pmt::util::smrt::GenericAstPath const& path_);
+  explicit RepetitionExpressionToStateMachinePartFrame(pmt::util::smrt::GenericAstPath const& path_);
   void process(CallstackType& callstack_, ExpressionToStateMachinePartFrameBaseCaptures& captures_) final;
 
  private:
@@ -21,10 +20,10 @@ class RepetitionExpressionToFaPartFrame : public ExpressionToStateMachinePartFra
   auto is_chunk_first() const -> bool;
   auto is_chunk_last() const -> bool;
 
-  pmt::util::smct::FaPart _choices;
-  pmt::util::smct::FaPart _chunk;
+  pmt::util::smct::StateMachinePart _choices;
+  pmt::util::smct::StateMachinePart _chunk;
   GrmNumber::RepetitionRangeType _range;
-  pmt::util::smct::Fa::Transitions* _transitions_choices = nullptr;
+  pmt::util::smct::State* _state_choices = nullptr;
   size_t _stage = 0;
   size_t _idx = 0;
   size_t _idx_max = 0;
