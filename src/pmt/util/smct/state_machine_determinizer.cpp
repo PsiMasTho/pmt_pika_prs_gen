@@ -46,30 +46,19 @@ void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
     IntervalSet<StateNrType> const& state_nr_set_cur = new_to_old.find(state_nr_cur)->second;
 
     // Set up the accepts
-    for (size_t i = 0; i < state_nr_set_cur.size(); ++i) {
-      Interval<StateNrType> const& interval = state_nr_set_cur.get_by_index(i);
-      for (StateNrType state_nr_old = interval.get_lower(); state_nr_old <= interval.get_upper(); ++state_nr_old) {
-        State const& state_old = state_machine_.get_or_create_state(state_nr_old);
-        Bitset const& accepts_old = state_old.get_accepts();
-        if (accepts_old.empty()) {
-          continue;
-        }
-
-        Bitset& accepts_cur = state_cur.get_accepts();
-        accepts_cur.resize(accepts_old.size(), false);
-        accepts_cur.inplace_or(accepts_old);
+    state_nr_set_cur.for_each_key([&](StateNrType state_nr_old_) {
+      State const& state_old = *state_machine_.get_state(state_nr_old_);
+      Bitset const& accepts_old = state_old.get_accepts();
+      if (accepts_old.empty()) {
+        return;
       }
-    }
+      Bitset& accepts_cur = state_cur.get_accepts();
+      accepts_cur.resize(accepts_old.size(), false);
+      accepts_cur.inplace_or(accepts_old);
+    });
 
     // Set up the transitions
-    IntervalSet<SymbolType> const symbols = get_symbols(state_machine_, state_nr_set_cur);
-    for (size_t i = 0; i < symbols.size(); ++i) {
-      Interval<SymbolType> const& interval = symbols.get_by_index(i);
-      for (SymbolType symbol = interval.get_lower(); symbol <= interval.get_upper(); ++symbol) {
-        IntervalSet<StateNrType> state_nr_set_next = get_e_closure(state_machine_, get_moves(state_machine_, state_nr_set_cur, Symbol(symbol)), e_closure_cache);
-        state_cur.add_symbol_transition(Symbol(symbol), push_and_visit(std::move(state_nr_set_next)));
-      }
-    }
+    get_symbols(state_machine_, state_nr_set_cur).for_each_key([&](SymbolType symbol_) { state_cur.add_symbol_transition(Symbol(symbol_), push_and_visit(get_e_closure(state_machine_, get_moves(state_machine_, state_nr_set_cur, Symbol(symbol_)), e_closure_cache))); });
   }
 
   state_machine_ = std::move(result);
@@ -92,16 +81,12 @@ auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_,
       continue;
     }
 
-    IntervalSet<StateNrType> const& epsilon_transitions = state_machine_.get_state(state_nr_cur)->get_epsilon_transitions();
-    for (size_t i = 0; i < epsilon_transitions.size(); ++i) {
-      Interval<StateNrType> const& interval = epsilon_transitions.get_by_index(i);
-      for (StateNrType state_nr_next = interval.get_lower(); state_nr_next <= interval.get_upper(); ++state_nr_next) {
-        if (!ret.contains(state_nr_next)) {
-          ret.insert(Interval<StateNrType>(state_nr_next));
-          pending.push_back(state_nr_next);
-        }
+    state_machine_.get_state(state_nr_cur)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) {
+      if (!ret.contains(state_nr_next_)) {
+        ret.insert(Interval<StateNrType>(state_nr_next_));
+        pending.push_back(state_nr_next_);
       }
-    }
+    });
   }
 
   // Cache the result
@@ -113,12 +98,7 @@ auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_,
 auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_from_, std::unordered_map<StateNrType, IntervalSet<StateNrType>>& cache_) -> IntervalSet<StateNrType> {
   IntervalSet<StateNrType> ret;
 
-  for (size_t i = 0; i < state_nrs_from_.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs_from_.get_by_index(i);
-    for (StateNrType state_nr_from = interval.get_lower(); state_nr_from <= interval.get_upper(); ++state_nr_from) {
-      ret.inplace_or(get_e_closure(state_machine_, state_nr_from, cache_));
-    }
-  }
+  state_nrs_from_.for_each_key([&](StateNrType state_nr_from_) { ret.inplace_or(get_e_closure(state_machine_, state_nr_from_, cache_)); });
 
   return ret;
 }
@@ -126,30 +106,25 @@ auto StateMachineDeterminizer::get_e_closure(StateMachine const& state_machine_,
 auto StateMachineDeterminizer::get_moves(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_from_, Symbol symbol_) -> IntervalSet<StateNrType> {
   IntervalSet<StateNrType> ret;
 
-  for (size_t i = 0; i < state_nrs_from_.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs_from_.get_by_index(i);
-    for (StateNrType state_nr_from = interval.get_lower(); state_nr_from <= interval.get_upper(); ++state_nr_from) {
-      State const& state_from = *state_machine_.get_state(state_nr_from);
-      StateNrType const state_nr_next = state_from.get_symbol_transition(symbol_);
-      if (state_nr_next != StateNrSink) {
-        ret.insert(Interval<StateNrType>(state_nr_next));
-      }
+  state_nrs_from_.for_each_key([&](StateNrType state_nr_from_) {
+    State const& state_from = *state_machine_.get_state(state_nr_from_);
+    StateNrType const state_nr_next = state_from.get_symbol_transition(symbol_);
+    if (state_nr_next != StateNrSink) {
+      ret.insert(Interval<StateNrType>(state_nr_next));
     }
-  }
+  });
+
   return ret;
 }
 
 auto StateMachineDeterminizer::get_symbols(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_from_) -> IntervalSet<SymbolType> {
   IntervalSet<SymbolType> ret;
 
-  for (size_t i = 0; i < state_nrs_from_.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs_from_.get_by_index(i);
-    for (StateNrType state_nr_from = interval.get_lower(); state_nr_from <= interval.get_upper(); ++state_nr_from) {
-      State const& state_from = *state_machine_.get_state(state_nr_from);
-      IntervalSet<SymbolType> const symbols = state_from.get_symbols();
-      ret.inplace_or(symbols);
-    }
-  }
+  state_nrs_from_.for_each_key([&](StateNrType state_nr_from_) {
+    State const& state_from = *state_machine_.get_state(state_nr_from_);
+    IntervalSet<SymbolType> const symbols = state_from.get_symbols();
+    ret.inplace_or(symbols);
+  });
 
   return ret;
 }

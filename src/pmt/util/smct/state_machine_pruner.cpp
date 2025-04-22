@@ -37,26 +37,12 @@ void StateMachinePruner::prune(StateMachine& state_machine_, StateNrType state_n
 
     state_new.get_accepts() = state_old.get_accepts();
 
-    {
-      IntervalSet<StateNrType> const& epsilon_transitions = state_old.get_epsilon_transitions();
-      for (size_t i = 0; i < epsilon_transitions.size(); ++i) {
-        Interval<StateNrType> const& interval = epsilon_transitions.get_by_index(i);
-        for (StateNrType state_nr_next_old = interval.get_lower(); state_nr_next_old <= interval.get_upper(); ++state_nr_next_old) {
-          state_new.add_epsilon_transition(push_and_visit(state_nr_next_old));
-        }
-      }
-    }
+    state_old.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_old_) { state_new.add_epsilon_transition(push_and_visit(state_nr_next_old_)); });
 
-    {
-      IntervalSet<SymbolType> const symbols = state_old.get_symbols();
-      for (size_t i = 0; i < symbols.size(); ++i) {
-        Interval<SymbolType> const& interval = symbols.get_by_index(i);
-        for (SymbolType symbol = interval.get_lower(); symbol <= interval.get_upper(); ++symbol) {
-          StateNrType const state_nr_next_old = state_old.get_symbol_transition(Symbol(symbol));
-          state_new.add_symbol_transition(Symbol(symbol), push_and_visit(state_nr_next_old));
-        }
-      }
-    }
+    state_old.get_symbols().for_each_key([&](SymbolType symbol_) {
+      StateNrType const state_nr_next_old = state_old.get_symbol_transition(Symbol(symbol_));
+      state_new.add_symbol_transition(Symbol(symbol_), push_and_visit(state_nr_next_old));
+    });
   }
 
   state_machine_ = std::move(res);

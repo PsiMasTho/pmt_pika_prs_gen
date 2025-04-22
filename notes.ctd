@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745259679">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745331819">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -61,6 +61,10 @@ for accept bitsets we should not rely on them being the same size, should be pos
 + countl_zero can be wrapped to handle an empty bitset diffrently
 
 -
-for handling comment loopbacks, refator out function, take a range of min max, create a huge interval, erase from it all intervals in current state, loop over the remainig and point to 0</rich_text>
+for handling comment loopbacks, refator out function, take a range of min max, create a huge interval, erase from it all intervals in current state, loop over the remainig and point to 0
+
+----
+GraphWriter::accepts_to_label_default can already use the intervals instead of being lazy
+---</rich_text>
   </node>
 </cherrytree>

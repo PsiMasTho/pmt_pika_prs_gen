@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 
 namespace pmt::base {
 
@@ -39,6 +40,15 @@ auto Interval<T_>::hash() const -> size_t {
   Hash::combine(get_lower(), seed);
   Hash::combine(get_upper(), seed);
   return seed;
+}
+
+template <std::integral T_>
+template <std::invocable<T_> F_>
+void Interval<T_>::for_each_key(F_&& f_) const {
+  T_ const size = get_upper() - get_lower() + T_{1};
+  for (T_ i = 0; i < size; ++i) {
+    std::invoke(std::forward<F_>(f_), get_lower() + i);
+  }
 }
 
 template <std::integral T_>

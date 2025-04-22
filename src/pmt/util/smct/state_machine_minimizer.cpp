@@ -13,15 +13,11 @@ namespace {
 auto get_alphabet(StateMachine const& state_machine_) -> IntervalSet<SymbolType> {
   IntervalSet<SymbolType> alphabet;
 
-  IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
-  for (size_t i = 0; i < state_nrs.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs.get_by_index(i);
-    for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-      State const& state = *state_machine_.get_state(state_nr);
-      IntervalSet<SymbolType> const symbols = state.get_symbols();
-      alphabet.inplace_or(symbols);
-    }
-  }
+  state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+    State const& state = *state_machine_.get_state(state_nr_);
+    IntervalSet<SymbolType> const symbols = state.get_symbols();
+    alphabet.inplace_or(symbols);
+  });
 
   return alphabet;
 }
@@ -34,19 +30,15 @@ auto get_initial_partitions(StateMachine const& state_machine_) -> std::unordere
   // may be different sizes and that can mess with the comparison and hashing
   std::unordered_map<IntervalSet<size_t>, IntervalSet<StateNrType>> by_accepts;
 
-  IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
-  for (size_t i = 0; i < state_nrs.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs.get_by_index(i);
-    for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-      State const& state = *state_machine_.get_state(state_nr);
-      IntervalSet<size_t> accepts = BitsetConverter::to_interval_set(state.get_accepts());
-      auto itr = by_accepts.find(accepts);
-      if (itr == by_accepts.end()) {
-        itr = by_accepts.insert_or_assign(std::move(accepts), IntervalSet<StateNrType>()).first;
-      }
-      itr->second.insert(Interval<StateNrType>(state_nr));
+  state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+    State const& state = *state_machine_.get_state(state_nr_);
+    IntervalSet<size_t> accepts = BitsetConverter::to_interval_set(state.get_accepts());
+    auto itr = by_accepts.find(accepts);
+    if (itr == by_accepts.end()) {
+      itr = by_accepts.insert_or_assign(std::move(accepts), IntervalSet<StateNrType>()).first;
     }
-  }
+    itr->second.insert(Interval<StateNrType>(state_nr_));
+  });
 
   // Insert the sink state, it has no accepts
   by_accepts[IntervalSet<size_t>{}].insert(Interval<StateNrType>(StateNrSink));
@@ -69,55 +61,49 @@ auto get_equivalence_partitions(StateMachine const& state_machine_, IntervalSet<
     IntervalSet<StateNrType> a = *w.begin();
     w.erase(w.begin());
 
-    for (size_t i = 0; i < alphabet_.size(); ++i) {
-      Interval<SymbolType> const& interval = alphabet_.get_by_index(i);
-      for (SymbolType c = interval.get_lower(); c <= interval.get_upper(); ++c) {
-        IntervalSet<StateNrType> x;
+    alphabet_.for_each_key([&](SymbolType c_) {
+      IntervalSet<StateNrType> x;
 
-        // Add the sink state
-        x.insert(Interval<StateNrType>(StateNrSink));
+      // Add the sink state
+      x.insert(Interval<StateNrType>(StateNrSink));
 
-        for (size_t k = 0; k < state_nrs.size(); ++k) {
-          Interval<StateNrType> const& interval = state_nrs.get_by_index(k);
-          for (StateNrType l = interval.get_lower(); l <= interval.get_upper(); ++l) {
-            // Note: state_nr_next will be the sink if there is no transition, so
-            // that is handled here
-            StateNrType const state_nr_next = state_machine_.get_state(l)->get_symbol_transition(Symbol(c));
-            if (a.contains(state_nr_next)) {
-              x.insert(Interval<StateNrType>(l));
-            }
-          }
+      state_nrs.for_each_key([&](StateNrType state_nr_from_) {
+        // Note: state_nr_to will be the sink if there is no transition, so
+        // that is handled here
+        StateNrType const state_nr_to = state_machine_.get_state(state_nr_from_)->get_symbol_transition(Symbol(c_));
+        if (a.contains(state_nr_to)) {
+          x.insert(Interval<StateNrType>(state_nr_from_));
+        }
+      });
 
-          std::unordered_set<IntervalSet<StateNrType>> p_new;
-          for (IntervalSet<StateNrType> const& y : initial_partitions_) {
-            IntervalSet<StateNrType> const x_intersect_y = x.clone_and(y);
-            IntervalSet<StateNrType> const x_diff_y = y.clone_asymmetric_difference(x);
+      std::unordered_set<IntervalSet<StateNrType>> p_new;
+      for (IntervalSet<StateNrType> const& y : initial_partitions_) {
+        IntervalSet<StateNrType> const x_intersect_y = x.clone_and(y);
+        IntervalSet<StateNrType> const x_diff_y = y.clone_asymmetric_difference(x);
 
-            size_t const popcnt_x_intersect_y = x_intersect_y.popcnt();
-            size_t const popcnt_x_diff_y = x_diff_y.popcnt();
+        size_t const popcnt_x_intersect_y = x_intersect_y.popcnt();
+        size_t const popcnt_x_diff_y = x_diff_y.popcnt();
 
-            if (popcnt_x_intersect_y == 0 || popcnt_x_diff_y == 0) {
-              p_new.insert(y);
-              continue;
-            }
+        if (popcnt_x_intersect_y == 0 || popcnt_x_diff_y == 0) {
+          p_new.insert(y);
+          continue;
+        }
 
-            p_new.insert(x_intersect_y);
-            p_new.insert(x_diff_y);
+        p_new.insert(x_intersect_y);
+        p_new.insert(x_diff_y);
 
-            auto const itr = w.find(y);
-            if (itr != w.end()) {
-              w.erase(itr);
-              w.insert(x_intersect_y);
-              w.insert(x_diff_y);
-            } else {
-              (popcnt_x_intersect_y <= popcnt_x_diff_y) ? w.insert(x_intersect_y) : w.insert(x_diff_y);
-            }
-          }
-
-          initial_partitions_ = std::move(p_new);
+        auto const itr = w.find(y);
+        if (itr != w.end()) {
+          w.erase(itr);
+          w.insert(x_intersect_y);
+          w.insert(x_diff_y);
+        } else {
+          (popcnt_x_intersect_y <= popcnt_x_diff_y) ? w.insert(x_intersect_y) : w.insert(x_diff_y);
         }
       }
-    }
+
+      initial_partitions_ = std::move(p_new);
+    });
   }
 
   return initial_partitions_;
@@ -130,14 +116,11 @@ auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_ma
   IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
 
   for (IntervalSet<StateNrType> const& equivalence_partition : equivalence_partitions_) {
-    for (size_t i = 0; i < state_nrs.size(); ++i) {
-      Interval<StateNrType> const& interval = state_nrs.get_by_index(i);
-      for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-        if (equivalence_partition.contains(state_nr)) {
-          ret.insert_or_assign(state_nr, &equivalence_partition);
-        }
+    equivalence_partition.for_each_key([&](StateNrType state_nr_) {
+      if (equivalence_partition.contains(state_nr_)) {
+        ret.insert_or_assign(state_nr_, &equivalence_partition);
       }
-    }
+    });
 
     // Insert the sink state
     if (equivalence_partition.contains(StateNrSink)) {
@@ -180,37 +163,27 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
     StateNrType const state_nr_cur = visited.find(equivalence_partition_cur)->second;
     State& state_cur = *result.get_state(state_nr_cur);
 
-    // Set up the accepts
-    for (size_t i = 0; i < equivalence_partition_cur->size(); ++i) {
-      Interval<StateNrType> const& state_nr_old_interval = equivalence_partition_cur->get_by_index(i);
-      for (StateNrType state_nr_old = state_nr_old_interval.get_lower(); state_nr_old <= state_nr_old_interval.get_upper(); ++state_nr_old) {
-        State const& state_old = *state_machine_.get_state(state_nr_old);
-        Bitset const& accepts_old = state_old.get_accepts();
+    equivalence_partition_cur->for_each_key([&](StateNrType state_nr_old_) {
+      State const& state_old = *state_machine_.get_state(state_nr_old_);
+      Bitset const& accepts_old = state_old.get_accepts();
 
-        // Set up the accepts
-        if (accepts_old.popcnt() != 0) {
-          state_cur.get_accepts().resize(accepts_old.size(), false);  // todo: fix bitset impl so that ORing resizes when needed by itself
-          state_cur.get_accepts().inplace_or(accepts_old);
-        }
-
-        // Set up the transitions
-        IntervalSet<SymbolType> const symbols = state_old.get_symbols();
-        for (size_t i = 0; i < symbols.size(); ++i) {
-          Interval<SymbolType> const& symbol_interval = symbols.get_by_index(i);
-          for (SymbolType c = symbol_interval.get_lower(); c <= symbol_interval.get_upper(); ++c) {
-            StateNrType const state_nr_next_old = state_old.get_symbol_transition(Symbol(c));
-
-            if (state_nr_next_old == StateNrSink) {
-              continue;
-            }
-
-            IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old)->second;
-            StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
-            state_cur.add_symbol_transition(Symbol(c), state_nr_next_new);
-          }
-        }
+      // Set up the accepts
+      if (accepts_old.popcnt() != 0) {
+        state_cur.get_accepts().resize(accepts_old.size(), false);
+        state_cur.get_accepts().inplace_or(accepts_old);
       }
-    }
+
+      // Set up the transitions
+      state_old.get_symbols().for_each_key([&](SymbolType symbol_) {
+        StateNrType const state_nr_next_old = state_old.get_symbol_transition(Symbol(symbol_));
+        if (state_nr_next_old == StateNrSink) {
+          return;
+        }
+        IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old)->second;
+        StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
+        state_cur.add_symbol_transition(Symbol(symbol_), state_nr_next_new);
+      });
+    });
   }
 
   return result;

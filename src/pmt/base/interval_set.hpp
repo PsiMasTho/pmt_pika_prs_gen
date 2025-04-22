@@ -65,6 +65,13 @@ class IntervalSet : public Hashable<IntervalSet<KEY_>> {
   auto lowest() const -> KEY_;
   auto highest() const -> KEY_;
 
+  // iteration
+  template <std::invocable<Interval<KEY_>> F_>
+  void for_each_interval(F_&& f_) const;
+
+  template <std::invocable<KEY_> F_>
+  void for_each_key(F_&& f_) const;
+
  private:
   auto get_lowers() const -> IntegralSpanConst<KEY_>;
   auto get_lowers() -> IntegralSpan<KEY_>;

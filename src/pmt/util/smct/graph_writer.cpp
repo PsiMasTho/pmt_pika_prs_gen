@@ -23,33 +23,26 @@ void GraphWriter::write_dot(std::ostream& os_, StateMachine const& state_machine
   std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>> symbol_arrow_labels;
 
   IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
-  for (size_t i = 0; i < state_nrs.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs.get_by_index(i);
-    for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-      State const& state = *state_machine_.get_state(state_nr);
 
-      // Symbol transitions
-      IntervalSet<SymbolType> const symbols = state.get_symbols();
+  state_nrs.for_each_key([&](StateNrType state_nr_) {
+    State const& state = *state_machine_.get_state(state_nr_);
 
-      if (symbols.empty()) {
-        continue;
-      }
+    // Symbol transitions
+    IntervalSet<SymbolType> const symbols = state.get_symbols();
 
+    if (!symbols.empty()) {
       std::unordered_map<StateNrType, IntervalSet<SymbolType>> relations;
 
-      for (size_t i = 0; i < symbols.size(); ++i) {
-        Interval<SymbolType> const& symbol_interval = symbols.get_by_index(i);
-        for (SymbolType c = symbol_interval.get_lower(); c <= symbol_interval.get_upper(); ++c) {
-          StateNrType const state_nr_next = state.get_symbol_transition(Symbol(c));
-          relations[state_nr_next].insert(Interval<SymbolType>(c));
-        }
-      }
+      symbols.for_each_key([&](SymbolType symbol_) {
+        StateNrType const state_nr_next = state.get_symbol_transition(Symbol(symbol_));
+        relations[state_nr_next].insert(Interval<SymbolType>(symbol_));
+      });
 
       for (auto const& [state_nr_next, symbols] : relations) {
-        symbol_arrow_labels[state_nr][state_nr_next] = create_label(symbols);
+        symbol_arrow_labels[state_nr_][state_nr_next] = create_label(symbols);
       }
     }
-  }
+  });
 
   // - Write the dot file -
   std::string delim;
@@ -59,14 +52,11 @@ void GraphWriter::write_dot(std::ostream& os_, StateMachine const& state_machine
          " peripheries=0;\n"
          "  node [shape=doublecircle, color=blue]; ";
 
-  for (size_t i = 0; i < state_nrs.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs.get_by_index(i);
-    for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-      if (state_machine_.get_state(state_nr)->get_accepts().popcnt() != 0) {
-        os_ << std::exchange(delim, " ") << state_nr;
-      }
+  state_nrs.for_each_key([&](StateNrType state_nr_) {
+    if (state_machine_.get_state(state_nr_)->get_accepts().popcnt() != 0) {
+      os_ << std::exchange(delim, " ") << state_nr_;
     }
-  }
+  });
 
   if (!delim.empty()) {
     os_ << ";\n";
@@ -75,18 +65,7 @@ void GraphWriter::write_dot(std::ostream& os_, StateMachine const& state_machine
 
   // Epsilon transitions
   os_ << "  edge [color=green];\n";
-  for (size_t i = 0; i < state_nrs.size(); ++i) {
-    Interval<StateNrType> const& state_nr_interval = state_nrs.get_by_index(i);
-    for (StateNrType state_nr = state_nr_interval.get_lower(); state_nr <= state_nr_interval.get_upper(); ++state_nr) {
-      IntervalSet<StateNrType> const& epsilon_transitions = state_machine_.get_state(state_nr)->get_epsilon_transitions();
-      for (size_t j = 0; j < epsilon_transitions.size(); ++j) {
-        Interval<StateNrType> const& epsilon_interval = epsilon_transitions.get_by_index(j);
-        for (StateNrType state_nr_next = epsilon_interval.get_lower(); state_nr_next <= epsilon_interval.get_upper(); ++state_nr_next) {
-          os_ << "  " << state_nr << " -> " << state_nr_next << "\n";
-        }
-      }
-    }
-  }
+  state_nrs.for_each_key([&](StateNrType state_nr_) { state_machine_.get_state(state_nr_)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { os_ << "  " << state_nr_ << " -> " << state_nr_next_ << "\n"; }); });
 
   // Symbol transitions
   os_ << "  edge [color=black];\n";
@@ -100,16 +79,13 @@ void GraphWriter::write_dot(std::ostream& os_, StateMachine const& state_machine
 
   // Accepts
   std::unordered_map<size_t, std::set<StateNrType>> accepts;
-  for (size_t i = 0; i < state_nrs.size(); ++i) {
-    Interval<StateNrType> const& interval = state_nrs.get_by_index(i);
-    for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-      State const& state = *state_machine_.get_state(state_nr);
-      std::set<size_t> const accepts_set = pmt::base::BitsetConverter::to_set(state.get_accepts());
-      for (size_t accept : accepts_set) {
-        accepts[accept].insert(state_nr);
-      }
+  state_nrs.for_each_key([&](StateNrType state_nr_) {
+    State const& state = *state_machine_.get_state(state_nr_);
+    std::set<size_t> const accepts_set = pmt::base::BitsetConverter::to_set(state.get_accepts());
+    for (size_t accept : accepts_set) {
+      accepts[accept].insert(state_nr_);
     }
-  }
+  });
 
   os_ << "\n"
          " subgraph cluster_accepts {\n"
@@ -120,12 +96,12 @@ void GraphWriter::write_dot(std::ostream& os_, StateMachine const& state_machine
 
   os_ << "  node_accepts [label=\"";
   delim.clear();
-  for (auto const& [accept, state_nrs] : accepts) {
+  for (auto const& [accept, state_nrs_accepted] : accepts) {
     std::string const lhs = accepts_to_label_(accept);
     os_ << std::exchange(delim, "|") << lhs << ": ";
 
     std::string delim2;
-    for (StateNrType state_nr : state_nrs) {
+    for (StateNrType state_nr : state_nrs_accepted) {
       os_ << std::exchange(delim2, ", ") << state_nr;
     }
     os_ << R"(\l)";
@@ -140,54 +116,17 @@ auto GraphWriter::accepts_to_label_default(size_t accepts_) -> std::string {
 }
 
 auto GraphWriter::create_label(pmt::base::IntervalSet<SymbolType> const& symbols_) -> std::string {
-  std::vector<std::pair<SymbolType, SymbolType>> ranges;
-
-  // todo: this is a bit lazy
-  std::set<SymbolType> symbols;
-  {
-    for (size_t i = 0; i < symbols_.size(); ++i) {
-      Interval<SymbolType> const& symbol_interval = symbols_.get_by_index(i);
-      for (SymbolType c = symbol_interval.get_lower(); c <= symbol_interval.get_upper(); ++c) {
-        symbols.insert(c);
-      }
-    }
-  }
-
-  for (auto itr_cur = symbols.begin(); itr_cur != symbols.end(); ++itr_cur) {
-    SymbolType const symbol_first = *itr_cur;
-    SymbolType symbol_cur = *itr_cur;
-    bool const displayale_cur = is_displayable(symbol_cur);
-
-    while (true) {
-      auto itr_next = std::next(itr_cur);
-      if (itr_next == symbols.end()) {
-        break;
-      }
-
-      SymbolType const symbol_next = *itr_next;
-
-      if (symbol_next != symbol_cur + 1 || is_displayable(symbol_next) != displayale_cur) {
-        break;
-      }
-
-      itr_cur = itr_next;
-      symbol_cur = symbol_next;
-    }
-
-    ranges.emplace_back(symbol_first, symbol_cur);
-  }
-
   std::string ret;
   std::string delim;
-  for (size_t i = 0; i < ranges.size(); ++i) {
-    auto const& range_info = ranges[i];
+
+  symbols_.for_each_interval([&](Interval<SymbolType> interval_) {
     ret += std::exchange(delim, ", ");
-    if (range_info.first == range_info.second) {
-      ret += to_displayable(range_info.first);
+    if (interval_.get_lower() == interval_.get_upper()) {
+      ret += to_displayable(interval_.get_lower());
     } else {
-      ret += "[" + to_displayable(range_info.first) + ".." + to_displayable(range_info.second) + "]";
+      ret += "[" + to_displayable(interval_.get_lower()) + ".." + to_displayable(interval_.get_upper()) + "]";
     }
-  }
+  });
 
   return ret;
 }

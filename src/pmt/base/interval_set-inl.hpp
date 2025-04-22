@@ -264,6 +264,20 @@ auto IntervalSet<KEY_>::highest() const -> KEY_ {
 }
 
 template <std::integral KEY_>
+template <std::invocable<Interval<KEY_>> F_>
+void IntervalSet<KEY_>::for_each_interval(F_&& f_) const {
+  for (size_t i = 0; i < size(); ++i) {
+    std::invoke(std::forward<F_>(f_), get_by_index(i));
+  }
+}
+
+template <std::integral KEY_>
+template <std::invocable<KEY_> F_>
+void IntervalSet<KEY_>::for_each_key(F_&& f_) const {
+  for_each_interval([&f_](Interval<KEY_> const& interval_) { interval_.for_each_key(std::forward<F_>(f_)); });
+}
+
+template <std::integral KEY_>
 auto IntervalSet<KEY_>::get_lowers() const -> IntegralSpanConst<KEY_> {
   return IntegralSpanConst<KEY_>(_intervals.get(), _size);
 }

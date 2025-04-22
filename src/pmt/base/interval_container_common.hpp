@@ -43,6 +43,10 @@ class Interval : public Hashable<Interval<T_>> {
 
   // --$ Inherited: pmt::base::Hashable $--
   auto hash() const -> size_t;
+
+  // iteration
+  template <std::invocable<T_> F_>
+  void for_each_key(F_&& f_) const;
 };
 
 template <std::integral T_>
