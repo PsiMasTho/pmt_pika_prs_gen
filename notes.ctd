@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745331819">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745762830">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -65,6 +65,21 @@ for handling comment loopbacks, refator out function, take a range of min max, c
 
 ----
 GraphWriter::accepts_to_label_default can already use the intervals instead of being lazy
----</rich_text>
+---
+GrammarData
+TerminalStateMachineBuilder
+ParserBuilder
+---
+no need to manually set expression type in TerminalStateMachinePartBuilder, dispatch() can deduce it
+--
+rename "Rule" to "Nonterminal" ?
+---
+should add something like GrmBoolean
+--
+GrammarData only has _whitespace_definition,   pmt::base::IntervalSet&lt;pmt::util::smrt::SymbolType&gt; _whitespace_symbols should be somewhere else like LexerBuilder
+---
+rename grm_* stuff to own_*
+----
+change the LexerTables data to private once i figure out how it needs to be accessed</rich_text>
   </node>
 </cherrytree>

@@ -13,7 +13,7 @@ class GenericId {
     IdUninitialized = -1ULL,  // Underflow
     IdDefault = -2ULL,
     IdEoi = -3ULL,
-    IdReserved1 = -4ULL,
+    IdStart = -4ULL,
     IdReserved2 = -5ULL,
     IdReserved3 = -6ULL,
     IdReserved4 = -7ULL,

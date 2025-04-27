@@ -25,9 +25,9 @@ class StateMachine : public pmt::util::smrt::StateMachineTablesBase {
   auto operator=(StateMachine&&) noexcept -> StateMachine& = default;
 
   // --$ Inherited: pmt::util::smrt::StateMachineTablesBase $--
-  auto get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType final;
-  auto get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst final;
-  auto get_accept_count() const -> size_t final;
+  auto get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;
+  auto get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
+  auto get_accept_count() const -> size_t override;
 
   // --$ Other $--
   auto get_state(pmt::util::smrt::StateNrType state_nr_) -> State*;

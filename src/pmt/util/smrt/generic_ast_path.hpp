@@ -13,8 +13,8 @@ class GenericAstPath : public pmt::base::Hashable<GenericAstPath> {
  public:
   // - Lifetime -
   GenericAstPath() = default;
-  GenericAstPath(size_t index_);
-  GenericAstPath(std::vector<size_t> path_);
+  explicit GenericAstPath(size_t index_);
+  explicit GenericAstPath(std::vector<size_t> path_);
 
   // - Access -
   auto inplace_push(size_t index_) -> GenericAstPath&;

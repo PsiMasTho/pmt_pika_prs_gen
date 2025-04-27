@@ -12,8 +12,8 @@ auto GenericId::id_to_string(IdType id_) -> std::string {
       return "IdDefault";
     case IdEoi:
       return "IdEoi";
-    case IdReserved1:
-      return "IdReserved1";
+    case IdStart:
+      return "IdStart";
     case IdReserved2:
       return "IdReserved2";
     case IdReserved3:

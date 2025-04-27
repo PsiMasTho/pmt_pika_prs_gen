@@ -11,6 +11,10 @@
 
 namespace pmt::base {
 
+Bitset::Bitset()
+ : Bitset(0) {
+}
+
 Bitset::Bitset(size_t size_, bool value_)
  : _data(nullptr)
  , _size(0)
@@ -201,6 +205,16 @@ auto Bitset::get_chunk_count() const -> size_t {
 
 auto Bitset::get_required_chunk_count(size_t size_) -> size_t {
   return (size_ + ChunkBit - 1) / ChunkBit;
+}
+
+auto Bitset::front() const -> bool {
+  assert(_size > 0);
+  return get(0);
+}
+
+auto Bitset::back() const -> bool {
+  assert(_size > 0);
+  return get(_size - 1);
 }
 
 auto Bitset::any() const -> bool {

@@ -33,7 +33,8 @@ class Bitset : public Hashable<Bitset> {
  public:
   // -$ Functions $-
   // --$ Lifetime $--
-  explicit Bitset(size_t size_ = 0, bool value_ = false);
+  Bitset();
+  explicit Bitset(size_t size_, bool value_ = false);
   explicit Bitset(ChunkSpanConst span_);
   Bitset(Bitset const& other_);
   Bitset(Bitset&&) noexcept = default;
@@ -70,6 +71,8 @@ class Bitset : public Hashable<Bitset> {
   auto get_chunk_count() const -> size_t;
   static auto get_required_chunk_count(size_t size_) -> size_t;
 
+  auto front() const -> bool;
+  auto back() const -> bool;
   auto any() const -> bool;
   auto none() const -> bool;
   auto all() const -> bool;
