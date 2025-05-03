@@ -5,7 +5,6 @@
 #include <cassert>
 #include <iterator>
 #include <queue>
-#include <stack>
 
 namespace pmt::util::smrt {
 
@@ -13,17 +12,31 @@ void GenericAst::UniqueHandleDeleter::operator()(GenericAst* self_) const {
   destruct(self_);
 }
 
-void GenericAst::destruct(GenericAst* self_) {
-  std::stack<GenericAst*> stack;
-  stack.push(self_);
+GenericAst::GenericAst(Tag tag_, GenericId::IdType id_)
+ : _data{[tag_]() -> std::variant<StringType, ChildrenType> {
+   switch (tag_) {
+     case Tag::String:
+       return StringType{};
+     case Tag::Children:
+       return ChildrenType{};
+     default:
+       pmt::unreachable();
+   }
+ }()}
+ , _id(id_) {
+}
 
-  while (!stack.empty()) {
-    std::unique_ptr<GenericAst> node{stack.top()};
-    stack.pop();
+void GenericAst::destruct(GenericAst* self_) {
+  std::vector<GenericAst*> pending;
+  pending.push_back(self_);
+
+  while (!pending.empty()) {
+    std::unique_ptr<GenericAst> node{pending.back()};
+    pending.pop_back();
 
     if (node->get_tag() == Tag::Children) {
       for (size_t i = 0; i < node->get_children_size(); ++i) {
-        stack.push(node->get_child_at(i));
+        pending.push_back(node->get_child_at(i));
       }
     }
   }
@@ -36,12 +49,12 @@ auto GenericAst::construct(Tag tag_, GenericId::IdType id_) -> UniqueHandle {
 auto GenericAst::clone(GenericAst const& other_) -> UniqueHandle {
   UniqueHandle result = construct(other_.get_tag());
 
-  std::stack<std::pair<GenericAst const*, GenericAst*>> stack;
-  stack.push({&other_, result.get()});
+  std::vector<std::pair<GenericAst const*, GenericAst*>> pending;
+  pending.push_back({&other_, result.get()});
 
-  while (!stack.empty()) {
-    auto [src, dst] = stack.top();
-    stack.pop();
+  while (!pending.empty()) {
+    auto [src, dst] = pending.back();
+    pending.pop_back();
 
     dst->set_id(src->get_id());
 
@@ -51,7 +64,7 @@ auto GenericAst::clone(GenericAst const& other_) -> UniqueHandle {
       for (size_t i = 0; i < src->get_children_size(); ++i) {
         UniqueHandle child = construct(src->get_child_at(i)->get_tag());
         dst->give_child_at(i, std::move(child));
-        stack.push({src->get_child_at(i), dst->get_child_at(i)});
+        pending.push_back({src->get_child_at(i), dst->get_child_at(i)});
       }
     }
   }
@@ -194,20 +207,6 @@ void GenericAst::unpack(size_t index_) {
   while (child->get_children_size() != 0) {
     give_child_at(index_++, child->take_child_at(0));
   }
-}
-
-GenericAst::GenericAst(Tag tag_, GenericId::IdType id_)
- : _data{[tag_]() -> std::variant<StringType, ChildrenType> {
-   switch (tag_) {
-     case Tag::String:
-       return StringType{};
-     case Tag::Children:
-       return ChildrenType{};
-     default:
-       pmt::unreachable();
-   }
- }()}
- , _id(id_) {
 }
 
 }  // namespace pmt::util::smrt

@@ -261,7 +261,12 @@ auto Bitset::countl(bool value_) const -> size_t {
 }
 
 auto Bitset::countr(bool value_) const -> size_t {
-  size_t const max = get_required_chunk_count(_size) - 1;
+  size_t const required_chunk_count = get_required_chunk_count(_size);
+  if (required_chunk_count == 0) {
+    return 0;
+  }
+
+  size_t const max = required_chunk_count - 1;
   auto const fn = value_ ? &std::countl_one<ChunkType> : &std::countl_zero<ChunkType>;
 
   size_t total = 0;

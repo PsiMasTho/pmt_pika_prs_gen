@@ -2,13 +2,12 @@
 
 #include "pmt/base/interval_set.hpp"
 #include "pmt/util/smct/state.hpp"
-#include "pmt/util/smrt/state_machine_tables_base.hpp"
 
 #include <map>
 
 namespace pmt::util::smct {
 
-class StateMachine : public pmt::util::smrt::StateMachineTablesBase {
+class StateMachine {
  private:
   // -$ Data $-
   std::map<pmt::util::smrt::StateNrType, State> _states;
@@ -24,11 +23,6 @@ class StateMachine : public pmt::util::smrt::StateMachineTablesBase {
   auto operator=(StateMachine const&) -> StateMachine& = default;
   auto operator=(StateMachine&&) noexcept -> StateMachine& = default;
 
-  // --$ Inherited: pmt::util::smrt::StateMachineTablesBase $--
-  auto get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;
-  auto get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
-  auto get_accept_count() const -> size_t override;
-
   // --$ Other $--
   auto get_state(pmt::util::smrt::StateNrType state_nr_) -> State*;
   auto get_state(pmt::util::smrt::StateNrType state_nr_) const -> State const*;
@@ -42,8 +36,6 @@ class StateMachine : public pmt::util::smrt::StateMachineTablesBase {
   void remove_state(pmt::util::smrt::StateNrType state_nr_);
 
   auto get_state_count() const -> size_t;
-
-  void debug_dump();  // REMOVE ME
 };
 
 }  // namespace pmt::util::smct

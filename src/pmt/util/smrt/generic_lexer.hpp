@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pmt/base/bitset.hpp"
-#include "pmt/util/smrt/state_machine_tables_base.hpp"
+#include "pmt/util/smrt/lexer_tables_base.hpp"
 #include "pmt/util/smrt/token.hpp"
 
 #include <string_view>
@@ -19,15 +19,17 @@ class GenericLexer {
 
  private:
   // -$ Data $-
-  pmt::base::Bitset _accepts_all;
-  StateMachineTablesBase const& _tables;
+  size_t _accept_count;
+  std::vector<pmt::base::Bitset::ChunkType> _accepts_all;
+  std::vector<pmt::base::Bitset::ChunkType> _accepts_valid;
+  LexerTablesBase const& _tables;
   std::string_view _input;
   size_t _cursor;
 
  public:
   // -$ Functions $-
   // --$ Lifetime $--
-  GenericLexer(std::string_view input_, StateMachineTablesBase const& tables_);
+  GenericLexer(std::string_view input_, LexerTablesBase const& tables_);
 
   // --$ Other $--
   auto lex() -> LexReturn;

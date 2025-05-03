@@ -13,6 +13,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <deque>
 
 PMT_FW_DECL_NS_CLASS(pmt::util::smct, StateMachine)
 
@@ -52,7 +53,7 @@ class TerminalStateMachinePartBuilder {
   pmt::util::smct::StateMachinePart _ret_part;
   pmt::base::IntervalSet<size_t> _terminal_idx_stack_contents;
   std::vector<size_t> _terminal_idx_stack;
-  std::vector<Frame> _frames;
+  std::deque<Frame> _frames; // Need a stack so that earlier frames are not invalidated on push_back
   std::vector<Frame*> _callstack;
 
   TerminalNameLookupFn _fn_lookup_terminal_name;
@@ -68,6 +69,9 @@ class TerminalStateMachinePartBuilder {
   void dispatch(Frame& frame_);
 
   auto build_epsilon() -> pmt::util::smct::StateMachinePart;
+
+  // definition
+  void process_definition_stage_0(Frame& frame_);
 
   // sequence
   void process_sequence_stage_0(Frame& frame_);

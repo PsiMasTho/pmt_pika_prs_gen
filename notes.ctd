@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1745762830">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746312269">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -80,6 +80,18 @@ GrammarData only has _whitespace_definition,   pmt::base::IntervalSet&lt;pmt::ut
 ---
 rename grm_* stuff to own_*
 ----
-change the LexerTables data to private once i figure out how it needs to be accessed</rich_text>
+change the LexerTables data to private once i figure out how it needs to be accessed
+----
+implement multi symbol whitespace
+rename whitespace to skip
+need to check if whitespace conflicts with comment open / multiple starting states is enough of an error?
+---
+implement case sensitivity
+--
+fix "" string in terminal definition resulting in null byte
+--
+emit ids in a list and actually include those where needed
+--
+use smallest possible integers when emitting lexer or parser tables</rich_text>
   </node>
 </cherrytree>

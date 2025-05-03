@@ -1,6 +1,7 @@
 #include "pmt/util/smrt/generic_id.hpp"
 
 #include <stdexcept>
+#include <regex>
 
 namespace pmt::util::smrt {
 
@@ -47,6 +48,11 @@ auto GenericId::string_to_id(std::string_view str_) -> IdType {
 
 auto GenericId::is_generic_id(IdType id_) -> bool {
   return id_ >= IdReserved9;
+}
+
+auto GenericId::is_generic_id(std::string_view str_) -> bool {
+ static const std::regex generic_id_regex = std::regex(R"(^Id(?:Uninitialized|Default|Eoi|Start|Reserved\d+)$)", std::regex::optimize);
+  return std::regex_match(str_.data(), generic_id_regex);
 }
 
 }  // namespace pmt::util::smrt

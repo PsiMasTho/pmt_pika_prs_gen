@@ -4,9 +4,12 @@
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
+#include "pmt/parserbuilder/lexer_table_builder.hpp"
+#include "pmt/parserbuilder/lexer_table_writer.hpp"
 #include "pmt/util/smct/graph_writer.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -43,7 +46,27 @@ auto main(int argc, char const* const* argv) -> int try {
   GenericAst::UniqueHandle ast = GrmParser::parse(lexer);
   GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
 
-  return 0;
+  LexerTables lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
+
+  std::cout << "Lexer tables built successfully\n";
+  write_dot(lexer_tables);
+  std::cout << "Dot file written\n";
+
+  std::cout << "Writing lexer tables to header and source files...\n";
+  std::ofstream header_file(args._output_header_file);
+  std::ofstream source_file(args._output_source_file);
+  std::ofstream id_constants_file(args._output_id_constants_file);
+
+  LexerTableWriter table_writer(header_file, source_file, id_constants_file, lexer_tables);
+
+  LexerTableWriter::Arguments lexer_table_writer_args;
+  lexer_table_writer_args._namespace_name = "pmt::parserbuilder";
+  lexer_table_writer_args._class_name = "LexerClass";
+  lexer_table_writer_args._header_include_path = std::filesystem::path(args._output_header_file).filename().string();
+  lexer_table_writer_args._indent_increment = 1;
+  table_writer.write(lexer_table_writer_args);
+  std::cout << "Done writing lexer tables\n";
+
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

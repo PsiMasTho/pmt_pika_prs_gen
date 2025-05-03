@@ -60,6 +60,15 @@ auto TerminalStateMachinePartBuilder::build(TerminalNameLookupFn fn_lookup_termi
 
 void TerminalStateMachinePartBuilder::dispatch(Frame& frame_) {
   switch (frame_._expression_type) {
+    case GrmAst::NtTerminalDefinition:
+      switch (frame_._stage) {
+        case 0:
+          process_definition_stage_0(frame_);
+          break;
+        default:
+          pmt::unreachable();
+      }
+      break;
     case GrmAst::NtTerminalSequence:
       switch (frame_._stage) {
         case 0:
@@ -86,6 +95,7 @@ void TerminalStateMachinePartBuilder::dispatch(Frame& frame_) {
         default:
           pmt::unreachable();
       }
+      break;
     case GrmAst::NtTerminalRepetition:
       switch (frame_._stage) {
         case 0:
@@ -160,6 +170,13 @@ auto TerminalStateMachinePartBuilder::build_epsilon() -> pmt::util::smct::StateM
   pmt::util::smct::StateMachinePart ret(state_nr_incoming);
   ret.add_outgoing_epsilon_transition(state_nr_incoming);
   return ret;
+}
+
+void TerminalStateMachinePartBuilder::process_definition_stage_0(Frame& frame_) {
+ _frames.emplace_back();
+ _frames.back()._expr_cur_path = frame_._expr_cur_path.clone_push(0);
+ _frames.back()._expression_type = _frames.back()._expr_cur_path.resolve(*_ast_root)->get_id();
+ _callstack.push_back(&_frames.back());
 }
 
 void TerminalStateMachinePartBuilder::process_sequence_stage_0(Frame& frame_) {

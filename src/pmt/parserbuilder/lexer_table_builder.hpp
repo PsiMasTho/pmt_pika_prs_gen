@@ -1,11 +1,9 @@
 #pragma once
 
-#include "pmt/base/interval_set.hpp"
 #include "pmt/fw_decl.hpp"
 #include "pmt/parserbuilder/grammar_data.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
 #include "pmt/parserbuilder/terminal_state_machine_part_builder.hpp"
-#include "pmt/util/smrt/state_machine_primitives.hpp"
 
 #include <optional>
 #include <string_view>
@@ -27,7 +25,7 @@ class LexerTableBuilder {
   std::vector<pmt::util::smct::StateMachine> _terminal_state_machines;
   std::vector<pmt::util::smct::StateMachine> _comment_open_state_machines;
   std::vector<pmt::util::smct::StateMachine> _comment_close_state_machines;
-  pmt::base::IntervalSet<pmt::util::smrt::SymbolType> _whitespace_symbols;
+  pmt::util::smct::StateMachine _whitespace_state_machine;
   pmt::util::smrt::GenericAst const* _ast = nullptr;
   GrammarData const* _grammar_data = nullptr;
 
@@ -37,13 +35,15 @@ class LexerTableBuilder {
   auto build(pmt::util::smrt::GenericAst const& ast_, GrammarData const& grammar_data_) -> LexerTables;
 
  private:
-  void setup_whitespace_symbols();
+  void setup_whitespace_state_machine();
   void setup_terminal_state_machines();
   void setup_comment_state_machines();
   void loop_back_comment_close_state_machines();
   void merge_comment_state_machines_into_result();
+  void merge_whitespace_state_machine_into_result();
   void setup_start_and_eoi_states();
   void connect_terminal_state_machines();
+  void fill_terminal_data();
   void validate_result();
 
   auto lookup_terminal_name_by_index(size_t index_) const -> std::optional<std::string>;

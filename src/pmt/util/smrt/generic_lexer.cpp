@@ -7,48 +7,71 @@
 namespace pmt::util::smrt {
 using namespace pmt::base;
 
-GenericLexer::GenericLexer(std::string_view input_, StateMachineTablesBase const& tables_)
- : _accepts_all(tables_.get_accept_count(), true)
+namespace {
+ auto find_first_set_bit(Bitset::ChunkSpanConst const& bitset_) -> size_t {
+  size_t total = 0;
+  for (Bitset::ChunkType chunk : bitset_) {
+    size_t const incr = std::countr_zero(chunk);
+    total += incr;
+    if (incr != Bitset::ChunkBit) {
+      break;
+    }
+  }
+
+  return total;
+ }
+
+ void bitwise_and(Bitset::ChunkSpan dest_, Bitset::ChunkSpanConst lhs_ , Bitset::ChunkSpanConst rhs_) {
+  std::fill(dest_.begin(), dest_.end(), Bitset::ChunkType(0));
+
+  Bitset::ChunkSpanConst const* smaller = lhs_.size() < rhs_.size() ? &lhs_ : &rhs_;
+  Bitset::ChunkSpanConst const* larger = lhs_.size() < rhs_.size() ? &rhs_ : &lhs_;
+
+  for (size_t i = 0; i < smaller->size(); ++i) {
+    dest_[i] = (*smaller)[i] & (*larger)[i];
+  }
+ }
+}
+
+GenericLexer::GenericLexer(std::string_view input_, LexerTablesBase const& tables_)
+ : _accept_count(tables_.get_accept_count())
+ , _accepts_all(Bitset::get_required_chunk_count(_accept_count), ~Bitset::ChunkType(0))
+ , _accepts_valid(Bitset::get_required_chunk_count(_accept_count), Bitset::ChunkType(0))
  , _tables(tables_)
  , _input(input_)
  , _cursor(0) {
 }
 
 auto GenericLexer::lex() -> LexReturn {
-  return lex(_accepts_all.get_chunks());
+  return lex(_accepts_all);
 }
 
 auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
-  Bitset accepts(accepts_);
-  accepts.resize(_accepts_all.size(), false);
-
   GenericId::IdType id = GenericId::IdUninitialized;
-  size_t countl = _accepts_all.size();
+  size_t countl = _accept_count;
   size_t te = _cursor;  // Token end
 
   StateNrType state_nr_cur = StateNrStart;
 
-  for (size_t p = _cursor; p <= _input.size(); ++p) {
+  for (size_t p = _cursor; p <= _input.size() + 1; ++p) {
     if (state_nr_cur == StateNrSink) {
       break;
     }
 
-    Bitset state_accepts(_tables.get_state_accepts(state_nr_cur));
-    if (state_accepts.size() < accepts.size()) {
-      state_accepts.resize(accepts.size(), false);
+    bitwise_and(_accepts_valid, _tables.get_state_accepts(state_nr_cur), accepts_);
+
+    countl = find_first_set_bit(_accepts_valid);
+
+    if (countl < _accept_count) {
+     if (countl == _tables.get_start_accept_index()) {
+      _cursor = p;
+     }
+
+     te = p;
+     id = _tables.get_accept_id(countl);
     }
 
-    Bitset const accepts_valid = state_accepts.clone_and(accepts);
-
-    assert(accepts_valid.popcnt() <= 1);
-
-    countl = accepts_valid.countl(false);
-    if (countl < accepts_valid.size()) {
-      te = p;
-      id = _tables.get_accept_id(countl);
-    }
-
-    if (state_nr_cur == StateNrSink) {
+    if (p == _input.size() + 1) {
       break;
     }
 
@@ -56,8 +79,8 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
     state_nr_cur = _tables.get_state_nr_next(state_nr_cur, symbol);
   }
 
-  LexReturn ret;
-  if (id != GenericId::IdUninitialized) {
+  if (id != GenericId::IdUninitialized && countl < _accept_count && countl != _tables.get_start_accept_index()) {
+   LexReturn ret;
     ret._accepted = countl;
     ret._token._token = std::string_view(_input.data() + _cursor, te - _cursor);
     ret._token._id = id;

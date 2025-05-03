@@ -28,6 +28,7 @@ class GenericId {
   static auto string_to_id(std::string_view str_) -> IdType;
 
   static auto is_generic_id(IdType id_) -> bool;
+  static auto is_generic_id(std::string_view str_) -> bool;
 };
 
 }  // namespace pmt::util::smrt

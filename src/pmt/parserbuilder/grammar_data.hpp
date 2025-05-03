@@ -2,6 +2,7 @@
 
 #include "pmt/base/bitset.hpp"
 #include "pmt/util/smrt/generic_ast_path.hpp"
+#include "pmt/base/overloaded.hpp"
 
 #include <optional>
 #include <string>
@@ -19,12 +20,12 @@ class GrammarData {
 
  public:
   static inline char const TERMINAL_RESERVED_PREFIX_CH = '@';
-  static inline std::string const TERMINAL_DIRECT_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "direct_";  // NOLINT
-  static inline std::string const TERMINAL_COMMENT_OPEN_PREFIX = TERMINAL_RESERVED_PREFIX_CH + "comment_open_";      // NOLINT
-  static inline std::string const TERMINAL_COMMENT_CLOSE_PREFIX = TERMINAL_RESERVED_PREFIX_CH + "comment_close_";    // NOLINT
-  static inline std::string const TERMINAL_NAME_WHITESPACE = TERMINAL_RESERVED_PREFIX_CH + "whitespace";             // NOLINT
-  static inline std::string const TERMINAL_NAME_START = TERMINAL_RESERVED_PREFIX_CH + "start";                       // NOLINT
-  static inline std::string const TERMINAL_NAME_EOI = TERMINAL_RESERVED_PREFIX_CH + "eoi";                           // NOLINT
+  static inline std::string const TERMINAL_DIRECT_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "direct_";                // NOLINT
+  static inline std::string const TERMINAL_COMMENT_OPEN_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_open_";    // NOLINT
+  static inline std::string const TERMINAL_COMMENT_CLOSE_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_close_";  // NOLINT
+  static inline std::string const TERMINAL_NAME_WHITESPACE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "whitespace";           // NOLINT
+  static inline std::string const TERMINAL_NAME_START = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "start";                     // NOLINT
+  static inline std::string const TERMINAL_NAME_EOI = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "eoi";                         // NOLINT
 
   static inline bool const MERGE_DEFAULT = false;
   static inline bool const UNPACK_DEFAULT = false;
@@ -48,6 +49,18 @@ class GrammarData {
     bool _unpack : 1;
     bool _hide : 1;
   };
+
+  using FetchNameString = decltype(pmt::base::Overloaded{
+   [](TerminalData const& data_) { return data_._name; },
+   [](RuleData const& data_) { return data_._name; },
+   [](std::string const& data_) { return data_; },
+  });
+
+  using FetchIdNameString = decltype(pmt::base::Overloaded{
+   [](TerminalData const& data_) { return data_._id_name; },
+   [](RuleData const& data_) { return data_._id_name; },
+   [](std::string const& data_) { return data_; },
+  });
 
   // -$ Data $-
   // terminals

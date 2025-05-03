@@ -320,7 +320,7 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
 }
 
 auto GrammarData::try_find_terminal_index_by_name(std::string const& name_) -> size_t {
-  size_t const index = binary_find_index(_terminals.begin(), _terminals.end(), name_, [](TerminalData const& lhs_, TerminalData const& rhs_) { return lhs_._name < rhs_._name; });
+  size_t const index = binary_find_index(_terminals.begin(), _terminals.end(), name_, [](auto const& lhs_, auto const& rhs_) { return FetchNameString{}(lhs_) < FetchNameString{}(rhs_); });
   if (index == _terminals.size()) {
     throw std::runtime_error("Terminal not found: " + name_);
   }
@@ -328,7 +328,7 @@ auto GrammarData::try_find_terminal_index_by_name(std::string const& name_) -> s
 }
 
 auto GrammarData::try_find_rule_index_by_name(std::string const& name_) -> size_t {
-  size_t const index = binary_find_index(_rules.begin(), _rules.end(), name_, [](RuleData const& lhs_, RuleData const& rhs_) { return lhs_._name < rhs_._name; });
+  size_t const index = binary_find_index(_rules.begin(), _rules.end(), name_, [](auto const& lhs_, auto const& rhs_) { return FetchNameString{}(lhs_) < FetchNameString{}(rhs_); });
   if (index == _rules.size()) {
     throw std::runtime_error("Rule not found: " + name_);
   }

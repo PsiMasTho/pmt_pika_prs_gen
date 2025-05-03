@@ -5,12 +5,13 @@
 #include <memory>
 #include <string>
 #include <variant>
-#include <vector>
+#include <deque>
 
 namespace pmt::util::smrt {
 
 class GenericAst {
  public:
+  // -$ Types / Constants $-
   using StringType = std::string;
 
   enum class Tag {
@@ -25,11 +26,24 @@ class GenericAst {
 
   using UniqueHandle = std::unique_ptr<GenericAst, UniqueHandleDeleter>;
 
+ private:
+  using ChildrenType = std::deque<GenericAst*>;
+
+  // -$ Data $-
+  std::variant<StringType, ChildrenType> _data;
+  GenericId::IdType _id;
+
+  // -$ Functions $-
+  // --$ Lifetime $--
+  explicit GenericAst(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized);
+
+ public:
   static void destruct(GenericAst* self_);
   static auto construct(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized) -> UniqueHandle;
 
   static auto clone(GenericAst const& other_) -> UniqueHandle;
 
+  // --$ Other $--s
   static void swap(GenericAst& lhs_, GenericAst& rhs_);
 
   auto get_id() const -> GenericId::IdType;
@@ -64,14 +78,6 @@ class GenericAst {
   void merge();
   // Unpack the child's children into this node
   void unpack(size_t index_);
-
- private:
-  explicit GenericAst(Tag tag_, GenericId::IdType id_ = GenericId::IdUninitialized);
-
-  using ChildrenType = std::vector<GenericAst*>;
-
-  std::variant<StringType, ChildrenType> _data;
-  GenericId::IdType _id;
 };
 
 }  // namespace pmt::util::smrt

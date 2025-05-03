@@ -6,6 +6,7 @@
 #include <cassert>
 #include <random>
 #include <unordered_set>
+#include <optional>
 
 namespace pmt::base::test {
 
