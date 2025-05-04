@@ -23,9 +23,9 @@ class GrammarData {
   static inline std::string const TERMINAL_DIRECT_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "direct_";                // NOLINT
   static inline std::string const TERMINAL_COMMENT_OPEN_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_open_";    // NOLINT
   static inline std::string const TERMINAL_COMMENT_CLOSE_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_close_";  // NOLINT
-  static inline std::string const TERMINAL_NAME_WHITESPACE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "whitespace";           // NOLINT
-  static inline std::string const TERMINAL_NAME_START = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "start";                     // NOLINT
-  static inline std::string const TERMINAL_NAME_EOI = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "eoi";                         // NOLINT
+  static inline std::string const TERMINAL_LABEL_WHITESPACE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "whitespace";           // NOLINT
+  static inline std::string const TERMINAL_LABEL_START = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "start";                     // NOLINT
+  static inline std::string const TERMINAL_LABEL_EOI = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "eoi";                         // NOLINT
 
   static inline bool const MERGE_DEFAULT = false;
   static inline bool const UNPACK_DEFAULT = false;
@@ -34,15 +34,15 @@ class GrammarData {
   static inline bool const CASE_SENSITIVITY_DEFAULT = true;
 
   struct TerminalData {
-    std::string _name;
+    std::string _label;
     std::string _id_name;
-    std::optional<size_t> _accepts;
+    std::optional<size_t> _terminal;
     pmt::util::smrt::GenericAstPath _definition_path;
     bool _case_sensitive : 1;
   };
 
-  struct RuleData {
-    std::string _name;
+  struct NonterminalData {
+    std::string _label;
     std::string _id_name;
     pmt::util::smrt::GenericAstPath _definition_path;
     bool _merge : 1;
@@ -51,31 +51,31 @@ class GrammarData {
   };
 
   using FetchNameString = decltype(pmt::base::Overloaded{
-   [](TerminalData const& data_) { return data_._name; },
-   [](RuleData const& data_) { return data_._name; },
+   [](TerminalData const& data_) { return data_._label; },
+   [](NonterminalData const& data_) { return data_._label; },
    [](std::string const& data_) { return data_; },
   });
 
   using FetchIdNameString = decltype(pmt::base::Overloaded{
    [](TerminalData const& data_) { return data_._id_name; },
-   [](RuleData const& data_) { return data_._id_name; },
+   [](NonterminalData const& data_) { return data_._id_name; },
    [](std::string const& data_) { return data_; },
   });
 
   // -$ Data $-
   // terminals
   std::vector<TerminalData> _terminals;
-  std::vector<size_t> _accepts_reverse;
+  std::vector<size_t> _terminals_reverse;
 
   std::vector<pmt::util::smrt::GenericAstPath> _comment_open_definitions;
   std::vector<pmt::util::smrt::GenericAstPath> _comment_close_definitions;
   pmt::util::smrt::GenericAstPath _whitespace_definition;
 
-  // rules
-  std::vector<RuleData> _rules;
+  // nonterminals
+  std::vector<NonterminalData> _nonterminals;
 
   // grammar properties
-  std::string _start_rule_name;
+  std::string _start_nonterminal_label;
   bool _case_sensitive : 1 = CASE_SENSITIVITY_DEFAULT;
 
   // -$ Functions $-
@@ -91,20 +91,20 @@ class GrammarData {
   static void initial_iteration_handle_grammar_property_whitespace(GrammarData& grammar_data_, pmt::util::smrt::GenericAstPath const& path_);
   static void initial_iteration_handle_grammar_property_comment(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
   static void initial_iteration_handle_terminal_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_, InitialIterationContext& context_);
-  static void initial_iteration_handle_rule_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
+  static void initial_iteration_handle_nonterminal_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
 
   static void add_start_and_eoi_terminals(GrammarData& grammar_data_);
 
-  static void sort_terminals_by_name(GrammarData& grammar_data_);
-  static void sort_rules_by_name(GrammarData& grammar_data_);
+  static void sort_terminals_by_label(GrammarData& grammar_data_);
+  static void sort_nonterminals_by_label(GrammarData& grammar_data_);
 
   static void check_terminal_uniqueness(GrammarData& grammar_data_);
-  static void check_start_rule_name_defined(GrammarData& grammar_data_);
+  static void check_start_nonterminal_label_defined(GrammarData& grammar_data_);
 
   static void final_iteration(GrammarData& grammar_data_, pmt::util::smrt::GenericAst& ast_);
 
-  auto try_find_terminal_index_by_name(std::string const& name_) -> size_t;
-  auto try_find_rule_index_by_name(std::string const& name_) -> size_t;
+  auto try_find_terminal_index_by_label(std::string const& label_) -> size_t;
+  auto try_find_nonterminal_index_by_label(std::string const& label_) -> size_t;
 };
 
 }  // namespace pmt::parserbuilder

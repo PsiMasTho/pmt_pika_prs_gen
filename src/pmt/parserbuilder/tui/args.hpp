@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace pmt::parserbuilder::exe {
+namespace pmt::parserbuilder::tui {
 
 class Args {
  public:
@@ -14,4 +14,4 @@ class Args {
   std::string _output_id_constants_file;
 };
 
-}  // namespace pmt::parserbuilder::exe
+}  // namespace pmt::parserbuilder::tui

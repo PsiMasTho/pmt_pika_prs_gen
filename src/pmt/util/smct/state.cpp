@@ -12,6 +12,10 @@ void State::add_symbol_transition(Symbol symbol_, StateNrType state_nr_) {
   _symbol_transitions.insert(Interval<StateNrType>(symbol_.get_combined()), state_nr_);
 }
 
+void State::add_symbol_transition(Interval<SymbolType> interval_, StateNrType state_nr_) {
+ _symbol_transitions.insert(interval_, state_nr_);
+}
+
 void State::remove_epsilon_transition(StateNrType state_nr_) {
   _epsilon_transitions.erase(Interval<StateNrType>(state_nr_));
 }

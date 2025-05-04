@@ -47,7 +47,7 @@ class LexerTableBuilder {
   void validate_result();
 
   auto lookup_terminal_name_by_index(size_t index_) const -> std::optional<std::string>;
-  auto lookup_terminal_index_by_name(std::string_view name_) const -> std::optional<size_t>;
+  auto lookup_terminal_index_by_label(std::string_view label_) const -> std::optional<size_t>;
   auto lookup_terminal_definition_by_index(size_t index_) const -> std::optional<pmt::util::smrt::GenericAstPath>;
 };
 

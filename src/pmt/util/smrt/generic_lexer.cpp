@@ -34,7 +34,7 @@ namespace {
 }
 
 GenericLexer::GenericLexer(std::string_view input_, LexerTablesBase const& tables_)
- : _accept_count(tables_.get_accept_count())
+ : _accept_count(tables_.get_terminal_count())
  , _accepts_all(Bitset::get_required_chunk_count(_accept_count), ~Bitset::ChunkType(0))
  , _accepts_valid(Bitset::get_required_chunk_count(_accept_count), Bitset::ChunkType(0))
  , _tables(tables_)
@@ -58,17 +58,17 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
       break;
     }
 
-    bitwise_and(_accepts_valid, _tables.get_state_accepts(state_nr_cur), accepts_);
+    bitwise_and(_accepts_valid, _tables.get_state_terminals(state_nr_cur), accepts_);
 
     countl = find_first_set_bit(_accepts_valid);
 
     if (countl < _accept_count) {
-     if (countl == _tables.get_start_accept_index()) {
+     if (countl == _tables.get_start_terminal_index()) {
       _cursor = p;
      }
 
      te = p;
-     id = _tables.get_accept_id(countl);
+     id = _tables.get_terminal_id(countl);
     }
 
     if (p == _input.size() + 1) {
@@ -79,7 +79,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
     state_nr_cur = _tables.get_state_nr_next(state_nr_cur, symbol);
   }
 
-  if (id != GenericId::IdUninitialized && countl < _accept_count && countl != _tables.get_start_accept_index()) {
+  if (id != GenericId::IdUninitialized && countl < _accept_count && countl != _tables.get_start_terminal_index()) {
    LexReturn ret;
     ret._accepted = countl;
     ret._token._token = std::string_view(_input.data() + _cursor, te - _cursor);

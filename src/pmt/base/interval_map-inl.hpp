@@ -44,12 +44,18 @@ auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap const& other_) -> Interval
   }
 
   IntervalMap tmp(other_);
-  _intervals = std::move(tmp._intervals);
-  _values = std::exchange(tmp._values, nullptr);
+  std::swap(_intervals, tmp._intervals);
+  std::swap(_values, tmp._values);
+
+  // swap bitfields manually because std::swap doesnt work
+  size_t swap_tmp = _size;
   _size = tmp._size;
-  tmp._size = 0;
+  tmp._size = swap_tmp;
+
+  swap_tmp = _capacity_idx;
   _capacity_idx = tmp._capacity_idx;
-  tmp._capacity_idx = 0;
+  tmp._capacity_idx = swap_tmp;
+  
   return *this;
 }
 
@@ -60,10 +66,12 @@ auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap&& other_) noexcept -> Inte
   }
 
   _intervals = std::move(other_._intervals);
-  _values = std::exchange(other_._values, nullptr);
+  _values = other_._values;
   _size = other_._size;
-  other_._size = 0;
   _capacity_idx = other_._capacity_idx;
+
+  other_._values = nullptr;
+  other_._size = 0;
   other_._capacity_idx = 0;
   return *this;
 }
@@ -285,7 +293,7 @@ void IntervalMap<KEY_, VALUE_>::reserve(size_t new_capacity_) {
 
   VALUE_* new_vals = static_cast<VALUE_*>(::operator new[](sizeof(VALUE_) * new_capacity_));
 
-  std::uninitialized_copy_n(_values, size(), new_vals);
+  std::uninitialized_move_n(_values, size(), new_vals);
   std::destroy_n(_values, size());
 
   ::operator delete[](_values);

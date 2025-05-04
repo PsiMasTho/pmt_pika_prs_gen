@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746312269">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746374121">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -92,6 +92,10 @@ fix "" string in terminal definition resulting in null byte
 --
 emit ids in a list and actually include those where needed
 --
-use smallest possible integers when emitting lexer or parser tables</rich_text>
+use smallest possible integers when emitting lexer or parser tables, offsets is an easy candidate
+---
+use eytzinger layout and precompute a prev table, use smallest type needed
+--
+shift the upper and lower bounds by + 1 then we can use small types</rich_text>
   </node>
 </cherrytree>

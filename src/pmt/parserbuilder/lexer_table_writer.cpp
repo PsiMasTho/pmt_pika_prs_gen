@@ -1,342 +1,274 @@
 #include "pmt/parserbuilder/lexer_table_writer.hpp"
 
-#include "pmt/asserts.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
 #include "pmt/parserbuilder/table_writer_common.hpp"
 
+#include <chrono>
+#include <iomanip>
 #include <vector>
+#include <regex>
+#include <sstream>
+#include <limits>
 
 namespace pmt::parserbuilder {
  using namespace pmt::util::smrt;
  using namespace pmt::util::smct;
  using namespace pmt::base;
 
- LexerTableWriter::LexerTableWriter(std::ostream& os_header_, std::ostream& os_source_, std::ostream& os_id_constants_, LexerTables const& tables_) 
- : _os_header(os_header_)
- , _os_source(os_source_)
- , _os_id_constants(os_id_constants_)
- , _tables(tables_)
- , _args(nullptr) {
+ namespace {
+  auto make_replace_regex(std::string const& label_) -> std::regex {
+   std::string const pattern = R"(\/\*\s*\$replace\s*)" + label_ + R"(\s*\*\/)";
+   return std::regex(pattern, std::regex::optimize);
+  }
+
+  auto get_smallest_unsigned_type(std::span<size_t const> data_) -> std::string {
+   size_t const max = *std::max_element(data_.begin(), data_.end());
+   if (max <= std::numeric_limits<uint8_t>::max()) {
+     return "uint8_t";
+   } else if (max <= std::numeric_limits<uint16_t>::max()) {
+     return "uint16_t";
+   } else if (max <= std::numeric_limits<uint32_t>::max()) {
+     return "uint32_t";
+   } else {
+     return "uint64_t";
+   }
+  }
  }
 
- void LexerTableWriter::write(Arguments const& args_) {
+ void LexerTableWriter::write(Arguments& args_) {
   _args = &args_;
 
-  write_header();
-  write_source();
-  write_id_constants();
+  _header = std::string(std::istreambuf_iterator<char>(_args->_is_header_skel), std::istreambuf_iterator<char>());
+  _source = std::string(std::istreambuf_iterator<char>(_args->_is_source_skel), std::istreambuf_iterator<char>());
+  _id_constants = std::string(std::istreambuf_iterator<char>(_args->_is_id_constants_skel), std::istreambuf_iterator<char>());
+
+  replace_in_header();
+  replace_in_source();
+  replace_in_id_constants();
+
+  _args->_os_header << _header;
+  _args->_os_source << _source;
+  _args->_os_id_constants << _id_constants;
  }
 
- void LexerTableWriter::write_header() {
-  write_header_include_guard_top();
-  write_header_includes();
-  write_namespace_top(_os_header);
-
-  write_header_class_top();
-  write_header_class_body();
-  write_header_class_bottom();
-  
-  write_namespace_bottom(_os_header);
-  write_header_include_guard_bottom();
- }
-
- void LexerTableWriter::write_source() {
-  write_source_includes();
-  write_namespace_top(_os_source);
-  write_anonymous_namespace_top(_os_source);
-  write_source_transitions();
-  write_source_accepts();
-  write_source_id_names();
-  write_anonymous_namespace_bottom(_os_source);
-  write_source_function_definitions();
-  write_namespace_bottom(_os_source);
- }
-
- void LexerTableWriter::write_id_constants() {
-  // Note: always add a comma at the end because we don't know what comes after
-  for (size_t i = 0; i < _tables._id_names.size(); ++i) {
-    _os_id_constants << _tables._id_names[i] << " = "  << TableWriterCommon::as_hex(i, true, true) << ",\n";
-  }
- }
-
- void LexerTableWriter::write_header_includes() {
-  write_include_statement(_os_header, "pmt/base/bitset.hpp", _args->_pmt_lib_include_quotes);
-  write_include_statement(_os_header, "pmt/util/smrt/lexer_tables_base.hpp", _args->_pmt_lib_include_quotes);
-  _os_header << "\n";
-  write_include_statement(_os_header, "string", IncludeQuotes::Angle);
-  _os_header << "\n";
- }
-
- void LexerTableWriter::write_anonymous_namespace_top(std::ostream& os_){
-  os_ << get_indent() << "namespace {\n";
- }
-
- void LexerTableWriter::write_anonymous_namespace_bottom(std::ostream& os_){
-  os_ << get_indent() << "}\n\n";
- }
-
- void LexerTableWriter::write_namespace_top(std::ostream& os_) {
-  if (!_args->_namespace_name.empty()) {
-    os_ << get_indent() << "namespace " << _args->_namespace_name << " {\n\n";
-  }
- }
-
- void LexerTableWriter::write_namespace_bottom(std::ostream& os_) {
-  if (!_args->_namespace_name.empty()) {
-    os_ << get_indent() << "}\n\n";
-  }
- }
-
-
- void LexerTableWriter::write_header_class_top() {
-  _os_header << "class " << _args->_class_name << " : public pmt::util::smrt::LexerTablesBase {\n";
-  increment_indent();
- }
-
- void LexerTableWriter::write_header_class_body() {
-  _os_header << get_indent() << "public:\n";
-  increment_indent();
-  _os_header << get_indent() << "// -$ Functions $-\n";
-  _os_header << get_indent() << "// --$ Inherited: pmt::util::smrt::LexerTablesBase $--\n";
-  _os_header << get_indent() << "auto get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;\n";
-  _os_header << get_indent() << "auto get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;\n";
-  _os_header << get_indent() << "auto get_accept_count() const -> size_t override;\n";
-  _os_header << get_indent() << "auto get_start_accept_index() const -> size_t override;\n";
-  _os_header << get_indent() << "auto get_eoi_accept_index() const -> size_t override;\n";
-  _os_header << get_indent() << "auto get_accept_string(size_t index_) const -> std::string override;\n";
-  _os_header << get_indent() << "auto get_accept_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType override;\n";
-  _os_header << get_indent() << "auto id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string override;\n";
-  decrement_indent();
- }
-
- void LexerTableWriter::write_header_class_bottom() {
-  _os_header << "};\n";
-  decrement_indent();
+ // ----------------------------
+ void LexerTableWriter::replace_in_header(){
+  replace_timestamp(_header);
+  replace_namespace_open(_header);
+  replace_class_name(_header);
+  replace_namespace_close(_header);
  }
  
- void LexerTableWriter::write_header_include_guard_top() {
-  if (_args->_header_include_guard_define.empty()) {
-    _os_header << "#pragma once\n\n";
-  } else {
-    _os_header << "#ifndef " << _args->_header_include_guard_define << "\n";
-    _os_header << "#define " << _args->_header_include_guard_define << "\n\n";
+ void LexerTableWriter::replace_in_source(){
+  replace_timestamp(_source);
+  replace_namespace_open(_source);
+  replace_class_name(_source);
+  replace_namespace_close(_source);
+  replace_header_include_path(_source);
+  replace_transitions(_source);
+  replace_terminals(_source);
+  replace_terminal_labels(_source);
+  replace_terminal_ids(_source);
+  replace_id_names(_source);
+  replace_terminal_count(_source);
+  replace_start_terminal_index(_source);
+  replace_eoi_terminal_index(_source);
+ }
+ 
+ void LexerTableWriter::replace_in_id_constants(){
+  replace_timestamp(_id_constants);
+  replace_id_constants(_id_constants);
+ }
+ 
+ void LexerTableWriter::replace_namespace_open(std::string& str_) {
+  if (_args->_namespace_name.empty()) {
+    return;
   }
+
+  std::string const namespace_open_replacement = "namespace " + _args->_namespace_name + " {";
+  static std::regex const namespace_open_regex = make_replace_regex("NAMESPACE_OPEN");
+  str_ = std::regex_replace(str_, namespace_open_regex, namespace_open_replacement);
+ }
+ 
+ void LexerTableWriter::replace_class_name(std::string& str_){
+  static std::regex const class_name_regex = make_replace_regex("CLASS_NAME");
+  str_ = std::regex_replace(str_, class_name_regex, _args->_class_name);
  }
 
- void LexerTableWriter::write_header_include_guard_bottom() {
-  if (!_args->_header_include_guard_define.empty()) {
-    _os_header << "#endif // " << _args->_header_include_guard_define << "\n";
+ void LexerTableWriter::replace_namespace_close(std::string& str_){
+  if (_args->_namespace_name.empty()) {
+    return;
   }
+
+  std::string const namespace_close_replacement = "} // namespace " + _args->_namespace_name + "\n";
+  static std::regex const namespace_close_regex = make_replace_regex("NAMESPACE_CLOSE");
+  str_ = std::regex_replace(str_, namespace_close_regex, namespace_close_replacement);
  }
-
-void LexerTableWriter::write_source_includes() {
-  write_include_statement(_os_source, _args->_header_include_path, _args->_generated_header_include_quotes);
-  _os_source << "\n";
-}
-
-void LexerTableWriter::write_source_transitions() {
- std::vector<size_t> transitions_lower_bounds;
- std::vector<size_t> transitions_upper_bounds;
- std::vector<size_t> transitions_values;
- std::vector<size_t> transition_offsets{0};
-
-  _tables.get_state_nrs().for_each_key(
-    [&](pmt::util::smrt::StateNrType state_nr_) {
-      State const& state = *_tables.get_state(state_nr_);
-      IntervalSet<SymbolType> const& symbols = state.get_symbols();
-      transition_offsets.push_back(transition_offsets.back() + symbols.size());
-      symbols.for_each_interval(
-        [&](Interval<SymbolType> interval_) {
-          transitions_lower_bounds.push_back(interval_.get_lower());
-          transitions_upper_bounds.push_back(interval_.get_upper());
-          size_t const value = state.get_symbol_transition(Symbol(interval_.get_lower()));
-          transitions_values.push_back(value);
-        }
-      );
-    }
-  );
-
-  std::string const transitions_lower_bound_label = "pmt::util::smrt::SymbolType const TRANSITIONS_LOWER_BOUNDS[]";
-  TableWriterCommon::write_single_entries<size_t>(_os_source, transitions_lower_bounds, transitions_lower_bound_label);
-  _os_source << "\n";
-
-  std::string const transitions_upper_bound_label = "pmt::util::smrt::SymbolType const TRANSITIONS_UPPER_BOUNDS[]";
-  TableWriterCommon::write_single_entries<size_t>(_os_source, transitions_upper_bounds, transitions_upper_bound_label);
-  _os_source << "\n";
-
-  std::string const transitions_values_label = "pmt::util::smrt::StateNrType const TRANSITIONS_VALUES[]";
-  TableWriterCommon::write_single_entries<size_t>(_os_source, transitions_values, transitions_values_label);
-  _os_source << "\n";
-
-  std::string const transition_offsets_label = "size_t const TRANSITIONS_OFFSETS[]";
-  TableWriterCommon::write_single_entries<size_t>(_os_source, transition_offsets, transition_offsets_label);
-  _os_source << "\n";
-}
-
-void LexerTableWriter::write_source_accepts() {
- size_t const accept_count = _tables.get_accept_count();
- std::vector<Bitset::ChunkType> accepts_flattened;
-
- _tables.get_state_nrs().for_each_key(
-   [&](pmt::util::smrt::StateNrType state_nr_) {
-     State const& state = *_tables.get_state(state_nr_);
-     Bitset accepts = state.get_accepts();
-     if (accepts.size() < accept_count) {
-       accepts.resize(accept_count, false);
+ 
+ void LexerTableWriter::replace_header_include_path(std::string& str_){
+  static std::regex const header_include_path_regex = make_replace_regex("HEADER_INCLUDE_PATH");
+  str_ = std::regex_replace(str_, header_include_path_regex, _args->_header_include_path);
+ }
+ 
+ void LexerTableWriter::replace_transitions(std::string& str_){
+  std::vector<SymbolType> lower_bounds;
+  std::vector<SymbolType> upper_bounds;
+  std::vector<StateNrType> values;
+  std::vector<size_t> offsets{0};
+ 
+   _args->_tables.get_state_nrs().for_each_key(
+     [&](pmt::util::smrt::StateNrType state_nr_) {
+       State const& state = *_args->_tables.get_state(state_nr_);
+       IntervalSet<SymbolType> const& symbols = state.get_symbols();
+       offsets.push_back(offsets.back() + symbols.size());
+       symbols.for_each_interval(
+         [&](Interval<SymbolType> interval_) {
+           // Store lowers and uppers + 1, this will make the EOI symbol
+           // roll over to zero and keep all values small in common cases.
+           // This is undone in the generated lexer class by subtracting where needed.
+           // This is all done so that we can use smaller types for the bounds, making the
+           // tables smaller and the search faster.
+           lower_bounds.push_back(interval_.get_lower() + 1);
+           upper_bounds.push_back(interval_.get_upper() + 1);
+           StateNrType const value = state.get_symbol_transition(Symbol(interval_.get_lower()));
+           values.push_back(value);
+         }
+       );
      }
-     for (Bitset::ChunkType const& chunk : accepts.get_chunks()) {
-       accepts_flattened.push_back(chunk);
-     }
+   );
+
+   {
+    std::stringstream lower_bounds_replacement;
+    TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, lower_bounds);
+    static std::regex const lower_bounds_regex = make_replace_regex("LOWER_BOUNDS");
+    str_ = std::regex_replace(str_, lower_bounds_regex, lower_bounds_replacement.str());
    }
-  );
-
-  std::string const accept_count_label = "size_t const ACCEPT_COUNT";
-  _os_source << get_indent() << accept_count_label << " = " << TableWriterCommon::as_hex(accept_count, true, true) << ";\n\n";
-
-  std::string const start_accept_index_label = "size_t const START_ACCEPT_INDEX";
-  _os_source << get_indent() << start_accept_index_label << " = " << TableWriterCommon::as_hex(_tables.get_start_accept_index(), true, true) << ";\n\n";
-
-  std::string const eoi_accept_index_label = "size_t const EOI_ACCEPT_INDEX";
-  _os_source << get_indent() << eoi_accept_index_label << " = " << TableWriterCommon::as_hex(_tables.get_eoi_accept_index(), true, true) << ";\n\n";
-
-  TableWriterCommon::write_single_entries<Bitset::ChunkType>(_os_source, accepts_flattened, "pmt::base::Bitset::ChunkType const ACCEPTS[]");
-  _os_source << '\n';
-
-  std::vector<std::string> accept_strings;
-  std::vector<GenericId::IdType> accept_ids;
-
-  for (LexerTables::TerminalData const& terminal_data : _tables._terminal_data) {
-   accept_strings.push_back(terminal_data._name);
-   accept_ids.push_back(terminal_data._id);
-  }
-
-  std::string const accept_strings_label = "char const* const ACCEPT_NAMES[]";
-  TableWriterCommon::write_single_entries(_os_source, accept_strings, accept_strings_label);
-  _os_source << '\n';
-
-  std::string const accept_ids_label = "pmt::util::smrt::GenericId::IdType const ACCEPT_IDS[]";
-  TableWriterCommon::write_single_entries<GenericId::IdType>(_os_source, accept_ids, accept_ids_label);
-  _os_source << '\n';
-}
-
-void LexerTableWriter::write_source_id_names() {
- std::string const id_names_label = "char const* const ID_NAMES[]";
- TableWriterCommon::write_single_entries(_os_source, _tables._id_names, id_names_label);
- _os_source << '\n';
-}
-
-void LexerTableWriter::write_source_function_definitions() {
- write_source_get_state_nr_next();
- write_source_get_state_accepts();
- write_source_get_accept_count();
- write_source_get_start_accept_index();
- write_source_get_eoi_accept_index();
- write_source_get_accept_string();
- write_source_get_accept_id();
- write_source_id_to_string();
-}
-
-void LexerTableWriter::write_source_get_state_nr_next() {
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {\n";
- increment_indent();
- _os_source << get_indent() << "return pmt::util::smrt::LexerTablesBase::get_state_nr_next_impl(state_nr_, symbol_, TRANSITIONS_LOWER_BOUNDS, TRANSITIONS_UPPER_BOUNDS, TRANSITIONS_VALUES, TRANSITIONS_OFFSETS);\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_get_state_accepts() {
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {\n";
- increment_indent();
- _os_source << get_indent() << "return pmt::base::Bitset::ChunkSpanConst(ACCEPTS + state_nr_ * ACCEPT_COUNT, ACCEPT_COUNT);\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_get_accept_count(){
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_accept_count() const -> size_t {\n";
- increment_indent();
- _os_source << get_indent() << "return ACCEPT_COUNT;\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_get_start_accept_index(){
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_start_accept_index() const -> size_t {\n";
- increment_indent();
- _os_source << get_indent() << "return START_ACCEPT_INDEX;\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_get_eoi_accept_index(){
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_eoi_accept_index() const -> size_t {\n";
- increment_indent();
- _os_source << get_indent() << "return EOI_ACCEPT_INDEX;\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_get_accept_string() {
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_accept_string(size_t index_) const -> std::string {\n";
- increment_indent();
- _os_source << get_indent() << "return ACCEPT_NAMES[index_];\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_get_accept_id() {
- _os_source << get_indent() << "auto " << _args->_class_name << "::get_accept_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {\n";
- increment_indent();
- _os_source << get_indent() << "return ACCEPT_IDS[index_];\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
-void LexerTableWriter::write_source_id_to_string() {
- _os_source << get_indent() << "auto " << _args->_class_name << "::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {\n";
- increment_indent();
- _os_source << get_indent() << "return ID_NAMES[id_];\n";
- decrement_indent();
- _os_source << get_indent() << "}\n\n";
-}
-
- auto LexerTableWriter::get_indent() -> std::string {
-  return std::string(_indent, ' ');
- }
-
- void LexerTableWriter::increment_indent() {
-  _indent += _args->_indent_increment;
- }
-
- void LexerTableWriter::decrement_indent() {
-  size_t const decr = std::min(_args->_indent_increment, _indent);
-  _indent -= decr;
- }
-
-void LexerTableWriter::write_include_statement(std::ostream& os_, std::string const& include_path_, IncludeQuotes quotes_) {
-  os_ << get_indent() << "#include " << get_open_quote(quotes_) << include_path_ << get_close_quote(quotes_) << "\n";
-}
-
- auto LexerTableWriter::get_open_quote(IncludeQuotes quotes_) -> char {
-  switch (quotes_) {
-    case IncludeQuotes::Angle:
-      return '<';
-    case IncludeQuotes::DoubleQuote:
-      return '"';
-    default:
-    pmt::unreachable();
-  }
+   std::string const lower_bounds_type_replacement = get_smallest_unsigned_type(lower_bounds);
+   static std::regex const lower_bounds_type_regex = make_replace_regex("LOWER_BOUNDS_TYPE");
+   str_ = std::regex_replace(str_, lower_bounds_type_regex, lower_bounds_type_replacement);
+   std::stringstream upper_bounds_replacement;
+   {
+    TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, upper_bounds);
+    static std::regex const upper_bounds_regex = make_replace_regex("UPPER_BOUNDS");
+    str_ = std::regex_replace(str_, upper_bounds_regex, upper_bounds_replacement.str());
+   }
+   std::string const upper_bounds_type_replacement = get_smallest_unsigned_type(upper_bounds);
+   static std::regex const upper_bounds_type_regex = make_replace_regex("UPPER_BOUNDS_TYPE");
+   str_ = std::regex_replace(str_, upper_bounds_type_regex, upper_bounds_type_replacement);
+   std::stringstream values_replacement;
+   {
+    TableWriterCommon::write_single_entries<StateNrType>(values_replacement, values);
+    static std::regex const values_regex = make_replace_regex("VALUES");
+    str_ = std::regex_replace(str_, values_regex, values_replacement.str());
+   }
+   std::string const values_type_replacement = get_smallest_unsigned_type(values);
+   static std::regex const values_type_regex = make_replace_regex("VALUES_TYPE");
+   str_ = std::regex_replace(str_, values_type_regex, values_type_replacement);
+   std::stringstream offsets_replacement;
+   {
+    TableWriterCommon::write_single_entries<size_t>(offsets_replacement, offsets);
+    static std::regex const offsets_regex = make_replace_regex("OFFSETS");
+    str_ = std::regex_replace(str_, offsets_regex, offsets_replacement.str());
+   }
+   std::string const offsets_type_replacement = get_smallest_unsigned_type(offsets);
+   static std::regex const offsets_type_regex = make_replace_regex("OFFSETS_TYPE");
+   str_ = std::regex_replace(str_, offsets_type_regex, offsets_type_replacement);
  }
  
- auto LexerTableWriter::get_close_quote(IncludeQuotes quotes_) -> char {
-  switch (quotes_) {
-    case IncludeQuotes::Angle:
-      return '>';
-    case IncludeQuotes::DoubleQuote:
-      return '"';
-    default:
-    pmt::unreachable();
-  }
+ void LexerTableWriter::replace_terminals(std::string& str_){
+  std::vector<Bitset::ChunkType> terminals_flattened;
+
+  size_t const terminal_count = _args->_tables.get_terminal_count();
+
+  _args->_tables.get_state_nrs().for_each_key(
+    [&](pmt::util::smrt::StateNrType state_nr_) {
+      State const& state = *_args->_tables.get_state(state_nr_);
+      Bitset terminals = state.get_accepts();
+      if (terminals.size() < terminal_count) {
+        terminals.resize(terminal_count, false);
+      }
+      for (Bitset::ChunkType const& chunk : terminals.get_chunks()) {
+        terminals_flattened.push_back(chunk);
+      }
+    }
+   );
+ 
+  std::stringstream terminals_replacement;
+  TableWriterCommon::write_single_entries<Bitset::ChunkType>(terminals_replacement, terminals_flattened);
+  static std::regex const terminals_regex = make_replace_regex("ACCEPTS");
+  str_ = std::regex_replace(str_, terminals_regex, terminals_replacement.str());
  }
+ 
+ void LexerTableWriter::replace_terminal_labels(std::string& str_){
+  std::vector<std::string> terminal_labels;
+  terminal_labels.reserve(_args->_tables._terminal_data.size());
+  for (LexerTables::TerminalData const& terminal_data : _args->_tables._terminal_data) {
+   terminal_labels.push_back(terminal_data._label);
+  }
+
+  std::stringstream terminal_labels_replacement;
+  TableWriterCommon::write_single_entries(terminal_labels_replacement, terminal_labels);
+  static std::regex const terminal_labels_regex = make_replace_regex("TERMINAL_LABELS");
+  str_ = std::regex_replace(str_, terminal_labels_regex, terminal_labels_replacement.str());
+ }
+ 
+ void LexerTableWriter::replace_terminal_ids(std::string& str_){
+  std::vector<GenericId::IdType> terminal_ids;
+  terminal_ids.reserve(_args->_tables._terminal_data.size());
+  for (LexerTables::TerminalData const& terminal_data : _args->_tables._terminal_data) {
+   terminal_ids.push_back(terminal_data._id);
+  }
+
+  std::stringstream terminal_ids_replacement;
+  TableWriterCommon::write_single_entries<GenericId::IdType>(terminal_ids_replacement, terminal_ids);
+  static std::regex const terminal_ids_regex = make_replace_regex("TERMINAL_IDS");
+  str_ = std::regex_replace(str_, terminal_ids_regex, terminal_ids_replacement.str());
+ }
+ 
+ void LexerTableWriter::replace_id_names(std::string& str_){
+  std::stringstream id_names_replacement;
+  TableWriterCommon::write_single_entries(id_names_replacement, _args->_tables._id_names);
+  static std::regex const id_names_regex = make_replace_regex("ID_NAMES");
+  str_ = std::regex_replace(str_, id_names_regex, id_names_replacement.str());
+ }
+ 
+ void LexerTableWriter::replace_terminal_count(std::string& str_){
+  std::string terminal_count_replacement = TableWriterCommon::as_hex(_args->_tables.get_terminal_count(), true);
+  static std::regex const terminal_count_regex = make_replace_regex("TERMINAL_COUNT");
+  str_ = std::regex_replace(str_, terminal_count_regex, terminal_count_replacement);
+ }
+ 
+ void LexerTableWriter::replace_start_terminal_index(std::string& str_){
+  std::string start_terminal_index_replacement = TableWriterCommon::as_hex(_args->_tables.get_start_terminal_index(), true);
+  static std::regex const start_terminal_index_regex = make_replace_regex("START_TERMINAL_INDEX");
+  str_ = std::regex_replace(str_, start_terminal_index_regex, start_terminal_index_replacement);
+ }
+ 
+ void LexerTableWriter::replace_eoi_terminal_index(std::string& str_){
+  std::string eoi_terminal_index_replacement = TableWriterCommon::as_hex(_args->_tables.get_eoi_terminal_index(), true);
+  static std::regex const eoi_terminal_index_regex = make_replace_regex("EOI_TERMINAL_INDEX");
+  str_ = std::regex_replace(str_, eoi_terminal_index_regex, eoi_terminal_index_replacement);
+ }
+
+void LexerTableWriter::replace_id_constants(std::string& str_) {
+ std::string id_constants_replacement;
+ for (size_t i = 0; i < _args->_tables._id_names.size(); ++i) {
+  id_constants_replacement += _args->_tables._id_names[i] + " = "  + TableWriterCommon::as_hex(i, true) + ",\n";
+ }
+
+ static std::regex const id_constants_regex = make_replace_regex("ID_CONSTANTS");
+ str_ = std::regex_replace(str_, id_constants_regex, id_constants_replacement);
+}
+
+void LexerTableWriter::replace_timestamp(std::string& str_) {
+  auto const now = std::chrono::system_clock::now();
+  auto const time = std::chrono::system_clock::to_time_t(now);
+  auto const local_time = *std::localtime(&time);
+
+  std::stringstream timestamp_replacement;
+  timestamp_replacement << "/* Generated on: " << std::put_time(&local_time, "%Y-%m-%d %H:%M:%S") << " */";
+  static std::regex const timestamp_regex = make_replace_regex("TIMESTAMP");
+  str_ = std::regex_replace(str_, timestamp_regex, timestamp_replacement.str());
+}
 
 }

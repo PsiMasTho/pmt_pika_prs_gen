@@ -8,4 +8,4 @@ target_link_libraries(${PROJECT_NAME}_parserbuilder ${PROJECT_NAME}_base)
 target_include_directories(${PROJECT_NAME}_parserbuilder PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
 
-add_subdirectory(exe)
+add_subdirectory(tui)

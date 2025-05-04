@@ -27,9 +27,9 @@ auto is_chunk_last(size_t idx_, size_t idx_chunk_, GrmNumber::RepetitionRangeTyp
 
 }  // namespace
 
-auto TerminalStateMachinePartBuilder::build(TerminalNameLookupFn fn_lookup_terminal_name_, TerminalReverseNameLookupFn fn_rev_lookup_terminal_name_, TerminalDefinitionLookupFn fn_lookup_terminal_definition_, pmt::util::smrt::GenericAst const& ast_root_, size_t terminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> StateMachinePart {
-  _fn_lookup_terminal_name = std::move(fn_lookup_terminal_name_);
-  _fn_rev_lookup_terminal_name = std::move(fn_rev_lookup_terminal_name_);
+auto TerminalStateMachinePartBuilder::build(TerminalLabelLookupFn fn_lookup_terminal_name_, TerminalReverseLabelLookupFn fn_rev_lookup_terminal_name_, TerminalDefinitionLookupFn fn_lookup_terminal_definition_, pmt::util::smrt::GenericAst const& ast_root_, size_t terminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> StateMachinePart {
+  _fn_lookup_terminal_label = std::move(fn_lookup_terminal_name_);
+  _fn_rev_lookup_terminal_label = std::move(fn_rev_lookup_terminal_name_);
   _fn_lookup_terminal_definition = std::move(fn_lookup_terminal_definition_);
   _ast_root = &ast_root_;
   _terminal_idx_stack.clear();
@@ -365,7 +365,7 @@ void TerminalStateMachinePartBuilder::process_terminal_identifier_stage_0(Frame&
   GenericAst const& expr_cur = *frame_._expr_cur_path.resolve(*_ast_root);
 
   std::string const& terminal_name = expr_cur.get_string();
-  frame_._terminal_idx_cur = _fn_rev_lookup_terminal_name(terminal_name).value_or(std::numeric_limits<size_t>::max());
+  frame_._terminal_idx_cur = _fn_rev_lookup_terminal_label(terminal_name).value_or(std::numeric_limits<size_t>::max());
 
   if (frame_._terminal_idx_cur == std::numeric_limits<size_t>::max()) {
     throw std::runtime_error("Terminal '" + terminal_name + "' not defined");
@@ -376,7 +376,7 @@ void TerminalStateMachinePartBuilder::process_terminal_identifier_stage_0(Frame&
     std::string msg = "Terminal '" + terminal_name + "' is recursive: ";
     std::string delim;
     for (size_t const stack_terminal_idx : _terminal_idx_stack) {
-      msg += std::exchange(delim, " -> ") + _fn_lookup_terminal_name(stack_terminal_idx).value_or("<unknown>");
+      msg += std::exchange(delim, " -> ") + _fn_lookup_terminal_label(stack_terminal_idx).value_or("<unknown>");
     }
     throw std::runtime_error(msg);
   }

@@ -10,6 +10,12 @@
 namespace pmt::base {
 
 template <std::integral KEY_>
+IntervalSet<KEY_>::IntervalSet(Interval<KEY_> interval_)
+: IntervalSet() {
+  insert(interval_);
+}
+
+template <std::integral KEY_>
 IntervalSet<KEY_>::IntervalSet(IntervalSet const& other_)
  : _intervals(nullptr)
  , _size(other_._size)

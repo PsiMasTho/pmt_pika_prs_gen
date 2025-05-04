@@ -1,6 +1,6 @@
 #include "pmt/parserbuilder/grammar_data.hpp"
 
-#include "pmt/parserbuilder/exe/args.hpp"
+#include "pmt/parserbuilder/tui/args.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
@@ -14,7 +14,7 @@
 #include <iostream>
 
 using namespace pmt::parserbuilder;
-using namespace pmt::parserbuilder::exe;
+using namespace pmt::parserbuilder::tui;
 using namespace pmt::util::smrt;
 using namespace pmt::util::smct;
 
@@ -31,7 +31,7 @@ void write_dot(LexerTables const& lexer_tables_) {
   }
 
   std::ofstream file(DOT_FILE_PREFIX + std::to_string(dot_file_count++) + ".dot");
-  GraphWriter::write_dot(file, lexer_tables_, [&lexer_tables_](size_t accept_idx_) { return lexer_tables_.get_accept_string(accept_idx_); });
+  GraphWriter::write_dot(file, lexer_tables_, [&lexer_tables_](size_t accept_idx_) { return lexer_tables_.get_terminal_label(accept_idx_); });
 }
 
 }  // namespace
@@ -57,14 +57,25 @@ auto main(int argc, char const* const* argv) -> int try {
   std::ofstream source_file(args._output_source_file);
   std::ofstream id_constants_file(args._output_id_constants_file);
 
-  LexerTableWriter table_writer(header_file, source_file, id_constants_file, lexer_tables);
+  std::ifstream header_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.hpp");
+  std::ifstream source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.cpp");
+  std::ifstream id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_id_constants-skel.hpp");
 
-  LexerTableWriter::Arguments lexer_table_writer_args;
-  lexer_table_writer_args._namespace_name = "pmt::parserbuilder";
-  lexer_table_writer_args._class_name = "LexerClass";
-  lexer_table_writer_args._header_include_path = std::filesystem::path(args._output_header_file).filename().string();
-  lexer_table_writer_args._indent_increment = 1;
-  table_writer.write(lexer_table_writer_args);
+  LexerTableWriter::Arguments table_writer_args{
+   ._os_header = header_file,
+   ._os_source = source_file,
+   ._os_id_constants = id_constants_file,
+   ._is_header_skel = header_skel_file,
+   ._is_source_skel = source_skel_file,
+   ._is_id_constants_skel = id_constants_skel_file,
+   ._tables = lexer_tables,
+   ._namespace_name = "pmt::parserbuilder",
+   ._class_name = "LexerClass",
+   ._header_include_path = std::filesystem::path(args._output_header_file).filename().string()
+  };
+
+  LexerTableWriter table_writer;
+  table_writer.write(table_writer_args);
   std::cout << "Done writing lexer tables\n";
 
 } catch (std::exception const& e) {

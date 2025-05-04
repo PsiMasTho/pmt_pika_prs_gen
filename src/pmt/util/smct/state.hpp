@@ -23,6 +23,7 @@ class State {
   // --$ Other $--
   void add_epsilon_transition(pmt::util::smrt::StateNrType state_nr_);
   void add_symbol_transition(Symbol symbol_, pmt::util::smrt::StateNrType state_nr_);
+  void add_symbol_transition(pmt::base::Interval<pmt::util::smrt::SymbolType> interval_, pmt::util::smrt::StateNrType state_nr_);
 
   void remove_epsilon_transition(pmt::util::smrt::StateNrType state_nr_);
   void remove_symbol_transition(Symbol symbol_);

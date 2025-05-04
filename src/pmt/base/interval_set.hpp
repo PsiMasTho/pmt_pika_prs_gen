@@ -28,6 +28,7 @@ class IntervalSet : public Hashable<IntervalSet<KEY_>> {
  public:
   // -$ Functions $-
   // --$ Lifetime $--
+  explicit IntervalSet(Interval<KEY_> interval_);
   IntervalSet() = default;
   IntervalSet(IntervalSet const&);
   IntervalSet(IntervalSet&&) noexcept = default;

@@ -198,6 +198,8 @@ void IntervalMapTest::test_erase() {
 
 void IntervalMapTest::test_copy() {
   static size_t const TEST_CASE_COUNT = 50;
+  static size_t const VECTOR_SIZE = 8;
+  std::vector<IntervalMap<size_t, std::string>> interval_maps(VECTOR_SIZE);
 
   for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
     static size_t const range = 200;
@@ -208,9 +210,11 @@ void IntervalMapTest::test_copy() {
 
     TestMapPair<size_t> test_set_pair = make_rng_filled_maps<size_t>(range, density, max_step, value_max, prefill_spacing);
 
-    IntervalMap<size_t, std::string> interval_map_copy = test_set_pair._interval_map;
+    // overwriting on purpose for the test
+    size_t const vector_index = i % VECTOR_SIZE;
+    interval_maps[vector_index] = test_set_pair._interval_map;
 
-    assert(interval_map_copy == test_set_pair._interval_map);
+    assert(interval_maps[vector_index] == test_set_pair._interval_map);
   }
 }
 

@@ -60,9 +60,17 @@ auto Bitset::operator=(Bitset const& other_) -> Bitset& {
   }
 
   Bitset tmp(other_);
-  _data = std::move(tmp._data);
+  std::swap(_data, tmp._data);
+
+  // swap bitfields manually because std::swap doesnt work
+  size_t swap_tmp = _size;
   _size = tmp._size;
+  tmp._size = swap_tmp;
+
+  swap_tmp = _capacity_idx;
   _capacity_idx = tmp._capacity_idx;
+  tmp._capacity_idx = swap_tmp;
+  
   return *this;
 }
 

@@ -1,9 +1,9 @@
-#include "pmt/parserbuilder/exe/args.hpp"
+#include "pmt/parserbuilder/tui/args.hpp"
 
 #include <stdexcept>
 #include <set>
 
-namespace pmt::parserbuilder::exe {
+namespace pmt::parserbuilder::tui {
 
 Args::Args(int argc_, char const* const* argv_) {
   for (int i = 1; i < argc_; ++i) {

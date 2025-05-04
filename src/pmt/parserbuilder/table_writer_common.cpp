@@ -4,8 +4,7 @@
 
 namespace pmt::parserbuilder {
 
- void TableWriterCommon::write_single_entries(std::ostream& os_, std::span<std::string const> const& entries_, std::string const& label_) {
-  os_ << label_ << " = {\n";
+ void TableWriterCommon::write_single_entries(std::ostream& os_, std::span<std::string const> const& entries_) {
   std::string delim;
   for (size_t i = 0; i < entries_.size(); ++i) {
     if (i == 0) {
@@ -15,7 +14,6 @@ namespace pmt::parserbuilder {
     }
     os_ << '"' << entries_[i] << '"';
   }
-  os_ << "\n};\n";
 }
 
 auto TableWriterCommon::calculate_numeric_entries_per_line(size_t max_width_) -> size_t {

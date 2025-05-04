@@ -17,10 +17,10 @@ auto GrammarData::construct_from_ast(GenericAst& ast_) -> GrammarData {
 
   initial_iteration(ret, ast_);
   add_start_and_eoi_terminals(ret);
-  sort_terminals_by_name(ret);
-  sort_rules_by_name(ret);
+  sort_terminals_by_label(ret);
+  sort_nonterminals_by_label(ret);
   check_terminal_uniqueness(ret);
-  check_start_rule_name_defined(ret);
+  check_start_nonterminal_label_defined(ret);
   final_iteration(ret, ast_);
 
   return ret;
@@ -38,8 +38,8 @@ void GrammarData::initial_iteration(GrammarData& grammar_data_, pmt::util::smrt:
       case GrmAst::NtTerminalProduction:
         initial_iteration_handle_terminal_production(grammar_data_, ast_, GenericAstPath(i), context_);
         break;
-      case GrmAst::NtRuleProduction:
-        initial_iteration_handle_rule_production(grammar_data_, ast_, GenericAstPath(i));
+      case GrmAst::NtNonterminalProduction:
+        initial_iteration_handle_nonterminal_production(grammar_data_, ast_, GenericAstPath(i));
         break;
     }
   }
@@ -90,7 +90,7 @@ void GrammarData::initial_iteration_handle_grammar_property_case_sensitive(Gramm
 void GrammarData::initial_iteration_handle_grammar_property_start(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) {
   GenericAst const& value = *path_.resolve(ast_);
   assert(value.get_id() == GrmAst::TkRuleIdentifier);
-  grammar_data_._start_rule_name = value.get_string();
+  grammar_data_._start_nonterminal_label = value.get_string();
 }
 
 void GrammarData::initial_iteration_handle_grammar_property_whitespace(GrammarData& grammar_data_, pmt::util::smrt::GenericAstPath const& path_) {
@@ -107,7 +107,7 @@ void GrammarData::initial_iteration_handle_grammar_property_comment(GrammarData&
 
 void GrammarData::initial_iteration_handle_terminal_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_, InitialIterationContext& context_) {
   GenericAst const& terminal_production = *path_.resolve(ast_);
-  std::string terminal_name = terminal_production.get_child_at(0)->get_string();
+  std::string terminal_label = terminal_production.get_child_at(0)->get_string();
 
   std::string terminal_id_name = GenericId::id_to_string(GenericId::IdDefault);
   std::optional<bool> terminal_case_sensitive;
@@ -134,7 +134,7 @@ void GrammarData::initial_iteration_handle_terminal_production(GrammarData& gram
   }
 
   grammar_data_._terminals.emplace_back();
-  grammar_data_._terminals.back()._name = std::move(terminal_name);
+  grammar_data_._terminals.back()._label = std::move(terminal_label);
   grammar_data_._terminals.back()._id_name = std::move(terminal_id_name);
 
   context_._terminal_case_sensitive_present.push_back(terminal_case_sensitive.has_value());
@@ -145,92 +145,92 @@ void GrammarData::initial_iteration_handle_terminal_production(GrammarData& gram
   grammar_data_._terminals.back()._definition_path = std::move(terminal_definition_position);
 }
 
-void GrammarData::initial_iteration_handle_rule_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) {
-  GenericAst const& rule_production = *path_.resolve(ast_);
-  std::string rule_name = rule_production.get_child_at(0)->get_string();
+void GrammarData::initial_iteration_handle_nonterminal_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) {
+  GenericAst const& nonterminal_production = *path_.resolve(ast_);
+  std::string nonterminal_label = nonterminal_production.get_child_at(0)->get_string();
 
-  std::string rule_id_name = GenericId::id_to_string(GenericId::IdDefault);
-  bool rule_merge = MERGE_DEFAULT;
-  bool rule_unpack = UNPACK_DEFAULT;
-  bool rule_hide = HIDE_DEFAULT;
-  GenericAstPath rule_definition_position = path_.clone_push(0);
+  std::string nonterminal_id_name = GenericId::id_to_string(GenericId::IdDefault);
+  bool nonterminal_merge = MERGE_DEFAULT;
+  bool nonterminal_unpack = UNPACK_DEFAULT;
+  bool nonterminal_hide = HIDE_DEFAULT;
+  GenericAstPath nonterminal_definition_position = path_.clone_push(0);
 
-  for (size_t i = 1; i < rule_production.get_children_size(); ++i) {
-    GenericAst const& child = *rule_production.get_child_at(i);
+  for (size_t i = 1; i < nonterminal_production.get_children_size(); ++i) {
+    GenericAst const& child = *nonterminal_production.get_child_at(i);
     switch (child.get_id()) {
-      case GrmAst::NtRuleParameter: {
+      case GrmAst::NtNonterminalParameter: {
         switch (child.get_child_at(0)->get_id()) {
           case GrmAst::TkKwParameterId:
-            rule_id_name = child.get_child_at(1)->get_string();
+            nonterminal_id_name = child.get_child_at(1)->get_string();
             break;
           case GrmAst::TkKwParameterMerge:
-            rule_merge = child.get_child_at(1)->get_string() == "true";
+            nonterminal_merge = child.get_child_at(1)->get_string() == "true";
             break;
           case GrmAst::TkKwParameterUnpack:
-            rule_unpack = child.get_child_at(1)->get_string() == "true";
+            nonterminal_unpack = child.get_child_at(1)->get_string() == "true";
             break;
           case GrmAst::TkKwParameterHide:
-            rule_hide = child.get_child_at(1)->get_string() == "true";
+            nonterminal_hide = child.get_child_at(1)->get_string() == "true";
             break;
         }
       } break;
-      case GrmAst::NtRuleDefinition:
-        rule_definition_position.inplace_pop();
-        rule_definition_position.inplace_push(i);
+      case GrmAst::NtNonterminalDefinition:
+        nonterminal_definition_position.inplace_pop();
+        nonterminal_definition_position.inplace_push(i);
         break;
     }
   }
 
-  grammar_data_._rules.emplace_back();
-  grammar_data_._rules.back()._name = std::move(rule_name);
-  grammar_data_._rules.back()._id_name = std::move(rule_id_name);
-  grammar_data_._rules.back()._merge = rule_merge;
-  grammar_data_._rules.back()._unpack = rule_unpack;
-  grammar_data_._rules.back()._hide = rule_hide;
-  grammar_data_._rules.back()._definition_path = std::move(rule_definition_position);
+  grammar_data_._nonterminals.emplace_back();
+  grammar_data_._nonterminals.back()._label = std::move(nonterminal_label);
+  grammar_data_._nonterminals.back()._id_name = std::move(nonterminal_id_name);
+  grammar_data_._nonterminals.back()._merge = nonterminal_merge;
+  grammar_data_._nonterminals.back()._unpack = nonterminal_unpack;
+  grammar_data_._nonterminals.back()._hide = nonterminal_hide;
+  grammar_data_._nonterminals.back()._definition_path = std::move(nonterminal_definition_position);
 }
 
 void GrammarData::add_start_and_eoi_terminals(GrammarData& grammar_data_) {
   size_t const index_start = grammar_data_._terminals.size();
   grammar_data_._terminals.emplace_back();
-  grammar_data_._terminals.back()._name = TERMINAL_NAME_START;
+  grammar_data_._terminals.back()._label = TERMINAL_LABEL_START;
   grammar_data_._terminals.back()._id_name = GenericId::id_to_string(GenericId::IdStart);
-  grammar_data_._terminals.back()._accepts = grammar_data_._accepts_reverse.size();
-  grammar_data_._accepts_reverse.push_back(index_start);
+  grammar_data_._terminals.back()._terminal = grammar_data_._terminals_reverse.size();
+  grammar_data_._terminals_reverse.push_back(index_start);
 
   size_t const index_eoi = grammar_data_._terminals.size();
   grammar_data_._terminals.emplace_back();
-  grammar_data_._terminals.back()._name = TERMINAL_NAME_EOI;
+  grammar_data_._terminals.back()._label = TERMINAL_LABEL_EOI;
   grammar_data_._terminals.back()._id_name = GenericId::id_to_string(GenericId::IdEoi);
-  grammar_data_._terminals.back()._accepts = grammar_data_._accepts_reverse.size();
-  grammar_data_._accepts_reverse.push_back(index_eoi);
+  grammar_data_._terminals.back()._terminal = grammar_data_._terminals_reverse.size();
+  grammar_data_._terminals_reverse.push_back(index_eoi);
 }
 
-void GrammarData::sort_terminals_by_name(GrammarData& grammar_data_) {
+void GrammarData::sort_terminals_by_label(GrammarData& grammar_data_) {
   std::vector<size_t> ordering;
   std::generate_n(std::back_inserter(ordering), grammar_data_._terminals.size(), [i = 0]() mutable { return i++; });
-  std::ranges::sort(ordering, [&grammar_data_](size_t lhs_, size_t rhs_) { return grammar_data_._terminals[lhs_]._name < grammar_data_._terminals[rhs_]._name; });
+  std::ranges::sort(ordering, [&grammar_data_](size_t lhs_, size_t rhs_) { return grammar_data_._terminals[lhs_]._label < grammar_data_._terminals[rhs_]._label; });
 
   apply_permutation(grammar_data_._terminals.begin(), grammar_data_._terminals.end(), ordering.begin());
 
   std::vector<size_t> const ordering_inverse = inverse_permutation(ordering.begin(), ordering.end());
 
-  std::transform(grammar_data_._accepts_reverse.begin(), grammar_data_._accepts_reverse.end(), grammar_data_._accepts_reverse.begin(), [&ordering_inverse](size_t i_) { return ordering_inverse[i_]; });
+  std::transform(grammar_data_._terminals_reverse.begin(), grammar_data_._terminals_reverse.end(), grammar_data_._terminals_reverse.begin(), [&ordering_inverse](size_t i_) { return ordering_inverse[i_]; });
 }
 
-void GrammarData::sort_rules_by_name(GrammarData& grammar_data_) {
-  std::ranges::sort(grammar_data_._rules, [](RuleData const& lhs_, RuleData const& rhs_) { return lhs_._name < rhs_._name; });
+void GrammarData::sort_nonterminals_by_label(GrammarData& grammar_data_) {
+  std::ranges::sort(grammar_data_._nonterminals, [](NonterminalData const& lhs_, NonterminalData const& rhs_) { return lhs_._label < rhs_._label; });
 }
 
 void GrammarData::check_terminal_uniqueness(GrammarData& grammar_data_) {
-  assert(std::ranges::is_sorted(grammar_data_._terminals, [](TerminalData const& lhs_, TerminalData const& rhs_) { return lhs_._name < rhs_._name; }));
-  if (auto const itr = std::adjacent_find(grammar_data_._terminals.begin(), grammar_data_._terminals.end(), [](TerminalData const& lhs_, TerminalData const& rhs_) { return lhs_._name == rhs_._name; }); itr != grammar_data_._terminals.end()) {
-    throw std::runtime_error("Terminal defined more than once: " + itr->_name);
+  assert(std::ranges::is_sorted(grammar_data_._terminals, [](TerminalData const& lhs_, TerminalData const& rhs_) { return lhs_._label < rhs_._label; }));
+  if (auto const itr = std::adjacent_find(grammar_data_._terminals.begin(), grammar_data_._terminals.end(), [](TerminalData const& lhs_, TerminalData const& rhs_) { return lhs_._label == rhs_._label; }); itr != grammar_data_._terminals.end()) {
+    throw std::runtime_error("Terminal defined more than once: " + itr->_label);
   }
 }
 
-void GrammarData::check_start_rule_name_defined(GrammarData& grammar_data_) {
-  if (grammar_data_._start_rule_name.empty()) {
+void GrammarData::check_start_nonterminal_label_defined(GrammarData& grammar_data_) {
+  if (grammar_data_._start_nonterminal_label.empty()) {
     throw std::runtime_error("Start symbol not defined");
   }
 }
@@ -238,7 +238,7 @@ void GrammarData::check_start_rule_name_defined(GrammarData& grammar_data_) {
 void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::GenericAst& ast_) {
   std::vector<GenericAstPath> pending;
   std::unordered_set<GenericAstPath> visited;
-  std::vector<std::string> terminals_direct_names;
+  std::vector<std::string> terminals_direct_labels;
   std::vector<GenericAstPath> terminals_direct_definitions;
 
   auto const push_and_visit = [&pending, &visited](GenericAstPath const& path_) {
@@ -250,7 +250,7 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
     visited.insert(path_);
   };
 
-  push_and_visit(grammar_data_._rules[grammar_data_.try_find_rule_index_by_name(grammar_data_._start_rule_name)]._definition_path);
+  push_and_visit(grammar_data_._nonterminals[grammar_data_.try_find_nonterminal_index_by_label(grammar_data_._start_nonterminal_label)]._definition_path);
 
   while (!pending.empty()) {
     GenericAstPath const path_cur = pending.back();
@@ -258,20 +258,20 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
 
     switch (path_cur.resolve(ast_)->get_id()) {
       case GrmAst::TkTerminalIdentifier: {
-        std::string const& name = path_cur.resolve(ast_)->get_string();
-        size_t const index = grammar_data_.try_find_terminal_index_by_name(name);
-        grammar_data_._terminals[index]._accepts = grammar_data_._accepts_reverse.size();
-        grammar_data_._accepts_reverse.push_back(index);
+        std::string const& label = path_cur.resolve(ast_)->get_string();
+        size_t const index = grammar_data_.try_find_terminal_index_by_label(label);
+        grammar_data_._terminals[index]._terminal = grammar_data_._terminals_reverse.size();
+        grammar_data_._terminals_reverse.push_back(index);
       } break;
       case GrmAst::TkRuleIdentifier:
-        push_and_visit(grammar_data_._rules[grammar_data_.try_find_rule_index_by_name(path_cur.resolve(ast_)->get_string())]._definition_path);
+        push_and_visit(grammar_data_._nonterminals[grammar_data_.try_find_nonterminal_index_by_label(path_cur.resolve(ast_)->get_string())]._definition_path);
         break;
       case GrmAst::NtTerminalDefinition:
-      case GrmAst::NtRuleDefinition:
+      case GrmAst::NtNonterminalDefinition:
       case GrmAst::NtTerminalChoices:
       case GrmAst::NtTerminalSequence:
-      case GrmAst::NtRuleChoices:
-      case GrmAst::NtRuleSequence:
+      case GrmAst::NtNonterminalChoices:
+      case GrmAst::NtNonterminalSequence:
         for (size_t i = 0; i < path_cur.resolve(ast_)->get_children_size(); ++i) {
           push_and_visit(path_cur.clone_push(i));
         }
@@ -281,13 +281,13 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
         break;
       case GrmAst::TkStringLiteral:
       case GrmAst::TkIntegerLiteral: {
-        std::string const terminal_direct_name = TERMINAL_DIRECT_PREFIX + std::to_string(terminals_direct_names.size());
-        terminals_direct_names.push_back(terminal_direct_name);
+        std::string const terminal_direct_label = TERMINAL_DIRECT_PREFIX + std::to_string(terminals_direct_labels.size());
+        terminals_direct_labels.push_back(terminal_direct_label);
 
         GenericAst::UniqueHandle terminal_direct_production = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtTerminalProduction);
-        GenericAst::UniqueHandle terminal_direct_production_name = GenericAst::construct(GenericAst::Tag::String, GrmAst::TkTerminalIdentifier);
-        terminal_direct_production_name->set_string(terminal_direct_name);
-        terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_name));
+        GenericAst::UniqueHandle terminal_direct_production_label = GenericAst::construct(GenericAst::Tag::String, GrmAst::TkTerminalIdentifier);
+        terminal_direct_production_label->set_string(terminal_direct_label);
+        terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_label));
         GenericAst::UniqueHandle terminal_direct_production_definition = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtTerminalDefinition);
         terminal_direct_production_definition->give_child_at_back(GenericAst::clone(*path_cur.resolve(ast_)));
         terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_definition));
@@ -295,42 +295,42 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
 
         GenericAstPath const path_direct_definition({ast_.get_children_size() - 1, 1});
         terminals_direct_definitions.push_back(path_direct_definition);
-        path_cur.resolve(ast_)->set_string(terminal_direct_name);
+        path_cur.resolve(ast_)->set_string(terminal_direct_label);
         path_cur.resolve(ast_)->set_id(GrmAst::TkTerminalIdentifier);
       } break;
     }
   }
 
-  while (!terminals_direct_names.empty()) {
+  while (!terminals_direct_labels.empty()) {
     size_t const index_direct = grammar_data_._terminals.size();
 
     grammar_data_._terminals.emplace_back();
-    grammar_data_._terminals.back()._name = std::move(terminals_direct_names.back());
+    grammar_data_._terminals.back()._label = std::move(terminals_direct_labels.back());
     grammar_data_._terminals.back()._id_name = GenericId::id_to_string(GenericId::IdDefault);
     grammar_data_._terminals.back()._case_sensitive = grammar_data_._case_sensitive;
     grammar_data_._terminals.back()._definition_path = std::move(terminals_direct_definitions.back());
-    grammar_data_._terminals.back()._accepts = grammar_data_._accepts_reverse.size();
-    grammar_data_._accepts_reverse.push_back(index_direct);
+    grammar_data_._terminals.back()._terminal = grammar_data_._terminals_reverse.size();
+    grammar_data_._terminals_reverse.push_back(index_direct);
 
-    terminals_direct_names.pop_back();
+    terminals_direct_labels.pop_back();
     terminals_direct_definitions.pop_back();
   }
 
-  sort_terminals_by_name(grammar_data_);
+  sort_terminals_by_label(grammar_data_);
 }
 
-auto GrammarData::try_find_terminal_index_by_name(std::string const& name_) -> size_t {
-  size_t const index = binary_find_index(_terminals.begin(), _terminals.end(), name_, [](auto const& lhs_, auto const& rhs_) { return FetchNameString{}(lhs_) < FetchNameString{}(rhs_); });
+auto GrammarData::try_find_terminal_index_by_label(std::string const& label_) -> size_t {
+  size_t const index = binary_find_index(_terminals.begin(), _terminals.end(), label_, [](auto const& lhs_, auto const& rhs_) { return FetchNameString{}(lhs_) < FetchNameString{}(rhs_); });
   if (index == _terminals.size()) {
-    throw std::runtime_error("Terminal not found: " + name_);
+    throw std::runtime_error("Terminal not found: " + label_);
   }
   return index;
 }
 
-auto GrammarData::try_find_rule_index_by_name(std::string const& name_) -> size_t {
-  size_t const index = binary_find_index(_rules.begin(), _rules.end(), name_, [](auto const& lhs_, auto const& rhs_) { return FetchNameString{}(lhs_) < FetchNameString{}(rhs_); });
-  if (index == _rules.size()) {
-    throw std::runtime_error("Rule not found: " + name_);
+auto GrammarData::try_find_nonterminal_index_by_label(std::string const& label_) -> size_t {
+  size_t const index = binary_find_index(_nonterminals.begin(), _nonterminals.end(), label_, [](auto const& lhs_, auto const& rhs_) { return FetchNameString{}(lhs_) < FetchNameString{}(rhs_); });
+  if (index == _nonterminals.size()) {
+    throw std::runtime_error("Rule not found: " + label_);
   }
   return index;
 }

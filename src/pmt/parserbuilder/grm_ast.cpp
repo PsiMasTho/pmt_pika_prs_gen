@@ -85,20 +85,20 @@ auto GrmAst::id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string
       return "NtTerminalRepetitionRange";
     case NtTerminalRange:
       return "NtTerminalRange";
-    case NtRuleProduction:
-      return "NtRuleProduction";
-    case NtRuleParameter:
-      return "NtRuleParameter";
-    case NtRuleDefinition:
-      return "NtRuleDefinition";
-    case NtRuleSequence:
-      return "NtRuleSequence";
-    case NtRuleChoices:
-      return "NtRuleChoices";
-    case NtRuleRepetition:
-      return "NtRuleRepetition";
-    case NtRuleRepetitionRange:
-      return "NtRuleRepetitionRange";
+    case NtNonterminalProduction:
+      return "NtNonterminalProduction";
+    case NtNonterminalParameter:
+      return "NtNonterminalParameter";
+    case NtNonterminalDefinition:
+      return "NtNonterminalDefinition";
+    case NtNonterminalSequence:
+      return "NtNonterminalSequence";
+    case NtNonterminalChoices:
+      return "NtNonterminalChoices";
+    case NtNonterminalRepetition:
+      return "NtNonterminalRepetition";
+    case NtNonterminalRepetitionRange:
+      return "NtNonterminalRepetitionRange";
     case NtGrammarProperty:
       return "NtGrammarProperty";
     case NtGrammarPropertyWhitespace:

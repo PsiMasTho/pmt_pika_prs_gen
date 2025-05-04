@@ -22,8 +22,8 @@ namespace pmt::parserbuilder {
 class TerminalStateMachinePartBuilder {
  public:
   // -$ Types / Constants $-
-  using TerminalNameLookupFn = std::function<std::optional<std::string>(size_t)>;
-  using TerminalReverseNameLookupFn = std::function<std::optional<size_t>(std::string_view)>;
+  using TerminalLabelLookupFn = std::function<std::optional<std::string>(size_t)>;
+  using TerminalReverseLabelLookupFn = std::function<std::optional<size_t>(std::string_view)>;
   using TerminalDefinitionLookupFn = std::function<std::optional<pmt::util::smrt::GenericAstPath>(size_t)>;
 
  private:
@@ -56,14 +56,14 @@ class TerminalStateMachinePartBuilder {
   std::deque<Frame> _frames; // Need a stack so that earlier frames are not invalidated on push_back
   std::vector<Frame*> _callstack;
 
-  TerminalNameLookupFn _fn_lookup_terminal_name;
-  TerminalReverseNameLookupFn _fn_rev_lookup_terminal_name;
+  TerminalLabelLookupFn _fn_lookup_terminal_label;
+  TerminalReverseLabelLookupFn _fn_rev_lookup_terminal_label;
   TerminalDefinitionLookupFn _fn_lookup_terminal_definition;
   pmt::util::smrt::GenericAst const* _ast_root = nullptr;
   pmt::util::smct::StateMachine* _dest_state_machine = nullptr;
 
  public:
-  auto build(TerminalNameLookupFn fn_lookup_terminal_name_, TerminalReverseNameLookupFn fn_rev_lookup_terminal_name_, TerminalDefinitionLookupFn fn_lookup_terminal_definition_, pmt::util::smrt::GenericAst const& ast_root_, size_t terminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart;
+  auto build(TerminalLabelLookupFn fn_lookup_terminal_name_, TerminalReverseLabelLookupFn fn_rev_lookup_terminal_name_, TerminalDefinitionLookupFn fn_lookup_terminal_definition_, pmt::util::smrt::GenericAst const& ast_root_, size_t terminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart;
 
  private:
   void dispatch(Frame& frame_);
