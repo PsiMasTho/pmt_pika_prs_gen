@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746374121">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746459638">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -96,6 +96,12 @@ use smallest possible integers when emitting lexer or parser tables, offsets is 
 ---
 use eytzinger layout and precompute a prev table, use smallest type needed
 --
-shift the upper and lower bounds by + 1 then we can use small types</rich_text>
+shift the upper and lower bounds by + 1 then we can use small types
+--
+make skel base class or something similar in pmt_util
+--
+graphwriter needs to write symbol edges, seperate by symbol kind
+this can be done somewhat efficiently by checking all used symbol kinds and then 'and'ing them together with the symbols to
+split them by kind, then they need to be written by-kind</rich_text>
   </node>
 </cherrytree>

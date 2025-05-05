@@ -30,8 +30,19 @@ void write_dot(LexerTables const& lexer_tables_) {
     return;
   }
 
-  std::ofstream file(DOT_FILE_PREFIX + std::to_string(dot_file_count++) + ".dot");
-  GraphWriter::write_dot(file, lexer_tables_, [&lexer_tables_](size_t accept_idx_) { return lexer_tables_.get_terminal_label(accept_idx_); });
+  std::ofstream graph_file(DOT_FILE_PREFIX + std::to_string(dot_file_count++) + ".dot");
+  std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/smct/state_machine-skel.dot");
+
+  GraphWriter::WriterArgs writer_args{
+    ._os_graph = graph_file,
+    ._is_graph_skel = skel_file,
+    ._state_machine = lexer_tables_
+  };
+
+  GraphWriter::StyleArgs style_args;
+  style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {return lexer_tables_.get_terminal_label(accepts_);};
+  
+  GraphWriter().write_dot(writer_args, style_args);
 }
 
 }  // namespace
@@ -61,7 +72,7 @@ auto main(int argc, char const* const* argv) -> int try {
   std::ifstream source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.cpp");
   std::ifstream id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_id_constants-skel.hpp");
 
-  LexerTableWriter::Arguments table_writer_args{
+  LexerTableWriter::WriterArgs table_writer_args{
    ._os_header = header_file,
    ._os_source = source_file,
    ._os_id_constants = id_constants_file,

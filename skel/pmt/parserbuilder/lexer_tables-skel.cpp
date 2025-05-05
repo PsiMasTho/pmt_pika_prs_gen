@@ -1,4 +1,4 @@
-/* $replace TIMESTAMP */
+/* Generated on: /* $replace TIMESTAMP */ */
 #include "/* $replace HEADER_INCLUDE_PATH */"
 
 /* $replace NAMESPACE_OPEN */
@@ -20,8 +20,8 @@ namespace {
 /* $replace OFFSETS */
 };
 
-pmt::base::Bitset::ChunkType const ACCEPTS[] = {
-/* $replace ACCEPTS */
+pmt::base::Bitset::ChunkType const TERMINALS[] = {
+/* $replace TERMINALS */
 };
 
 char const* const TERMINAL_LABELS[] = {
@@ -70,7 +70,7 @@ auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::smrt::StateNrType s
 }
 
 auto /* $replace CLASS_NAME */::get_state_terminals(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
- return pmt::base::Bitset::ChunkSpanConst(ACCEPTS + state_nr_ * /* $replace TERMINAL_COUNT */, /* $replace TERMINAL_COUNT */);
+ return pmt::base::Bitset::ChunkSpanConst(TERMINALS + state_nr_ * /* $replace TERMINAL_COUNT */, /* $replace TERMINAL_COUNT */);
 }
 
 auto /* $replace CLASS_NAME */::get_terminal_count() const -> size_t {

@@ -1,4 +1,4 @@
-/* $replace TIMESTAMP */
+/* Generated on: /* $replace TIMESTAMP */ */
 #pragma once
 
 #include <pmt/base/bitset.hpp>

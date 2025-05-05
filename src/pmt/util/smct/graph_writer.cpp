@@ -1,134 +1,192 @@
 #include "pmt/util/smct/graph_writer.hpp"
 
+#include "pmt/asserts.hpp"
 #include "pmt/base/bitset.hpp"
 #include "pmt/base/bitset_converter.hpp"
 #include "pmt/util/smct/state_machine.hpp"
+#include "pmt/util/timestamp.hpp"
 
 #include <ios>
 #include <iostream>
 #include <sstream>
-#include <unordered_map>
 #include <utility>
+#include <iomanip>
 
 namespace pmt::util::smct {
 using namespace pmt::base;
 using namespace pmt::util::smrt;
 
-void GraphWriter::write_dot(std::ostream& os_, StateMachine const& state_machine_, AcceptsToLabel accepts_to_label_) {
-  if (!accepts_to_label_) {
-    accepts_to_label_ = accepts_to_label_default;
-  }
-
-  // <state_nr> -> <state_nr_next, label>
-  std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>> symbol_arrow_labels;
-
-  IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
-
-  state_nrs.for_each_key([&](StateNrType state_nr_) {
-    State const& state = *state_machine_.get_state(state_nr_);
-
-    // Symbol transitions
-    IntervalSet<SymbolType> const symbols = state.get_symbols();
-
-    if (!symbols.empty()) {
-      std::unordered_map<StateNrType, IntervalSet<SymbolType>> relations;
-
-      symbols.for_each_key([&](SymbolType symbol_) {
-        StateNrType const state_nr_next = state.get_symbol_transition(Symbol(symbol_));
-        relations[state_nr_next].insert(Interval<SymbolType>(symbol_));
-      });
-
-      for (auto const& [state_nr_next, symbols] : relations) {
-        symbol_arrow_labels[state_nr_][state_nr_next] = create_label(symbols);
-      }
-    }
-  });
-
-  // - Write the dot file -
-  std::string delim;
-  os_ << "digraph finite_state_machine {\n"
-         " rankdir=LR;\n"
-         " subgraph cluster_states {\n"
-         " peripheries=0;\n"
-         "  node [shape=doublecircle, color=blue]; ";
-
-  state_nrs.for_each_key([&](StateNrType state_nr_) {
-    if (state_machine_.get_state(state_nr_)->get_accepts().popcnt() != 0) {
-      os_ << std::exchange(delim, " ") << state_nr_;
-    }
-  });
-
-  if (!delim.empty()) {
-    os_ << ";\n";
-  }
-  os_ << "  node [shape=circle, color=black];\n";
-
-  // Epsilon transitions
-  os_ << "  edge [color=green];\n";
-  state_nrs.for_each_key([&](StateNrType state_nr_) { state_machine_.get_state(state_nr_)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { os_ << "  " << state_nr_ << " -> " << state_nr_next_ << "\n"; }); });
-
-  // Symbol transitions
-  os_ << "  edge [color=black];\n";
-  for (auto const& [state_nr, state_nr_next_and_label] : symbol_arrow_labels) {
-    for (auto const& [state_nr_next, label] : state_nr_next_and_label) {
-      os_ << "  " << state_nr << " -> " << state_nr_next << " [label=\"" << label << "\"]\n";
-    }
-  }
-
-  os_ << " }\n";
-
-  // Accepts
-  std::unordered_map<size_t, std::set<StateNrType>> accepts;
-  state_nrs.for_each_key([&](StateNrType state_nr_) {
-    State const& state = *state_machine_.get_state(state_nr_);
-    std::set<size_t> const accepts_set = pmt::base::BitsetConverter::to_set(state.get_accepts());
-    for (size_t accept : accepts_set) {
-      accepts[accept].insert(state_nr_);
-    }
-  });
-
-  os_ << "\n"
-         " subgraph cluster_accepts {\n"
-         "  label=\"Accepts\";\n"
-         "  color=gray;\n"
-         "  style=filled;\n\n"
-         "  node [shape=record;style=filled;fillcolor=white];\n\n";
-
-  os_ << "  node_accepts [label=\"";
-  delim.clear();
-  for (auto const& [accept, state_nrs_accepted] : accepts) {
-    std::string const lhs = accepts_to_label_(accept);
-    os_ << std::exchange(delim, "|") << lhs << ": ";
-
-    std::string delim2;
-    for (StateNrType state_nr : state_nrs_accepted) {
-      os_ << std::exchange(delim2, ", ") << state_nr;
-    }
-    os_ << R"(\l)";
-  }
-  os_ << "\"];\n\n"
-         " }\n"
-         "}\n";
-}
+GraphWriter::StyleArgs::StyleArgs()
+: _accepts_to_label_fn(accepts_to_label_default),
+   _symbols_to_label_fn(symbols_to_label_default),
+   _symbol_kind_to_color_fn(symbol_kind_to_color_default),
+   _symbol_kind_to_edge_style_fn(symbol_kind_to_edge_style_default),
+   _title("State Machine"),
+   _accepts_label("Accepts"),
+   _accepting_node_color{._r = 0, ._g = 0, ._b = 255},
+   _epsilon_edge_color{._r = 0, ._g = 255, ._b = 0},
+   _epsilon_edge_style(EdgeStyle::Solid)
+{}
 
 auto GraphWriter::accepts_to_label_default(size_t accepts_) -> std::string {
-  return std::to_string(accepts_);
+ return std::to_string(accepts_);
 }
 
-auto GraphWriter::create_label(pmt::base::IntervalSet<SymbolType> const& symbols_) -> std::string {
-  std::string ret;
-  std::string delim;
+auto GraphWriter::symbols_to_label_default(pmt::base::IntervalSet<SymbolType> const& symbols_) -> std::string {
+ std::string ret;
+ std::string delim;
 
-  symbols_.for_each_interval([&](Interval<SymbolType> interval_) {
-    ret += std::exchange(delim, ", ");
-    if (interval_.get_lower() == interval_.get_upper()) {
-      ret += to_displayable(interval_.get_lower());
-    } else {
-      ret += "[" + to_displayable(interval_.get_lower()) + ".." + to_displayable(interval_.get_upper()) + "]";
-    }
-  });
+ symbols_.for_each_interval([&](Interval<SymbolType> interval_) {
+   ret += std::exchange(delim, ", ");
+   if (interval_.get_lower() == interval_.get_upper()) {
+     ret += to_displayable(interval_.get_lower());
+   } else {
+     ret += "[" + to_displayable(interval_.get_lower()) + ".." + to_displayable(interval_.get_upper()) + "]";
+   }
+ });
 
-  return ret;
+ return ret;
+}
+
+auto GraphWriter::symbol_kind_to_color_default(pmt::util::smrt::SymbolType kind_) -> Color {
+ return Color{._r = 0, ._g = 0, ._b = 0};
+}
+
+auto GraphWriter::symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType kind_) -> EdgeStyle {
+ return EdgeStyle::Solid;
+}
+
+void GraphWriter::write_dot(WriterArgs& writer_args_, StyleArgs style_args_) {
+ _writer_args = &writer_args_;
+ _style_args = std::move(style_args_);
+
+ std::string graph(std::istreambuf_iterator<char>(_writer_args->_is_graph_skel), std::istreambuf_iterator<char>());
+
+ replace_timestamp(graph);
+ replace_accepting_node_shape(graph);
+ replace_accepting_node_color(graph);
+ replace_accepting_nodes(graph);
+ replace_nonaccepting_node_shape(graph);
+ replace_nonaccepting_node_color(graph);
+ replace_epsilon_edge_color(graph);
+ replace_epsilon_edges(graph);
+ replace_symbol_edges(graph);
+ replace_accepts_label(graph);
+ replace_accepts_table(graph);
+ replace_graph_title(graph);
+
+ _writer_args->_os_graph << graph;
+}
+
+void GraphWriter::replace_accepting_node_shape(std::string& str_) {
+ replace_skeleton_label(str_, "ACCEPTING_NODE_SHAPE", to_string(_style_args._accepting_node_shape));
+}
+
+void GraphWriter::replace_accepting_node_color(std::string& str_) {
+ replace_skeleton_label(str_, "ACCEPTING_NODE_COLOR", to_string(_style_args._accepting_node_color));
+}
+
+void GraphWriter::replace_accepting_nodes(std::string& str_) {
+ std::string accepting_nodes_replacement;
+ std::string delim;
+ _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+  if (_writer_args->_state_machine.get_state(state_nr_)->get_accepts().popcnt() != 0) {
+   accepting_nodes_replacement += std::exchange(delim, " ") + std::to_string(state_nr_);
+  }
+ });
+ if (!accepting_nodes_replacement.empty()) {
+   accepting_nodes_replacement += ";";
+ }
+ replace_skeleton_label(str_, "ACCEPTING_NODES", accepting_nodes_replacement);
+}
+
+void GraphWriter::replace_nonaccepting_node_shape(std::string& str_) {
+ replace_skeleton_label(str_, "NONACCEPTING_NODE_SHAPE", to_string(_style_args._nonaccepting_node_shape));
+}
+
+void GraphWriter::replace_nonaccepting_node_color(std::string& str_) {
+ replace_skeleton_label(str_, "NONACCEPTING_NODE_COLOR", to_string(_style_args._nonaccepting_node_color));
+}
+
+void GraphWriter::replace_epsilon_edge_color(std::string& str_){
+ replace_skeleton_label(str_, "EPSILON_EDGE_COLOR", to_string(_style_args._epsilon_edge_color));
+}
+
+void GraphWriter::replace_epsilon_edges(std::string& str_){
+ std::string epsilon_edges_replacement;
+ _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) { _writer_args->_state_machine.get_state(state_nr_)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { epsilon_edges_replacement + "  " + std::to_string(state_nr_) + " -> " + std::to_string(state_nr_next_) + "\n"; }); });
+ if (!epsilon_edges_replacement.empty()) {
+   epsilon_edges_replacement += ";";
+ }
+ replace_skeleton_label(str_, "EPSILON_EDGES", epsilon_edges_replacement);
+}
+
+void GraphWriter::replace_symbol_edges(std::string& str_) {
+ std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>> symbol_arrow_labels;
+
+ state_nrs.for_each_key([&](StateNrType state_nr_) {
+   State const& state = *state_machine_.get_state(state_nr_);
+
+   // Symbol transitions
+   IntervalSet<SymbolType> const symbols = state.get_symbols();
+
+   if (!symbols.empty()) {
+     std::unordered_map<StateNrType, IntervalSet<SymbolType>> relations;
+
+     symbols.for_each_key([&](SymbolType symbol_) {
+       StateNrType const state_nr_next = state.get_symbol_transition(Symbol(symbol_));
+       relations[state_nr_next].insert(Interval<SymbolType>(symbol_));
+     });
+
+     for (auto const& [state_nr_next, symbols] : relations) {
+       symbol_arrow_labels[state_nr_][state_nr_next] = _style_args._symbols_to_label_fn(symbols);
+     }
+   }
+ });
+
+ for (auto const& [state_nr, state_nr_next_and_label] : symbol_arrow_labels) {
+  for (auto const& [state_nr_next, label] : state_nr_next_and_label) {
+    os_ << "  " << state_nr << " -> " << state_nr_next << " [label=\"" << label << "\"]\n";
+  }
+}
+}
+
+void GraphWriter::replace_accepts_label(std::string& str_) {
+ replace_skeleton_label(str_, "ACCEPTS_LABEL", _style_args._accepts_label);
+}
+
+void GraphWriter::replace_accepts_table(std::string& str_) {
+ std::unordered_map<size_t, std::set<StateNrType>> accepts;
+ _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+   State const& state = *_writer_args->_state_machine.get_state(state_nr_);
+   std::set<size_t> const accepts_set = pmt::base::BitsetConverter::to_set(state.get_accepts());
+   for (size_t accept : accepts_set) {
+     accepts[accept].insert(state_nr_);
+   }
+ });
+
+ std::string delim;
+ std::string accepts_label_replacement;
+ for (auto const& [accept, state_nrs_accepted] : accepts) {
+   std::string const lhs = _style_args._accepts_to_label_fn(accept);
+   accepts_label_replacement += std::exchange(delim, "|") + lhs + ": ";
+
+   std::string delim2;
+   for (StateNrType state_nr : state_nrs_accepted) {
+    accepts_label_replacement += std::exchange(delim2, ", ") + std::to_string(state_nr);
+   }
+   accepts_label_replacement + R"(\l)";
+ }
+
+ replace_skeleton_label(str_, "ACCEPTS_TABLE", accepts_label_replacement);
+}
+
+void GraphWriter::replace_graph_title(std::string& str_) {
+ replace_skeleton_label(str_, "GRAPH_TITLE", _style_args._title);
+}
+
+void GraphWriter::replace_timestamp(std::string& str_) {
+ replace_skeleton_label(str_, "TIMESTAMP", pmt::util::get_timestamp());
 }
 
 auto GraphWriter::is_displayable(SymbolType symbol_) -> bool {
@@ -156,6 +214,46 @@ auto GraphWriter::to_displayable(SymbolType symbol_) -> std::string {
   std::string ret = ss.str();
   std::transform(ret.begin(), ret.end(), ret.begin(), [](auto const c_) { return std::toupper(c_); });
   return "0x" + ret;
+}
+
+auto GraphWriter::to_string(EdgeStyle edge_style_) -> std::string {
+ switch (edge_style_) {
+   case EdgeStyle::Dashed:
+     return "dashed";
+   case EdgeStyle::Dotted:
+     return "dotted";
+   case EdgeStyle::Solid:
+     return "solid";
+   case EdgeStyle::Bold:
+     return "bold";
+   default:
+     pmt::unreachable();
+ }
+}
+
+auto GraphWriter::to_string(NodeShape node_shape_) -> std::string {
+ switch (node_shape_) {
+   case NodeShape::Box:
+     return "box";
+   case NodeShape::Circle:
+     return "circle";
+   case NodeShape::DoubleCircle:
+     return "doublecircle";
+   case NodeShape::Ellipse:
+     return "ellipse";
+   case NodeShape::Octagon:
+     return "octagon";
+   case NodeShape::DoubleOctagon:
+     return "doubleoctagon";
+   default:
+     pmt::unreachable();
+ }
+}
+
+auto GraphWriter::to_string(Color color_) -> std::string {
+ std::stringstream ss;
+ ss << R"("#)" << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(color_._r) << std::setw(2) << static_cast<int>(color_._g) << std::setw(2) << static_cast<int>(color_._b) << R"(")";
+ return ss.str();
 }
 
 }  // namespace pmt::util::smct

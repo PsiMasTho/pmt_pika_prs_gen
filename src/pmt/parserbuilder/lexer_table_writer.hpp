@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pmt/fw_decl.hpp"
+#include "pmt/util/skeleton_replacer_base.hpp"
 
 #include <ostream>
 
@@ -8,10 +9,10 @@ PMT_FW_DECL_NS_CLASS(pmt::parserbuilder, LexerTables)
 
 namespace pmt::parserbuilder {
 
-class LexerTableWriter {
+class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
  public:
  // -$ Types / Constants $-
- struct Arguments {
+ struct WriterArgs {
   std::ostream& _os_header;
   std::ostream& _os_source;
   std::ostream& _os_id_constants;
@@ -26,7 +27,7 @@ class LexerTableWriter {
 
  private:
  // -$ Data $-
- Arguments* _args = nullptr;
+ WriterArgs* _writer_args = nullptr;
  std::string _header;
  std::string _source;
  std::string _id_constants;
@@ -34,7 +35,7 @@ class LexerTableWriter {
  public:
   // -$ Functions $-
   // --$ Other $--
-  void write(Arguments& args_);
+  void write(WriterArgs& writer_args_);
 
   private:
   void replace_in_header();
@@ -57,7 +58,7 @@ class LexerTableWriter {
 
   void replace_id_constants(std::string& str_);
 
-  static void replace_timestamp(std::string& str_);
+  void replace_timestamp(std::string& str_);
 };
 
 }
