@@ -8,27 +8,17 @@ namespace pmt::parserbuilder {
  using namespace pmt::util::smrt;
 
 auto LexerTables::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {
- State const* state = get_state(state_nr_);
+ State const* state = _lexer_state_machine.get_state(state_nr_);
  return state ? state->get_symbol_transition(Symbol(symbol_)) : StateNrSink;
 }
 
 auto LexerTables::get_state_terminals(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
- State const* state = get_state(state_nr_);
+ State const* state = _lexer_state_machine.get_state(state_nr_);
  return state ? state->get_accepts().get_chunks() : pmt::base::Bitset::ChunkSpanConst{};
 }
 
 auto LexerTables::get_terminal_count() const -> size_t {
- size_t max = 0;
- IntervalSet<StateNrType> state_nrs = get_state_nrs();
- state_nrs.for_each_key(
-  [&](StateNrType state_nr_) {
-   State const* state = get_state(state_nr_);
-   Bitset const& accepts = state->get_accepts();
-   size_t const furthest = accepts.size() - accepts.countr(false);
-   max = std::max(max, furthest);
-  });
-
-  return max;
+ return _terminal_data.size();
 }
 
 auto LexerTables::get_start_terminal_index() const -> size_t {

@@ -32,6 +32,7 @@ class State {
   auto get_accepts() -> pmt::base::Bitset&;
 
   auto get_epsilon_transitions() const -> pmt::base::IntervalSet<pmt::util::smrt::StateNrType> const&;
+  auto get_symbol_transitions() const -> pmt::base::IntervalMap<pmt::util::smrt::SymbolType, pmt::util::smrt::StateNrType> const&;
   auto get_symbol_transition(Symbol symbol_) const -> pmt::util::smrt::StateNrType;
 
   auto get_symbols() const -> pmt::base::IntervalSet<pmt::util::smrt::SymbolType>;

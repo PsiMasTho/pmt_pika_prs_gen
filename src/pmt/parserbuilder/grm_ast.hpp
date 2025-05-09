@@ -15,7 +15,7 @@ class GrmAst {
     TkBooleanLiteral = TOKEN_BOOLEAN_LITERAL,
     // - Identifiers
     TkTerminalIdentifier = TOKEN_TERMINAL_IDENTIFIER,
-    TkRuleIdentifier = TOKEN_RULE_IDENTIFIER,
+    TkNonterminalIdentifier = TOKEN_RULE_IDENTIFIER,
     TkEpsilon = TOKEN_EPSILON,
     // - Symbols
     TkPipe = TOKEN_PIPE,

@@ -9,21 +9,21 @@ using namespace pmt::util::smrt;
 
 namespace {
 auto extract_kind(SymbolType combined_) -> SymbolType {
-  SymbolType const ret = combined_ >> Symbol::ValueBitWidth;
-  assert(ret <= Symbol::KindMax);
+  SymbolType const ret = combined_ >> SymbolValueBitWidth;
+  assert(ret <= SymbolKindMax);
   return ret;
 }
 
 auto extract_value(SymbolType combined_) -> SymbolType {
-  SymbolType const ret = combined_ & ((1ull << Symbol::ValueBitWidth) - 1ull);
-  assert(ret <= Symbol::ValueMax);
+  SymbolType const ret = combined_ & ((1ull << SymbolValueBitWidth) - 1ull);
+  assert(ret <= SymbolValueMax);
   return ret;
 }
 
 auto create_combined(SymbolType kind_, SymbolType value_) -> SymbolType {
-  assert(kind_ <= Symbol::KindMax);
-  assert(value_ <= Symbol::ValueMax);
-  return (kind_ << Symbol::ValueBitWidth) | value_;
+  assert(kind_ <= SymbolKindMax);
+  assert(value_ <= SymbolValueMax);
+  return (kind_ << SymbolValueBitWidth) | value_;
 }
 
 }  // namespace
@@ -36,8 +36,8 @@ Symbol::Symbol(SymbolType combined_)
 Symbol::Symbol(SymbolType kind_, SymbolType value_)
  : _kind(kind_)
  , _value(value_) {
-  assert(kind_ <= KindMax);
-  assert(value_ <= ValueMax);
+  assert(kind_ <= SymbolKindMax);
+  assert(value_ <= SymbolValueMax);
 }
 
 auto Symbol::hash() const -> size_t {
@@ -60,12 +60,12 @@ auto Symbol::get_combined() const -> SymbolType {
 }
 
 void Symbol::set_kind(SymbolType kind_) {
-  assert(kind_ <= KindMax);
+  assert(kind_ <= SymbolKindMax);
   _kind = kind_;
 }
 
 void Symbol::set_value(SymbolType value_) {
-  assert(value_ <= ValueMax);
+  assert(value_ <= SymbolValueMax);
   _value = value_;
 }
 

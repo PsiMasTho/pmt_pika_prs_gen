@@ -494,7 +494,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
       p--;
       {
         ++ts;
-        ACCEPT_TOKEN(GrmAst::TkRuleIdentifier);
+        ACCEPT_TOKEN(GrmAst::TkNonterminalIdentifier);
         {
           p++;
           cs = 68;

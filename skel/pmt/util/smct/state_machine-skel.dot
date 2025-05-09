@@ -1,25 +1,25 @@
 /* Generated on: /* $replace TIMESTAMP */ */
 
 digraph finite_state_machine {
- rankdir=LR;
+ rankdir=LR
  subgraph cluster_states {
- peripheries=0;
+ peripheries=0
 
- node [shape=/* $replace ACCEPTING_NODE_SHAPE */, color=/* $replace ACCEPTING_NODE_COLOR */];
+ node [shape=/* $replace ACCEPTING_NODE_SHAPE */, color=/* $replace ACCEPTING_NODE_COLOR */]
  /* $replace ACCEPTING_NODES */
- node [shape=/* $replace NONACCEPTING_NODE_SHAPE */, color=/* $replace NONACCEPTING_NODE_COLOR */];
- edge [color=/* $replace EPSILON_EDGE_COLOR */];
+ node [shape=/* $replace NONACCEPTING_NODE_SHAPE */, color=/* $replace NONACCEPTING_NODE_COLOR */]
+ edge [color=/* $replace EPSILON_EDGE_COLOR */]
  /* $replace EPSILON_EDGES */
  /* $replace SYMBOL_EDGES */
  }
 
  subgraph cluster_accepts {
-  label="/* $replace ACCEPTS_LABEL */";
+  label="/* $replace ACCEPTS_LABEL */"
   color=gray;
   style=filled;
-  node [shape=record;style=filled;fillcolor=white];
-  node_accepts [label="/* $replace ACCEPTS_TABLE */"];
+  node [shape=record;style=filled;fillcolor=white]
+  node_accepts [label="/* $replace ACCEPTS_TABLE */"]
  }
 
- graph [label="/* $replace GRAPH_TITLE */", labelloc=t, fontsize=15];
+ graph [label="/* $replace GRAPH_TITLE */", labelloc=t, fontsize=15]
 }

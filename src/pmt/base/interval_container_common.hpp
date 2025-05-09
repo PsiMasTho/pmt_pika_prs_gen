@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <span>
 #include <utility>
+#include <optional>
 
 namespace pmt::base {
 
@@ -43,6 +44,10 @@ class Interval : public Hashable<Interval<T_>> {
 
   // --$ Inherited: pmt::base::Hashable $--
   auto hash() const -> size_t;
+
+  // bitwise operations
+  void inplace_or(Interval const& other_);
+  auto clone_and(Interval const& other_) const -> std::optional<Interval>;
 
   // iteration
   template <std::invocable<T_> F_>

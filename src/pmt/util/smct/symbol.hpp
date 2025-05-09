@@ -8,19 +8,9 @@
 namespace pmt::util::smct {
 
 class Symbol : public pmt::base::Hashable<Symbol> {
- public:
-  // -$ Types / Constants $-
-  enum : size_t {
-    KindBitWidth = 8ull,
-    ValueBitWidth = sizeof(pmt::util::smrt::SymbolType) * CHAR_BIT - KindBitWidth,
-    KindMax = (1ull << KindBitWidth) - 1ull,
-    ValueMax = (1ull << ValueBitWidth) - 1ull,
-  };
-
- private:
   // -$ Data $-
-  pmt::util::smrt::SymbolType _kind : KindBitWidth;
-  pmt::util::smrt::SymbolType _value : ValueBitWidth;
+  pmt::util::smrt::SymbolType _kind : pmt::util::smrt::SymbolKindBitWidth;
+  pmt::util::smrt::SymbolType _value : pmt::util::smrt::SymbolValueBitWidth;
 
  public:
   // -$ Functions $-

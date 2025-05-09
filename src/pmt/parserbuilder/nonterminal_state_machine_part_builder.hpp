@@ -11,7 +11,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <deque>
 
 PMT_FW_DECL_NS_CLASS(pmt::util::smct, StateMachine)
 
@@ -36,8 +35,7 @@ class NonterminalStateMachinePartBuilder {
   // -$ Data $-
   pmt::util::smct::StateMachinePart _ret_part;
   std::vector<size_t> _nonterminal_idx_stack;
-  std::deque<Frame> _frames;
-  std::vector<Frame*> _callstack;
+  std::vector<Frame> _callstack;
 
   NonterminalLabelLookupFn _fn_lookup_nonterminal_label;
   NonterminalReverseLabelLookupFn _fn_rev_lookup_nonterminal_label;
@@ -45,29 +43,31 @@ class NonterminalStateMachinePartBuilder {
   pmt::util::smrt::GenericAst const* _ast_root = nullptr;
   pmt::util::smct::StateMachine* _dest_state_machine = nullptr;
 
+  bool _keep_current_frame = false;
+
  public:
   auto build(NonterminalLabelLookupFn fn_lookup_nonterminal_name_, NonterminalReverseLabelLookupFn fn_rev_lookup_nonterminal_name_, NonterminalDefinitionLookupFn fn_lookup_nonterminal_definition_, pmt::util::smrt::GenericAst const& ast_root_, size_t nonterminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart;
 
  private:
-  void dispatch(Frame& frame_);
+  void dispatch(size_t frame_idx_);
 
   auto build_epsilon() -> pmt::util::smct::StateMachinePart;
 
   // definition
-  void process_definition_stage_0(Frame& frame_);
+  void process_definition_stage_0(size_t frame_idx_);
 
   // sequence
-  void process_sequence_stage_0(Frame& frame_);
-  void process_sequence_stage_1(Frame& frame_);
+  void process_sequence_stage_0(size_t frame_idx_);
+  void process_sequence_stage_1(size_t frame_idx_);
 
   // choices
-  void process_choices_stage_0(Frame& frame_);
-  void process_choices_stage_1(Frame& frame_);
-  void process_choices_stage_2(Frame& frame_);
+  void process_choices_stage_0(size_t frame_idx_);
+  void process_choices_stage_1(size_t frame_idx_);
+  void process_choices_stage_2(size_t frame_idx_);
 
   // nonterminal_identifier
-  void process_nonterminal_identifier_stage_0(Frame& frame_);
-  void process_nonterminal_identifier_stage_1(Frame& frame_);
+  void process_nonterminal_identifier_stage_0(size_t frame_idx_);
+  void process_nonterminal_identifier_stage_1(size_t frame_idx_);
 };
 
 }  // namespace pmt::parserbuilder

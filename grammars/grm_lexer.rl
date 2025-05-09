@@ -81,7 +81,7 @@
 
   RuleIdentifier => {
    ++ts;
-   ACCEPT_TOKEN(GrmAst::TkRuleIdentifier);
+   ACCEPT_TOKEN(GrmAst::TkNonterminalIdentifier);
    fbreak;
   };
 

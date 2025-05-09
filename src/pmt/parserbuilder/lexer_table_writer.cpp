@@ -105,9 +105,9 @@ namespace pmt::parserbuilder {
   std::vector<StateNrType> values;
   std::vector<size_t> offsets{0};
  
-   _writer_args->_tables.get_state_nrs().for_each_key(
+   _writer_args->_tables._lexer_state_machine.get_state_nrs().for_each_key(
      [&](pmt::util::smrt::StateNrType state_nr_) {
-       State const& state = *_writer_args->_tables.get_state(state_nr_);
+       State const& state = *_writer_args->_tables._lexer_state_machine.get_state(state_nr_);
        IntervalSet<SymbolType> const& symbols = state.get_symbols();
        offsets.push_back(offsets.back() + symbols.size());
        symbols.for_each_interval(
@@ -164,9 +164,9 @@ namespace pmt::parserbuilder {
 
   size_t const terminal_count = _writer_args->_tables.get_terminal_count();
 
-  _writer_args->_tables.get_state_nrs().for_each_key(
+  _writer_args->_tables._lexer_state_machine.get_state_nrs().for_each_key(
     [&](pmt::util::smrt::StateNrType state_nr_) {
-      State const& state = *_writer_args->_tables.get_state(state_nr_);
+      State const& state = *_writer_args->_tables._lexer_state_machine.get_state(state_nr_);
       Bitset terminals = state.get_accepts();
       if (terminals.size() < terminal_count) {
         terminals.resize(terminal_count, false);

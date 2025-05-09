@@ -8,7 +8,7 @@
 
 namespace pmt::parserbuilder {
 
-class LexerTables : public util::smct::StateMachine, public pmt::util::smrt::LexerTablesBase {
+class LexerTables : public pmt::util::smrt::LexerTablesBase {
  public:
   // -$ Types / Constants $-
   struct TerminalData {
@@ -17,6 +17,9 @@ class LexerTables : public util::smct::StateMachine, public pmt::util::smrt::Lex
   };
 
   // -$ Data $-
+  pmt::util::smct::StateMachine _lexer_state_machine;
+  // pmt::util::smct::StateMachine _newline_state_machine;
+
   std::vector<std::string> _id_names;
   std::vector<TerminalData> _terminal_data;
   size_t _start_accept_index;

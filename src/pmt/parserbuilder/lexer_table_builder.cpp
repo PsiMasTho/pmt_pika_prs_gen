@@ -9,7 +9,10 @@
 #include "pmt/util/smct/state_machine_part.hpp"
 #include "pmt/util/smct/state_machine_pruner.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
+#include "pmt/util/smct/graph_writer.hpp"
 
+#include <iostream>
+#include <fstream>
 #include <map>
 
 namespace pmt::parserbuilder {
@@ -30,9 +33,12 @@ auto LexerTableBuilder::build(pmt::util::smrt::GenericAst const& ast_, GrammarDa
   merge_whitespace_state_machine_into_result();
   setup_start_and_eoi_states();
   connect_terminal_state_machines();
-  StateMachineDeterminizer::determinize(_result_tables);
-  StateMachineMinimizer::minimize(_result_tables);
   fill_terminal_data();
+  debug_write_dot("lexer_tables_0.dot", _result_tables._lexer_state_machine);
+  StateMachineDeterminizer::determinize(_result_tables._lexer_state_machine);
+  debug_write_dot("lexer_tables_1.dot", _result_tables._lexer_state_machine);
+  StateMachineMinimizer::minimize(_result_tables._lexer_state_machine);
+  debug_write_dot("lexer_tables_2.dot", _result_tables._lexer_state_machine);
   validate_result();
 
   return std::move(_result_tables);
@@ -134,18 +140,18 @@ void LexerTableBuilder::loop_back_comment_close_state_machines() {
 }
 
 void LexerTableBuilder::merge_comment_state_machines_into_result() {
-  _result_tables.get_or_create_state(StateNrStart);
+  _result_tables._lexer_state_machine.get_or_create_state(StateNrStart);
 
   for (size_t i = 0; i < _comment_open_state_machines.size(); ++i) {
     StateMachine& state_machine_comment_open = _comment_open_state_machines[i];
-    StateNrType const state_nr_comment_open = _result_tables.create_new_state();
+    StateNrType const state_nr_comment_open = _result_tables._lexer_state_machine.create_new_state();
     StateMachinePruner::prune(state_machine_comment_open, StateNrStart, state_nr_comment_open, true);
 
     StateMachine& state_machine_comment_close = _comment_close_state_machines[i];
     StateNrType const state_nr_comment_close = state_nr_comment_open + state_machine_comment_close.get_state_count();
     StateMachinePruner::prune(state_machine_comment_close, StateNrStart, state_nr_comment_close, true);
 
-    _result_tables.get_state(StateNrStart)->add_epsilon_transition(state_nr_comment_open);
+    _result_tables._lexer_state_machine.get_state(StateNrStart)->add_epsilon_transition(state_nr_comment_open);
 
     state_machine_comment_open.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
       State& state = *state_machine_comment_open.get_state(state_nr_);
@@ -155,7 +161,7 @@ void LexerTableBuilder::merge_comment_state_machines_into_result() {
         state.add_epsilon_transition(state_nr_comment_close);
       }
 
-      _result_tables.get_or_create_state(state_nr_) = state;
+      _result_tables._lexer_state_machine.get_or_create_state(state_nr_) = state;
     });
 
     state_machine_comment_close.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
@@ -166,7 +172,7 @@ void LexerTableBuilder::merge_comment_state_machines_into_result() {
         state.add_epsilon_transition(StateNrStart);
       }
 
-      _result_tables.get_or_create_state(state_nr_) = state;
+      _result_tables._lexer_state_machine.get_or_create_state(state_nr_) = state;
     });
   }
 }
@@ -176,29 +182,29 @@ void LexerTableBuilder::merge_whitespace_state_machine_into_result() {
    return;
  }
 
- StateNrType const state_nr_whitespace = _result_tables.create_new_state();
+ StateNrType const state_nr_whitespace = _result_tables._lexer_state_machine.create_new_state();
  StateMachinePruner::prune(_whitespace_state_machine, StateNrStart, state_nr_whitespace, true);
 
- _result_tables.get_state(StateNrStart)->add_epsilon_transition(state_nr_whitespace);
+ _result_tables._lexer_state_machine.get_state(StateNrStart)->add_epsilon_transition(state_nr_whitespace);
  _whitespace_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
    State& state = *_whitespace_state_machine.get_state(state_nr_);
    if (state.get_accepts().popcnt() != 0) {
      state.get_accepts().clear();
      state.add_epsilon_transition(StateNrStart);
    }
-   _result_tables.get_or_create_state(state_nr_) = state;
+   _result_tables._lexer_state_machine.get_or_create_state(state_nr_) = state;
  });
 }
 
 void LexerTableBuilder::setup_start_and_eoi_states() {
-  State& state_start = _result_tables.get_or_create_state(StateNrStart);
+  State& state_start = _result_tables._lexer_state_machine.get_or_create_state(StateNrStart);
   state_start.get_accepts().resize(_grammar_data->_terminals.size(), false);
   size_t const index_start =  binary_find_index(_grammar_data->_terminals.begin(), _grammar_data->_terminals.end(), GrammarData::TERMINAL_LABEL_START, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchNameString{}(lhs_) < GrammarData::FetchNameString{}(rhs_); });
   state_start.get_accepts().set(*_grammar_data->_terminals[index_start]._terminal, true);
   _result_tables._start_accept_index = *_grammar_data->_terminals[index_start]._terminal;
 
-  StateNrType const state_nr_eoi = _result_tables.create_new_state();
-  State& state_eoi = *_result_tables.get_state(state_nr_eoi);
+  StateNrType const state_nr_eoi = _result_tables._lexer_state_machine.create_new_state();
+  State& state_eoi = *_result_tables._lexer_state_machine.get_state(state_nr_eoi);
   state_eoi.get_accepts().resize(_grammar_data->_terminals.size(), false);
   size_t const index_eoi = binary_find_index(_grammar_data->_terminals.begin(), _grammar_data->_terminals.end(), GrammarData::TERMINAL_LABEL_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchNameString{}(lhs_) < GrammarData::FetchNameString{}(rhs_); });
   state_eoi.get_accepts().set(*_grammar_data->_terminals[index_eoi]._terminal, true);
@@ -208,14 +214,14 @@ void LexerTableBuilder::setup_start_and_eoi_states() {
 }
 
 void LexerTableBuilder::connect_terminal_state_machines() {
-  State& state_start = *_result_tables.get_state(StateNrStart);
+  State& state_start = *_result_tables._lexer_state_machine.get_state(StateNrStart);
 
   for (size_t i = 0; i < _terminal_state_machines.size(); ++i) {
     StateMachine& state_machine_terminal = _terminal_state_machines[i];
-    StateNrType const state_nr_terminal = _result_tables.get_unused_state_nr();
+    StateNrType const state_nr_terminal = _result_tables._lexer_state_machine.get_unused_state_nr();
     StateMachinePruner::prune(state_machine_terminal, StateNrStart, state_nr_terminal, true);
 
-    state_machine_terminal.get_state_nrs().for_each_key([&](StateNrType state_nr_) { _result_tables.get_or_create_state(state_nr_) = *state_machine_terminal.get_state(state_nr_); });
+    state_machine_terminal.get_state_nrs().for_each_key([&](StateNrType state_nr_) { _result_tables._lexer_state_machine.get_or_create_state(state_nr_) = *state_machine_terminal.get_state(state_nr_); });
 
     state_start.add_epsilon_transition(state_nr_terminal);
   }
@@ -256,7 +262,7 @@ void LexerTableBuilder::fill_terminal_data() {
 }
 
 void LexerTableBuilder::validate_result() {
-  Bitset accepts_start = _result_tables.get_state(StateNrStart)->get_accepts();
+  Bitset accepts_start = _result_tables._lexer_state_machine.get_state(StateNrStart)->get_accepts();
 
   size_t const index_start = _grammar_data->_terminals[binary_find_index(_grammar_data->_terminals.begin(), _grammar_data->_terminals.end(), GrammarData::TERMINAL_LABEL_START, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchNameString{}(lhs_) < GrammarData::FetchNameString{}(rhs_); })]._terminal.value();
   accepts_start.set(index_start, false);
@@ -279,11 +285,11 @@ void LexerTableBuilder::validate_result() {
   }
 
   size_t accepts_start_count = 0;
-  IntervalSet<StateNrType> const state_nrs = _result_tables.get_state_nrs();
+  IntervalSet<StateNrType> const state_nrs = _result_tables._lexer_state_machine.get_state_nrs();
   for (size_t j = 0; j < state_nrs.size(); ++j) {
     Interval<StateNrType> const interval = state_nrs.get_by_index(j);
     for (StateNrType state_nr = interval.get_lower(); state_nr <= interval.get_upper(); ++state_nr) {
-      State const& state = *_result_tables.get_state(state_nr);
+      State const& state = *_result_tables._lexer_state_machine.get_state(state_nr);
       if (state.get_accepts().size() == 0) {
         continue;
       }
@@ -295,6 +301,33 @@ void LexerTableBuilder::validate_result() {
   if (accepts_start_count != 1) {
     throw std::runtime_error("Error during building, there are " + std::to_string(accepts_start_count) + " starting states");
   }
+}
+
+void LexerTableBuilder::debug_write_dot(std::string_view filename_, pmt::util::smct::StateMachine const& state_machine_) const {
+ #ifdef NDEBUG
+  return;
+ #endif
+
+ static size_t const DOT_FILE_MAX_STATES = 750;
+ if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
+  std::cerr << "Skipping dot file write, too many states\n";
+  return;
+ }
+
+ std::ofstream graph_file(filename_.data());
+ std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/smct/state_machine-skel.dot");
+
+ GraphWriter::WriterArgs writer_args{
+  ._os_graph = graph_file,
+  ._is_graph_skel = skel_file,
+  ._state_machine = state_machine_
+ };
+
+ GraphWriter::StyleArgs style_args;
+ style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {return _result_tables.get_terminal_label(accepts_);};
+
+ GraphWriter().write_dot(writer_args, style_args);
+ std::cout << "Wrote dot file: " << filename_ << '\n';
 }
 
 auto LexerTableBuilder::lookup_terminal_name_by_index(size_t index_) const -> std::optional<std::string> {

@@ -17,7 +17,16 @@ void SkeletonReplacerBase::replace_skeleton_label(std::string& dest_, std::strin
    std::string const pattern = R"(\/\*\s*\$replace\s*)" + label + R"(\s*\*\/)";
    itr = _label_to_regex_map.emplace(std::make_pair<>(std::move(label), std::regex(pattern, std::regex::optimize))).first;
   }
-  dest_ = std::regex_replace(dest_, itr->second, replacement_);
+
+  // Note: using std::regex_replace naively doesnt work because the actual destination string is interpreted as a format string.
+  //       So we have to do it manually.
+  std::smatch match;
+  size_t search_from = 0;
+
+  while (std::regex_search(dest_.cbegin() + search_from, dest_.cend(), match, itr->second)) {
+   dest_.replace(match.position(0) + search_from, match.length(0), replacement_);
+   search_from += match.position(0) + replacement_.size();
+  }
 }
 
 }

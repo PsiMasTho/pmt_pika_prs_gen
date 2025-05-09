@@ -251,8 +251,8 @@ auto IntervalMap<KEY_, VALUE_>::contains(KEY_ key_) const -> bool {
 }
 
 template <std::integral KEY_, typename VALUE_>
-auto IntervalMap<KEY_, VALUE_>::get_by_index(size_t index_) const -> Entry {
-  return Entry{._interval = Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]), ._value = _values[index_]};
+auto IntervalMap<KEY_, VALUE_>::get_by_index(size_t index_) const -> std::pair<VALUE_ const&, Interval<KEY_>> {
+  return {_values[index_], Interval<KEY_>(get_lowers()[index_], get_uppers()[index_])};
 }
 
 template <std::integral KEY_, typename VALUE_>
@@ -313,6 +313,24 @@ template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::highest() const -> KEY_ {
   assert(!empty());
   return get_uppers()[size() - 1];
+}
+
+template <std::integral KEY_, typename VALUE_>
+template <std::invocable<VALUE_ const&, Interval<KEY_>> F_>
+void IntervalMap<KEY_, VALUE_>::for_each_interval(F_&& f_) const {
+ for (size_t i = 0; i < size(); ++i) {
+  std::invoke(std::forward<F_>(f_), get_by_index(i).first, get_by_index(i).second);
+ }
+}
+
+template <std::integral KEY_, typename VALUE_>
+template <std::invocable<VALUE_ const&, KEY_> F_>
+void IntervalMap<KEY_, VALUE_>::for_each_key(F_&& f_) const {
+ for_each_interval([&f_](VALUE_ const& value_, Interval<KEY_> const& interval_) {
+  interval_.for_each_key([&](KEY_ const& key_) {
+   std::invoke(std::forward<F_>(f_), value_, key_);
+  });
+ });
 }
 
 template <std::integral KEY_, typename VALUE_>

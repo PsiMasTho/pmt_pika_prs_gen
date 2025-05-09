@@ -13,7 +13,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <deque>
 
 PMT_FW_DECL_NS_CLASS(pmt::util::smct, StateMachine)
 
@@ -53,8 +52,7 @@ class TerminalStateMachinePartBuilder {
   pmt::util::smct::StateMachinePart _ret_part;
   pmt::base::IntervalSet<size_t> _terminal_idx_stack_contents;
   std::vector<size_t> _terminal_idx_stack;
-  std::deque<Frame> _frames; // Need a stack so that earlier frames are not invalidated on push_back
-  std::vector<Frame*> _callstack;
+  std::vector<Frame> _callstack;
 
   TerminalLabelLookupFn _fn_lookup_terminal_label;
   TerminalReverseLabelLookupFn _fn_rev_lookup_terminal_label;
@@ -62,46 +60,48 @@ class TerminalStateMachinePartBuilder {
   pmt::util::smrt::GenericAst const* _ast_root = nullptr;
   pmt::util::smct::StateMachine* _dest_state_machine = nullptr;
 
+  bool _keep_current_frame = false;
+
  public:
   auto build(TerminalLabelLookupFn fn_lookup_terminal_name_, TerminalReverseLabelLookupFn fn_rev_lookup_terminal_name_, TerminalDefinitionLookupFn fn_lookup_terminal_definition_, pmt::util::smrt::GenericAst const& ast_root_, size_t terminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart;
 
  private:
-  void dispatch(Frame& frame_);
+  void dispatch(size_t frame_idx_);
 
   auto build_epsilon() -> pmt::util::smct::StateMachinePart;
 
   // definition
-  void process_definition_stage_0(Frame& frame_);
+  void process_definition_stage_0(size_t frame_idx_);
 
   // sequence
-  void process_sequence_stage_0(Frame& frame_);
-  void process_sequence_stage_1(Frame& frame_);
+  void process_sequence_stage_0(size_t frame_idx_);
+  void process_sequence_stage_1(size_t frame_idx_);
 
   // choices
-  void process_choices_stage_0(Frame& frame_);
-  void process_choices_stage_1(Frame& frame_);
-  void process_choices_stage_2(Frame& frame_);
+  void process_choices_stage_0(size_t frame_idx_);
+  void process_choices_stage_1(size_t frame_idx_);
+  void process_choices_stage_2(size_t frame_idx_);
 
   // repetition
-  void process_repetition_stage_0(Frame& frame_);
-  void process_repetition_stage_1(Frame& frame_);
-  void process_repetition_stage_2(Frame& frame_);
+  void process_repetition_stage_0(size_t frame_idx_);
+  void process_repetition_stage_1(size_t frame_idx_);
+  void process_repetition_stage_2(size_t frame_idx_);
 
   // string_literal
-  void process_string_literal_stage_0(Frame& frame_);
+  void process_string_literal_stage_0(size_t frame_idx_);
 
   // range
-  void process_range_stage_0(Frame& frame_);
+  void process_range_stage_0(size_t frame_idx_);
 
   // integer_literal
-  void process_integer_literal_stage_0(Frame& frame_);
+  void process_integer_literal_stage_0(size_t frame_idx_);
 
   // epsilon
-  void process_epsilon_stage_0(Frame& frame_);
+  void process_epsilon_stage_0(size_t frame_idx_);
 
   // terminal_identifier
-  void process_terminal_identifier_stage_0(Frame& frame_);
-  void process_terminal_identifier_stage_1(Frame& frame_);
+  void process_terminal_identifier_stage_0(size_t frame_idx_);
+  void process_terminal_identifier_stage_1(size_t frame_idx_);
 };
 
 }  // namespace pmt::parserbuilder

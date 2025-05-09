@@ -46,6 +46,8 @@ class LexerTableBuilder {
   void fill_terminal_data();
   void validate_result();
 
+  void debug_write_dot(std::string_view filename_, pmt::util::smct::StateMachine const& state_machine_) const;
+
   auto lookup_terminal_name_by_index(size_t index_) const -> std::optional<std::string>;
   auto lookup_terminal_index_by_label(std::string_view label_) const -> std::optional<size_t>;
   auto lookup_terminal_definition_by_index(size_t index_) const -> std::optional<pmt::util::smrt::GenericAstPath>;

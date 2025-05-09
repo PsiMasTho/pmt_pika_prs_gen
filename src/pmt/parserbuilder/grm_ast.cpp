@@ -13,8 +13,8 @@ auto GrmAst::id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string
       return "TkBooleanLiteral";
     case TkTerminalIdentifier:
       return "TkTerminalIdentifier";
-    case TkRuleIdentifier:
-      return "TkRuleIdentifier";
+    case TkNonterminalIdentifier:
+      return "TkNonterminalIdentifier";
     case TkEpsilon:
       return "TkEpsilon";
     case TkPipe:

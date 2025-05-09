@@ -19,66 +19,106 @@ auto NonterminalStateMachinePartBuilder::build(NonterminalLabelLookupFn fn_looku
  _fn_lookup_nonterminal_definition = std::move(fn_lookup_nonterminal_definition_);
  _ast_root = &ast_root_;
  _nonterminal_idx_stack.clear();
- _callstack.clear();
 
  _dest_state_machine = &dest_state_machine_;
 
  _nonterminal_idx_stack.push_back(nonterminal_idx_);
 
- _frames.emplace_back();
- _frames.back()._expr_cur_path = *_fn_lookup_nonterminal_definition(nonterminal_idx_);
- _frames.back()._expression_type = _frames.back()._expr_cur_path.resolve(*_ast_root)->get_id();
- _callstack.push_back(&_frames.back());
+ _callstack.emplace_back();
+ _callstack.back()._expr_cur_path = *_fn_lookup_nonterminal_definition(nonterminal_idx_);
+ _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)->get_id();
 
  while (!_callstack.empty()) {
-   Frame* cur = _callstack.back();
-   _callstack.pop_back();
-   dispatch(*cur);
+  _keep_current_frame = false; 
+  size_t const frame_idx = _callstack.size() - 1;
+  dispatch(frame_idx);
+  if (!_keep_current_frame) {
+   _callstack.erase(_callstack.begin() + frame_idx);
+  }
  }
-
- // cleanup in case this object is used for another build
- _frames.clear();
 
  return std::move(_ret_part);
 }
 
-void NonterminalStateMachinePartBuilder::dispatch(Frame& frame_){
-
+void NonterminalStateMachinePartBuilder::dispatch(size_t frame_idx_){
+ switch (_callstack[frame_idx_]._expression_type) {
+  case GrmAst::NtNonterminalDefinition:
+    switch (_callstack[frame_idx_]._stage) {
+      case 0:
+        process_definition_stage_0(frame_idx_);
+        break;
+      default:
+        pmt::unreachable();
+    }
+    break;
+  case GrmAst::NtNonterminalSequence:
+    switch (_callstack[frame_idx_]._stage) {
+      case 0:
+        process_sequence_stage_0(frame_idx_);
+        break;
+      case 1:
+        process_sequence_stage_1(frame_idx_);
+        break;
+      default:
+        pmt::unreachable();
+    }
+    break;
+  case GrmAst::NtNonterminalChoices:
+    switch (_callstack[frame_idx_]._stage) {
+      case 0:
+        process_choices_stage_0(frame_idx_);
+        break;
+      case 1:
+        process_choices_stage_1(frame_idx_);
+        break;
+      case 2:
+        process_choices_stage_2(frame_idx_);
+        break;
+      default:
+        pmt::unreachable();
+    }
+    break;
+  case GrmAst::TkNonterminalIdentifier:
+    default: {
+     pmt::unreachable();
+    }
+  }
+  
 }
 
 auto NonterminalStateMachinePartBuilder::build_epsilon() -> pmt::util::smct::StateMachinePart{
 
 }
 
-void NonterminalStateMachinePartBuilder::process_definition_stage_0(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_definition_stage_0(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_sequence_stage_0(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_sequence_stage_0(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_sequence_stage_1(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_sequence_stage_1(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_choices_stage_0(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_choices_stage_0(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_choices_stage_1(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_choices_stage_1(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_choices_stage_2(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_choices_stage_2(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_0(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_0(size_t frame_idx_){
 
 }
 
-void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_1(Frame& frame_){
+void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_1(size_t frame_idx_){
 
 }
 

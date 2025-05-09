@@ -48,11 +48,11 @@ auto GraphWriter::symbols_to_label_default(pmt::base::IntervalSet<SymbolType> co
  return ret;
 }
 
-auto GraphWriter::symbol_kind_to_color_default(pmt::util::smrt::SymbolType kind_) -> Color {
+auto GraphWriter::symbol_kind_to_color_default(pmt::util::smrt::SymbolType) -> Color {
  return Color{._r = 0, ._g = 0, ._b = 0};
 }
 
-auto GraphWriter::symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType kind_) -> EdgeStyle {
+auto GraphWriter::symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType) -> EdgeStyle {
  return EdgeStyle::Solid;
 }
 
@@ -94,9 +94,6 @@ void GraphWriter::replace_accepting_nodes(std::string& str_) {
    accepting_nodes_replacement += std::exchange(delim, " ") + std::to_string(state_nr_);
   }
  });
- if (!accepting_nodes_replacement.empty()) {
-   accepting_nodes_replacement += ";";
- }
  replace_skeleton_label(str_, "ACCEPTING_NODES", accepting_nodes_replacement);
 }
 
@@ -114,41 +111,48 @@ void GraphWriter::replace_epsilon_edge_color(std::string& str_){
 
 void GraphWriter::replace_epsilon_edges(std::string& str_){
  std::string epsilon_edges_replacement;
- _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) { _writer_args->_state_machine.get_state(state_nr_)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { epsilon_edges_replacement + "  " + std::to_string(state_nr_) + " -> " + std::to_string(state_nr_next_) + "\n"; }); });
- if (!epsilon_edges_replacement.empty()) {
-   epsilon_edges_replacement += ";";
- }
+ std::string space;
+ _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) { _writer_args->_state_machine.get_state(state_nr_)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { epsilon_edges_replacement += std::exchange(space, " ") + std::to_string(state_nr_) + " -> " + std::to_string(state_nr_next_) + "\n"; }); });
  replace_skeleton_label(str_, "EPSILON_EDGES", epsilon_edges_replacement);
 }
 
 void GraphWriter::replace_symbol_edges(std::string& str_) {
- std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>> symbol_arrow_labels;
+ // <symbol_kind -> <state_nr -> <state_nr_next -> label_text>>
+ std::unordered_map<SymbolType, std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>>> labels;
 
- state_nrs.for_each_key([&](StateNrType state_nr_) {
-   State const& state = *state_machine_.get_state(state_nr_);
+ _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+  State const& state = *_writer_args->_state_machine.get_state(state_nr_);
 
-   // Symbol transitions
-   IntervalSet<SymbolType> const symbols = state.get_symbols();
-
-   if (!symbols.empty()) {
-     std::unordered_map<StateNrType, IntervalSet<SymbolType>> relations;
-
-     symbols.for_each_key([&](SymbolType symbol_) {
-       StateNrType const state_nr_next = state.get_symbol_transition(Symbol(symbol_));
-       relations[state_nr_next].insert(Interval<SymbolType>(symbol_));
-     });
-
-     for (auto const& [state_nr_next, symbols] : relations) {
-       symbol_arrow_labels[state_nr_][state_nr_next] = _style_args._symbols_to_label_fn(symbols);
+  state.get_symbol_transitions().for_each_interval(
+   [&](StateNrType state_nr_next_, Interval<SymbolType> interval_) {
+    SymbolType const kind_max = Symbol(interval_.get_upper()).get_kind();
+    for (SymbolType kind_i = Symbol(interval_.get_lower()).get_kind(); kind_i <= kind_max; ++kind_i) {
+     Interval<SymbolType> const kind_mask(Symbol(kind_i, 0).get_combined(), Symbol(kind_i, SymbolValueMax).get_combined());
+     std::optional<Interval<SymbolType>> const kind_symbol_interval = kind_mask.clone_and(interval_);
+     if (kind_symbol_interval.has_value()) {
+       std::string& label = labels[kind_i][state_nr_][state_nr_next_];
+       if (!label.empty()) {
+        label += ", ";
+       }
+       label += _style_args._symbols_to_label_fn(IntervalSet<SymbolType>(*kind_symbol_interval));
      }
+    }
    }
+  );
  });
 
- for (auto const& [state_nr, state_nr_next_and_label] : symbol_arrow_labels) {
-  for (auto const& [state_nr_next, label] : state_nr_next_and_label) {
-    os_ << "  " << state_nr << " -> " << state_nr_next << " [label=\"" << label << "\"]\n";
+ std::string space;
+ std::string symbol_edges_replacement;
+ for (auto const& [kind, state_nr_next_and_labels] : labels) {
+  symbol_edges_replacement += std::exchange(space, " ") + "edge [color=" + to_string(_style_args._symbol_kind_to_color_fn(kind)) + ", style=" + to_string(_style_args._symbol_kind_to_edge_style_fn(kind)) + "]\n";
+  for (auto const& [state_nr, state_nr_next_and_label] : state_nr_next_and_labels) {
+   for (auto const& [state_nr_next, label] : state_nr_next_and_label) {
+    symbol_edges_replacement += " " + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next) + " [label=\"" + label + "\"]\n";
+   }
   }
-}
+ }
+ 
+ replace_skeleton_label(str_, "SYMBOL_EDGES", symbol_edges_replacement);
 }
 
 void GraphWriter::replace_accepts_label(std::string& str_) {
@@ -166,19 +170,19 @@ void GraphWriter::replace_accepts_table(std::string& str_) {
  });
 
  std::string delim;
- std::string accepts_label_replacement;
+ std::string accepts_table_replacement;
  for (auto const& [accept, state_nrs_accepted] : accepts) {
    std::string const lhs = _style_args._accepts_to_label_fn(accept);
-   accepts_label_replacement += std::exchange(delim, "|") + lhs + ": ";
+   accepts_table_replacement += std::exchange(delim, "|") + lhs + ": ";
 
    std::string delim2;
    for (StateNrType state_nr : state_nrs_accepted) {
-    accepts_label_replacement += std::exchange(delim2, ", ") + std::to_string(state_nr);
+    accepts_table_replacement += std::exchange(delim2, ", ") + std::to_string(state_nr);
    }
-   accepts_label_replacement + R"(\l)";
+   accepts_table_replacement += R"(\l)";
  }
 
- replace_skeleton_label(str_, "ACCEPTS_TABLE", accepts_label_replacement);
+ replace_skeleton_label(str_, "ACCEPTS_TABLE", accepts_table_replacement);
 }
 
 void GraphWriter::replace_graph_title(std::string& str_) {

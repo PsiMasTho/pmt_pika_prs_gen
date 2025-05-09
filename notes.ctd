@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746459638">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746807438">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -102,6 +102,21 @@ make skel base class or something similar in pmt_util
 --
 graphwriter needs to write symbol edges, seperate by symbol kind
 this can be done somewhat efficiently by checking all used symbol kinds and then 'and'ing them together with the symbols to
-split them by kind, then they need to be written by-kind</rich_text>
+split them by kind, then they need to be written by-kind
+----
+newline tables passed to the generic lexer</rich_text>
+  </node>
+  <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746822398">
+    <rich_text> size_t max = 0;
+ IntervalSet&lt;StateNrType&gt; state_nrs = _lexer_state_machine.get_state_nrs();
+ state_nrs.for_each_key(
+  [&amp;](StateNrType state_nr_) {
+   State const* state = _lexer_state_machine.get_state(state_nr_);
+   Bitset const&amp; accepts = state-&gt;get_accepts();
+   size_t const furthest = accepts.size() - accepts.countr(false);
+   max = std::max(max, furthest);
+  });
+
+  return max;</rich_text>
   </node>
 </cherrytree>

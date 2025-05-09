@@ -36,6 +36,10 @@ auto State::get_epsilon_transitions() const -> IntervalSet<StateNrType> const& {
   return _epsilon_transitions;
 }
 
+auto State::get_symbol_transitions() const -> pmt::base::IntervalMap<pmt::util::smrt::SymbolType, pmt::util::smrt::StateNrType> const& {
+  return _symbol_transitions;
+}
+
 auto State::get_symbol_transition(Symbol symbol_) const -> StateNrType {
   SymbolType const combined = symbol_.get_combined();
   StateNrType const* ret = _symbol_transitions.find(combined);
@@ -46,7 +50,7 @@ auto State::get_symbols() const -> IntervalSet<SymbolType> {
   IntervalSet<SymbolType> ret;
   for (size_t i = 0; i < _symbol_transitions.size(); ++i) {
     auto const entry = _symbol_transitions.get_by_index(i);
-    ret.insert(entry._interval);
+    ret.insert(entry.second);
   }
   return ret;
 }

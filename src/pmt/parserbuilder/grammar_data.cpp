@@ -89,7 +89,7 @@ void GrammarData::initial_iteration_handle_grammar_property_case_sensitive(Gramm
 
 void GrammarData::initial_iteration_handle_grammar_property_start(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) {
   GenericAst const& value = *path_.resolve(ast_);
-  assert(value.get_id() == GrmAst::TkRuleIdentifier);
+  assert(value.get_id() == GrmAst::TkNonterminalIdentifier);
   grammar_data_._start_nonterminal_label = value.get_string();
 }
 
@@ -263,7 +263,7 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
         grammar_data_._terminals[index]._terminal = grammar_data_._terminals_reverse.size();
         grammar_data_._terminals_reverse.push_back(index);
       } break;
-      case GrmAst::TkRuleIdentifier:
+      case GrmAst::TkNonterminalIdentifier:
         push_and_visit(grammar_data_._nonterminals[grammar_data_.try_find_nonterminal_index_by_label(path_cur.resolve(ast_)->get_string())]._definition_path);
         break;
       case GrmAst::NtTerminalDefinition:

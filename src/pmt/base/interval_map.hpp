@@ -12,11 +12,6 @@ template <std::integral KEY_, typename VALUE_>
 class IntervalMap {
  public:
   // -$ Types / Constants $-
-  struct Entry {
-    Interval<KEY_> _interval;
-    VALUE_ const& _value;
-  };
-
   using KeyType = KEY_;
   using ValueType = VALUE_;
 
@@ -50,7 +45,7 @@ class IntervalMap {
   void erase(Interval<KEY_> interval_);
   void clear();
   auto contains(KEY_ key_) const -> bool;
-  auto get_by_index(size_t index_) const -> Entry;
+  auto get_by_index(size_t index_) const -> std::pair<VALUE_ const&, Interval<KEY_>>;
   auto find(KEY_ key_) const -> VALUE_ const*;
   auto size() const -> size_t;
   auto capacity() const -> size_t;
@@ -60,6 +55,13 @@ class IntervalMap {
   // undefined behavior if the container is empty
   auto lowest() const -> KEY_;
   auto highest() const -> KEY_;
+
+  // iteration
+  template <std::invocable<VALUE_ const&, Interval<KEY_>> F_>
+  void for_each_interval(F_&& f_) const;
+  
+  template <std::invocable<VALUE_ const&, KEY_> F_>
+  void for_each_key(F_&& f_) const;
 
  private:
   auto get_lowers() const -> IntegralSpanConst<KEY_>;

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <climits>
 
 namespace pmt::util::smrt {
 
@@ -14,7 +15,12 @@ enum : StateNrType {
 };
 
 enum : SymbolType {
-  SymbolEoi = std::numeric_limits<SymbolType>::max(),
+ SymbolKindBitWidth = 8ull,
+ SymbolValueBitWidth = sizeof(pmt::util::smrt::SymbolType) * CHAR_BIT - SymbolKindBitWidth,
+ SymbolKindMax = (1ull << SymbolKindBitWidth) - 1ull,
+ SymbolValueMax = (1ull << SymbolValueBitWidth) - 1ull,
+ 
+ SymbolEoi = SymbolValueMax,
 };
 
 }  // namespace pmt::util::smrt
