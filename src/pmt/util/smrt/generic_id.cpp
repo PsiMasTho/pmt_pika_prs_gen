@@ -15,8 +15,8 @@ auto GenericId::id_to_string(IdType id_) -> std::string {
       return "IdEoi";
     case IdStart:
       return "IdStart";
-    case IdReserved2:
-      return "IdReserved2";
+    case IdNewline:
+      return "IdNewline";
     case IdReserved3:
       return "IdReserved3";
     case IdReserved4:
@@ -51,7 +51,7 @@ auto GenericId::is_generic_id(IdType id_) -> bool {
 }
 
 auto GenericId::is_generic_id(std::string_view str_) -> bool {
- static const std::regex generic_id_regex = std::regex(R"(^Id(?:Uninitialized|Default|Eoi|Start|Reserved\d+)$)", std::regex::optimize);
+ static const std::regex generic_id_regex = std::regex(R"(^Id(?:Uninitialized|Default|Eoi|Start|Newline|Reserved\d+)$)", std::regex::optimize);
   return std::regex_match(str_.data(), generic_id_regex);
 }
 

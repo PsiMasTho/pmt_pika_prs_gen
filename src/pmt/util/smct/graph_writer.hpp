@@ -32,6 +32,11 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
    DoubleOctagon,
   };
 
+  enum class LayoutDirection : size_t {
+   TopToBottom,
+   LeftToRight,
+  };
+
   struct Color {
     uint8_t _r = std::numeric_limits<uint8_t>::max();
     uint8_t _g = std::numeric_limits<uint8_t>::max();
@@ -63,6 +68,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
    NodeShape _nonaccepting_node_shape = NodeShape::Circle;
    Color _epsilon_edge_color = Color{._r = 0, ._g = 255, ._b = 0};
    EdgeStyle _epsilon_edge_style = EdgeStyle::Solid;
+   LayoutDirection _layout_direction = LayoutDirection::LeftToRight;
   };
 
   private:
@@ -82,6 +88,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   void write_dot(WriterArgs& writer_args_, StyleArgs style_args_);
 
  private:
+  void replace_layout_direction(std::string& str_);
   void replace_accepting_node_shape(std::string& str_);
   void replace_accepting_node_color(std::string& str_);
   void replace_accepting_nodes(std::string& str_);
@@ -101,6 +108,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
 
   static auto to_string(EdgeStyle edge_style_) -> std::string;
   static auto to_string(NodeShape node_shape_) -> std::string;
+  static auto to_string(LayoutDirection layout_direction_) -> std::string;
   static auto to_string(Color color_) -> std::string;
 };
 

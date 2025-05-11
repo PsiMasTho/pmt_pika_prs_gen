@@ -10,7 +10,6 @@
 #include "pmt/util/smrt/generic_id.hpp"
 
 #include <functional>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -21,9 +20,9 @@ namespace pmt::parserbuilder {
 class TerminalStateMachinePartBuilder {
  public:
   // -$ Types / Constants $-
-  using TerminalLabelLookupFn = std::function<std::optional<std::string>(size_t)>;
-  using TerminalReverseLabelLookupFn = std::function<std::optional<size_t>(std::string_view)>;
-  using TerminalDefinitionLookupFn = std::function<std::optional<pmt::util::smrt::GenericAstPath>(size_t)>;
+  using TerminalLabelLookupFn = std::function<std::string(size_t)>;
+  using TerminalReverseLabelLookupFn = std::function<size_t(std::string_view)>;
+  using TerminalDefinitionLookupFn = std::function<pmt::util::smrt::GenericAstPath(size_t)>;
 
  private:
   struct Frame {
@@ -45,7 +44,6 @@ class TerminalStateMachinePartBuilder {
 
     pmt::util::smct::State* _state_cur = nullptr;
     pmt::util::smct::State* _state_choices = nullptr;
-    pmt::util::smct::State* _state_reference = nullptr;
   };
 
   // -$ Data $-

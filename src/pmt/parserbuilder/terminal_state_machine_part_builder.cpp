@@ -41,7 +41,7 @@ auto TerminalStateMachinePartBuilder::build(TerminalLabelLookupFn fn_lookup_term
   _terminal_idx_stack.push_back(terminal_idx_);
 
   _callstack.emplace_back();
-  _callstack.back()._expr_cur_path = *_fn_lookup_terminal_definition(terminal_idx_);
+  _callstack.back()._expr_cur_path = _fn_lookup_terminal_definition(terminal_idx_);
   _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)->get_id();
 
   while (!_callstack.empty()) {
@@ -359,19 +359,15 @@ void TerminalStateMachinePartBuilder::process_epsilon_stage_0(size_t) {
 void TerminalStateMachinePartBuilder::process_terminal_identifier_stage_0(size_t frame_idx_) {
   GenericAst const& expr_cur = *_callstack[frame_idx_]._expr_cur_path.resolve(*_ast_root);
 
-  std::string const& terminal_name = expr_cur.get_string();
-  _callstack[frame_idx_]._terminal_idx_cur = _fn_rev_lookup_terminal_label(terminal_name).value_or(std::numeric_limits<size_t>::max());
-
-  if (_callstack[frame_idx_]._terminal_idx_cur == std::numeric_limits<size_t>::max()) {
-    throw std::runtime_error("Terminal '" + terminal_name + "' not defined");
-  }
+  std::string const& terminal_label = expr_cur.get_string();
+  _callstack[frame_idx_]._terminal_idx_cur = _fn_rev_lookup_terminal_label(terminal_label);
 
   _terminal_idx_stack.push_back(_callstack[frame_idx_]._terminal_idx_cur);
   if (_terminal_idx_stack_contents.contains(_callstack[frame_idx_]._terminal_idx_cur)) {
-    std::string msg = "Terminal '" + terminal_name + "' is recursive: ";
+    std::string msg = "Terminal '" + terminal_label + "' is recursive: ";
     std::string delim;
     for (size_t const stack_terminal_idx : _terminal_idx_stack) {
-      msg += std::exchange(delim, " -> ") + _fn_lookup_terminal_label(stack_terminal_idx).value_or("<unknown>");
+      msg += std::exchange(delim, " -> ") + _fn_lookup_terminal_label(stack_terminal_idx);
     }
     throw std::runtime_error(msg);
   }
@@ -381,19 +377,12 @@ void TerminalStateMachinePartBuilder::process_terminal_identifier_stage_0(size_t
   ++_callstack[frame_idx_]._stage;
   _keep_current_frame = true;
 
-  _callstack[frame_idx_]._state_nr_reference = _dest_state_machine->create_new_state();
-  _callstack[frame_idx_]._state_reference = _dest_state_machine->get_state(_callstack[frame_idx_]._state_nr_reference);
-
   _callstack.emplace_back();
-  _callstack.back()._expr_cur_path = *_fn_lookup_terminal_definition(_callstack[frame_idx_]._terminal_idx_cur);
+  _callstack.back()._expr_cur_path = _fn_lookup_terminal_definition(_callstack[frame_idx_]._terminal_idx_cur);
   _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)->get_id();
-  
 }
 
 void TerminalStateMachinePartBuilder::process_terminal_identifier_stage_1(size_t frame_idx_) {
-  _callstack[frame_idx_]._state_reference->add_epsilon_transition(*_ret_part.get_incoming_state_nr());
-  _ret_part.set_incoming_state_nr(_callstack[frame_idx_]._state_nr_reference);
-
   _terminal_idx_stack_contents.erase(Interval<size_t>(_callstack[frame_idx_]._terminal_idx_cur));
   _terminal_idx_stack.pop_back();
 }

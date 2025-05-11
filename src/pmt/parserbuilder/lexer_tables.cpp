@@ -2,17 +2,19 @@
 
 #include "pmt/util/smct/symbol.hpp"
 
+#include <cassert>
+
 namespace pmt::parserbuilder {
  using namespace pmt::base;
  using namespace pmt::util::smct;
  using namespace pmt::util::smrt;
 
-auto LexerTables::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {
+auto LexerTables::get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType {
  State const* state = _lexer_state_machine.get_state(state_nr_);
  return state ? state->get_symbol_transition(Symbol(symbol_)) : StateNrSink;
 }
 
-auto LexerTables::get_state_terminals(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto LexerTables::get_state_terminals(StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  State const* state = _lexer_state_machine.get_state(state_nr_);
  return state ? state->get_accepts().get_chunks() : pmt::base::Bitset::ChunkSpanConst{};
 }
@@ -33,12 +35,39 @@ auto LexerTables::get_terminal_label(size_t index_) const -> std::string {
  return _terminal_data[index_]._label;
 }
 
-auto LexerTables::get_terminal_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
+auto LexerTables::get_terminal_id(size_t index_) const -> GenericId::IdType {
  return _terminal_data[index_]._id;
 }
 
-auto LexerTables::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {
+auto LexerTables::id_to_string(GenericId::IdType id_) const -> std::string {
  return _id_names[id_];
+}
+
+auto LexerTables::get_newline_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType {
+ State const* state = _newline_state_machine.get_state(state_nr_);
+ return state ? state->get_symbol_transition(Symbol(symbol_)) : StateNrSink;
+}
+
+auto LexerTables::get_newline_state_nr_accept() const -> pmt::util::smrt::SymbolType {
+  StateNrType ret = StateNrSink;
+ _newline_state_machine.get_state_nrs().for_each_key(
+   [&](pmt::util::smrt::StateNrType state_nr_) {
+     State const& state = *_newline_state_machine.get_state(state_nr_);
+     if (state.get_accepts().popcnt() != 0) {
+       ret = state_nr_;
+     }
+   }
+ );
+
+ return ret;
+}
+
+auto LexerTables::terminal_label_to_index(std::string_view label_) const -> std::optional<size_t> {
+ auto const itr = std::find_if(_terminal_data.begin(), _terminal_data.end(), [&](TerminalData const& terminal_data_) {
+   return terminal_data_._label == label_;
+ });
+ 
+ return (itr != _terminal_data.end()) ? std::make_optional(std::distance(_terminal_data.begin(), itr)) : std::nullopt;
 }
 
 }

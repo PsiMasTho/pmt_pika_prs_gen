@@ -14,7 +14,7 @@ class GenericId {
     IdDefault = -2ULL,
     IdEoi = -3ULL,
     IdStart = -4ULL,
-    IdReserved2 = -5ULL,
+    IdNewline = -5ULL,
     IdReserved3 = -6ULL,
     IdReserved4 = -7ULL,
     IdReserved5 = -8ULL,

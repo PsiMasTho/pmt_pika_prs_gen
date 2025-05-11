@@ -65,6 +65,8 @@ auto GrmAst::id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string
       return "TkGrammarPropertyWhitespace";
     case TkGrammarPropertyComment:
       return "TkGrammarPropertyComment";
+    case TkGrammarPropertyNewline:
+      return "TkGrammarPropertyNewline";
     case TkGrammarPropertyCaseSensitive:
       return "TkGrammarPropertyCaseSensitive";
     case NtGrammar:
@@ -107,6 +109,8 @@ auto GrmAst::id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string
       return "NtGrammarPropertyComment";
     case NtGrammarPropertyCaseSensitive:
       return "NtGrammarPropertyCaseSensitive";
+    case NtGrammarPropertyNewline:
+      return "NtGrammarPropertyNewline";
     case NtTerminalDefinitionPairList:
       return "NtTerminalDefinitionPairList";
     case NtTerminalDefinitionPair:

@@ -58,7 +58,7 @@ auto GrmNumber::number_convert(std::string_view str_, NumberType base_) -> Numbe
 
   NumberType ret = 0;
   for (NumberType i = str_.size(); i-- > 0;) {
-    auto const itr = CHAR_TO_NUM.find(str_[i]);
+    auto const itr = CHAR_TO_NUM.find(std::tolower(str_[i]));
     if (itr == CHAR_TO_NUM.end() || itr->second >= base_) {
       throw std::runtime_error("Invalid number: " + std::string(str_));
     }
@@ -90,7 +90,7 @@ auto GrmNumber::get_repetition_number(GenericAst const& token_) -> std::optional
 }
 
 auto GrmNumber::get_repetition_range(GenericAst const& repetition_) -> RepetitionRangeType {
-  assert(repetition_.get_id() == GrmAst::NtTerminalRepetitionRange);
+  assert(repetition_.get_id() == GrmAst::NtTerminalRepetitionRange || repetition_.get_id() == GrmAst::NtNonterminalRepetitionRange);
 
   switch (repetition_.get_children_size()) {
     case 1: {

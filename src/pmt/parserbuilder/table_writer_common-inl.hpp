@@ -4,6 +4,7 @@
 #endif
 // clang-format on
 
+#include <algorithm>
 #include <vector>
 #include <sstream>
 #include <limits>
@@ -15,7 +16,6 @@ void TableWriterCommon::write_single_entries(std::ostream& os_, std::span<T_ con
   std::vector<std::string> entries_str;
   size_t max_width = 0;
   for (T_ const& entry : entries_) {
-   bool const is_negated = entry == std::numeric_limits<T_>::max() && std::is_unsigned_v<T_>;
      std::string entry_str = as_hex(entry, false);
      entries_str.push_back(entry_str);
      max_width = std::max(max_width, entries_str.back().size());
@@ -50,6 +50,20 @@ auto TableWriterCommon::as_hex(std::integral auto value_, bool hex_prefix_) -> s
  os << std::hex << value_;
 
  return os.str();
+}
+
+template <std::integral T_>
+auto TableWriterCommon::get_smallest_unsigned_type(std::span<T_ const> data_) -> std::string {
+ size_t const max = *std::max_element(data_.begin(), data_.end());
+ if (max <= std::numeric_limits<uint8_t>::max()) {
+   return "uint8_t";
+ } else if (max <= std::numeric_limits<uint16_t>::max()) {
+   return "uint16_t";
+ } else if (max <= std::numeric_limits<uint32_t>::max()) {
+   return "uint32_t";
+ } else {
+   return "uint64_t";
+ }
 }
 
 }

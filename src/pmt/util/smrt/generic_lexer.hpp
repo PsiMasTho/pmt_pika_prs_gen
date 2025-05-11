@@ -1,10 +1,14 @@
 #pragma once
 
+#include "pmt/fw_decl.hpp"
 #include "pmt/base/bitset.hpp"
-#include "pmt/util/smrt/lexer_tables_base.hpp"
 #include "pmt/util/smrt/token.hpp"
+#include "pmt/util/smrt/state_machine_primitives.hpp"
+#include "pmt/util/smrt/source_position.hpp"
 
 #include <string_view>
+
+PMT_FW_DECL_NS_CLASS(pmt::util::smrt, LexerTablesBase);
 
 namespace pmt::util::smrt {
 
@@ -22,14 +26,17 @@ class GenericLexer {
   size_t _accept_count;
   std::vector<pmt::base::Bitset::ChunkType> _accepts_all;
   std::vector<pmt::base::Bitset::ChunkType> _accepts_valid;
-  LexerTablesBase const& _tables;
+  LexerTablesBase const& _lexer_tables;
   std::string_view _input;
+  SourcePosition _source_position;
   size_t _cursor;
+  pmt::util::smrt::StateNrType _state_nr_newline;
+  pmt::util::smrt::StateNrType _state_nr_newline_accept;
 
  public:
   // -$ Functions $-
   // --$ Lifetime $--
-  GenericLexer(std::string_view input_, LexerTablesBase const& tables_);
+  GenericLexer(std::string_view input_, LexerTablesBase const& lexer_tables_);
 
   // --$ Other $--
   auto lex() -> LexReturn;

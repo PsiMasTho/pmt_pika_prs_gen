@@ -17,7 +17,7 @@ namespace pmt::util::smrt {
    // -$ Functions $-
    // --$ Other $--
    virtual auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType = 0;
-   virtual auto get_state_nonterminal(StateNrType state_nr_) const -> size_t;
+   virtual auto get_state_nonterminal(StateNrType state_nr_) const -> size_t = 0;
    virtual auto get_nonterminal_count() const -> size_t = 0;
  
    virtual auto get_nonterminal_label(size_t index_) const -> std::string;

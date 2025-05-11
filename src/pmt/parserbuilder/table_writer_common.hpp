@@ -16,6 +16,9 @@ class TableWriterCommon {
 
  static auto as_hex(std::integral auto value_, bool hex_prefix_ = true) -> std::string;
 
+ template <std::integral T_>
+ static auto get_smallest_unsigned_type(std::span<T_ const> data_) -> std::string;
+
  private:
  static auto calculate_numeric_entries_per_line(size_t max_width_) -> size_t;
 };

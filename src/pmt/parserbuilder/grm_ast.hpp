@@ -46,6 +46,7 @@ class GrmAst {
     TkGrammarPropertyStart = TOKEN_GRAMMAR_PROPERTY_START,
     TkGrammarPropertyWhitespace = TOKEN_GRAMMAR_PROPERTY_WHITESPACE,
     TkGrammarPropertyComment = TOKEN_GRAMMAR_PROPERTY_COMMENT,
+    TkGrammarPropertyNewline = TOKEN_GRAMMAR_PROPERTY_NEWLINE,
     TkGrammarPropertyCaseSensitive = TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE,  // Also used as a parameter keyword
 
     // Non-terminals
@@ -71,6 +72,7 @@ class GrmAst {
     NtGrammarProperty,
     NtGrammarPropertyWhitespace,
     NtGrammarPropertyComment,
+    NtGrammarPropertyNewline,
     NtGrammarPropertyCaseSensitive,
     // - Other
     NtTerminalDefinitionPairList,

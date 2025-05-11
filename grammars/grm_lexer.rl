@@ -49,6 +49,7 @@
  GrammarPropertyStart             = '@start';
  GrammarPropertyWhitespace        = '@whitespace';
  GrammarPropertyComment           = '@comment';
+ GrammarPropertyNewline           = '@newline';
  GrammarPropertyCaseSensitive     = '@case_sensitive';
 
  SingleLineComment = "//" [^\n]*;
@@ -213,6 +214,12 @@
    fbreak;
   };
 
+  GrammarPropertyNewline => {
+   ++ts;
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyNewline);
+   fbreak;
+  };
+
   GrammarPropertyCaseSensitive => {
    ++ts;
    ACCEPT_TOKEN(GrmAst::TkGrammarPropertyCaseSensitive);
@@ -235,7 +242,7 @@ namespace {
 } // namespace
 
 namespace pmt::parserbuilder {
- using namespace pmt::util::parsert;
+ using namespace pmt::util::smrt;
 
 GrmLexer::GrmLexer(std::string_view input_)
 :

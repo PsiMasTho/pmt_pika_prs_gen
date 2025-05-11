@@ -12,6 +12,7 @@ class LexerTablesBase {
  public:
   // -$ Functions $-
   // --$ Other $--
+  // Lexer tables
   virtual auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType = 0;
   virtual auto get_state_terminals(StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst = 0;
   virtual auto get_terminal_count() const -> size_t = 0;
@@ -22,6 +23,10 @@ class LexerTablesBase {
   virtual auto get_terminal_id(size_t index_) const -> GenericId::IdType;  // Note: multiple accepts can have the same id, they should still be distinguished by index
 
   virtual auto id_to_string(GenericId::IdType id_) const -> std::string;
+
+  // Newline tables
+  virtual auto get_newline_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType = 0;
+  virtual auto get_newline_state_nr_accept() const -> StateNrType = 0;
 };
 
 }  // namespace pmt::util::smrt

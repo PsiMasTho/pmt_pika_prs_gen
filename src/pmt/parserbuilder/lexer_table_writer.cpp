@@ -6,7 +6,6 @@
 
 #include <vector>
 #include <sstream>
-#include <limits>
 
 namespace pmt::parserbuilder {
  using namespace pmt::util::smrt;
@@ -14,17 +13,8 @@ namespace pmt::parserbuilder {
  using namespace pmt::base;
 
  namespace {
-  auto get_smallest_unsigned_type(std::span<size_t const> data_) -> std::string {
-   size_t const max = *std::max_element(data_.begin(), data_.end());
-   if (max <= std::numeric_limits<uint8_t>::max()) {
-     return "uint8_t";
-   } else if (max <= std::numeric_limits<uint16_t>::max()) {
-     return "uint16_t";
-   } else if (max <= std::numeric_limits<uint32_t>::max()) {
-     return "uint32_t";
-   } else {
-     return "uint64_t";
-   }
+  auto encode_symbol(pmt::util::smrt::SymbolType symbol_) -> pmt::util::smrt::SymbolType {
+   return (symbol_ == pmt::util::smrt::SymbolValueMax) ? 0 : symbol_ + 1;
   }
  }
 
@@ -44,7 +34,6 @@ namespace pmt::parserbuilder {
   _writer_args->_os_id_constants << _id_constants;
  }
 
- // ----------------------------
  void LexerTableWriter::replace_in_header(){
   replace_timestamp(_header);
   replace_namespace_open(_header);
@@ -63,6 +52,8 @@ namespace pmt::parserbuilder {
   replace_terminal_labels(_source);
   replace_terminal_ids(_source);
   replace_id_names(_source);
+  replace_newline_transitions(_source);
+  replace_newline_accepting_state_nr(_source);
   replace_terminal_count(_source);
   replace_start_terminal_index(_source);
   replace_eoi_terminal_index(_source);
@@ -117,8 +108,8 @@ namespace pmt::parserbuilder {
            // This is undone in the generated lexer class by subtracting where needed.
            // This is all done so that we can use smaller types for the bounds, making the
            // tables smaller and the search faster.
-           lower_bounds.push_back(interval_.get_lower() + 1);
-           upper_bounds.push_back(interval_.get_upper() + 1);
+           lower_bounds.push_back(encode_symbol(interval_.get_lower()));
+           upper_bounds.push_back(encode_symbol(interval_.get_upper()));
            StateNrType const value = state.get_symbol_transition(Symbol(interval_.get_lower()));
            values.push_back(value);
          }
@@ -131,7 +122,7 @@ namespace pmt::parserbuilder {
     TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, lower_bounds);
     replace_skeleton_label(str_, "LOWER_BOUNDS", lower_bounds_replacement.str());
    }
-   std::string const lower_bounds_type_replacement = get_smallest_unsigned_type(lower_bounds);
+   std::string const lower_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(lower_bounds);
    replace_skeleton_label(str_, "LOWER_BOUNDS_TYPE", lower_bounds_type_replacement);
    
    std::stringstream upper_bounds_replacement;
@@ -139,7 +130,7 @@ namespace pmt::parserbuilder {
     TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, upper_bounds);
     replace_skeleton_label(str_, "UPPER_BOUNDS", upper_bounds_replacement.str());
    }
-   std::string const upper_bounds_type_replacement = get_smallest_unsigned_type(upper_bounds);
+   std::string const upper_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(upper_bounds);
    replace_skeleton_label(str_, "UPPER_BOUNDS_TYPE", upper_bounds_type_replacement);
 
    std::stringstream values_replacement;
@@ -147,7 +138,7 @@ namespace pmt::parserbuilder {
     TableWriterCommon::write_single_entries<StateNrType>(values_replacement, values);
     replace_skeleton_label(str_, "VALUES", values_replacement.str());
    }
-   std::string const values_type_replacement = get_smallest_unsigned_type(values);
+   std::string const values_type_replacement = TableWriterCommon::get_smallest_unsigned_type<StateNrType>(values);
    replace_skeleton_label(str_, "VALUES_TYPE", values_type_replacement);
 
    std::stringstream offsets_replacement;
@@ -155,9 +146,9 @@ namespace pmt::parserbuilder {
     TableWriterCommon::write_single_entries<size_t>(offsets_replacement, offsets);
     replace_skeleton_label(str_, "OFFSETS", offsets_replacement.str());
    }
-   std::string const offsets_type_replacement = get_smallest_unsigned_type(offsets);
+   std::string const offsets_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(offsets);
    replace_skeleton_label(str_, "OFFSETS_TYPE", offsets_type_replacement);
-  }
+ }
  
  void LexerTableWriter::replace_terminals(std::string& str_){
   std::vector<Bitset::ChunkType> terminals_flattened;
@@ -210,6 +201,64 @@ namespace pmt::parserbuilder {
   std::stringstream id_names_replacement;
   TableWriterCommon::write_single_entries(id_names_replacement, _writer_args->_tables._id_names);
   replace_skeleton_label(str_, "ID_NAMES", id_names_replacement.str());
+ }
+
+ void LexerTableWriter::replace_newline_transitions(std::string& str_) {
+  std::vector<SymbolType> newline_lower_bounds;
+  std::vector<SymbolType> newline_upper_bounds;
+  std::vector<StateNrType> newline_values;
+  std::vector<size_t> newline_offsets{0};
+ 
+   _writer_args->_tables._newline_state_machine.get_state_nrs().for_each_key(
+     [&](pmt::util::smrt::StateNrType state_nr_) {
+       State const& state = *_writer_args->_tables._newline_state_machine.get_state(state_nr_);
+       IntervalMap<SymbolType, StateNrType> const& symbol_transitions = state.get_symbol_transitions();
+       newline_offsets.push_back(newline_offsets.back() + symbol_transitions.size());
+       symbol_transitions.for_each_interval(
+         [&](StateNrType value_, Interval<SymbolType> interval_) {
+           newline_lower_bounds.push_back(encode_symbol(interval_.get_lower()));
+           newline_upper_bounds.push_back(encode_symbol(interval_.get_upper()));
+           newline_values.push_back(value_);
+         }
+       );
+     }
+   );
+
+   {
+    std::stringstream lower_bounds_replacement;
+    TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, newline_lower_bounds);
+    replace_skeleton_label(str_, "NEWLINE_LOWER_BOUNDS", lower_bounds_replacement.str());
+   }
+   std::string const lower_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(newline_lower_bounds);
+   replace_skeleton_label(str_, "NEWLINE_LOWER_BOUNDS_TYPE", lower_bounds_type_replacement);
+   
+   std::stringstream upper_bounds_replacement;
+   {
+    TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, newline_upper_bounds);
+    replace_skeleton_label(str_, "NEWLINE_UPPER_BOUNDS", upper_bounds_replacement.str());
+   }
+   std::string const upper_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(newline_upper_bounds);
+   replace_skeleton_label(str_, "NEWLINE_UPPER_BOUNDS_TYPE", upper_bounds_type_replacement);
+
+   std::stringstream values_replacement;
+   {
+    TableWriterCommon::write_single_entries<StateNrType>(values_replacement, newline_values);
+    replace_skeleton_label(str_, "NEWLINE_VALUES", values_replacement.str());
+   }
+   std::string const values_type_replacement = TableWriterCommon::get_smallest_unsigned_type<StateNrType>(newline_values);
+   replace_skeleton_label(str_, "NEWLINE_VALUES_TYPE", values_type_replacement);
+
+   std::stringstream offsets_replacement;
+   {
+    TableWriterCommon::write_single_entries<size_t>(offsets_replacement, newline_offsets);
+    replace_skeleton_label(str_, "NEWLINE_OFFSETS", offsets_replacement.str());
+   }
+   std::string const offsets_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(newline_offsets);
+   replace_skeleton_label(str_, "NEWLINE_OFFSETS_TYPE", offsets_type_replacement);
+ }
+
+ void LexerTableWriter::replace_newline_accepting_state_nr(std::string& str_) {
+  replace_skeleton_label(str_, "NEWLINE_ACCEPTING_STATE_NR", TableWriterCommon::as_hex(_writer_args->_tables.get_newline_state_nr_accept(), true));
  }
  
  void LexerTableWriter::replace_terminal_count(std::string& str_){

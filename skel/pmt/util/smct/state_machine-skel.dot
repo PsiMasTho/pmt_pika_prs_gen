@@ -1,7 +1,7 @@
 /* Generated on: /* $replace TIMESTAMP */ */
 
 digraph finite_state_machine {
- rankdir=LR
+ rankdir=/* $replace LAYOUT_DIRECTION */;
  subgraph cluster_states {
  peripheries=0
 

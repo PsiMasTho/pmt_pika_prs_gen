@@ -6,6 +6,7 @@
 #include "pmt/parserbuilder/lexer_tables.hpp"
 #include "pmt/parserbuilder/lexer_table_builder.hpp"
 #include "pmt/parserbuilder/lexer_table_writer.hpp"
+#include "pmt/parserbuilder/parser_table_builder.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
 
 #include <filesystem>
@@ -30,7 +31,8 @@ auto main(int argc, char const* const* argv) -> int try {
   GenericAst::UniqueHandle ast = GrmParser::parse(lexer);
   GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
 
-  LexerTables lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
+  std::cout << "Building lexer tables...\n";
+  LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
 
   std::cout << "Lexer tables built successfully\n";
 
@@ -60,6 +62,8 @@ auto main(int argc, char const* const* argv) -> int try {
   table_writer.write(table_writer_args);
   std::cout << "Done writing lexer tables\n";
 
+  std::cout << "Building parser tables...\n";
+  ParserTables parser_tables = ParserTableBuilder{}.build(*ast, grammar_data, lexer_tables);
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

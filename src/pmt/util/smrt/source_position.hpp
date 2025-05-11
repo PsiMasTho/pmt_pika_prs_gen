@@ -11,8 +11,8 @@ class SourcePosition {
   using LinenoType = uint32_t;
 
   // - Data -
-  LinenoType _lineno;
-  ColnoType _colno;
+  LinenoType _lineno = 0;
+  ColnoType _colno = 0;
 
   // - Member functions -
   SourcePosition(LinenoType lineno_, ColnoType colno_);

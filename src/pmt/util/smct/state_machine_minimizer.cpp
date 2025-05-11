@@ -156,7 +156,9 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
     return itr->second;
   };
 
-  push_and_visit(equivalence_partition_mapping_.find(0)->second);
+  if (auto const itr = equivalence_partition_mapping_.find(StateNrStart); itr != equivalence_partition_mapping_.end()) {
+    push_and_visit(itr->second);
+  } 
 
   while (!pending.empty()) {
     IntervalSet<StateNrType> const* equivalence_partition_cur = take();

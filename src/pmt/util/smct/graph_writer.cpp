@@ -63,6 +63,7 @@ void GraphWriter::write_dot(WriterArgs& writer_args_, StyleArgs style_args_) {
  std::string graph(std::istreambuf_iterator<char>(_writer_args->_is_graph_skel), std::istreambuf_iterator<char>());
 
  replace_timestamp(graph);
+ replace_layout_direction(graph);
  replace_accepting_node_shape(graph);
  replace_accepting_node_color(graph);
  replace_accepting_nodes(graph);
@@ -76,6 +77,10 @@ void GraphWriter::write_dot(WriterArgs& writer_args_, StyleArgs style_args_) {
  replace_graph_title(graph);
 
  _writer_args->_os_graph << graph;
+}
+
+void GraphWriter::replace_layout_direction(std::string& str_) {
+ replace_skeleton_label(str_, "LAYOUT_DIRECTION", to_string(_style_args._layout_direction));
 }
 
 void GraphWriter::replace_accepting_node_shape(std::string& str_) {
@@ -209,7 +214,7 @@ auto GraphWriter::is_displayable(SymbolType symbol_) -> bool {
 auto GraphWriter::to_displayable(SymbolType symbol_) -> std::string {
   if (is_displayable(symbol_)) {
     return R"(')" + std::string(1, symbol_) + R"(')";
-  } else if (symbol_ == SymbolEoi) {
+  } else if (symbol_ == SymbolValueEoi) {
     return "<EOI>";
   }
 
@@ -249,6 +254,17 @@ auto GraphWriter::to_string(NodeShape node_shape_) -> std::string {
      return "octagon";
    case NodeShape::DoubleOctagon:
      return "doubleoctagon";
+   default:
+     pmt::unreachable();
+ }
+}
+
+auto GraphWriter::to_string(LayoutDirection layout_direction_) -> std::string {
+ switch (layout_direction_) {
+   case LayoutDirection::TopToBottom:
+     return "TB";
+   case LayoutDirection::LeftToRight:
+     return "LR";
    default:
      pmt::unreachable();
  }

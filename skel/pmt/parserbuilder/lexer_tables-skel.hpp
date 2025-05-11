@@ -18,6 +18,8 @@ class /* $replace CLASS_NAME */ : public pmt::util::smrt::LexerTablesBase {
   auto get_terminal_label(size_t index_) const -> std::string override;
   auto get_terminal_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType override;
   auto id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string override;
+  auto get_newline_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;
+  auto get_newline_state_nr_accept() const -> pmt::util::smrt::SymbolType override;
 };
 
 /* $replace NAMESPACE_CLOSE */

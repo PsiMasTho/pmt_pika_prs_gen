@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746807438">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746921846">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -104,7 +104,22 @@ graphwriter needs to write symbol edges, seperate by symbol kind
 this can be done somewhat efficiently by checking all used symbol kinds and then 'and'ing them together with the symbols to
 split them by kind, then they need to be written by-kind
 ----
-newline tables passed to the generic lexer</rich_text>
+newline tables passed to the generic lexer
+-&gt; take alphabet that loops back to state 0 from the lexer state machine
+---
+graphviz nodes should be first defined in the proper order
+--
+rename @start to @skip ?
+----
+LexerTables::terminal_label_to_index is slow
+--
+set up the start and end in setup_parser_state_machine
+--
+rename rule things in the grammar to nonterminal
+--
+end states looping on themselves is fine in nonterminals, just means it needs lookahead
+--
+rule building from expressions not done right, probably needs a stack of rule opens but just a map of closes</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746822398">
     <rich_text> size_t max = 0;

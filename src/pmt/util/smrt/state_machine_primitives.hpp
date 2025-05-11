@@ -20,7 +20,13 @@ enum : SymbolType {
  SymbolKindMax = (1ull << SymbolKindBitWidth) - 1ull,
  SymbolValueMax = (1ull << SymbolValueBitWidth) - 1ull,
  
- SymbolEoi = SymbolValueMax,
+ SymbolValueEoi = SymbolValueMax,
+ SymbolValueOpen = 0ull,
+
+ SymbolKindCharacter = 0ull,
+ SymbolKindTerminal = 1ull,
+ SymbolKindOpen = 2ull,
+ SymbolKindClose = 3ull,
 };
 
 }  // namespace pmt::util::smrt
