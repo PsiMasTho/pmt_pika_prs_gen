@@ -21,6 +21,7 @@ GraphWriter::StyleArgs::StyleArgs()
    _symbols_to_label_fn(symbols_to_label_default),
    _symbol_kind_to_color_fn(symbol_kind_to_color_default),
    _symbol_kind_to_edge_style_fn(symbol_kind_to_edge_style_default),
+   _symbol_kind_to_font_flags_fn(symbol_kind_to_font_flags_default),
    _title("State Machine"),
    _accepts_label("Accepts"),
    _accepting_node_color{._r = 0, ._g = 0, ._b = 255},
@@ -54,6 +55,10 @@ auto GraphWriter::symbol_kind_to_color_default(pmt::util::smrt::SymbolType) -> C
 
 auto GraphWriter::symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType) -> EdgeStyle {
  return EdgeStyle::Solid;
+}
+
+auto GraphWriter::symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolType kind_) -> FontFlags {
+ return FontFlags::None;
 }
 
 void GraphWriter::write_dot(WriterArgs& writer_args_, StyleArgs style_args_) {
@@ -151,8 +156,8 @@ void GraphWriter::replace_symbol_edges(std::string& str_) {
  for (auto const& [kind, state_nr_next_and_labels] : labels) {
   symbol_edges_replacement += std::exchange(space, " ") + "edge [color=" + to_string(_style_args._symbol_kind_to_color_fn(kind)) + ", style=" + to_string(_style_args._symbol_kind_to_edge_style_fn(kind)) + "]\n";
   for (auto const& [state_nr, state_nr_next_and_label] : state_nr_next_and_labels) {
-   for (auto const& [state_nr_next, label] : state_nr_next_and_label) {
-    symbol_edges_replacement += " " + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next) + " [label=\"" + label + "\"]\n";
+   for (auto const& [state_nr_next, label] : state_nr_next_and_label) {    
+    symbol_edges_replacement += " " + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next) + " [label=<" + apply_font_flags(label, _style_args._symbol_kind_to_font_flags_fn(kind)) + ">]\n";
    }
   }
  }
@@ -174,18 +179,18 @@ void GraphWriter::replace_accepts_table(std::string& str_) {
    }
  });
 
- std::string delim;
- std::string accepts_table_replacement;
+ std::string accepts_table_replacement = R"(<TABLE BORDER="0" CELLBORDER="1">)";
  for (auto const& [accept, state_nrs_accepted] : accepts) {
    std::string const lhs = _style_args._accepts_to_label_fn(accept);
-   accepts_table_replacement += std::exchange(delim, "|") + lhs + ": ";
-
-   std::string delim2;
+   accepts_table_replacement += "<TR><TD>" + lhs + ": ";
+   std::string delim;
    for (StateNrType state_nr : state_nrs_accepted) {
-    accepts_table_replacement += std::exchange(delim2, ", ") + std::to_string(state_nr);
+    accepts_table_replacement += std::exchange(delim, ", ") + std::to_string(state_nr);
    }
-   accepts_table_replacement += R"(\l)";
+   accepts_table_replacement += "</TD></TR>";
  }
+
+ accepts_table_replacement += "</TABLE>";
 
  replace_skeleton_label(str_, "ACCEPTS_TABLE", accepts_table_replacement);
 }
@@ -215,7 +220,7 @@ auto GraphWriter::to_displayable(SymbolType symbol_) -> std::string {
   if (is_displayable(symbol_)) {
     return R"(')" + std::string(1, symbol_) + R"(')";
   } else if (symbol_ == SymbolValueEoi) {
-    return "<EOI>";
+    return "@eoi";
   }
 
   std::stringstream ss;
@@ -274,6 +279,17 @@ auto GraphWriter::to_string(Color color_) -> std::string {
  std::stringstream ss;
  ss << R"("#)" << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(color_._r) << std::setw(2) << static_cast<int>(color_._g) << std::setw(2) << static_cast<int>(color_._b) << R"(")";
  return ss.str();
+}
+
+auto GraphWriter::apply_font_flags(std::string str_, FontFlags flags_) -> std::string {
+ if (flags_ & FontFlags::Bold) {
+   str_ = "<b>" + str_ + "</b>";
+ }
+ if (flags_ & FontFlags::Italic) {
+   str_ = "<i>" + str_ + "</i>";
+ }
+
+ return str_;
 }
 
 }  // namespace pmt::util::smct

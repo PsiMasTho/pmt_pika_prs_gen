@@ -94,7 +94,7 @@ void GrammarData::initial_iteration_handle_grammar_property_case_sensitive(Gramm
 void GrammarData::initial_iteration_handle_grammar_property_start(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) {
   GenericAst const& value = *path_.resolve(ast_);
   assert(value.get_id() == GrmAst::TkNonterminalIdentifier);
-  grammar_data_._start_nonterminal_label = value.get_string();
+  grammar_data_._start_nonterminal_definition = path_;
 }
 
 void GrammarData::initial_iteration_handle_grammar_property_whitespace(GrammarData& grammar_data_, pmt::util::smrt::GenericAstPath const& path_) {
@@ -251,7 +251,7 @@ void GrammarData::check_terminal_uniqueness(GrammarData& grammar_data_) {
 }
 
 void GrammarData::check_start_nonterminal_label_defined(GrammarData& grammar_data_) {
-  if (grammar_data_._start_nonterminal_label.empty()) {
+  if (grammar_data_._start_nonterminal_definition.empty()) {
     throw std::runtime_error("Start symbol not defined");
   }
 }
@@ -271,7 +271,7 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
     visited.insert(path_);
   };
 
-  push_and_visit(grammar_data_._nonterminals[grammar_data_.try_find_nonterminal_index_by_label(grammar_data_._start_nonterminal_label)]._definition_path);
+  push_and_visit(grammar_data_._nonterminals[grammar_data_.try_find_nonterminal_index_by_label(grammar_data_._start_nonterminal_definition.resolve(ast_)->get_string())]._definition_path);
 
   while (!pending.empty()) {
     GenericAstPath const path_cur = pending.back();

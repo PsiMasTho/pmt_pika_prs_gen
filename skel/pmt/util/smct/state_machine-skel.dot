@@ -15,10 +15,10 @@ digraph finite_state_machine {
 
  subgraph cluster_accepts {
   label="/* $replace ACCEPTS_LABEL */"
-  color=gray;
-  style=filled;
-  node [shape=record;style=filled;fillcolor=white]
-  node_accepts [label="/* $replace ACCEPTS_TABLE */"]
+  color=gray
+  style=filled
+  node [shape=record, style=filled, fillcolor=white]
+  node_accepts [label=</* $replace ACCEPTS_TABLE */>]
  }
 
  graph [label="/* $replace GRAPH_TITLE */", labelloc=t, fontsize=15]

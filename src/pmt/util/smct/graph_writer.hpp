@@ -37,6 +37,12 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
    LeftToRight,
   };
 
+  enum FontFlags : size_t {
+   None = 0,
+   Bold = 1 << 0,
+   Italic = 1 << 1,
+  };
+
   struct Color {
     uint8_t _r = std::numeric_limits<uint8_t>::max();
     uint8_t _g = std::numeric_limits<uint8_t>::max();
@@ -47,6 +53,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   using SymbolsToLabelFn = std::function<std::string(pmt::base::IntervalSet<pmt::util::smrt::SymbolType> const&)>;
   using SymbolKindToColorFn = std::function<Color(pmt::util::smrt::SymbolType)>;
   using SymbolKindToEdgeStyleFn = std::function<EdgeStyle(pmt::util::smrt::SymbolType)>;
+  using SymbolKindToFontFlagsFn = std::function<FontFlags(pmt::util::smrt::SymbolType)>;
 
   struct WriterArgs {
    std::ostream& _os_graph;
@@ -60,6 +67,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
    SymbolsToLabelFn _symbols_to_label_fn;
    SymbolKindToColorFn _symbol_kind_to_color_fn;
    SymbolKindToEdgeStyleFn _symbol_kind_to_edge_style_fn;
+   SymbolKindToFontFlagsFn _symbol_kind_to_font_flags_fn;
    std::string _title = "State Machine";
    std::string _accepts_label = "Accepts";
    Color _accepting_node_color = Color{._r = 0, ._g = 0, ._b = 255};
@@ -84,6 +92,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   static auto symbols_to_label_default(pmt::base::IntervalSet<pmt::util::smrt::SymbolType> const& symbols_) -> std::string;
   static auto symbol_kind_to_color_default(pmt::util::smrt::SymbolType kind_) -> Color;
   static auto symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType kind_) -> EdgeStyle;
+  static auto symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolType kind_) -> FontFlags;
 
   void write_dot(WriterArgs& writer_args_, StyleArgs style_args_);
 
@@ -110,6 +119,8 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   static auto to_string(NodeShape node_shape_) -> std::string;
   static auto to_string(LayoutDirection layout_direction_) -> std::string;
   static auto to_string(Color color_) -> std::string;
+
+  static auto apply_font_flags(std::string str_, FontFlags flags_) -> std::string;
 };
 
 }  // namespace pmt::util::smct

@@ -25,20 +25,17 @@ auto is_chunk_last(size_t idx_, size_t idx_chunk_, GrmNumber::RepetitionRangeTyp
 }
 }
 
-auto NonterminalStateMachinePartBuilder::build(NonterminalLabelLookupFn fn_lookup_nonterminal_name_, NonterminalReverseLabelLookupFn fn_rev_lookup_nonterminal_name_, NonterminalDefinitionLookupFn fn_lookup_nonterminal_definition_, TerminalIndexLookupFn fn_lookup_terminal_index_, pmt::util::smrt::GenericAst const& ast_root_, size_t nonterminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart{
+auto NonterminalStateMachinePartBuilder::build(NonterminalLabelLookupFn fn_lookup_nonterminal_name_, NonterminalReverseLabelLookupFn fn_rev_lookup_nonterminal_name_, NonterminalDefinitionLookupFn fn_lookup_nonterminal_definition_, TerminalIndexLookupFn fn_lookup_terminal_index_, pmt::util::smrt::GenericAst const& ast_root_, pmt::util::smrt::GenericAstPath start_nonterminal_definition_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart{
  _fn_lookup_nonterminal_label = std::move(fn_lookup_nonterminal_name_);
  _fn_rev_lookup_nonterminal_label = std::move(fn_rev_lookup_nonterminal_name_);
  _fn_lookup_nonterminal_definition = std::move(fn_lookup_nonterminal_definition_);
  _fn_lookup_terminal_index = std::move(fn_lookup_terminal_index_);
  _ast_root = &ast_root_;
- _nonterminal_idx_stack.clear();
 
  _dest_state_machine = &dest_state_machine_;
 
- _nonterminal_idx_stack.push_back(nonterminal_idx_);
-
  _callstack.emplace_back();
- _callstack.back()._expr_cur_path = _fn_lookup_nonterminal_definition(nonterminal_idx_);
+ _callstack.back()._expr_cur_path = std::move(start_nonterminal_definition_);
  _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)->get_id();
 
  while (!_callstack.empty()) {
@@ -296,35 +293,46 @@ void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_0(
  std::string const& nonterminal_label = expr_cur.get_string();
  _callstack[frame_idx_]._nonterminal_idx_cur = _fn_rev_lookup_nonterminal_label(nonterminal_label);
 
- auto itr = _nonterminal_idx_to_open_close_pairs.find(_callstack[frame_idx_]._nonterminal_idx_cur);
- if (itr == _nonterminal_idx_to_open_close_pairs.end()) {
-  _nonterminal_idx_to_open_close_pairs[_callstack[frame_idx_]._nonterminal_idx_cur] = {_dest_state_machine->create_new_state(),_dest_state_machine->create_new_state()};
-  itr = _nonterminal_idx_to_open_close_pairs.find(_callstack[frame_idx_]._nonterminal_idx_cur);
-
-  State& state_close = *_dest_state_machine->get_state(itr->second._state_nr_close);
+ auto itr_close = _nonterminal_idx_to_state_nr_close.find(_callstack[frame_idx_]._nonterminal_idx_cur);
+ if (itr_close == _nonterminal_idx_to_state_nr_close.end()) {
+  itr_close = _nonterminal_idx_to_state_nr_close.emplace(_callstack[frame_idx_]._nonterminal_idx_cur, _dest_state_machine->create_new_state()).first;
+  State& state_close = *_dest_state_machine->get_state(itr_close->second);
   state_close.get_accepts().resize(_callstack[frame_idx_]._nonterminal_idx_cur + 1, false);
   state_close.get_accepts().set(_callstack[frame_idx_]._nonterminal_idx_cur, true);
+ }
 
-   ++_callstack[frame_idx_]._stage;
-   _keep_current_frame = true;
-   _callstack.emplace_back();
-   _callstack.back()._expr_cur_path = _fn_lookup_nonterminal_definition(_callstack[frame_idx_]._nonterminal_idx_cur);
-   _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)->get_id();
+ _callstack[frame_idx_]._state_nr_open_cur = _dest_state_machine->create_new_state();
+
+ auto itr_post_open = _nonterminal_idx_to_state_nr_post_open.find(_callstack[frame_idx_]._nonterminal_idx_cur);
+ if (itr_post_open == _nonterminal_idx_to_state_nr_post_open.end()) {
+  StateNrType const state_nr_post_open = _dest_state_machine->create_new_state();
+  _nonterminal_idx_to_state_nr_post_open.emplace(_callstack[frame_idx_]._nonterminal_idx_cur, state_nr_post_open);
+  ++_callstack[frame_idx_]._stage;
+  _keep_current_frame = true;
+  _callstack.emplace_back();
+  _callstack.back()._expr_cur_path = _fn_lookup_nonterminal_definition(_callstack[frame_idx_]._nonterminal_idx_cur);
+  _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)->get_id();
  } else {
-  _ret_part.connect_outgoing_transitions_to(itr->second._state_nr_open, *_dest_state_machine);
-  _ret_part.set_incoming_state_nr(itr->second._state_nr_open);
-  _ret_part.add_outgoing_symbol_transition(itr->second._state_nr_open, Symbol(SymbolKindClose, _callstack[frame_idx_]._nonterminal_idx_cur));
+  _ret_part.connect_outgoing_transitions_to(itr_post_open->second, *_dest_state_machine);
+  _ret_part.set_incoming_state_nr(_callstack[frame_idx_]._state_nr_open_cur);
+  _ret_part.add_outgoing_symbol_transition(_callstack[frame_idx_]._state_nr_open_cur, Symbol(SymbolKindClose, _callstack[frame_idx_]._nonterminal_idx_cur));
+  State& state_open = *_dest_state_machine->get_state(_callstack[frame_idx_]._state_nr_open_cur);
+  state_open.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), itr_post_open->second);
  }
 }
 
 void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_1(size_t frame_idx_){
- StateNrType const state_nr_incoming = _nonterminal_idx_to_open_close_pairs.find(_callstack[frame_idx_]._nonterminal_idx_cur)->second._state_nr_open;
- State& state_incoming = *_dest_state_machine->get_state(state_nr_incoming);
- StateNrType const state_nr_close = _nonterminal_idx_to_open_close_pairs.find(_callstack[frame_idx_]._nonterminal_idx_cur)->second._state_nr_close;
- state_incoming.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), *_ret_part.get_incoming_state_nr());
- _ret_part.set_incoming_state_nr(state_nr_incoming);
+ State& state_incoming = *_dest_state_machine->get_state(_callstack[frame_idx_]._state_nr_open_cur);
+ StateNrType const state_nr_close = _nonterminal_idx_to_state_nr_close.find(_callstack[frame_idx_]._nonterminal_idx_cur)->second;
+ StateNrType const state_nr_post_open = _nonterminal_idx_to_state_nr_post_open.find(_callstack[frame_idx_]._nonterminal_idx_cur)->second;
+ State& state_post_open = *_dest_state_machine->get_state(state_nr_post_open);
+ state_incoming.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), state_nr_post_open);
+ state_post_open.add_epsilon_transition(*_ret_part.get_incoming_state_nr());
+ _ret_part.set_incoming_state_nr(_callstack[frame_idx_]._state_nr_open_cur);
  _ret_part.connect_outgoing_transitions_to(state_nr_close, *_dest_state_machine);
- _ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindClose, _callstack[frame_idx_]._nonterminal_idx_cur));
+ _ret_part.add_outgoing_symbol_transition(_callstack[frame_idx_]._state_nr_open_cur, Symbol(SymbolKindClose, _callstack[frame_idx_]._nonterminal_idx_cur));
+
+ _nonterminal_idx_to_state_nr_post_open.erase(_callstack[frame_idx_]._nonterminal_idx_cur);
 }
 
 void NonterminalStateMachinePartBuilder::process_terminal_identifier_stage_0(size_t frame_idx_) {

@@ -11,7 +11,7 @@ namespace pmt::util::smct {
 
 class StateMachineDeterminizer {
  public:
-  static void determinize(StateMachine& state_machine_);
+  static void determinize(StateMachine& state_machine_, pmt::util::smrt::StateNrType state_nr_from_ = pmt::util::smrt::StateNrStart);
 
  private:
   static auto get_e_closure(StateMachine const& state_machine_, pmt::util::smrt::StateNrType state_nr_from_, std::unordered_map<pmt::util::smrt::StateNrType, pmt::base::IntervalSet<pmt::util::smrt::StateNrType>>& cache_) -> pmt::base::IntervalSet<pmt::util::smrt::StateNrType>;

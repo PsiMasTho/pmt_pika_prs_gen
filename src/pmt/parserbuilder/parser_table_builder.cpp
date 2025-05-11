@@ -28,31 +28,22 @@ auto ParserTableBuilder::build(GenericAst const& ast_, GrammarData const& gramma
 }
 
 void ParserTableBuilder::setup_parser_state_machine() {
- StateNrType const state_nr_start = _result_tables._parser_state_machine.create_new_state();
- State& state_start = *_result_tables._parser_state_machine.get_state(state_nr_start);
+ StateMachinePart state_machine_part_nonterminal = _nonterminal_state_machine_part_builder.build([this](size_t index_) { return lookup_nonterminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_nonterminal_index_by_label(name_); }, [this](size_t index_) { return lookup_nonterminal_definition_by_index(index_); }, [&](std::string_view label_){return *_lexer_tables->terminal_label_to_index(label_);}, *_ast, _grammar_data->_start_nonterminal_definition, _result_tables._parser_state_machine);
+
  StateNrType const state_nr_pre_end = _result_tables._parser_state_machine.create_new_state();
  State& state_pre_end = *_result_tables._parser_state_machine.get_state(state_nr_pre_end);
  StateNrType const state_nr_end = _result_tables._parser_state_machine.create_new_state();
  State& state_end = *_result_tables._parser_state_machine.get_state(state_nr_end);
- StateNrType const state_nr_close = _result_tables._parser_state_machine.create_new_state();
- State& state_close = *_result_tables._parser_state_machine.get_state(state_nr_close);
-
- size_t const index_start = binary_find_index(_grammar_data->_nonterminals.begin(), _grammar_data->_nonterminals.end(), _grammar_data->_start_nonterminal_label, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
- state_start.add_symbol_transition(Symbol(SymbolKindClose, index_start), state_nr_pre_end);
  state_pre_end.add_symbol_transition(Symbol(SymbolKindTerminal, _lexer_tables->get_eoi_terminal_index()), state_nr_end);
-
  state_end.get_accepts().resize(_grammar_data->_nonterminals.size(), false);
  size_t const index_eoi_nonterminal = binary_find_index(_grammar_data->_nonterminals.begin(), _grammar_data->_nonterminals.end(), GrammarData::LABEL_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
  state_end.get_accepts().set(index_eoi_nonterminal, true);
 
- state_close.get_accepts().resize(_grammar_data->_nonterminals.size(), false);
- state_close.get_accepts().set(index_start, true);
+ state_machine_part_nonterminal.connect_outgoing_transitions_to(state_nr_pre_end, _result_tables._parser_state_machine);
 
- StateMachinePart state_machine_part_nonterminal = _nonterminal_state_machine_part_builder.build([this](size_t index_) { return lookup_nonterminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_nonterminal_index_by_label(name_); }, [this](size_t index_) { return lookup_nonterminal_definition_by_index(index_); }, [&](std::string_view label_){return *_lexer_tables->terminal_label_to_index(label_);}, *_ast, index_start, _result_tables._parser_state_machine);
- state_machine_part_nonterminal.connect_outgoing_transitions_to(state_nr_close, _result_tables._parser_state_machine);
- state_start.add_symbol_transition(Symbol(SymbolKindOpen, index_start), *state_machine_part_nonterminal.get_incoming_state_nr());
- //StateMachineDeterminizer::determinize(_result_tables._parser_state_machine);
- //StateMachineMinimizer::minimize(_result_tables._parser_state_machine);
+ // The starting state may not be StateNrStart, so determinize from the incoming state nr
+ StateMachineDeterminizer::determinize(_result_tables._parser_state_machine, *state_machine_part_nonterminal.get_incoming_state_nr());
+ StateMachineMinimizer::minimize(_result_tables._parser_state_machine);
 }
 
 void ParserTableBuilder::write_dot(std::string_view filename_, pmt::util::smct::StateMachine const& state_machine_) const {
@@ -109,6 +100,18 @@ void ParserTableBuilder::write_dot(std::string_view filename_, pmt::util::smct::
     return GraphWriter::EdgeStyle::Solid;
   }
  };
+
+ style_args._symbol_kind_to_font_flags_fn = [&](SymbolType kind_) -> GraphWriter::FontFlags {
+  switch (kind_) {
+   case SymbolKindTerminal:
+    return GraphWriter::FontFlags::Italic;
+   case SymbolKindClose:
+    return GraphWriter::FontFlags::Bold;
+   default:
+    return GraphWriter::FontFlags::None;
+  }
+ };
+
  style_args._layout_direction = GraphWriter::LayoutDirection::TopToBottom;
 
  GraphWriter().write_dot(writer_args, style_args);

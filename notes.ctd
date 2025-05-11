@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746921846">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1746979226">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -119,9 +119,12 @@ rename rule things in the grammar to nonterminal
 --
 end states looping on themselves is fine in nonterminals, just means it needs lookahead
 --
-rule building from expressions not done right, probably needs a stack of rule opens but just a map of closes</rich_text>
+rule building from expressions not done right, probably needs a stack of rule opens but just a map of closes
+----
+every nonterminal identifier needs to create an open state, but it should point to an existing definition node if on the stack,
+the created open + should point to the existing definition, the - should become outgoing</rich_text>
   </node>
-  <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746822398">
+  <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;
  IntervalSet&lt;StateNrType&gt; state_nrs = _lexer_state_machine.get_state_nrs();
  state_nrs.for_each_key(
@@ -132,6 +135,47 @@ rule building from expressions not done right, probably needs a stack of rule op
    max = std::max(max, furthest);
   });
 
-  return max;</rich_text>
+  return max;
+  ----
+  void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_0(size_t frame_idx_){
+ GenericAst const&amp; expr_cur = *_callstack[frame_idx_]._expr_cur_path.resolve(*_ast_root);
+
+ std::string const&amp; nonterminal_label = expr_cur.get_string();
+ _callstack[frame_idx_]._nonterminal_idx_cur = _fn_rev_lookup_nonterminal_label(nonterminal_label);
+
+ auto itr_close = _nonterminal_idx_to_close_state_nr.find(_callstack[frame_idx_]._nonterminal_idx_cur);
+ if (itr_close == _nonterminal_idx_to_close_state_nr.end()) {
+  itr_close = _nonterminal_idx_to_close_state_nr.emplace(_callstack[frame_idx_]._nonterminal_idx_cur, _dest_state_machine-&gt;create_new_state()).first;
+  State&amp; state_close = *_dest_state_machine-&gt;get_state(itr_close-&gt;second);
+  state_close.get_accepts().resize(_callstack[frame_idx_]._nonterminal_idx_cur + 1, false);
+  state_close.get_accepts().set(_callstack[frame_idx_]._nonterminal_idx_cur, true);
+ }
+
+ auto itr_open = _nonterminal_idx_to_open_state_nr.find(_callstack[frame_idx_]._nonterminal_idx_cur);
+ if (itr_open == _nonterminal_idx_to_open_state_nr.end()) {
+  itr_open = _nonterminal_idx_to_open_state_nr.emplace(_callstack[frame_idx_]._nonterminal_idx_cur, _dest_state_machine-&gt;create_new_state()).first;
+  ++_callstack[frame_idx_]._stage;
+  _keep_current_frame = true;
+  _callstack.emplace_back();
+  _callstack.back()._expr_cur_path = _fn_lookup_nonterminal_definition(_callstack[frame_idx_]._nonterminal_idx_cur);
+  _callstack.back()._expression_type = _callstack.back()._expr_cur_path.resolve(*_ast_root)-&gt;get_id();
+ } else {
+  _ret_part.connect_outgoing_transitions_to(itr_open-&gt;second, *_dest_state_machine);
+  _ret_part.set_incoming_state_nr(itr_open-&gt;second);
+  _ret_part.add_outgoing_symbol_transition(itr_open-&gt;second, Symbol(SymbolKindClose, _callstack[frame_idx_]._nonterminal_idx_cur));
+ }
+}
+
+void NonterminalStateMachinePartBuilder::process_nonterminal_identifier_stage_1(size_t frame_idx_){
+ StateNrType const state_nr_incoming = _nonterminal_idx_to_open_state_nr.find(_callstack[frame_idx_]._nonterminal_idx_cur)-&gt;second;
+ State&amp; state_incoming = *_dest_state_machine-&gt;get_state(state_nr_incoming);
+ StateNrType const state_nr_close = _nonterminal_idx_to_close_state_nr.find(_callstack[frame_idx_]._nonterminal_idx_cur)-&gt;second;
+ state_incoming.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), *_ret_part.get_incoming_state_nr());
+ _ret_part.set_incoming_state_nr(state_nr_incoming);
+ _ret_part.connect_outgoing_transitions_to(state_nr_close, *_dest_state_machine);
+ _ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindClose, _callstack[frame_idx_]._nonterminal_idx_cur));
+
+ _nonterminal_idx_to_open_state_nr.erase(_callstack[frame_idx_]._nonterminal_idx_cur);
+}</rich_text>
   </node>
 </cherrytree>

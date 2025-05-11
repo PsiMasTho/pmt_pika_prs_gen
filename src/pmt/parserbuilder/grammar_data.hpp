@@ -74,12 +74,12 @@ class GrammarData {
   std::vector<pmt::util::smrt::GenericAstPath> _comment_close_definitions;
   pmt::util::smrt::GenericAstPath _newline_definition;
   pmt::util::smrt::GenericAstPath _whitespace_definition;
+  pmt::util::smrt::GenericAstPath _start_nonterminal_definition;
 
   // nonterminals
   std::vector<NonterminalData> _nonterminals;
 
   // grammar properties
-  std::string _start_nonterminal_label;
   bool _case_sensitive : 1 = CASE_SENSITIVITY_DEFAULT;
 
   // -$ Functions $-

@@ -36,6 +36,7 @@ class NonterminalStateMachinePartBuilder {
     size_t _idx_max = 0;
     size_t _idx_chunk = 0;
 
+    pmt::util::smrt::StateNrType _state_nr_open_cur;
 
     pmt::util::smct::StateMachinePart _choices;
     pmt::util::smct::StateMachinePart _chunk;
@@ -44,15 +45,10 @@ class NonterminalStateMachinePartBuilder {
     pmt::util::smct::State* _state_choices = nullptr;
   };
 
-  struct OpenClosePair {
-   pmt::util::smrt::StateNrType _state_nr_open;
-   pmt::util::smrt::StateNrType _state_nr_close;
-  };
-
   // -$ Data $-
   pmt::util::smct::StateMachinePart _ret_part;
-  std::unordered_map<size_t, OpenClosePair> _nonterminal_idx_to_open_close_pairs;
-  std::vector<size_t> _nonterminal_idx_stack;
+  std::unordered_map<size_t, pmt::util::smrt::StateNrType> _nonterminal_idx_to_state_nr_post_open;
+  std::unordered_map<size_t, pmt::util::smrt::StateNrType> _nonterminal_idx_to_state_nr_close;
   std::vector<Frame> _callstack;
 
   NonterminalLabelLookupFn _fn_lookup_nonterminal_label;
@@ -65,7 +61,7 @@ class NonterminalStateMachinePartBuilder {
   bool _keep_current_frame = false;
 
  public:
-  auto build(NonterminalLabelLookupFn fn_lookup_nonterminal_name_, NonterminalReverseLabelLookupFn fn_rev_lookup_nonterminal_name_, NonterminalDefinitionLookupFn fn_lookup_nonterminal_definition_, TerminalIndexLookupFn fn_lookup_terminal_index_, pmt::util::smrt::GenericAst const& ast_root_, size_t nonterminal_idx_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart;
+  auto build(NonterminalLabelLookupFn fn_lookup_nonterminal_name_, NonterminalReverseLabelLookupFn fn_rev_lookup_nonterminal_name_, NonterminalDefinitionLookupFn fn_lookup_nonterminal_definition_, TerminalIndexLookupFn fn_lookup_terminal_index_, pmt::util::smrt::GenericAst const& ast_root_, pmt::util::smrt::GenericAstPath start_nonterminal_definition_, pmt::util::smct::StateMachine& dest_state_machine_) -> pmt::util::smct::StateMachinePart;
 
  private:
   void dispatch(size_t frame_idx_);
@@ -74,6 +70,7 @@ class NonterminalStateMachinePartBuilder {
 
   // definition
   void process_definition_stage_0(size_t frame_idx_);
+  void process_definition_stage_1(size_t frame_idx_);
 
   // sequence
   void process_sequence_stage_0(size_t frame_idx_);

@@ -7,7 +7,7 @@ namespace pmt::util::smct {
 using namespace pmt::base;
 using namespace pmt::util::smrt;
 
-void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
+void StateMachineDeterminizer::determinize(StateMachine& state_machine_, StateNrType state_nr_from_) {
   if (state_machine_.get_state_count() == 0) {
     return;
   }
@@ -38,7 +38,7 @@ void StateMachineDeterminizer::determinize(StateMachine& state_machine_) {
     return state_nr;
   };
 
-  push_and_visit(get_e_closure(state_machine_, StateNrStart, e_closure_cache));
+  push_and_visit(get_e_closure(state_machine_, state_nr_from_, e_closure_cache));
 
   while (!pending.empty()) {
     StateNrType const state_nr_cur = take();
