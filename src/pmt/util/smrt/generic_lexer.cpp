@@ -42,7 +42,7 @@ GenericLexer::GenericLexer(std::string_view input_, LexerTablesBase const& lexer
  , _input(input_)
  , _cursor(0)
  , _state_nr_newline(StateNrStart)
- , _state_nr_newline_accept(lexer_tables_.get_newline_state_nr_accept()) {
+{
 }
 
 auto GenericLexer::lex() -> LexReturn {
@@ -61,7 +61,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
       break;
     }
 
-    if (_state_nr_newline == _state_nr_newline_accept) {
+    if (_lexer_tables.is_linecount_state_nr_accepting(_state_nr_newline)) {
       _source_position._lineno++;
       _source_position._colno = 0;
       _state_nr_newline = StateNrStart;
@@ -88,7 +88,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
 
     SymbolType const symbol = (p == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolType>(_input[p]);
     state_nr_cur = _lexer_tables.get_state_nr_next(state_nr_cur, symbol);
-    _state_nr_newline = _lexer_tables.get_newline_state_nr_next(_state_nr_newline, symbol);
+    _state_nr_newline = _lexer_tables.get_linecount_state_nr_next(_state_nr_newline, symbol);
   }
 
   if (id != GenericId::IdUninitialized && countl < _accept_count && countl != _lexer_tables.get_start_terminal_index()) {

@@ -24,6 +24,10 @@ void State::remove_symbol_transition(Symbol symbol_) {
   _symbol_transitions.erase(Interval<StateNrType>(symbol_.get_combined()));
 }
 
+void State::clear_symbol_transitions() {
+ _symbol_transitions.clear();
+}
+
 auto State::get_accepts() const -> Bitset const& {
   return _accepts;
 }

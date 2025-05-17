@@ -9,12 +9,20 @@ namespace pmt::parserbuilder {
 
 class TableWriterCommon {
  public:
+ template <typename T_>
+ requires std::integral<typename T_::value_type>
+ static void write_single_entries(std::ostream& os_, T_ begin_, T_ end_);
+
  template <std::integral T_>
  static void write_single_entries(std::ostream& os_, std::span<T_ const> const& entries_);
 
  static void write_single_entries(std::ostream& os_, std::span<std::string const> const& entries_);
 
  static auto as_hex(std::integral auto value_, bool hex_prefix_ = true) -> std::string;
+
+ template <typename T_>
+ requires std::integral<typename T_::value_type>
+ static auto get_smallest_unsigned_type(T_ begin_, T_ end_) -> std::string;
 
  template <std::integral T_>
  static auto get_smallest_unsigned_type(std::span<T_ const> data_) -> std::string;

@@ -38,17 +38,16 @@ class LexerTableBuilder {
   void setup_whitespace_state_machine();
   void setup_terminal_state_machines();
   void setup_comment_state_machines();
-  void setup_newline_state_machine();
-  void setup_default_newline_state_machine();
+  void setup_linecount_state_machine();
+  void setup_default_linecount_state_machine();
   void loop_back_comment_close_state_machines();
   void merge_comment_state_machines_into_result();
   void merge_whitespace_state_machine_into_result();
   void setup_start_and_eoi_states();
   void connect_terminal_state_machines();
-  void loop_back_newline_state_machine();
+  void loop_back_linecount_state_machine();
   void fill_terminal_data();
   void validate_result();
-  void validate_newline_state_machine();
 
   void write_dot(std::string_view filename_, pmt::util::smct::StateMachine const& state_machine_) const;
 

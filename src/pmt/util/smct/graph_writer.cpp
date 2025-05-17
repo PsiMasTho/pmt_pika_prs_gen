@@ -19,9 +19,10 @@ using namespace pmt::util::smrt;
 GraphWriter::StyleArgs::StyleArgs()
 : _accepts_to_label_fn(accepts_to_label_default),
    _symbols_to_label_fn(symbols_to_label_default),
-   _symbol_kind_to_color_fn(symbol_kind_to_color_default),
+   _symbol_kind_to_edge_color_fn(symbol_kind_to_edge_color_default),
    _symbol_kind_to_edge_style_fn(symbol_kind_to_edge_style_default),
    _symbol_kind_to_font_flags_fn(symbol_kind_to_font_flags_default),
+   _symbol_kind_to_font_color_fn(symbol_kind_to_font_color_default),
    _title("State Machine"),
    _accepts_label("Accepts"),
    _accepting_node_color{._r = 0, ._g = 0, ._b = 255},
@@ -49,7 +50,7 @@ auto GraphWriter::symbols_to_label_default(pmt::base::IntervalSet<SymbolType> co
  return ret;
 }
 
-auto GraphWriter::symbol_kind_to_color_default(pmt::util::smrt::SymbolType) -> Color {
+auto GraphWriter::symbol_kind_to_edge_color_default(pmt::util::smrt::SymbolType) -> Color {
  return Color{._r = 0, ._g = 0, ._b = 0};
 }
 
@@ -59,6 +60,10 @@ auto GraphWriter::symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType)
 
 auto GraphWriter::symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolType kind_) -> FontFlags {
  return FontFlags::None;
+}
+
+auto GraphWriter::symbol_kind_to_font_color_default(pmt::util::smrt::SymbolType) -> Color {
+ return Color{._r = 0, ._g = 0, ._b = 0};
 }
 
 void GraphWriter::write_dot(WriterArgs& writer_args_, StyleArgs style_args_) {
@@ -154,10 +159,10 @@ void GraphWriter::replace_symbol_edges(std::string& str_) {
  std::string space;
  std::string symbol_edges_replacement;
  for (auto const& [kind, state_nr_next_and_labels] : labels) {
-  symbol_edges_replacement += std::exchange(space, " ") + "edge [color=" + to_string(_style_args._symbol_kind_to_color_fn(kind)) + ", style=" + to_string(_style_args._symbol_kind_to_edge_style_fn(kind)) + "]\n";
+  symbol_edges_replacement += std::exchange(space, " ") + "edge [color=" + to_string(_style_args._symbol_kind_to_edge_color_fn(kind)) + ", style=" + to_string(_style_args._symbol_kind_to_edge_style_fn(kind)) + "]\n";
   for (auto const& [state_nr, state_nr_next_and_label] : state_nr_next_and_labels) {
    for (auto const& [state_nr_next, label] : state_nr_next_and_label) {    
-    symbol_edges_replacement += " " + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next) + " [label=<" + apply_font_flags(label, _style_args._symbol_kind_to_font_flags_fn(kind)) + ">]\n";
+    symbol_edges_replacement += " " + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next) + " [label=<" + apply_font_color(apply_font_flags(label, _style_args._symbol_kind_to_font_flags_fn(kind)), _style_args._symbol_kind_to_font_color_fn(kind)) + ">]\n";
    }
   }
  }
@@ -289,6 +294,12 @@ auto GraphWriter::apply_font_flags(std::string str_, FontFlags flags_) -> std::s
    str_ = "<i>" + str_ + "</i>";
  }
 
+ return str_;
+}
+
+auto GraphWriter::apply_font_color(std::string str_, Color color_) -> std::string {
+ std::string color_str = to_string(color_);
+ str_ = "<font color=" + color_str + ">" + str_ + "</font>";
  return str_;
 }
 

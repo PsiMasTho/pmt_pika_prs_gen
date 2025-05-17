@@ -31,7 +31,6 @@ class GenericLexer {
   SourcePosition _source_position;
   size_t _cursor;
   pmt::util::smrt::StateNrType _state_nr_newline;
-  pmt::util::smrt::StateNrType _state_nr_newline_accept;
 
  public:
   // -$ Functions $-

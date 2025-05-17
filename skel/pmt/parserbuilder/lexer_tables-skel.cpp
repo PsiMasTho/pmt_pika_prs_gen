@@ -1,6 +1,8 @@
 /* Generated on: /* $replace TIMESTAMP */ */
 #include "/* $replace HEADER_INCLUDE_PATH */"
 
+#include <algorithm>
+
 /* $replace NAMESPACE_OPEN */
 
 namespace {
@@ -36,20 +38,24 @@ char const* const ID_NAMES[] = {
 /* $replace ID_NAMES */
 };
 
-/* $replace NEWLINE_LOWER_BOUNDS_TYPE */ const NEWLINE_LOWER_BOUNDS[] = {
-/* $replace NEWLINE_LOWER_BOUNDS */
+/* $replace LINECOUNT_LOWER_BOUNDS_TYPE */ const NEWLINE_LOWER_BOUNDS[] = {
+/* $replace LINECOUNT_LOWER_BOUNDS */
 };
 
-/* $replace NEWLINE_UPPER_BOUNDS_TYPE */ const NEWLINE_UPPER_BOUNDS[] = {
-/* $replace NEWLINE_UPPER_BOUNDS */
+/* $replace LINECOUNT_UPPER_BOUNDS_TYPE */ const LINECOUNT_UPPER_BOUNDS[] = {
+/* $replace LINECOUNT_UPPER_BOUNDS */
 };
 
-/* $replace NEWLINE_VALUES_TYPE */ const NEWLINE_VALUES[] = {
-/* $replace NEWLINE_VALUES */
+/* $replace LINECOUNT_VALUES_TYPE */ const LINECOUNT_VALUES[] = {
+/* $replace LINECOUNT_VALUES */
 };
 
-/* $replace NEWLINE_OFFSETS_TYPE */ const NEWLINE_OFFSETS[] = {
-/* $replace NEWLINE_OFFSETS */
+/* $replace LINECOUNT_OFFSETS_TYPE */ const LINECOUNT_OFFSETS[] = {
+/* $replace LINECOUNT_OFFSETS */
+};
+
+/* $replace LINECOUNT_ACCEPTS_TYPE */ const LINECOUNT_ACCEPTS[] = {
+/* $replace LINECOUNT_ACCEPTS */
 };
 
 auto encode_symbol(pmt::util::smrt::SymbolType symbol_) -> pmt::util::smrt::SymbolType {
@@ -125,12 +131,12 @@ auto /* $replace CLASS_NAME */::id_to_string(pmt::util::smrt::GenericId::IdType 
  return ID_NAMES[id_];
 }
 
-auto /* $replace CLASS_NAME */::get_newline_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {
- return get_state_nr_next_generic</* $replace NEWLINE_LOWER_BOUNDS_TYPE */, /* $replace NEWLINE_UPPER_BOUNDS_TYPE */, /* $replace NEWLINE_VALUES_TYPE */, /* $replace NEWLINE_OFFSETS_TYPE */>(NEWLINE_LOWER_BOUNDS, NEWLINE_UPPER_BOUNDS, NEWLINE_VALUES, NEWLINE_OFFSETS, state_nr_, symbol_);
+auto /* $replace CLASS_NAME */::get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {
+ return get_state_nr_next_generic</* $replace LINECOUNT_LOWER_BOUNDS_TYPE */, /* $replace LINECOUNT_UPPER_BOUNDS_TYPE */, /* $replace LINECOUNT_VALUES_TYPE */, /* $replace LINECOUNT_OFFSETS_TYPE */>(NEWLINE_LOWER_BOUNDS, LINECOUNT_UPPER_BOUNDS, LINECOUNT_VALUES, LINECOUNT_OFFSETS, state_nr_, symbol_);
 }
 
-auto /* $replace CLASS_NAME */::get_newline_state_nr_accept() const -> pmt::util::smrt::SymbolType {
- return /* $replace NEWLINE_ACCEPTING_STATE_NR */;
+auto /* $replace CLASS_NAME */::is_linecount_state_nr_accepting(pmt::util::smrt::SymbolType state_nr_) const -> bool {
+ return std::binary_search(LINECOUNT_ACCEPTS, LINECOUNT_ACCEPTS + /* $replace LINECOUNT_ACCEPTS_COUNT */, state_nr_);
 }
 
 /* $replace NAMESPACE_CLOSE */

@@ -243,6 +243,9 @@ auto Bitset::all() const -> bool {
 }
 
 auto Bitset::popcnt() const -> size_t {
+  if (_size == 0) {
+    return 0;
+  }
   return std::accumulate(_data.get(), _data.get() + get_required_chunk_count(_size), 0, [](size_t acc_, ChunkType chunk_) { return acc_ + std::popcount(chunk_); });
 }
 

@@ -27,6 +27,7 @@ class State {
 
   void remove_epsilon_transition(pmt::util::smrt::StateNrType state_nr_);
   void remove_symbol_transition(Symbol symbol_);
+  void clear_symbol_transitions();
 
   auto get_accepts() const -> pmt::base::Bitset const&;
   auto get_accepts() -> pmt::base::Bitset&;

@@ -27,6 +27,7 @@ enum : SymbolType {
  SymbolKindTerminal = 1ull,
  SymbolKindOpen = 2ull,
  SymbolKindClose = 3ull,
+ SymbolKindConflict = 4ull,
 };
 
 }  // namespace pmt::util::smrt

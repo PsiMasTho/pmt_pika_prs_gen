@@ -4,6 +4,7 @@
 #include "pmt/parserbuilder/lexer_tables.hpp"
 #include "pmt/parserbuilder/table_writer_common.hpp"
 
+#include <set>
 #include <vector>
 #include <sstream>
 
@@ -52,8 +53,8 @@ namespace pmt::parserbuilder {
   replace_terminal_labels(_source);
   replace_terminal_ids(_source);
   replace_id_names(_source);
-  replace_newline_transitions(_source);
-  replace_newline_accepting_state_nr(_source);
+  replace_linecount_transitions(_source);
+  replace_linecount_accepts(_source);
   replace_terminal_count(_source);
   replace_start_terminal_index(_source);
   replace_eoi_terminal_index(_source);
@@ -203,22 +204,22 @@ namespace pmt::parserbuilder {
   replace_skeleton_label(str_, "ID_NAMES", id_names_replacement.str());
  }
 
- void LexerTableWriter::replace_newline_transitions(std::string& str_) {
-  std::vector<SymbolType> newline_lower_bounds;
-  std::vector<SymbolType> newline_upper_bounds;
-  std::vector<StateNrType> newline_values;
-  std::vector<size_t> newline_offsets{0};
+ void LexerTableWriter::replace_linecount_transitions(std::string& str_) {
+  std::vector<SymbolType> linecount_lower_bounds;
+  std::vector<SymbolType> linecount_upper_bounds;
+  std::vector<StateNrType> linecount_values;
+  std::vector<size_t> linecount_offsets{0};
  
-   _writer_args->_tables._newline_state_machine.get_state_nrs().for_each_key(
+   _writer_args->_tables._linecount_state_machine.get_state_nrs().for_each_key(
      [&](pmt::util::smrt::StateNrType state_nr_) {
-       State const& state = *_writer_args->_tables._newline_state_machine.get_state(state_nr_);
+       State const& state = *_writer_args->_tables._linecount_state_machine.get_state(state_nr_);
        IntervalMap<SymbolType, StateNrType> const& symbol_transitions = state.get_symbol_transitions();
-       newline_offsets.push_back(newline_offsets.back() + symbol_transitions.size());
+       linecount_offsets.push_back(linecount_offsets.back() + symbol_transitions.size());
        symbol_transitions.for_each_interval(
          [&](StateNrType value_, Interval<SymbolType> interval_) {
-           newline_lower_bounds.push_back(encode_symbol(interval_.get_lower()));
-           newline_upper_bounds.push_back(encode_symbol(interval_.get_upper()));
-           newline_values.push_back(value_);
+           linecount_lower_bounds.push_back(encode_symbol(interval_.get_lower()));
+           linecount_upper_bounds.push_back(encode_symbol(interval_.get_upper()));
+           linecount_values.push_back(value_);
          }
        );
      }
@@ -226,39 +227,55 @@ namespace pmt::parserbuilder {
 
    {
     std::stringstream lower_bounds_replacement;
-    TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, newline_lower_bounds);
-    replace_skeleton_label(str_, "NEWLINE_LOWER_BOUNDS", lower_bounds_replacement.str());
+    TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, linecount_lower_bounds);
+    replace_skeleton_label(str_, "LINECOUNT_LOWER_BOUNDS", lower_bounds_replacement.str());
    }
-   std::string const lower_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(newline_lower_bounds);
-   replace_skeleton_label(str_, "NEWLINE_LOWER_BOUNDS_TYPE", lower_bounds_type_replacement);
+   std::string const lower_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(linecount_lower_bounds);
+   replace_skeleton_label(str_, "LINECOUNT_LOWER_BOUNDS_TYPE", lower_bounds_type_replacement);
    
    std::stringstream upper_bounds_replacement;
    {
-    TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, newline_upper_bounds);
-    replace_skeleton_label(str_, "NEWLINE_UPPER_BOUNDS", upper_bounds_replacement.str());
+    TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, linecount_upper_bounds);
+    replace_skeleton_label(str_, "LINECOUNT_UPPER_BOUNDS", upper_bounds_replacement.str());
    }
-   std::string const upper_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(newline_upper_bounds);
-   replace_skeleton_label(str_, "NEWLINE_UPPER_BOUNDS_TYPE", upper_bounds_type_replacement);
+   std::string const upper_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(linecount_upper_bounds);
+   replace_skeleton_label(str_, "LINECOUNT_UPPER_BOUNDS_TYPE", upper_bounds_type_replacement);
 
    std::stringstream values_replacement;
    {
-    TableWriterCommon::write_single_entries<StateNrType>(values_replacement, newline_values);
-    replace_skeleton_label(str_, "NEWLINE_VALUES", values_replacement.str());
+    TableWriterCommon::write_single_entries<StateNrType>(values_replacement, linecount_values);
+    replace_skeleton_label(str_, "LINECOUNT_VALUES", values_replacement.str());
    }
-   std::string const values_type_replacement = TableWriterCommon::get_smallest_unsigned_type<StateNrType>(newline_values);
-   replace_skeleton_label(str_, "NEWLINE_VALUES_TYPE", values_type_replacement);
+   std::string const values_type_replacement = TableWriterCommon::get_smallest_unsigned_type<StateNrType>(linecount_values);
+   replace_skeleton_label(str_, "LINECOUNT_VALUES_TYPE", values_type_replacement);
 
    std::stringstream offsets_replacement;
    {
-    TableWriterCommon::write_single_entries<size_t>(offsets_replacement, newline_offsets);
-    replace_skeleton_label(str_, "NEWLINE_OFFSETS", offsets_replacement.str());
+    TableWriterCommon::write_single_entries<size_t>(offsets_replacement, linecount_offsets);
+    replace_skeleton_label(str_, "LINECOUNT_OFFSETS", offsets_replacement.str());
    }
-   std::string const offsets_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(newline_offsets);
-   replace_skeleton_label(str_, "NEWLINE_OFFSETS_TYPE", offsets_type_replacement);
+   std::string const offsets_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(linecount_offsets);
+   replace_skeleton_label(str_, "LINECOUNT_OFFSETS_TYPE", offsets_type_replacement);
  }
 
- void LexerTableWriter::replace_newline_accepting_state_nr(std::string& str_) {
-  replace_skeleton_label(str_, "NEWLINE_ACCEPTING_STATE_NR", TableWriterCommon::as_hex(_writer_args->_tables.get_newline_state_nr_accept(), true));
+ void LexerTableWriter::replace_linecount_accepts(std::string& str_) {
+  std::set<StateNrType> linecount_accepts;
+  _writer_args->_tables._linecount_state_machine.get_state_nrs().for_each_key(
+    [&](pmt::util::smrt::StateNrType state_nr_) {
+      if (_writer_args->_tables._linecount_state_machine.get_state(state_nr_)->get_accepts().any()) {
+        linecount_accepts.insert(state_nr_);
+      }
+    }
+   );
+
+   {
+   std::stringstream linecount_accepts_replacement;
+   TableWriterCommon::write_single_entries(linecount_accepts_replacement, linecount_accepts.begin(), linecount_accepts.end());
+   replace_skeleton_label(str_, "LINECOUNT_ACCEPTS", linecount_accepts_replacement.str());
+  }
+  std::string const linecount_accepts_type_replacement = TableWriterCommon::get_smallest_unsigned_type(linecount_accepts.begin(), linecount_accepts.end());
+  replace_skeleton_label(str_, "LINECOUNT_ACCEPTS_TYPE", linecount_accepts_type_replacement);   
+  replace_skeleton_label(str_, "LINECOUNT_ACCEPTS_COUNT", TableWriterCommon::as_hex(linecount_accepts.size(), true));
  }
  
  void LexerTableWriter::replace_terminal_count(std::string& str_){

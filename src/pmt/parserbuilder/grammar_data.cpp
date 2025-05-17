@@ -110,7 +110,7 @@ void GrammarData::initial_iteration_handle_grammar_property_comment(GrammarData&
 }
 
 void GrammarData::initial_iteration_handle_grammar_property_newline(GrammarData& grammar_data_, pmt::util::smrt::GenericAstPath const& path_) {
-  grammar_data_._newline_definition = path_;
+  grammar_data_._linecount_definition = path_;
 }
 
 void GrammarData::initial_iteration_handle_terminal_production(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_, InitialIterationContext& context_) {
@@ -215,7 +215,7 @@ void GrammarData::add_reserved_terminals(GrammarData& grammar_data_) {
 
   size_t const index_newline = grammar_data_._terminals.size();
   grammar_data_._terminals.emplace_back();
-  grammar_data_._terminals.back()._label = TERMINAL_LABEL_NEWLINE;
+  grammar_data_._terminals.back()._label = TERMINAL_LABEL_LINECOUNT;
   grammar_data_._terminals.back()._id_name = GenericId::id_to_string(GenericId::IdNewline);
   grammar_data_._terminals.back()._terminal = grammar_data_._terminals_reverse.size();
   grammar_data_._terminals_reverse.push_back(index_newline);

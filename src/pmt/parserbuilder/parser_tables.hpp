@@ -15,6 +15,7 @@ class ParserTables : public pmt::util::smrt::ParserTablesBase {
 
   // -$ Data $-
   pmt::util::smct::StateMachine _parser_state_machine;
+  pmt::util::smct::StateMachine _lookahead_state_machine;
 
   std::vector<std::string> _id_names;
   std::vector<NonterminalData> _nonterminal_data;

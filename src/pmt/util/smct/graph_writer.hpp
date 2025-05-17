@@ -51,9 +51,10 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
  
   using AcceptsToLabelFn = std::function<std::string(size_t)>;
   using SymbolsToLabelFn = std::function<std::string(pmt::base::IntervalSet<pmt::util::smrt::SymbolType> const&)>;
-  using SymbolKindToColorFn = std::function<Color(pmt::util::smrt::SymbolType)>;
+  using SymbolKindToEdgeColorFn = std::function<Color(pmt::util::smrt::SymbolType)>;
   using SymbolKindToEdgeStyleFn = std::function<EdgeStyle(pmt::util::smrt::SymbolType)>;
   using SymbolKindToFontFlagsFn = std::function<FontFlags(pmt::util::smrt::SymbolType)>;
+  using SymbolKindToFontColorFn = std::function<Color(pmt::util::smrt::SymbolType)>;
 
   struct WriterArgs {
    std::ostream& _os_graph;
@@ -65,9 +66,10 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
    StyleArgs();
    AcceptsToLabelFn _accepts_to_label_fn;
    SymbolsToLabelFn _symbols_to_label_fn;
-   SymbolKindToColorFn _symbol_kind_to_color_fn;
+   SymbolKindToEdgeColorFn _symbol_kind_to_edge_color_fn;
    SymbolKindToEdgeStyleFn _symbol_kind_to_edge_style_fn;
    SymbolKindToFontFlagsFn _symbol_kind_to_font_flags_fn;
+   SymbolKindToFontColorFn _symbol_kind_to_font_color_fn;
    std::string _title = "State Machine";
    std::string _accepts_label = "Accepts";
    Color _accepting_node_color = Color{._r = 0, ._g = 0, ._b = 255};
@@ -90,9 +92,10 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   // --$ Other $--
   static auto accepts_to_label_default(size_t accepts_) -> std::string;
   static auto symbols_to_label_default(pmt::base::IntervalSet<pmt::util::smrt::SymbolType> const& symbols_) -> std::string;
-  static auto symbol_kind_to_color_default(pmt::util::smrt::SymbolType kind_) -> Color;
+  static auto symbol_kind_to_edge_color_default(pmt::util::smrt::SymbolType kind_) -> Color;
   static auto symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType kind_) -> EdgeStyle;
   static auto symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolType kind_) -> FontFlags;
+  static auto symbol_kind_to_font_color_default(pmt::util::smrt::SymbolType kind_) -> Color;
 
   void write_dot(WriterArgs& writer_args_, StyleArgs style_args_);
 
@@ -121,6 +124,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   static auto to_string(Color color_) -> std::string;
 
   static auto apply_font_flags(std::string str_, FontFlags flags_) -> std::string;
+  static auto apply_font_color(std::string str_, Color color_) -> std::string;
 };
 
 }  // namespace pmt::util::smct

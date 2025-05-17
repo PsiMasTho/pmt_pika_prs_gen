@@ -25,8 +25,8 @@ class LexerTablesBase {
   virtual auto id_to_string(GenericId::IdType id_) const -> std::string;
 
   // Newline tables
-  virtual auto get_newline_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType = 0;
-  virtual auto get_newline_state_nr_accept() const -> StateNrType = 0;
+  virtual auto get_linecount_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType = 0;
+  virtual auto is_linecount_state_nr_accepting(StateNrType state_nr_) const -> bool = 0;
 };
 
 }  // namespace pmt::util::smrt

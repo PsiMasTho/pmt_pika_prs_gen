@@ -8,16 +8,17 @@ namespace pmt::util::smct {
 using namespace pmt::base;
 using namespace pmt::util::smrt;
 
-void StateMachinePruner::prune(StateMachine& state_machine_, StateNrType state_nr_from_, StateNrType state_nr_from_new_, bool renumber_) {
+void StateMachinePruner::prune(StateMachine& state_machine_, StateNrType state_nr_from_, std::optional<pmt::util::smrt::StateNrType> state_nr_from_new_) {
   std::vector<StateNrType> pending;
   IntervalMap<StateNrType, StateNrType> visited;
 
-  auto const push_and_visit = [&pending, &visited, &state_nr_from_new_, &renumber_](StateNrType state_nr_) -> StateNrType {
+  auto const push_and_visit = [&pending, &visited, &state_nr_from_new_](StateNrType state_nr_) -> StateNrType {
     if (StateNrType const* ptr = visited.find(state_nr_); ptr != nullptr) {
       return *ptr;
     }
 
-    StateNrType const state_nr_new = renumber_ ? state_nr_from_new_++ : state_nr_;
+    StateNrType const state_nr_new = state_nr_from_new_.value_or(state_nr_);
+    state_nr_from_new_ = state_nr_from_new_.has_value() ? std::make_optional(state_nr_new + 1) : std::nullopt;
 
     pending.push_back(state_nr_);
     visited.insert(Interval<StateNrType>(state_nr_), state_nr_new);

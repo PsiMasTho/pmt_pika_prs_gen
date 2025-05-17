@@ -18,7 +18,7 @@ class LexerTables : public pmt::util::smrt::LexerTablesBase {
 
   // -$ Data $-
   pmt::util::smct::StateMachine _lexer_state_machine;
-  pmt::util::smct::StateMachine _newline_state_machine;
+  pmt::util::smct::StateMachine _linecount_state_machine;
 
   std::vector<std::string> _id_names;
   std::vector<TerminalData> _terminal_data;
@@ -34,8 +34,8 @@ class LexerTables : public pmt::util::smrt::LexerTablesBase {
   auto get_terminal_label(size_t index_) const -> std::string override;
   auto get_terminal_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType override;
   auto id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string override;
-  auto get_newline_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;
-  auto get_newline_state_nr_accept() const -> pmt::util::smrt::SymbolType override;
+  auto get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;
+  auto is_linecount_state_nr_accepting(pmt::util::smrt::StateNrType state_nr_) const -> bool override;
 
   // --$ Other $--
   auto terminal_label_to_index(std::string_view label_) const -> std::optional<size_t>;

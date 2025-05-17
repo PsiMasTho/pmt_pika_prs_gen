@@ -43,23 +43,14 @@ auto LexerTables::id_to_string(GenericId::IdType id_) const -> std::string {
  return _id_names[id_];
 }
 
-auto LexerTables::get_newline_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType {
- State const* state = _newline_state_machine.get_state(state_nr_);
+auto LexerTables::get_linecount_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType {
+ State const* state = _linecount_state_machine.get_state(state_nr_);
  return state ? state->get_symbol_transition(Symbol(symbol_)) : StateNrSink;
 }
 
-auto LexerTables::get_newline_state_nr_accept() const -> pmt::util::smrt::SymbolType {
-  StateNrType ret = StateNrSink;
- _newline_state_machine.get_state_nrs().for_each_key(
-   [&](pmt::util::smrt::StateNrType state_nr_) {
-     State const& state = *_newline_state_machine.get_state(state_nr_);
-     if (state.get_accepts().popcnt() != 0) {
-       ret = state_nr_;
-     }
-   }
- );
-
- return ret;
+auto LexerTables::is_linecount_state_nr_accepting(StateNrType state_nr_) const -> bool {
+ State const* state = _linecount_state_machine.get_state(state_nr_);
+ return state ? state->get_accepts().any() : false;
 }
 
 auto LexerTables::terminal_label_to_index(std::string_view label_) const -> std::optional<size_t> {

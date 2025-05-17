@@ -26,7 +26,7 @@ class GrammarData {
   static inline std::string const TERMINAL_LABEL_WHITESPACE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "whitespace";         // NOLINT
   static inline std::string const TERMINAL_LABEL_START = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "start";                   // NOLINT
   static inline std::string const LABEL_EOI = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "eoi";                                // NOLINT
-  static inline std::string const TERMINAL_LABEL_NEWLINE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "newline";               // NOLINT
+  static inline std::string const TERMINAL_LABEL_LINECOUNT = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "linecount";           // NOLINT
 
   static inline bool const MERGE_DEFAULT = false;
   static inline bool const UNPACK_DEFAULT = false;
@@ -72,7 +72,7 @@ class GrammarData {
 
   std::vector<pmt::util::smrt::GenericAstPath> _comment_open_definitions;
   std::vector<pmt::util::smrt::GenericAstPath> _comment_close_definitions;
-  pmt::util::smrt::GenericAstPath _newline_definition;
+  pmt::util::smrt::GenericAstPath _linecount_definition;
   pmt::util::smrt::GenericAstPath _whitespace_definition;
   pmt::util::smrt::GenericAstPath _start_nonterminal_definition;
 
