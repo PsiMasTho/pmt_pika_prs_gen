@@ -53,6 +53,8 @@ namespace pmt::parserbuilder {
   replace_terminal_labels(_source);
   replace_terminal_ids(_source);
   replace_id_names(_source);
+  replace_min_id(_source);
+  replace_id_count(_source);
   replace_linecount_transitions(_source);
   replace_linecount_accepts(_source);
   replace_terminal_count(_source);
@@ -91,7 +93,7 @@ namespace pmt::parserbuilder {
   replace_skeleton_label(str_, "HEADER_INCLUDE_PATH", _writer_args->_header_include_path);
  }
  
- void LexerTableWriter::replace_transitions(std::string& str_){
+ void LexerTableWriter::replace_transitions(std::string& str_) {
   std::vector<SymbolType> lower_bounds;
   std::vector<SymbolType> upper_bounds;
   std::vector<StateNrType> values;
@@ -100,10 +102,8 @@ namespace pmt::parserbuilder {
    _writer_args->_tables._lexer_state_machine.get_state_nrs().for_each_key(
      [&](pmt::util::smrt::StateNrType state_nr_) {
        State const& state = *_writer_args->_tables._lexer_state_machine.get_state(state_nr_);
-       IntervalSet<SymbolType> const& symbols = state.get_symbols();
-       offsets.push_back(offsets.back() + symbols.size());
-       symbols.for_each_interval(
-         [&](Interval<SymbolType> interval_) {
+       IntervalMap<SymbolType, StateNrType> const& symbol_transitions = state.get_symbol_transitions();
+       symbol_transitions.for_each_interval([&](StateNrType value_, Interval<SymbolType> interval_){
            // Store lowers and uppers + 1, this will make the EOI symbol
            // roll over to zero and keep all values small in common cases.
            // This is undone in the generated lexer class by subtracting where needed.
@@ -111,10 +111,9 @@ namespace pmt::parserbuilder {
            // tables smaller and the search faster.
            lower_bounds.push_back(encode_symbol(interval_.get_lower()));
            upper_bounds.push_back(encode_symbol(interval_.get_upper()));
-           StateNrType const value = state.get_symbol_transition(Symbol(interval_.get_lower()));
-           values.push_back(value);
-         }
-       );
+           values.push_back(value_);
+       });
+       offsets.push_back(offsets.back() + symbol_transitions.size());
      }
    );
 
@@ -154,7 +153,7 @@ namespace pmt::parserbuilder {
  void LexerTableWriter::replace_terminals(std::string& str_){
   std::vector<Bitset::ChunkType> terminals_flattened;
 
-  size_t const terminal_count = _writer_args->_tables.get_terminal_count();
+  size_t const terminal_count = _writer_args->_tables.get_accept_count();
 
   _writer_args->_tables._lexer_state_machine.get_state_nrs().for_each_key(
     [&](pmt::util::smrt::StateNrType state_nr_) {
@@ -203,6 +202,16 @@ namespace pmt::parserbuilder {
   TableWriterCommon::write_single_entries(id_names_replacement, _writer_args->_tables._id_names);
   replace_skeleton_label(str_, "ID_NAMES", id_names_replacement.str());
  }
+
+ void LexerTableWriter::replace_min_id(std::string& str_) {
+  std::string const min_id_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_min_id(), true);
+  replace_skeleton_label(str_, "MIN_ID", min_id_replacement);
+}
+
+void LexerTableWriter::replace_id_count(std::string& str_) {
+  std::string const id_count_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_id_count(), true);
+  replace_skeleton_label(str_, "ID_COUNT", id_count_replacement);
+}
 
  void LexerTableWriter::replace_linecount_transitions(std::string& str_) {
   std::vector<SymbolType> linecount_lower_bounds;
@@ -279,24 +288,25 @@ namespace pmt::parserbuilder {
  }
  
  void LexerTableWriter::replace_terminal_count(std::string& str_){
-  std::string terminal_count_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_terminal_count(), true);
-  replace_skeleton_label(str_, "TERMINAL_COUNT", terminal_count_replacement);
+  size_t const accept_count = _writer_args->_tables.get_accept_count();
+  replace_skeleton_label(str_, "TERMINAL_COUNT", TableWriterCommon::as_hex(accept_count, true));
+  replace_skeleton_label(str_, "TERMINAL_CHUNK_COUNT", TableWriterCommon::as_hex(Bitset::get_required_chunk_count(accept_count), true));
  }
  
  void LexerTableWriter::replace_start_terminal_index(std::string& str_){
-  std::string start_terminal_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_start_terminal_index(), true);
+  std::string start_terminal_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_start_accept_index(), true);
   replace_skeleton_label(str_, "START_TERMINAL_INDEX", start_terminal_index_replacement);
  }
  
  void LexerTableWriter::replace_eoi_terminal_index(std::string& str_){
-  std::string eoi_terminal_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_eoi_terminal_index(), true);
+  std::string eoi_terminal_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_eoi_accept_index(), true);
   replace_skeleton_label(str_, "EOI_TERMINAL_INDEX", eoi_terminal_index_replacement);
  }
 
 void LexerTableWriter::replace_id_constants(std::string& str_) {
  std::string id_constants_replacement;
- for (size_t i = 0; i < _writer_args->_tables._id_names.size(); ++i) {
-  id_constants_replacement += _writer_args->_tables._id_names[i] + " = "  + TableWriterCommon::as_hex(i, true) + ",\n";
+ for (GenericId::IdType i = 0; i < _writer_args->_tables._id_names.size(); ++i) {
+  id_constants_replacement += _writer_args->_tables._id_names[i] + " = "  + TableWriterCommon::as_hex(i + _writer_args->_tables.get_min_id(), true) + ",\n";
  }
 
  replace_skeleton_label(str_, "ID_CONSTANTS", id_constants_replacement);

@@ -103,32 +103,40 @@ auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::smrt::StateNrType s
  return get_state_nr_next_generic</* $replace LOWER_BOUNDS_TYPE */, /* $replace UPPER_BOUNDS_TYPE */, /* $replace VALUES_TYPE */, /* $replace OFFSETS_TYPE */>(LOWER_BOUNDS, UPPER_BOUNDS, VALUES, OFFSETS, state_nr_, symbol_);
 }
 
-auto /* $replace CLASS_NAME */::get_state_terminals(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
- return pmt::base::Bitset::ChunkSpanConst(TERMINALS + state_nr_ * /* $replace TERMINAL_COUNT */, /* $replace TERMINAL_COUNT */);
+auto /* $replace CLASS_NAME */::get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+ return pmt::base::Bitset::ChunkSpanConst(TERMINALS + state_nr_ * /* $replace TERMINAL_CHUNK_COUNT */, /* $replace TERMINAL_CHUNK_COUNT */);
 }
 
-auto /* $replace CLASS_NAME */::get_terminal_count() const -> size_t {
+auto /* $replace CLASS_NAME */::get_accept_count() const -> size_t {
  return /* $replace TERMINAL_COUNT */;
 }
 
-auto /* $replace CLASS_NAME */::get_start_terminal_index() const -> size_t {
+auto /* $replace CLASS_NAME */::get_start_accept_index() const -> size_t {
  return /* $replace START_TERMINAL_INDEX */;
 }
 
-auto /* $replace CLASS_NAME */::get_eoi_terminal_index() const -> size_t {
+auto /* $replace CLASS_NAME */::get_eoi_accept_index() const -> size_t {
  return /* $replace EOI_TERMINAL_INDEX */;
 }
 
-auto /* $replace CLASS_NAME */::get_terminal_label(size_t index_) const -> std::string {
+auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> std::string {
  return TERMINAL_LABELS[index_];
 }
 
-auto /* $replace CLASS_NAME */::get_terminal_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
+auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
  return TERMINAL_IDS[index_];
 }
 
 auto /* $replace CLASS_NAME */::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {
- return ID_NAMES[id_];
+ return ID_NAMES[id_ - /* $replace MIN_ID */];
+}
+
+auto /* $replace CLASS_NAME */::get_min_id() const -> pmt::util::smrt::GenericId::IdType {
+ return /* $replace MIN_ID */;
+}
+
+auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
+ return /* $replace ID_COUNT */;
 }
 
 auto /* $replace CLASS_NAME */::get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {

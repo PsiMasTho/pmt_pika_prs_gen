@@ -194,9 +194,9 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
 }  // namespace
 
 void StateMachineMinimizer::minimize(StateMachine& state_machine_) {
-  std::unordered_set<IntervalSet<StateNrType>> const p = get_equivalence_partitions(state_machine_, get_alphabet(state_machine_), get_initial_partitions(state_machine_));
-  std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(state_machine_, p);
-  state_machine_ = rebuild_minimized_state_machine(state_machine_, state_nr_to_equiv_partition);
+ std::unordered_set<IntervalSet<StateNrType>> const p = get_equivalence_partitions(state_machine_, get_alphabet(state_machine_), get_initial_partitions(state_machine_));
+ std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(state_machine_, p);
+ state_machine_ = rebuild_minimized_state_machine(state_machine_, state_nr_to_equiv_partition);
 }
 
 }  // namespace pmt::util::smct

@@ -40,6 +40,8 @@ class GenericLexer {
   // --$ Other $--
   auto lex() -> LexReturn;
   auto lex(pmt::base::Bitset::ChunkSpanConst accepts_) -> LexReturn;
+
+  auto get_eoi_accept_index() const -> size_t;
 };
 
 }  // namespace pmt::util::smrt

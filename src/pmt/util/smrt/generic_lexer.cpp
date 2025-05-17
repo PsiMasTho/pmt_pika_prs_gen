@@ -22,6 +22,14 @@ namespace {
   return total;
  }
 
+ void set_bit(Bitset::ChunkSpan dest_, size_t index_) {
+  size_t const chunk_index = index_ / Bitset::ChunkBit;
+  size_t const bit_index = index_ % Bitset::ChunkBit;
+
+  assert(chunk_index < dest_.size());
+  dest_[chunk_index] |= Bitset::ChunkType(1) << bit_index;
+ }
+
  void bitwise_and(Bitset::ChunkSpan dest_, Bitset::ChunkSpanConst lhs_ , Bitset::ChunkSpanConst rhs_) {
   std::fill(dest_.begin(), dest_.end(), Bitset::ChunkType(0));
 
@@ -35,9 +43,9 @@ namespace {
 }
 
 GenericLexer::GenericLexer(std::string_view input_, LexerTablesBase const& lexer_tables_)
- : _accept_count(lexer_tables_.get_terminal_count())
- , _accepts_all(Bitset::get_required_chunk_count(_accept_count), ~Bitset::ChunkType(0))
- , _accepts_valid(Bitset::get_required_chunk_count(_accept_count), Bitset::ChunkType(0))
+ : _accept_count(lexer_tables_.get_accept_count())
+ , _accepts_all(Bitset::get_required_chunk_count(_accept_count), Bitset::ALL_SET_MASKS[true])
+ , _accepts_valid(Bitset::get_required_chunk_count(_accept_count), Bitset::ALL_SET_MASKS[false])
  , _lexer_tables(lexer_tables_)
  , _input(input_)
  , _cursor(0)
@@ -69,17 +77,17 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
       _source_position._colno++;
     }
 
-    bitwise_and(_accepts_valid, _lexer_tables.get_state_terminals(state_nr_cur), accepts_);
+    bitwise_and(_accepts_valid, _lexer_tables.get_state_accepts(state_nr_cur), accepts_);
 
     countl = find_first_set_bit(_accepts_valid);
 
     if (countl < _accept_count) {
-     if (countl == _lexer_tables.get_start_terminal_index()) {
+     if (countl == _lexer_tables.get_start_accept_index()) {
       _cursor = p;
      }
 
      te = p;
-     id = _lexer_tables.get_terminal_id(countl);
+     id = _lexer_tables.get_accept_index_id(countl);
     }
 
     if (p == _input.size() + 1) {
@@ -91,7 +99,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
     _state_nr_newline = _lexer_tables.get_linecount_state_nr_next(_state_nr_newline, symbol);
   }
 
-  if (id != GenericId::IdUninitialized && countl < _accept_count && countl != _lexer_tables.get_start_terminal_index()) {
+  if (id != GenericId::IdUninitialized && countl < _accept_count && countl != _lexer_tables.get_start_accept_index()) {
    LexReturn ret;
    ret._accepted = countl;
    ret._token._token = std::string_view(_input.data() + _cursor, te - _cursor);
@@ -103,5 +111,10 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
    throw std::runtime_error("Unexpected character");
   }
 }
+
+auto GenericLexer::get_eoi_accept_index() const -> size_t {
+ return _lexer_tables.get_eoi_accept_index();
+}
+
 
 }  // namespace pmt::util::smrt

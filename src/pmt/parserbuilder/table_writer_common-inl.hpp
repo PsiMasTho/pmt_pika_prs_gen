@@ -14,6 +14,10 @@ namespace pmt::parserbuilder {
 template <typename T_>
 requires std::integral<typename T_::value_type>
 void TableWriterCommon::write_single_entries(std::ostream& os_, T_ begin_, T_ end_) {
+  if (begin_ == end_) {
+    return;
+  }
+ 
   std::vector<std::string> entries_str;
   size_t max_width = 0;
   for (auto itr = begin_; itr != end_; ++itr) {
@@ -61,7 +65,7 @@ auto TableWriterCommon::as_hex(std::integral auto value_, bool hex_prefix_) -> s
 template <typename T_>
 requires std::integral<typename T_::value_type>
 auto TableWriterCommon::get_smallest_unsigned_type(T_ begin_, T_ end_) -> std::string {
-  size_t const max = *std::max_element(begin_, end_);
+  size_t const max = (begin_ == end_) ? 0 : *std::max_element(begin_, end_);
   if (max <= std::numeric_limits<uint8_t>::max()) {
     return "uint8_t";
   } else if (max <= std::numeric_limits<uint16_t>::max()) {

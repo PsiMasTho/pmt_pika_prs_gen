@@ -7,7 +7,11 @@
 #include "pmt/parserbuilder/lexer_table_builder.hpp"
 #include "pmt/parserbuilder/lexer_table_writer.hpp"
 #include "pmt/parserbuilder/parser_table_builder.hpp"
+#include "pmt/parserbuilder/parser_table_writer.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
+#include "pmt/util/smrt/generic_ast_printer.hpp"
+#include "pmt/util/smrt/generic_lexer.hpp"
+#include "pmt/util/smrt/generic_parser.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -37,33 +41,78 @@ auto main(int argc, char const* const* argv) -> int try {
   std::cout << "Lexer tables built successfully\n";
 
   std::cout << "Writing lexer tables to header and source files...\n";
-  std::ofstream header_file(args._output_header_file);
-  std::ofstream source_file(args._output_source_file);
-  std::ofstream id_constants_file(args._output_id_constants_file);
+  std::ofstream lexer_header_file(args._output_lexer_header_file);
+  std::ofstream lexer_source_file(args._output_lexer_source_file);
+  std::ofstream lexer_id_constants_file(args._output_lexer_id_constants_file);
 
-  std::ifstream header_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.hpp");
-  std::ifstream source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.cpp");
-  std::ifstream id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_id_constants-skel.hpp");
+  std::ifstream lexer_header_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.hpp");
+  std::ifstream lexer_source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.cpp");
+  std::ifstream lexer_id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_id_constants-skel.hpp");
 
   LexerTableWriter::WriterArgs table_writer_args{
-   ._os_header = header_file,
-   ._os_source = source_file,
-   ._os_id_constants = id_constants_file,
-   ._is_header_skel = header_skel_file,
-   ._is_source_skel = source_skel_file,
-   ._is_id_constants_skel = id_constants_skel_file,
+   ._os_header = lexer_header_file,
+   ._os_source = lexer_source_file,
+   ._os_id_constants = lexer_id_constants_file,
+   ._is_header_skel = lexer_header_skel_file,
+   ._is_source_skel = lexer_source_skel_file,
+   ._is_id_constants_skel = lexer_id_constants_skel_file,
    ._tables = lexer_tables,
    ._namespace_name = "pmt::parserbuilder",
    ._class_name = "LexerClass",
-   ._header_include_path = std::filesystem::path(args._output_header_file).filename().string()
+   ._header_include_path = std::filesystem::path(args._output_lexer_header_file).filename().string()
   };
 
-  LexerTableWriter table_writer;
-  table_writer.write(table_writer_args);
+  LexerTableWriter lexer_table_writer;
+  lexer_table_writer.write(table_writer_args);
   std::cout << "Done writing lexer tables\n";
 
   std::cout << "Building parser tables...\n";
   ParserTables parser_tables = ParserTableBuilder{}.build(*ast, grammar_data, lexer_tables);
+
+  std::ofstream parser_header_file(args._output_parser_header_file);
+  std::ofstream parser_source_file(args._output_parser_source_file);
+  std::ofstream parser_id_constants_file(args._output_parser_id_constants_file);
+
+  std::ifstream parser_header_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/parser_tables-skel.hpp");
+  std::ifstream parser_source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/parser_tables-skel.cpp");
+  std::ifstream parser_id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/parser_id_constants-skel.hpp");
+
+  ParserTableWriter::WriterArgs parser_writer_args{
+   ._os_header = parser_header_file,
+   ._os_source = parser_source_file,
+   ._os_id_constants = parser_id_constants_file,
+   ._is_header_skel = parser_header_skel_file,
+   ._is_source_skel = parser_source_skel_file,
+   ._is_id_constants_skel = parser_id_constants_skel_file,
+   ._tables = parser_tables,
+   ._namespace_name = "pmt::parserbuilder",
+   ._class_name = "ParserClass",
+   ._header_include_path = std::filesystem::path(args._output_parser_header_file).filename().string()
+  };
+  ParserTableWriter parser_table_writer;
+  parser_table_writer.write(parser_writer_args);
+  std::cout << "Done writing parser tables\n";
+
+  std::ifstream test_file(args._input_test_file);
+  std::string const test_input((std::istreambuf_iterator<char>(test_file)), std::istreambuf_iterator<char>());
+
+  GenericLexer test_lexer(test_input, lexer_tables);
+  GenericParser test_parser;
+  GenericAst::UniqueHandle test_ast = test_parser.parse(test_lexer, parser_tables);
+
+  GenericAstPrinter ast_printer([&](GenericId::IdType id_) {
+   if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
+    return lexer_tables.id_to_string(id_);
+   }
+   if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
+    return parser_tables.id_to_string(id_);
+   }
+   return "unknown(" + std::to_string(id_) + ")";
+  });
+
+  ast_printer.print(*test_ast, std::cout);
+
+
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

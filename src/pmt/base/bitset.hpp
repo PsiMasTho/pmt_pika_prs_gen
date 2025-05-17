@@ -20,9 +20,10 @@ class Bitset : public Hashable<Bitset> {
     ChunkBit = sizeof(ChunkType) * CHAR_BIT,
   };
 
+ static constexpr std::array<ChunkType, 2> ALL_SET_MASKS = {ChunkType(0), ~ChunkType(0)};
+
  private:
   static constexpr bool DEFAULT_VALUE = false;
-  static constexpr std::array<ChunkType, 2> ALL_SET_MASKS = {ChunkType(0), ~ChunkType(0)};
 
  private:
   // -$ Data $-

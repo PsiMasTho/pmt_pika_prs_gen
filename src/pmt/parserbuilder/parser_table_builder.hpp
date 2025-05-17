@@ -12,6 +12,8 @@ PMT_FW_DECL_NS_CLASS(pmt::parserbuilder, LexerTables);
 namespace pmt::parserbuilder {
 
 class ParserTableBuilder {
+ // -$ Types / Constants $-
+ static inline size_t const DOT_FILE_MAX_STATES = 750;
  // -$ Data $-
  NonterminalStateMachinePartBuilder _nonterminal_state_machine_part_builder;
  ParserTables _result_tables;
@@ -19,6 +21,8 @@ class ParserTableBuilder {
  GrammarData const* _grammar_data = nullptr;
  LexerTables const* _lexer_tables = nullptr;
  pmt::base::IntervalSet<pmt::util::smrt::StateNrType> _conflicting_state_nrs;
+ size_t _nonterminal_dotfile_counter = 0;
+ size_t _lookahead_dotfile_counter = 0;
 
  public:
   // -$ Functions $-
@@ -29,8 +33,13 @@ class ParserTableBuilder {
  void setup_parser_state_machine();
  void extract_conflicts();
  void setup_lookahead_state_machine();
+ void fill_terminal_transition_masks();
+ void check_terminal_transition_masks();
+ void fill_conflict_transition_masks();
+ void fill_nonterminal_data();
 
- void write_dot(std::string_view filename_, std::string title_, pmt::util::smct::StateMachine const& state_machine_, bool is_lookahead_ = false) const;
+ void write_nonterminal_state_machine_dot(std::string title_, pmt::util::smct::StateMachine const& state_machine_);
+ void write_lookahead_state_machine_dot(std::string title_, pmt::util::smct::StateMachine const& state_machine_);
 
  auto lookup_nonterminal_label_by_index(size_t index_) const -> std::string;
  auto lookup_nonterminal_index_by_label(std::string_view label_) const -> size_t;

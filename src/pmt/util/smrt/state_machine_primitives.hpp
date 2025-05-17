@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <limits>
 #include <climits>
+#include <cstddef>
 
 namespace pmt::util::smrt {
 
@@ -28,6 +29,10 @@ enum : SymbolType {
  SymbolKindOpen = 2ull,
  SymbolKindClose = 3ull,
  SymbolKindConflict = 4ull,
+};
+
+enum : size_t {
+ AcceptIndexInvalid = std::numeric_limits<size_t>::max(),
 };
 
 }  // namespace pmt::util::smrt
