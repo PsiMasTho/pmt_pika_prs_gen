@@ -32,6 +32,9 @@ class GenericParser {
 
  public:
  auto parse(GenericLexer& lexer_, ParserTablesBase const& parser_tables_) -> GenericAst::UniqueHandle;
+
+ private:
+ auto parse_stack_take() -> StackItem;
 };
 
 }

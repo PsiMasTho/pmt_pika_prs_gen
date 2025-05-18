@@ -100,6 +100,7 @@ void GrammarData::initial_iteration_handle_terminal_production(GrammarData& gram
   std::string terminal_label = terminal_production.get_child_at(0)->get_string();
 
   std::string terminal_id_name = GenericId::id_to_string(GenericId::IdDefault);
+  bool terminal_hide = HIDE_DEFAULT;
   GenericAstPath terminal_definition_position = path_.clone_push(0);
 
   for (size_t i = 1; i < terminal_production.get_children_size(); ++i) {
@@ -108,6 +109,9 @@ void GrammarData::initial_iteration_handle_terminal_production(GrammarData& gram
       case GrmAst::NtTerminalParameter: {
         switch (child.get_child_at(0)->get_id()) {
           case GrmAst::TkKwParameterCaseSensitive:
+            break;
+          case GrmAst::TkKwParameterHide:
+            terminal_hide = child.get_child_at(1)->get_string() == "true";
             break;
           case GrmAst::TkKwParameterId:
             terminal_id_name = child.get_child_at(1)->get_string();
@@ -124,7 +128,8 @@ void GrammarData::initial_iteration_handle_terminal_production(GrammarData& gram
   grammar_data_._terminal_accepts.emplace_back();
   grammar_data_._terminal_accepts.back()._label = std::move(terminal_label);
   grammar_data_._terminal_accepts.back()._id_name = std::move(terminal_id_name);
-  grammar_data_._terminal_accepts.back()._hide = true;
+  grammar_data_._terminal_accepts.back()._hide = terminal_hide;
+  grammar_data_._terminal_accepts.back()._accepted = false;
 
   grammar_data_._terminal_accepts.back()._definition_path = std::move(terminal_definition_position);
 }
@@ -184,6 +189,7 @@ void GrammarData::add_reserved_terminal_accepts(GrammarData& grammar_data_) {
   grammar_data_._terminal_accepts.emplace_back();
   grammar_data_._terminal_accepts.back()._label = LABEL_EOI;
   grammar_data_._terminal_accepts.back()._id_name = GenericId::id_to_string(GenericId::IdEoi);
+  grammar_data_._terminal_accepts.back()._hide = true;
 
   size_t const index_newline = grammar_data_._terminal_accepts.size();
   grammar_data_._terminal_accepts.emplace_back();
@@ -195,6 +201,7 @@ void GrammarData::add_reserved_nonterminal_accepts(GrammarData& grammar_data_) {
  grammar_data_._nonterminal_accepts.emplace_back();
  grammar_data_._nonterminal_accepts.back()._label = LABEL_EOI;
  grammar_data_._nonterminal_accepts.back()._id_name = GenericId::id_to_string(GenericId::IdEoi);
+ grammar_data_._nonterminal_accepts.back()._hide = true;
 }
 
 void GrammarData::sort_terminal_accepts_by_label(GrammarData& grammar_data_) {
@@ -222,6 +229,7 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
   std::vector<GenericAstPath> pending;
   std::unordered_set<GenericAstPath> visited;
   std::vector<std::string> terminals_direct_labels;
+  Bitset terminals_direct_hide;
   std::vector<GenericAstPath> terminals_direct_definitions;
 
   auto const push_and_visit = [&pending, &visited](GenericAstPath const& path_) {
@@ -239,15 +247,16 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
     GenericAstPath const path_cur = pending.back();
     pending.pop_back();
 
-    switch (path_cur.resolve(ast_)->get_id()) {
+    GenericId::IdType const id_cur = path_cur.resolve(ast_)->get_id();
+    switch (id_cur) {
       case GrmAst::TkTerminalIdentifier: {
         std::string const& label = path_cur.resolve(ast_)->get_string();
         size_t const index = grammar_data_.try_find_terminal_accept_index_by_label(label);
-        grammar_data_._terminal_accepts[index]._hide = false;
+        grammar_data_._terminal_accepts[index]._accepted = true;
       } break;
       case GrmAst::TkNonterminalIdentifier:
         push_and_visit(grammar_data_._nonterminal_accepts[grammar_data_.try_find_nonterminal_accept_index_by_label(path_cur.resolve(ast_)->get_string())]._definition_path);
-        break;
+        break;      
       case GrmAst::NtTerminalDefinition:
       case GrmAst::NtNonterminalDefinition:
       case GrmAst::NtTerminalChoices:
@@ -264,24 +273,31 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
       case GrmAst::NtNonterminalRepetition:
         push_and_visit(path_cur.clone_push(0));
         break;
+      case GrmAst::NtNonterminalHiddenDirect:
       case GrmAst::TkStringLiteral:
       case GrmAst::TkIntegerLiteral: {
         std::string const terminal_direct_label = TERMINAL_DIRECT_PREFIX + std::to_string(terminals_direct_labels.size());
         terminals_direct_labels.push_back(terminal_direct_label);
+
+        GenericAstPath const definition_path = (id_cur == GrmAst::NtNonterminalHiddenDirect) ? path_cur.clone_push(0) : path_cur;
+        terminals_direct_hide.push_back((id_cur == GrmAst::NtNonterminalHiddenDirect) ? true : false);
 
         GenericAst::UniqueHandle terminal_direct_production = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtTerminalProduction);
         GenericAst::UniqueHandle terminal_direct_production_label = GenericAst::construct(GenericAst::Tag::String, GrmAst::TkTerminalIdentifier);
         terminal_direct_production_label->set_string(terminal_direct_label);
         terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_label));
         GenericAst::UniqueHandle terminal_direct_production_definition = GenericAst::construct(GenericAst::Tag::Children, GrmAst::NtTerminalDefinition);
-        terminal_direct_production_definition->give_child_at_back(GenericAst::clone(*path_cur.resolve(ast_)));
+        terminal_direct_production_definition->give_child_at_back(GenericAst::clone(*definition_path.resolve(ast_)));
         terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_definition));
         ast_.give_child_at_back(std::move(terminal_direct_production));
 
         GenericAstPath const path_direct_definition({ast_.get_children_size() - 1, 1});
         terminals_direct_definitions.push_back(path_direct_definition);
-        path_cur.resolve(ast_)->set_string(terminal_direct_label);
-        path_cur.resolve(ast_)->set_id(GrmAst::TkTerminalIdentifier);
+
+        GenericAst::UniqueHandle replacement = GenericAst::construct(GenericAst::Tag::String, GrmAst::TkTerminalIdentifier);
+        replacement->set_string(terminal_direct_label);
+
+        GenericAst::swap(*path_cur.resolve(ast_), *replacement);
       } break;
     }
   }
@@ -293,9 +309,12 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, pmt::util::smrt::G
     grammar_data_._terminal_accepts.back()._label = std::move(terminals_direct_labels.back());
     grammar_data_._terminal_accepts.back()._id_name = GenericId::id_to_string(GenericId::IdDefault);
     grammar_data_._terminal_accepts.back()._definition_path = std::move(terminals_direct_definitions.back());
+    grammar_data_._terminal_accepts.back()._hide = terminals_direct_hide.back();
+    grammar_data_._terminal_accepts.back()._accepted = true;
 
     terminals_direct_labels.pop_back();
     terminals_direct_definitions.pop_back();
+    terminals_direct_hide.pop_back();
   }
 
   sort_terminal_accepts_by_label(grammar_data_);

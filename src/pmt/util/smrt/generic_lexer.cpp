@@ -4,6 +4,7 @@
 #include "pmt/util/smrt/lexer_tables_base.hpp"
 
 #include <cassert>
+#include <utility>
 
 namespace pmt::util::smrt {
 using namespace pmt::base;
@@ -28,6 +29,17 @@ namespace {
 
   assert(chunk_index < dest_.size());
   dest_[chunk_index] |= Bitset::ChunkType(1) << bit_index;
+ }
+
+ auto get_bit(Bitset::ChunkSpanConst dest_, size_t index_) -> bool {
+  size_t const chunk_index = index_ / Bitset::ChunkBit;
+  size_t const bit_index = index_ % Bitset::ChunkBit;
+
+  if (chunk_index >= dest_.size()) {
+    return false;
+  }
+
+  return (dest_[chunk_index] & (Bitset::ChunkType(1) << bit_index)) != 0;
  }
 
  void bitwise_and(Bitset::ChunkSpan dest_, Bitset::ChunkSpanConst lhs_ , Bitset::ChunkSpanConst rhs_) {
@@ -108,7 +120,16 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
    _cursor = te;
    return ret;
   } else {
-   throw std::runtime_error("Unexpected character");
+   std::string message = "Lexing error, expected to match: ";
+   std::string delim;
+   for (size_t i = 0; i < _accept_count; ++i) {
+    if (get_bit(accepts_, i)) {
+     message += std::exchange(delim, ", ") + "'" + _lexer_tables.get_accept_index_label(i) + "'";
+    }
+   }
+
+   message += " at position " + std::to_string(_cursor);
+   throw std::runtime_error(message);
   }
 }
 
@@ -116,5 +137,8 @@ auto GenericLexer::get_eoi_accept_index() const -> size_t {
  return _lexer_tables.get_eoi_accept_index();
 }
 
+auto GenericLexer::get_accept_index_hide(size_t index_) const -> bool {
+ return _lexer_tables.get_accept_index_hide(index_);
+}
 
 }  // namespace pmt::util::smrt

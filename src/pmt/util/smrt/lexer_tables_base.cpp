@@ -7,6 +7,10 @@ auto LexerTablesBase::get_accept_index_label(size_t index_) const -> std::string
   return std::to_string(index_);
 }
 
+auto LexerTablesBase::get_accept_index_hide(size_t) const -> bool {
+  return false;
+}
+
 auto LexerTablesBase::get_accept_index_id(size_t) const -> GenericId::IdType {
   return GenericId::IdUninitialized;
 }

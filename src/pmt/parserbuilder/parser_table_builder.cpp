@@ -68,8 +68,8 @@ void ParserTableBuilder::setup_parser_state_machine() {
  State& state_end = *_result_tables._parser_state_machine.get_state(state_nr_end);
  state_pre_end.add_symbol_transition(Symbol(SymbolKindTerminal, _lexer_tables->get_eoi_accept_index()), state_nr_end);
  state_end.get_accepts().resize(_grammar_data->_nonterminal_accepts.size(), false);
- size_t const index_eoi_nonterminal = binary_find_index(_grammar_data->_nonterminal_accepts.begin(), _grammar_data->_nonterminal_accepts.end(), GrammarData::LABEL_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
- state_end.get_accepts().set(index_eoi_nonterminal, true);
+ _result_tables._eoi_accept_index = binary_find_index(_grammar_data->_nonterminal_accepts.begin(), _grammar_data->_nonterminal_accepts.end(), GrammarData::LABEL_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
+ state_end.get_accepts().set(_result_tables._eoi_accept_index, true);
  state_machine_part_nonterminal.connect_outgoing_transitions_to(state_nr_pre_end, _result_tables._parser_state_machine);
  _result_tables._parser_state_machine.get_state(state_nr_start)->add_epsilon_transition(*state_machine_part_nonterminal.get_incoming_state_nr());
 }

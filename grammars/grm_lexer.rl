@@ -41,6 +41,7 @@
  Plus                             = '+';
  Star                             = '*';
  Question                         = '?';
+ Tilde                            = '~';
  KwParameterUnpack                = 'unpack';
  KwParameterHide                  = 'hide';
  KwParameterMerge                 = 'merge';
@@ -168,6 +169,11 @@
 
   Question => {
    ACCEPT_TOKEN(GrmAst::TkQuestion);
+   fbreak;
+  };
+
+  Tilde => {
+   ACCEPT_TOKEN(GrmAst::TkTilde);
    fbreak;
   };
 

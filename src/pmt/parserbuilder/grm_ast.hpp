@@ -36,6 +36,7 @@ class GrmAst {
     TkPlus = TOKEN_PLUS,
     TkStar = TOKEN_STAR,
     TkQuestion = TOKEN_QUESTION,
+    TkTilde = TOKEN_TILDE,
     // - Parameter keywords
     TkKwParameterUnpack = TOKEN_KW_PARAMETER_UNPACK,
     TkKwParameterHide = TOKEN_KW_PARAMETER_HIDE,
@@ -68,6 +69,7 @@ class GrmAst {
     NtNonterminalChoices,
     NtNonterminalRepetition,
     NtNonterminalRepetitionRange,
+    NtNonterminalHiddenDirect,
     // - Grammar properties
     NtGrammarProperty,
     NtGrammarPropertyWhitespace,

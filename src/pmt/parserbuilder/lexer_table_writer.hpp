@@ -54,6 +54,7 @@ class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
   void replace_id_names(std::string& str_);
   void replace_min_id(std::string& str_);
   void replace_id_count(std::string& str_);
+  void replace_hides(std::string& str_);
   void replace_linecount_transitions(std::string& str_);
   void replace_linecount_accepts(std::string& str_);
   void replace_terminal_count(std::string& str_);

@@ -55,6 +55,7 @@ namespace pmt::parserbuilder {
   replace_id_names(_source);
   replace_min_id(_source);
   replace_id_count(_source);
+  replace_hides(_source);
   replace_linecount_transitions(_source);
   replace_linecount_accepts(_source);
   replace_terminal_count(_source);
@@ -212,6 +213,23 @@ void LexerTableWriter::replace_id_count(std::string& str_) {
   std::string const id_count_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_id_count(), true);
   replace_skeleton_label(str_, "ID_COUNT", id_count_replacement);
 }
+
+void LexerTableWriter::replace_hides(std::string& str_) {
+ Bitset hide;
+ for (size_t i = 0; i < _writer_args->_tables._terminal_data.size(); ++i) {
+  hide.push_back(_writer_args->_tables._terminal_data[i]._hide);
+ }
+
+ std::vector<Bitset::ChunkType> hide_flattened;
+ for (Bitset::ChunkType const& chunk : hide.get_chunks()) {
+  hide_flattened.push_back(chunk);
+ }
+
+ std::stringstream hide_replacement;
+ TableWriterCommon::write_single_entries<Bitset::ChunkType>(hide_replacement, hide_flattened);
+ replace_skeleton_label(str_, "HIDES", hide_replacement.str());
+}
+
 
  void LexerTableWriter::replace_linecount_transitions(std::string& str_) {
   std::vector<SymbolType> linecount_lower_bounds;

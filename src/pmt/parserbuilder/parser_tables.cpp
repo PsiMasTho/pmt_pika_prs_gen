@@ -59,6 +59,11 @@ auto ParserTables::get_state_accept_index(pmt::util::smrt::StateNrType state_nr_
  return (countl == state->get_accepts().size()) ? AcceptIndexInvalid : countl;
 }
 
+auto ParserTables::get_eoi_accept_index() const -> size_t {
+ return _eoi_accept_index;
+}
+
+
 auto ParserTables::get_accept_count() const -> size_t {
  return _nonterminal_data.size();
 }

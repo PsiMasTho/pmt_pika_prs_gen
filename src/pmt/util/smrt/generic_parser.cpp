@@ -48,7 +48,7 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
  _lexer = &lexer_;
  _parser_tables = &parser_tables_;
  _state_nr_cur = StateNrStart;
- _ast_root = GenericAst::construct(GenericAst::Tag::Children);
+ _ast_root = GenericAst::construct(GenericAst::Tag::Children, GenericId::IdRoot);
 
  _conflict_accepts_valid.resize(Bitset::get_required_chunk_count(_parser_tables->get_conflict_count()), Bitset::ALL_SET_MASKS[false]);
 
@@ -72,15 +72,28 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
    case ParserTablesBase::StateTypeAccept: {
     size_t const accept_idx = _parser_tables->get_state_accept_index(_state_nr_cur);
     assert(accept_idx != AcceptIndexInvalid);
-    if (accept_idx == _lexer->get_eoi_accept_index() || _parse_stack.empty()) {
+    if (accept_idx == _parser_tables->get_eoi_accept_index()) {
      _state_nr_cur = StateNrSink;
      break;
     }
 
-    StackItem const stack_item = _parse_stack.back();
-    _parse_stack.pop_back();
+    StackItem const stack_item = parse_stack_take();
     GenericAst* const parent = stack_item._ast_path.resolve(*_ast_root);
     parent->set_id(_parser_tables->get_accept_index_id(accept_idx));
+    
+    if (_parser_tables->get_accept_index_merge(accept_idx)) {
+     parent->merge();
+    }
+    
+    if (_parser_tables->get_accept_index_unpack(accept_idx)) {
+     GenericAst* const grandparent = stack_item._ast_path.clone_pop().resolve(*_ast_root);
+     grandparent->unpack(grandparent->get_children_size() - 1);
+    }
+
+    if (_parser_tables->get_accept_index_hide(accept_idx)) {
+     GenericAst* const grandparent = stack_item._ast_path.clone_pop().resolve(*_ast_root);
+     grandparent->take_child_at_back();
+    }
 
     _state_nr_cur = _parser_tables->get_state_nr_next(stack_item._state_nr, SymbolType((SymbolKindClose << SymbolValueBitWidth) | accept_idx));
    }
@@ -94,14 +107,17 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
      lexed = _lexer->lex(_parser_tables->get_state_terminal_transitions(_state_nr_cur));
     }
     _state_nr_cur = _parser_tables->get_state_nr_next(_state_nr_cur, SymbolType((SymbolKindTerminal << SymbolValueBitWidth) | lexed._accepted));
-    add_child(_ast_root, lexed._token.to_ast(), ast_path_cur);
+    if (!_lexer->get_accept_index_hide(lexed._accepted)) {
+     add_child(_ast_root, lexed._token.to_ast(), ast_path_cur);
+    }
    }
    break;
    case ParserTablesBase::StateTypeConflict: {
     Bitset::ChunkSpanConst const conflict_transitions = _parser_tables->get_state_conflict_transitions(_state_nr_cur);
     StateNrType state_nr_conflict_cur = StateNrStart;
 
-    size_t consume_from_queue = _lex_queue.size();
+    size_t const consume_from_queue = _lex_queue.size();
+    size_t consumed_from_queue = 0;
 
     while (true) {
      if (state_nr_conflict_cur == StateNrSink) {
@@ -118,13 +134,12 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
      }
 
      GenericLexer::LexReturn lexed;
-     if (consume_from_queue != 0) {
-      lexed = _lex_queue.front();
-      _lex_queue.pop_front();
-      --consume_from_queue;
+     if (consumed_from_queue < consume_from_queue) {
+      lexed = _lex_queue[consumed_from_queue];
+      ++consumed_from_queue;
      } else {
-      lexed = _lexer->lex(_parser_tables->get_lookahead_state_terminal_transitions(state_nr_conflict_cur));
-      _lex_queue.push_back(lexed);
+      _lex_queue.push_back(_lexer->lex(_parser_tables->get_lookahead_state_terminal_transitions(state_nr_conflict_cur)));
+      lexed = _lex_queue.back();
      }
      state_nr_conflict_cur = _parser_tables->get_lookahead_state_nr_next(state_nr_conflict_cur, SymbolType((SymbolKindTerminal << SymbolValueBitWidth) | lexed._accepted));
     }
@@ -139,5 +154,11 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
  return std::move(_ast_root);
 }
 
+auto GenericParser::parse_stack_take() -> StackItem {
+ assert(!_parse_stack.empty());
+ StackItem stack_item = _parse_stack.back();
+ _parse_stack.pop_back();
+ return stack_item;
+}
 
 }

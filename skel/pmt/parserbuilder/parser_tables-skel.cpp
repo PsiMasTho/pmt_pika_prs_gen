@@ -143,6 +143,10 @@ auto /* $replace CLASS_NAME */::get_state_accept_index(pmt::util::smrt::StateNrT
  return decode_parser_accept_index(PARSER_ACCEPTS[state_nr_]);
 }
 
+auto /* $replace CLASS_NAME */::get_eoi_accept_index() const -> size_t {
+ return /* $replace EOI_ACCEPT_INDEX */;
+}
+
 auto /* $replace CLASS_NAME */::get_accept_count() const -> size_t {
  return /* $replace PARSER_ACCEPT_COUNT */;
 }

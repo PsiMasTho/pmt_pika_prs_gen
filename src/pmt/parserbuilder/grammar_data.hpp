@@ -28,6 +28,7 @@ class GrammarData {
     std::string _id_name;
     pmt::util::smrt::GenericAstPath _definition_path;
     bool _hide : 1 = HIDE_DEFAULT;
+    bool _accepted : 1 = false;
   };
 
   struct NonterminalAcceptData {

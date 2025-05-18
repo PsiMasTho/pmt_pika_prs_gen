@@ -31,6 +31,7 @@
 %token TOKEN_PLUS.
 %token TOKEN_STAR.
 %token TOKEN_QUESTION.
+%token TOKEN_TILDE.
 %token TOKEN_KW_PARAMETER_UNPACK.
 %token TOKEN_KW_PARAMETER_HIDE.
 %token TOKEN_KW_PARAMETER_MERGE.
@@ -105,7 +106,7 @@ terminal_parameter(A) ::= TOKEN_KW_PARAMETER_ID(B) TOKEN_EQUALS TOKEN_STRING_LIT
  A->give_child_at_back(std::move(C));
 }
 
-terminal_parameter(A) ::= TOKEN_KW_PARAMETER_CASE_SENSITIVE(B) TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL(C). {
+terminal_parameter(A) ::= TOKEN_KW_PARAMETER_HIDE(B) TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL(C). {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalParameter);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
@@ -364,8 +365,19 @@ rule_expression(A) ::= TOKEN_STRING_LITERAL(B). {
  A = std::move(B);
 }
 
+rule_expression(A) ::= TOKEN_STRING_LITERAL(B) TOKEN_TILDE. {
+ A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalHiddenDirect);
+ A->give_child_at_back(std::move(B));
+}
+
+
 rule_expression(A) ::= TOKEN_INTEGER_LITERAL(B). {
  A = std::move(B);
+}
+
+rule_expression(A) ::= TOKEN_INTEGER_LITERAL(B) TOKEN_TILDE. {
+ A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalHiddenDirect);
+ A->give_child_at_back(std::move(B));
 }
 
 rule_expression(A) ::= TOKEN_EPSILON(B). {

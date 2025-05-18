@@ -16,6 +16,7 @@ class /* $replace CLASS_NAME */ : public pmt::util::smrt::LexerTablesBase {
   auto get_start_accept_index() const -> size_t override;
   auto get_eoi_accept_index() const -> size_t override;
   auto get_accept_index_label(size_t index_) const -> std::string override;
+  auto get_accept_index_hide(size_t index_) const -> bool override;
   auto get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType override;
   auto id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string override;
   auto get_min_id() const -> pmt::util::smrt::GenericId::IdType override;

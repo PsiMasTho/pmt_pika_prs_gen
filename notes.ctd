@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1747500154">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1747569214">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -134,7 +134,9 @@ id_names to id_strings in the generated parsing and lexing tables
 --
 add a function for returning a span of acceptible terminals from parsertablesbase
 +
-calculate masks near the end of parsertablebuilder and check for conflicts</rich_text>
+calculate masks near the end of parsertablebuilder and check for conflicts
+--
+some modifiers may be incompatible like unpack and id</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;

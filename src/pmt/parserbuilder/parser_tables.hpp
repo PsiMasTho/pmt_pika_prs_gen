@@ -30,6 +30,7 @@ class ParserTables : public pmt::util::smrt::ParserTablesBase {
   pmt::util::smrt::GenericId::IdType _min_id;
   size_t _id_count;
   size_t _conflict_count;
+  size_t _eoi_accept_index;
 
   // --$ Inherited: pmt::util::smrt::ParserTablesBase $--
   auto get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType override;
@@ -37,6 +38,7 @@ class ParserTables : public pmt::util::smrt::ParserTablesBase {
   auto get_state_conflict_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
   auto get_state_kind(pmt::util::smrt::StateNrType state_nr_) const -> StateKind override;
   auto get_state_accept_index(pmt::util::smrt::StateNrType state_nr_) const -> size_t override;
+  auto get_eoi_accept_index() const -> size_t override;
   auto get_accept_count() const -> size_t override;
   auto get_conflict_count() const -> size_t override;
 

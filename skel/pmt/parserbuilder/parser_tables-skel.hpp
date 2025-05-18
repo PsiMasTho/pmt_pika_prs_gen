@@ -15,6 +15,7 @@ class /* $replace CLASS_NAME */ : public pmt::util::smrt::ParserTablesBase {
   auto get_state_conflict_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
   auto get_state_kind(pmt::util::smrt::StateNrType state_nr_) const -> StateKind override;
   auto get_state_accept_index(pmt::util::smrt::StateNrType state_nr_) const -> size_t override;
+  auto get_eoi_accept_index() const -> size_t override;
   auto get_accept_count() const -> size_t override;
   auto get_conflict_count() const -> size_t override;
   auto get_accept_index_label(size_t index_) const -> std::string override;

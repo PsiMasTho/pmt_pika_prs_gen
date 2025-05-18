@@ -59,6 +59,7 @@ namespace pmt::parserbuilder {
   replace_lookahead_accepts(_source);
   replace_parser_accepts_labels(_source);
   replace_parser_accepts_ids(_source);
+  replace_parser_eoi_accept_index(_source);
   replace_id_names(_source);
   replace_min_id(_source);
   replace_id_count(_source);
@@ -345,6 +346,11 @@ void ParserTableWriter::replace_parser_accepts_ids(std::string& str_) {
   std::stringstream terminal_ids_replacement;
   TableWriterCommon::write_single_entries<GenericId::IdType>(terminal_ids_replacement, ids);
   replace_skeleton_label(str_, "PARSER_ACCEPTS_IDS", terminal_ids_replacement.str());
+}
+
+void ParserTableWriter::replace_parser_eoi_accept_index(std::string& str_) {
+ std::string const eoi_accept_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_eoi_accept_index(), true);
+ replace_skeleton_label(str_, "EOI_ACCEPT_INDEX", eoi_accept_index_replacement);
 }
 
 void ParserTableWriter::replace_id_names(std::string& str_) {

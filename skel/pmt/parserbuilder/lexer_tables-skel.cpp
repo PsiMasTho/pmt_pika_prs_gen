@@ -58,6 +58,16 @@ char const* const ID_NAMES[] = {
 /* $replace LINECOUNT_ACCEPTS */
 };
 
+pmt::base::Bitset::ChunkType const HIDES[] = {
+/* $replace HIDES */
+};
+
+auto access_bit(std::span<pmt::base::Bitset::ChunkType const> bitset_, size_t index_) -> bool {
+ size_t const chunk_index = index_ / pmt::base::Bitset::ChunkBit;
+ size_t const bit_index = index_ % pmt::base::Bitset::ChunkBit;
+ return (bitset_[chunk_index] & (1 << bit_index)) != 0;
+}
+
 auto encode_symbol(pmt::util::smrt::SymbolType symbol_) -> pmt::util::smrt::SymbolType {
  return (symbol_ == pmt::util::smrt::SymbolValueMax) ? 0 : symbol_ + 1;
 }
@@ -121,6 +131,10 @@ auto /* $replace CLASS_NAME */::get_eoi_accept_index() const -> size_t {
 
 auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> std::string {
  return TERMINAL_LABELS[index_];
+}
+
+auto /* $replace CLASS_NAME */::get_accept_index_hide(size_t index_) const -> bool {
+ return access_bit(HIDES, index_);
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {

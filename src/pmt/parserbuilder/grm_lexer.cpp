@@ -19,7 +19,7 @@
   } while (0)
 
 
-#line 236 "grm_lexer.rl"
+#line 242 "grm_lexer.rl"
 
 
 namespace {
@@ -37,7 +37,7 @@ static const char _GrmLexer_actions[] = {
 	27, 1, 28, 1, 29, 1, 30, 1, 
 	31, 1, 32, 1, 33, 1, 34, 1, 
 	35, 1, 36, 1, 37, 1, 38, 1, 
-	39, 1, 40
+	39, 1, 40, 1, 41
 };
 
 static const unsigned char _GrmLexer_key_offsets[] = {
@@ -50,9 +50,9 @@ static const unsigned char _GrmLexer_key_offsets[] = {
 	72, 73, 74, 75, 76, 77, 78, 79, 
 	80, 81, 82, 83, 84, 85, 86, 87, 
 	88, 89, 90, 91, 92, 93, 94, 95, 
-	96, 97, 98, 132, 137, 142, 149, 154, 
-	161, 162, 164, 165, 168, 174, 178, 179, 
-	180, 181, 182, 183, 184, 185
+	96, 97, 98, 133, 138, 143, 150, 155, 
+	162, 163, 165, 166, 169, 175, 179, 180, 
+	181, 182, 183, 184, 185, 186
 };
 
 static const char _GrmLexer_trans_keys[] = {
@@ -72,14 +72,14 @@ static const char _GrmLexer_trans_keys[] = {
 	42, 43, 44, 46, 47, 59, 60, 61, 
 	62, 63, 64, 91, 93, 99, 101, 102, 
 	104, 105, 109, 116, 117, 123, 124, 125, 
-	9, 13, 48, 57, 34, 32, 38, 40, 
-	126, 95, 65, 90, 97, 122, 95, 48, 
-	57, 65, 90, 97, 122, 95, 65, 90, 
-	97, 122, 95, 48, 57, 65, 90, 97, 
-	122, 46, 42, 47, 10, 35, 48, 57, 
-	48, 57, 65, 90, 97, 122, 99, 110, 
-	115, 119, 97, 112, 97, 105, 100, 101, 
-	114, 110, 0
+	126, 9, 13, 48, 57, 34, 32, 38, 
+	40, 126, 95, 65, 90, 97, 122, 95, 
+	48, 57, 65, 90, 97, 122, 95, 65, 
+	90, 97, 122, 95, 48, 57, 65, 90, 
+	97, 122, 46, 42, 47, 10, 35, 48, 
+	57, 48, 57, 65, 90, 97, 122, 99, 
+	110, 115, 119, 97, 112, 97, 105, 100, 
+	101, 114, 110, 0
 };
 
 static const char _GrmLexer_single_lengths[] = {
@@ -92,7 +92,7 @@ static const char _GrmLexer_single_lengths[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 1, 30, 1, 1, 1, 1, 1, 
+	1, 1, 31, 1, 1, 1, 1, 1, 
 	1, 2, 1, 1, 0, 4, 1, 1, 
 	1, 1, 1, 1, 1, 1
 };
@@ -122,9 +122,9 @@ static const short _GrmLexer_index_offsets[] = {
 	108, 110, 112, 114, 116, 118, 120, 122, 
 	124, 126, 128, 130, 132, 134, 136, 138, 
 	140, 142, 144, 146, 148, 150, 152, 154, 
-	156, 158, 160, 193, 197, 201, 206, 210, 
-	215, 217, 220, 222, 225, 229, 234, 236, 
-	238, 240, 242, 244, 246, 248
+	156, 158, 160, 194, 198, 202, 207, 211, 
+	216, 218, 221, 223, 226, 230, 235, 237, 
+	239, 241, 243, 245, 247, 249
 };
 
 static const char _GrmLexer_trans_targs[] = {
@@ -151,15 +151,15 @@ static const char _GrmLexer_trans_targs[] = {
 	74, 75, 76, 78, 74, 74, 74, 74, 
 	74, 80, 81, 74, 74, 74, 74, 74, 
 	85, 74, 74, 86, 87, 88, 89, 90, 
-	91, 92, 93, 74, 74, 74, 74, 83, 
-	74, 74, 0, 0, 74, 1, 1, 1, 
-	74, 77, 77, 77, 77, 74, 2, 2, 
-	2, 74, 79, 79, 79, 79, 74, 74, 
-	74, 3, 82, 74, 74, 82, 5, 6, 
-	74, 84, 84, 84, 74, 7, 25, 31, 
-	35, 74, 44, 74, 56, 74, 61, 74, 
-	64, 74, 74, 74, 66, 74, 69, 74, 
-	70, 74, 74, 74, 74, 74, 74, 74, 
+	91, 92, 93, 74, 74, 74, 74, 74, 
+	83, 74, 74, 0, 0, 74, 1, 1, 
+	1, 74, 77, 77, 77, 77, 74, 2, 
+	2, 2, 74, 79, 79, 79, 79, 74, 
+	74, 74, 3, 82, 74, 74, 82, 5, 
+	6, 74, 84, 84, 84, 74, 7, 25, 
+	31, 35, 74, 44, 74, 56, 74, 61, 
+	74, 64, 74, 74, 74, 66, 74, 69, 
+	74, 70, 74, 74, 74, 74, 74, 74, 
 	74, 74, 74, 74, 74, 74, 74, 74, 
 	74, 74, 74, 74, 74, 74, 74, 74, 
 	74, 74, 74, 74, 74, 74, 74, 74, 
@@ -170,53 +170,55 @@ static const char _GrmLexer_trans_targs[] = {
 	74, 74, 74, 74, 74, 74, 74, 74, 
 	74, 74, 74, 74, 74, 74, 74, 74, 
 	74, 74, 74, 74, 74, 74, 74, 74, 
-	74, 74, 74, 74, 74, 74, 74, 0
+	74, 74, 74, 74, 74, 74, 74, 74, 
+	0
 };
 
 static const char _GrmLexer_trans_actions[] = {
-	7, 0, 0, 81, 0, 0, 0, 0, 
-	81, 0, 0, 0, 0, 81, 0, 0, 
-	67, 0, 0, 0, 0, 81, 0, 0, 
-	81, 0, 0, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 0, 81, 
-	0, 81, 63, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 59, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 0, 81, 
-	61, 81, 0, 81, 0, 81, 0, 81, 
-	55, 81, 0, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 0, 81, 
-	0, 81, 57, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 0, 81, 
-	0, 81, 53, 81, 0, 81, 0, 81, 
-	0, 81, 0, 81, 11, 81, 0, 81, 
-	0, 81, 9, 81, 0, 81, 47, 81, 
-	0, 81, 0, 81, 49, 81, 0, 81, 
-	0, 81, 0, 81, 0, 81, 45, 81, 
-	65, 5, 5, 5, 23, 25, 41, 39, 
+	7, 0, 0, 83, 0, 0, 0, 0, 
+	83, 0, 0, 0, 0, 83, 0, 0, 
+	69, 0, 0, 0, 0, 83, 0, 0, 
+	83, 0, 0, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 0, 83, 
+	0, 83, 65, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 61, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 0, 83, 
+	63, 83, 0, 83, 0, 83, 0, 83, 
+	57, 83, 0, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 0, 83, 
+	0, 83, 59, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 0, 83, 
+	0, 83, 55, 83, 0, 83, 0, 83, 
+	0, 83, 0, 83, 11, 83, 0, 83, 
+	0, 83, 9, 83, 0, 83, 49, 83, 
+	0, 83, 0, 83, 51, 83, 0, 83, 
+	0, 83, 0, 83, 0, 83, 47, 83, 
+	67, 5, 5, 5, 23, 25, 41, 39, 
 	19, 0, 5, 15, 35, 17, 37, 43, 
 	5, 31, 33, 5, 5, 5, 5, 0, 
-	5, 5, 5, 27, 13, 29, 65, 5, 
-	69, 7, 0, 0, 79, 0, 0, 0, 
-	79, 0, 0, 0, 0, 73, 0, 0, 
-	0, 79, 0, 0, 0, 0, 75, 21, 
-	79, 0, 0, 79, 77, 0, 0, 0, 
-	79, 0, 0, 0, 71, 0, 0, 0, 
-	0, 79, 0, 79, 0, 79, 0, 79, 
-	0, 79, 51, 79, 0, 79, 0, 79, 
-	0, 79, 81, 81, 81, 81, 81, 81, 
+	5, 5, 5, 27, 13, 29, 45, 67, 
+	5, 71, 7, 0, 0, 81, 0, 0, 
+	0, 81, 0, 0, 0, 0, 75, 0, 
+	0, 0, 81, 0, 0, 0, 0, 77, 
+	21, 81, 0, 0, 81, 79, 0, 0, 
+	0, 81, 0, 0, 0, 73, 0, 0, 
+	0, 0, 81, 0, 81, 0, 81, 0, 
+	81, 0, 81, 53, 81, 0, 81, 0, 
+	81, 0, 81, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 83, 83, 83, 
+	83, 83, 83, 83, 83, 81, 81, 75, 
+	81, 77, 81, 81, 79, 81, 73, 81, 
 	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 81, 81, 81, 81, 
-	81, 81, 81, 81, 79, 79, 73, 79, 
-	75, 79, 79, 77, 79, 71, 79, 79, 
-	79, 79, 79, 79, 79, 79, 79, 0
+	0
 };
 
 static const char _GrmLexer_to_state_actions[] = {
@@ -250,18 +252,18 @@ static const char _GrmLexer_from_state_actions[] = {
 };
 
 static const short _GrmLexer_eof_trans[] = {
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 324, 324, 324, 324, 324, 324, 
-	324, 324, 0, 343, 343, 327, 343, 329, 
-	343, 343, 332, 343, 334, 343, 343, 343, 
-	343, 343, 343, 343, 343, 343
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 325, 325, 325, 325, 325, 325, 
+	325, 325, 0, 344, 344, 328, 344, 330, 
+	344, 344, 333, 344, 335, 344, 344, 344, 
+	344, 344, 344, 344, 344, 344
 };
 
 static const int GrmLexer_start = 74;
@@ -271,7 +273,7 @@ static const int GrmLexer_error = -1;
 static const int GrmLexer_en_main = 74;
 
 
-#line 241 "grm_lexer.rl"
+#line 247 "grm_lexer.rl"
 
 } // namespace
 
@@ -290,7 +292,7 @@ GrmLexer::GrmLexer(std::string_view input_)
 {
  MAKE_RL_CONTEXT_AVAILABLE;
  
-#line 285 "grm_lexer.cpp"
+#line 287 "grm_lexer.cpp"
 	{
 	cs = GrmLexer_start;
 	ts = 0;
@@ -298,7 +300,7 @@ GrmLexer::GrmLexer(std::string_view input_)
 	act = 0;
 	}
 
-#line 259 "grm_lexer.rl"
+#line 265 "grm_lexer.rl"
 }
 
 auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
@@ -307,7 +309,7 @@ auto GrmLexer::next_token() -> GenericAst::UniqueHandle {
  GenericAst::UniqueHandle accepted;
 
  
-#line 298 "grm_lexer.cpp"
+#line 300 "grm_lexer.cpp"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -326,7 +328,7 @@ _resume:
 #line 1 "NONE"
 	{ts = p;}
 	break;
-#line 315 "grm_lexer.cpp"
+#line 317 "grm_lexer.cpp"
 		}
 	}
 
@@ -396,7 +398,7 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 3:
-#line 60 "grm_lexer.rl"
+#line 61 "grm_lexer.rl"
 	{te = p+1;{ 
    ++ts;
    --te;
@@ -405,171 +407,170 @@ _eof_trans:
   }}
 	break;
 	case 4:
-#line 72 "grm_lexer.rl"
+#line 73 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkBooleanLiteral);
    {p++; goto _out; }
   }}
 	break;
 	case 5:
-#line 89 "grm_lexer.rl"
+#line 90 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkEpsilon);
    {p++; goto _out; }
   }}
 	break;
 	case 6:
-#line 94 "grm_lexer.rl"
+#line 95 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkPipe);
    {p++; goto _out; }
   }}
 	break;
 	case 7:
-#line 99 "grm_lexer.rl"
+#line 100 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkSemiColon);
    {p++; goto _out; }
   }}
 	break;
 	case 8:
-#line 104 "grm_lexer.rl"
+#line 105 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkEquals);
    {p++; goto _out; }
   }}
 	break;
 	case 9:
-#line 109 "grm_lexer.rl"
+#line 110 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkComma);
    {p++; goto _out; }
   }}
 	break;
 	case 10:
-#line 114 "grm_lexer.rl"
+#line 115 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkDoubleDot);
    {p++; goto _out; }
   }}
 	break;
 	case 11:
-#line 119 "grm_lexer.rl"
+#line 120 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkOpenParen);
    {p++; goto _out; }
   }}
 	break;
 	case 12:
-#line 124 "grm_lexer.rl"
+#line 125 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkCloseParen);
    {p++; goto _out; }
   }}
 	break;
 	case 13:
-#line 129 "grm_lexer.rl"
+#line 130 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkOpenBrace);
    {p++; goto _out; }
   }}
 	break;
 	case 14:
-#line 134 "grm_lexer.rl"
+#line 135 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkCloseBrace);
    {p++; goto _out; }
   }}
 	break;
 	case 15:
-#line 139 "grm_lexer.rl"
+#line 140 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkOpenSquare);
    {p++; goto _out; }
   }}
 	break;
 	case 16:
-#line 144 "grm_lexer.rl"
+#line 145 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkCloseSquare);
    {p++; goto _out; }
   }}
 	break;
 	case 17:
-#line 149 "grm_lexer.rl"
+#line 150 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkOpenAngle);
    {p++; goto _out; }
   }}
 	break;
 	case 18:
-#line 154 "grm_lexer.rl"
+#line 155 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkCloseAngle);
    {p++; goto _out; }
   }}
 	break;
 	case 19:
-#line 159 "grm_lexer.rl"
+#line 160 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkPlus);
    {p++; goto _out; }
   }}
 	break;
 	case 20:
-#line 164 "grm_lexer.rl"
+#line 165 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkStar);
    {p++; goto _out; }
   }}
 	break;
 	case 21:
-#line 169 "grm_lexer.rl"
+#line 170 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkQuestion);
    {p++; goto _out; }
   }}
 	break;
 	case 22:
-#line 174 "grm_lexer.rl"
+#line 175 "grm_lexer.rl"
+	{te = p+1;{
+   ACCEPT_TOKEN(GrmAst::TkTilde);
+   {p++; goto _out; }
+  }}
+	break;
+	case 23:
+#line 180 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkKwParameterUnpack);
    {p++; goto _out; }
   }}
 	break;
-	case 23:
-#line 179 "grm_lexer.rl"
+	case 24:
+#line 185 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkKwParameterHide);
    {p++; goto _out; }
   }}
 	break;
-	case 24:
-#line 184 "grm_lexer.rl"
+	case 25:
+#line 190 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkKwParameterMerge);
    {p++; goto _out; }
   }}
 	break;
-	case 25:
-#line 189 "grm_lexer.rl"
+	case 26:
+#line 195 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkKwParameterId);
    {p++; goto _out; }
   }}
 	break;
-	case 26:
-#line 194 "grm_lexer.rl"
+	case 27:
+#line 200 "grm_lexer.rl"
 	{te = p+1;{
    ACCEPT_TOKEN(GrmAst::TkKwParameterCaseSensitive);
-   {p++; goto _out; }
-  }}
-	break;
-	case 27:
-#line 199 "grm_lexer.rl"
-	{te = p+1;{
-   ++ts;
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyStart);
    {p++; goto _out; }
   }}
 	break;
@@ -577,7 +578,7 @@ _eof_trans:
 #line 205 "grm_lexer.rl"
 	{te = p+1;{
    ++ts;
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyWhitespace);
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyStart);
    {p++; goto _out; }
   }}
 	break;
@@ -585,7 +586,7 @@ _eof_trans:
 #line 211 "grm_lexer.rl"
 	{te = p+1;{
    ++ts;
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyComment);
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyWhitespace);
    {p++; goto _out; }
   }}
 	break;
@@ -593,7 +594,7 @@ _eof_trans:
 #line 217 "grm_lexer.rl"
 	{te = p+1;{
    ++ts;
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyNewline);
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyComment);
    {p++; goto _out; }
   }}
 	break;
@@ -601,58 +602,66 @@ _eof_trans:
 #line 223 "grm_lexer.rl"
 	{te = p+1;{
    ++ts;
-   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyCaseSensitive);
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyNewline);
    {p++; goto _out; }
   }}
 	break;
 	case 32:
 #line 229 "grm_lexer.rl"
-	{te = p+1;}
+	{te = p+1;{
+   ++ts;
+   ACCEPT_TOKEN(GrmAst::TkGrammarPropertyCaseSensitive);
+   {p++; goto _out; }
+  }}
 	break;
 	case 33:
-#line 231 "grm_lexer.rl"
+#line 235 "grm_lexer.rl"
 	{te = p+1;}
 	break;
 	case 34:
-#line 234 "grm_lexer.rl"
-	{te = p+1;{ throw std::runtime_error("lexer error"); }}
+#line 237 "grm_lexer.rl"
+	{te = p+1;}
 	break;
 	case 35:
-#line 67 "grm_lexer.rl"
+#line 240 "grm_lexer.rl"
+	{te = p+1;{ throw std::runtime_error("lexer error"); }}
+	break;
+	case 36:
+#line 68 "grm_lexer.rl"
 	{te = p;p--;{
    ACCEPT_TOKEN(GrmAst::TkIntegerLiteral);
    {p++; goto _out; }
   }}
 	break;
-	case 36:
-#line 77 "grm_lexer.rl"
+	case 37:
+#line 78 "grm_lexer.rl"
 	{te = p;p--;{
    ++ts;
    ACCEPT_TOKEN(GrmAst::TkTerminalIdentifier);
    {p++; goto _out; }
   }}
 	break;
-	case 37:
-#line 83 "grm_lexer.rl"
+	case 38:
+#line 84 "grm_lexer.rl"
 	{te = p;p--;{
    ++ts;
    ACCEPT_TOKEN(GrmAst::TkNonterminalIdentifier);
    {p++; goto _out; }
   }}
 	break;
-	case 38:
-#line 230 "grm_lexer.rl"
+	case 39:
+#line 236 "grm_lexer.rl"
 	{te = p;p--;}
 	break;
-	case 39:
-#line 234 "grm_lexer.rl"
+	case 40:
+#line 240 "grm_lexer.rl"
 	{te = p;p--;{ throw std::runtime_error("lexer error"); }}
 	break;
-	case 40:
-#line 234 "grm_lexer.rl"
+	case 41:
+#line 240 "grm_lexer.rl"
 	{{p = ((te))-1;}{ throw std::runtime_error("lexer error"); }}
 	break;
-#line 601 "grm_lexer.cpp"
+#line 609 "grm_lexer.cpp"
 		}
 	}
 
@@ -665,7 +674,7 @@ _again:
 #line 1 "NONE"
 	{ts = 0;}
 	break;
-#line 612 "grm_lexer.cpp"
+#line 620 "grm_lexer.cpp"
 		}
 	}
 
@@ -683,7 +692,7 @@ _again:
 	_out: {}
 	}
 
-#line 267 "grm_lexer.rl"
+#line 273 "grm_lexer.rl"
 
  if (_p == _pe && accepted.get() == nullptr) {
   return nullptr;

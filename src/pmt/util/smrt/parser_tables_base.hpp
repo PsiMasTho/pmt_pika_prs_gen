@@ -25,6 +25,7 @@ namespace pmt::util::smrt {
    virtual auto get_state_conflict_transitions(StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst = 0; // which lookahead symbols can come after this state, if any
    virtual auto get_state_kind(StateNrType state_nr_) const -> StateKind = 0;
    virtual auto get_state_accept_index(StateNrType state_nr_) const -> size_t = 0;
+   virtual auto get_eoi_accept_index() const -> size_t = 0;
    virtual auto get_accept_count() const -> size_t = 0;
    virtual auto get_conflict_count() const -> size_t = 0;
  

@@ -35,6 +35,10 @@ auto LexerTables::get_accept_index_label(size_t index_) const -> std::string {
  return _terminal_data[index_]._label;
 }
 
+auto LexerTables::get_accept_index_hide(size_t index_) const -> bool {
+ return _terminal_data[index_]._hide;
+}
+
 auto LexerTables::get_accept_index_id(size_t index_) const -> GenericId::IdType {
  return _terminal_data[index_]._id;
 }

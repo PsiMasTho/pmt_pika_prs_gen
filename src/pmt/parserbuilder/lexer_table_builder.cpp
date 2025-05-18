@@ -64,7 +64,7 @@ void LexerTableBuilder::setup_whitespace_state_machine() {
 
 void LexerTableBuilder::setup_terminal_state_machines() {
   for (size_t i = 0; i < _grammar_data->_terminal_accepts.size(); ++i) {
-    if (_grammar_data->_terminal_accepts[i]._hide || _grammar_data->_terminal_accepts[i]._label == GrammarData::LABEL_EOI || _grammar_data->_terminal_accepts[i]._label == GrammarData::TERMINAL_LABEL_START || _grammar_data->_terminal_accepts[i]._label == GrammarData::TERMINAL_LABEL_LINECOUNT) {
+    if (!_grammar_data->_terminal_accepts[i]._accepted || _grammar_data->_terminal_accepts[i]._label == GrammarData::LABEL_EOI || _grammar_data->_terminal_accepts[i]._label == GrammarData::TERMINAL_LABEL_START || _grammar_data->_terminal_accepts[i]._label == GrammarData::TERMINAL_LABEL_LINECOUNT) {
       continue;
     }
 
@@ -312,7 +312,8 @@ void LexerTableBuilder::fill_terminal_data() {
  for (size_t i = 0; i < _grammar_data->_terminal_accepts.size(); ++i) {
   _result_tables._terminal_data.push_back(LexerTables::TerminalData{
    ._label = _grammar_data->_terminal_accepts[i]._label,
-   ._id = string_to_id_map.find(_grammar_data->_terminal_accepts[i]._id_name)->second
+   ._id = string_to_id_map.find(_grammar_data->_terminal_accepts[i]._id_name)->second,
+   ._hide = _grammar_data->_terminal_accepts[i]._hide,
   });
  }
 

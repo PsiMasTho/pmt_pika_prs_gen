@@ -74,6 +74,7 @@ auto GenericAst::clone(GenericAst const& other_) -> UniqueHandle {
 
 void GenericAst::swap(GenericAst& lhs_, GenericAst& rhs_) {
   std::swap(lhs_._data, rhs_._data);
+  std::swap(lhs_._id, rhs_._id);
 }
 
 auto GenericAst::get_id() const -> GenericId::IdType {
