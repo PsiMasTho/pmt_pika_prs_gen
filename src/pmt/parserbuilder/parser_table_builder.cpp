@@ -40,14 +40,14 @@ auto ParserTableBuilder::build(GenericAst const& ast_, GrammarData const& gramma
 
  setup_parser_state_machine();
  write_nonterminal_state_machine_dot("Initial tables", _result_tables._parser_state_machine);
- StateMachineDeterminizer::determinize(_result_tables._parser_state_machine);
+ _result_tables._parser_state_machine = StateMachineDeterminizer(_result_tables._parser_state_machine).determinize();
  write_nonterminal_state_machine_dot("Determinized tables", _result_tables._parser_state_machine);
  StateMachineMinimizer::minimize(_result_tables._parser_state_machine);
  write_nonterminal_state_machine_dot("Minimized tables", _result_tables._parser_state_machine);
  extract_conflicts();
  write_nonterminal_state_machine_dot("Final tables", _result_tables._parser_state_machine);
  setup_lookahead_state_machine();
- StateMachineDeterminizer::determinize(_result_tables._lookahead_state_machine);
+ _result_tables._lookahead_state_machine = StateMachineDeterminizer(_result_tables._lookahead_state_machine).determinize();
  StateMachineMinimizer::minimize(_result_tables._lookahead_state_machine);
  write_lookahead_state_machine_dot("Lookahead tables", _result_tables._lookahead_state_machine);
 
@@ -245,7 +245,7 @@ void ParserTableBuilder::setup_lookahead_state_machine() {
 
    // merge this state machine into the partial conflict state machine
    StateNrType const state_nr_lookahead_start = partial_conflict_state_machine.get_unused_state_nr();
-   StateMachinePruner::prune(state_machine_lookahead, StateNrStart, state_nr_lookahead_start);
+   state_machine_lookahead = StateMachinePruner(state_machine_lookahead).enable_renumbering(state_nr_lookahead_start).prune();
    partial_conflict_state_machine.get_state(state_nr_partial_start)->add_epsilon_transition(state_nr_lookahead_start);
 
    state_machine_lookahead.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
@@ -253,11 +253,11 @@ void ParserTableBuilder::setup_lookahead_state_machine() {
    });
   });
 
-  StateMachineDeterminizer::determinize(partial_conflict_state_machine);
+  partial_conflict_state_machine = StateMachineDeterminizer(partial_conflict_state_machine).determinize();
   try_solve_partial_conflict(partial_conflict_state_machine, state_conflicting.get_symbols());
 
   StateNrType const state_nr_prune_start = _result_tables._lookahead_state_machine.get_unused_state_nr();
-  StateMachinePruner::prune(partial_conflict_state_machine, StateNrStart, state_nr_prune_start);
+  partial_conflict_state_machine = StateMachinePruner(partial_conflict_state_machine).enable_renumbering(state_nr_prune_start).prune();
   _result_tables._lookahead_state_machine.get_state(StateNrStart)->add_epsilon_transition(state_nr_prune_start);
   partial_conflict_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
    _result_tables._lookahead_state_machine.get_or_create_state(state_nr_) = *partial_conflict_state_machine.get_state(state_nr_);
@@ -675,7 +675,7 @@ void ParserTableBuilder::try_solve_partial_conflict(StateMachine& state_machine_
    });
  }
 
- StateMachinePruner::prune(state_machine_, StateNrStart);
+ state_machine_ = StateMachinePruner(state_machine_).prune();
 
  // check that all conflict symbols exist at least once
  IntervalSet<SymbolType> seen;

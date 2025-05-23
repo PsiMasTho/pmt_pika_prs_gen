@@ -8,45 +8,72 @@ namespace pmt::util::smct {
 using namespace pmt::base;
 using namespace pmt::util::smrt;
 
-void StateMachinePruner::prune(StateMachine& state_machine_, StateNrType state_nr_from_, std::optional<pmt::util::smrt::StateNrType> state_nr_from_new_) {
-  std::vector<StateNrType> pending;
-  IntervalMap<StateNrType, StateNrType> visited;
+StateMachinePruner::StateMachinePruner(StateMachine const& state_machine_)
+: _input_state_machine(state_machine_)
+, _state_nr_from(StateNrStart) {
+}
 
-  auto const push_and_visit = [&pending, &visited, &state_nr_from_new_](StateNrType state_nr_) -> StateNrType {
-    if (StateNrType const* ptr = visited.find(state_nr_); ptr != nullptr) {
-      return *ptr;
-    }
+auto StateMachinePruner::set_state_nr_from(pmt::util::smrt::StateNrType state_nr_from_) && -> StateMachinePruner&& {
+ _state_nr_from = state_nr_from_;
+ return std::move(*this);
+}
 
-    StateNrType const state_nr_new = state_nr_from_new_.value_or(state_nr_);
-    state_nr_from_new_ = state_nr_from_new_.has_value() ? std::make_optional(state_nr_new + 1) : std::nullopt;
+auto StateMachinePruner::enable_renumbering(pmt::util::smrt::StateNrType state_nr_from_new_) && -> StateMachinePruner&& {
+ _state_nr_from_new = state_nr_from_new_;
+ return std::move(*this);
+}
 
-    pending.push_back(state_nr_);
-    visited.insert(Interval<StateNrType>(state_nr_), state_nr_new);
-    return state_nr_new;
-  };
+auto StateMachinePruner::prune() && -> StateMachine {
+ push_and_visit(_state_nr_from);
 
-  push_and_visit(state_nr_from_);
+ while (!_pending.empty()) {
+  StateNrType const state_nr_old = take();
+  StateNrType const state_nr_new = *_visited.find(state_nr_old);
+  State const& state_old = *_input_state_machine.get_state(state_nr_old);
+  State& state_new = _output_state_machine.get_or_create_state(state_nr_new);
 
-  StateMachine res;
+  copy_accepts(state_old, state_new);
+  follow_and_copy_epsilon_transitions(state_old, state_new);
+  follow_and_copy_symbol_transitions(state_old, state_new);
+ }
 
-  while (!pending.empty()) {
-    StateNrType const state_nr_old = pending.back();
-    pending.pop_back();
-    StateNrType const state_nr_new = *visited.find(state_nr_old);
-    State const& state_old = *state_machine_.get_state(state_nr_old);
-    State& state_new = res.get_or_create_state(state_nr_new);
+ return std::move(_output_state_machine);
+}
 
-    state_new.get_accepts() = state_old.get_accepts();
+auto StateMachinePruner::push_and_visit(StateNrType state_nr_) -> StateNrType {
+ if (StateNrType const* ptr = _visited.find(state_nr_); ptr != nullptr) {
+   return *ptr;
+ }
 
-    state_old.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_old_) { state_new.add_epsilon_transition(push_and_visit(state_nr_next_old_)); });
+ StateNrType const state_nr_new = _state_nr_from_new.value_or(state_nr_);
+ _state_nr_from_new = _state_nr_from_new.has_value() ? std::make_optional(state_nr_new + 1) : std::nullopt;
 
-    state_old.get_symbols().for_each_key([&](SymbolType symbol_) {
-      StateNrType const state_nr_next_old = state_old.get_symbol_transition(Symbol(symbol_));
-      state_new.add_symbol_transition(Symbol(symbol_), push_and_visit(state_nr_next_old));
-    });
-  }
+ _pending.push_back(state_nr_);
+ _visited.insert(Interval<StateNrType>(state_nr_), state_nr_new);
+ return state_nr_new;
+}
 
-  state_machine_ = std::move(res);
+auto StateMachinePruner::take() -> pmt::util::smrt::StateNrType {
+ StateNrType const ret = _pending.back();
+ _pending.pop_back();
+ return ret;
+}
+
+void StateMachinePruner::copy_accepts(pmt::util::smct::State const& state_old_, pmt::util::smct::State& state_new_) {
+  state_new_.get_accepts() = state_old_.get_accepts();
+}
+
+void StateMachinePruner::follow_and_copy_epsilon_transitions(pmt::util::smct::State const& state_old_, pmt::util::smct::State& state_new_) {
+ state_old_.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_old_) {
+  StateNrType const state_nr_next_new = push_and_visit(state_nr_next_old_);
+  state_new_.add_epsilon_transition(state_nr_next_new);
+ });
+}
+
+void StateMachinePruner::follow_and_copy_symbol_transitions(pmt::util::smct::State const& state_old_, pmt::util::smct::State& state_new_) {
+ state_old_.get_symbol_transitions().for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolType> const& interval_) {
+  state_new_.add_symbol_transition(interval_, push_and_visit(state_nr_next_old_));
+ });
 }
 
 }  // namespace pmt::util::smct
