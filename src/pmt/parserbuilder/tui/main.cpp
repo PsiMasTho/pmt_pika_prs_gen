@@ -12,6 +12,7 @@
 #include "pmt/util/smrt/generic_ast_printer.hpp"
 #include "pmt/util/smrt/generic_lexer.hpp"
 #include "pmt/util/smrt/generic_parser.hpp"
+#include "pmt/parserbuilder/terminal_conflict_checker.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -23,6 +24,7 @@ using namespace pmt::util::smrt;
 using namespace pmt::util::smct;
 
 namespace {
+
 }  // namespace
 
 auto main(int argc, char const* const* argv) -> int try {
@@ -93,6 +95,14 @@ auto main(int argc, char const* const* argv) -> int try {
   parser_table_writer.write(parser_writer_args);
   std::cout << "Done writing parser tables\n";
 
+  TerminalConflictChecker::check_conflicts(
+   TerminalConflictChecker::Args{
+    ._state_machine = parser_tables._parser_state_machine,
+    ._grammar_data = grammar_data,
+    ._ast = *ast,
+   }
+  );
+
   std::ifstream test_file(args._input_test_file);
   std::string const test_input((std::istreambuf_iterator<char>(test_file)), std::istreambuf_iterator<char>());
 
@@ -100,19 +110,22 @@ auto main(int argc, char const* const* argv) -> int try {
   GenericParser test_parser;
   GenericAst::UniqueHandle test_ast = test_parser.parse(test_lexer, parser_tables);
 
-  GenericAstPrinter ast_printer([&](GenericId::IdType id_) {
-   if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
-    return lexer_tables.id_to_string(id_);
-   }
-   if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
-    return parser_tables.id_to_string(id_);
-   }
-   return "unknown(" + std::to_string(id_) + ")";
-  });
+  GenericAstPrinter::Args ast_printer_args{
+    ._id_to_string_fn = [&](GenericId::IdType id_) {
+     if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
+      return lexer_tables.id_to_string(id_);
+     }
+     if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
+      return parser_tables.id_to_string(id_);
+     }
+     return "unknown(" + std::to_string(id_) + ")";
+    },
+    ._out = std::cout,
+    ._ast = *test_ast,
+    ._indent_width = 2
+  };
 
-  ast_printer.print(*test_ast, std::cout);
-
-
+  GenericAstPrinter::print(ast_printer_args);
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

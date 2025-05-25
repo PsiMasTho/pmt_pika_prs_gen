@@ -5,11 +5,17 @@
 
 #include <string>
 #include <vector>
+#include <limits>
 
 namespace pmt::parserbuilder {
 
 class GrammarData {
  public:
+  // -$ Types / Constants $-
+  enum : size_t {
+    LookupIndexAnonymous = std::numeric_limits<size_t>::max(),
+  };
+
   static inline char const TERMINAL_RESERVED_PREFIX_CH = '@';
   static inline std::string const TERMINAL_DIRECT_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "direct_";               // NOLINT
   static inline std::string const TERMINAL_COMMENT_OPEN_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_open_";   // NOLINT
@@ -71,6 +77,13 @@ class GrammarData {
   // --$ Other $--
   // modifies the ast_ passed to it!
   static auto construct_from_ast(pmt::util::smrt::GenericAst& ast_) -> GrammarData;
+
+  auto lookup_terminal_label_by_index(size_t index_) const -> std::string;
+  auto lookup_terminal_index_by_label(std::string_view label_) const -> size_t;
+  auto lookup_terminal_definition_by_index(size_t index_) const -> pmt::util::smrt::GenericAstPath;
+  auto lookup_nonterminal_label_by_index(size_t index_) const -> std::string;
+  auto lookup_nonterminal_index_by_label(std::string_view label_) const -> size_t;
+  auto lookup_nonterminal_definition_by_index(size_t index_) const -> pmt::util::smrt::GenericAstPath;
 
  private:
   static void initial_iteration(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_);

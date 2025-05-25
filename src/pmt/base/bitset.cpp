@@ -156,6 +156,7 @@ void Bitset::pop_back() {
 }
 
 auto Bitset::get(size_t index_) const -> bool {
+  assert(index_ < _size);
   size_t const chunk_index = get_chunk_index(index_);
   size_t const bit_index = get_bit_index(index_);
   return (_data[chunk_index] & (ChunkType(1) << bit_index)) != 0;

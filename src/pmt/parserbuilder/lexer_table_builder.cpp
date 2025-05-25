@@ -11,6 +11,7 @@
 #include "pmt/util/smrt/generic_ast.hpp"
 #include "pmt/util/smct/graph_writer.hpp"
 #include "pmt/parserbuilder/grammar_data.hpp"
+#include "pmt/parserbuilder/state_machine_part_builder.hpp"
 
 
 #include <iostream>
@@ -39,7 +40,7 @@ auto LexerTableBuilder::build(pmt::util::smrt::GenericAst const& ast_, GrammarDa
   connect_terminal_state_machines();
   loop_back_linecount_state_machine();
   fill_terminal_data();
-  _result_tables._lexer_state_machine = StateMachineDeterminizer(_result_tables._lexer_state_machine).determinize();
+  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _result_tables._lexer_state_machine});
   StateMachineMinimizer::minimize(_result_tables._lexer_state_machine);
   write_dot("linecount_state_machine.dot", _result_tables._linecount_state_machine);
   StateMachineMinimizer::minimize(_result_tables._linecount_state_machine);
@@ -55,11 +56,21 @@ void LexerTableBuilder::setup_whitespace_state_machine() {
   }
 
   size_t const index_whitespace = _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size();
-  StateMachinePart fsm_part_whitespace = _terminal_state_machine_part_builder.build([this](size_t index_) { return lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_terminal_index_by_label(name_); }, [this](size_t index_) { return lookup_terminal_definition_by_index(index_); }, *_ast, index_whitespace, _whitespace_state_machine);
+  StateMachinePart fsm_part_whitespace = StateMachinePartBuilder::build(
+    StateMachinePartBuilder::TerminalBuildingArgs(
+     StateMachinePartBuilder::ArgsBase{
+      ._ast_root = *_ast,
+      ._dest_state_machine = _whitespace_state_machine,
+      ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); },
+      ._starting_index = index_whitespace
+     },
+     [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); },
+     [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_);} )
+  );
   StateNrType const state_nr_end = _whitespace_state_machine.create_new_state();
   _whitespace_state_machine.get_state(state_nr_end)->get_accepts().resize(1, true);
   fsm_part_whitespace.connect_outgoing_transitions_to(state_nr_end, _whitespace_state_machine);
-  _whitespace_state_machine = StateMachineDeterminizer(_whitespace_state_machine).determinize();
+  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _whitespace_state_machine});
 }
 
 void LexerTableBuilder::setup_terminal_state_machines() {
@@ -69,13 +80,24 @@ void LexerTableBuilder::setup_terminal_state_machines() {
     }
 
     StateMachine state_machine_terminal;
-    StateMachinePart state_machine_part_terminal = _terminal_state_machine_part_builder.build([this](size_t index_) { return lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_terminal_index_by_label(name_); }, [this](size_t index_) { return lookup_terminal_definition_by_index(index_); }, *_ast, i, state_machine_terminal);
+    StateMachinePart state_machine_part_terminal = StateMachinePartBuilder::build(
+      StateMachinePartBuilder::TerminalBuildingArgs(
+        StateMachinePartBuilder::ArgsBase{
+          ._ast_root = *_ast,
+          ._dest_state_machine = state_machine_terminal,
+          ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); },
+          ._starting_index = i
+        },
+        [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); },
+        [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }
+      )
+    );
     StateNrType const state_nr_end = state_machine_terminal.create_new_state();
     State& state_end = *state_machine_terminal.get_state(state_nr_end);
     state_end.get_accepts().resize(_grammar_data->_terminal_accepts.size(), false);
     state_end.get_accepts().set(i, true);
     state_machine_part_terminal.connect_outgoing_transitions_to(state_nr_end, state_machine_terminal);
-    state_machine_terminal = StateMachineDeterminizer(state_machine_terminal).determinize();
+    StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = state_machine_terminal});
     _terminal_state_machines.push_back(std::move(state_machine_terminal));
   }
 }
@@ -85,11 +107,22 @@ void LexerTableBuilder::setup_comment_state_machines() {
    size_t const index_comment_open = _grammar_data->_terminal_accepts.size() + i;
 
     StateMachine state_machine_comment_open;
-    StateMachinePart state_machine_part_comment_open = _terminal_state_machine_part_builder.build([this](size_t index_) { return lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_terminal_index_by_label(name_); }, [this](size_t index_) { return lookup_terminal_definition_by_index(index_); }, *_ast, index_comment_open, state_machine_comment_open);
+    StateMachinePart state_machine_part_comment_open = StateMachinePartBuilder::build(
+      StateMachinePartBuilder::TerminalBuildingArgs(
+        StateMachinePartBuilder::ArgsBase{
+          ._ast_root = *_ast,
+          ._dest_state_machine = state_machine_comment_open,
+          ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); },
+          ._starting_index = index_comment_open
+        },
+        [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); },
+        [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }
+      )
+    );
     StateNrType const state_nr_end = state_machine_comment_open.create_new_state();
     state_machine_comment_open.get_state(state_nr_end)->get_accepts().resize(1, true);
     state_machine_part_comment_open.connect_outgoing_transitions_to(state_nr_end, state_machine_comment_open);
-    state_machine_comment_open = StateMachineDeterminizer(state_machine_comment_open).determinize();
+    StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = state_machine_comment_open});
     _comment_open_state_machines.push_back(std::move(state_machine_comment_open));
   }
 
@@ -97,11 +130,22 @@ void LexerTableBuilder::setup_comment_state_machines() {
     size_t const index_comment_close = _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + i;
 
     StateMachine state_machine_comment_close;
-    StateMachinePart state_machine_part_comment_close = _terminal_state_machine_part_builder.build([this](size_t index_) { return lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_terminal_index_by_label(name_); }, [this](size_t index_) { return lookup_terminal_definition_by_index(index_); }, *_ast, index_comment_close, state_machine_comment_close);
+    StateMachinePart state_machine_part_comment_close = StateMachinePartBuilder::build(
+      StateMachinePartBuilder::TerminalBuildingArgs(
+        StateMachinePartBuilder::ArgsBase{
+          ._ast_root = *_ast,
+          ._dest_state_machine = state_machine_comment_close,
+          ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); },
+          ._starting_index = index_comment_close
+        },
+        [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); },
+        [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }
+      )
+    );
     StateNrType const state_nr_end = state_machine_comment_close.create_new_state();
     state_machine_comment_close.get_state(state_nr_end)->get_accepts().resize(1, true);
     state_machine_part_comment_close.connect_outgoing_transitions_to(state_nr_end, state_machine_comment_close);
-    state_machine_comment_close = StateMachineDeterminizer(state_machine_comment_close).determinize();
+    StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = state_machine_comment_close});
     _comment_close_state_machines.push_back(std::move(state_machine_comment_close));
   }
 }
@@ -113,14 +157,25 @@ void LexerTableBuilder::setup_linecount_state_machine() {
  }
 
  size_t const index_linecount = _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size() + 1;
- StateMachinePart fsm_part_linecount = _terminal_state_machine_part_builder.build([this](size_t index_) { return lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_terminal_index_by_label(name_); }, [this](size_t index_) { return lookup_terminal_definition_by_index(index_); }, *_ast, index_linecount, _result_tables._linecount_state_machine);
+ StateMachinePart fsm_part_linecount = StateMachinePartBuilder::build(
+  StateMachinePartBuilder::TerminalBuildingArgs(
+   StateMachinePartBuilder::ArgsBase{
+    ._ast_root = *_ast,
+    ._dest_state_machine = _result_tables._linecount_state_machine,
+    ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); },
+    ._starting_index = index_linecount
+   },
+   [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); },
+   [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }
+  )
+ );
  StateNrType const state_nr_end = _result_tables._linecount_state_machine.create_new_state();
  State& state_end = *_result_tables._linecount_state_machine.get_state(state_nr_end);
  fsm_part_linecount.connect_outgoing_transitions_to(state_nr_end, _result_tables._linecount_state_machine);
  state_end.get_accepts().resize(_grammar_data->_terminal_accepts.size(), false);
  size_t const index_linecount_terminal = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), GrammarData::TERMINAL_LABEL_LINECOUNT, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
  state_end.get_accepts().set(index_linecount_terminal, true);
- _result_tables._linecount_state_machine = StateMachineDeterminizer(_result_tables._linecount_state_machine).determinize();
+ StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _result_tables._linecount_state_machine});
 }
 
 void LexerTableBuilder::setup_default_linecount_state_machine() {
@@ -178,11 +233,11 @@ void LexerTableBuilder::merge_comment_state_machines_into_result() {
   for (size_t i = 0; i < _comment_open_state_machines.size(); ++i) {
     StateMachine& state_machine_comment_open = _comment_open_state_machines[i];
     StateNrType const state_nr_comment_open = _result_tables._lexer_state_machine.create_new_state();
-    state_machine_comment_open = StateMachinePruner(state_machine_comment_open).enable_renumbering(state_nr_comment_open).prune();
+    StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_comment_open, ._state_nr_from_new = state_nr_comment_open});
 
     StateMachine& state_machine_comment_close = _comment_close_state_machines[i];
     StateNrType const state_nr_comment_close = state_nr_comment_open + state_machine_comment_close.get_state_count();
-    state_machine_comment_close = StateMachinePruner(state_machine_comment_close).enable_renumbering(state_nr_comment_close).prune();
+    StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_comment_close, ._state_nr_from_new = state_nr_comment_close});
 
     _result_tables._lexer_state_machine.get_state(StateNrStart)->add_epsilon_transition(state_nr_comment_open);
 
@@ -216,7 +271,7 @@ void LexerTableBuilder::merge_whitespace_state_machine_into_result() {
  }
 
  StateNrType const state_nr_whitespace = _result_tables._lexer_state_machine.create_new_state();
- _whitespace_state_machine = StateMachinePruner(_whitespace_state_machine).enable_renumbering(state_nr_whitespace).prune();
+ StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = _whitespace_state_machine, ._state_nr_from_new = state_nr_whitespace});
  _result_tables._lexer_state_machine.get_state(StateNrStart)->add_epsilon_transition(state_nr_whitespace);
  _whitespace_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
    State& state = *_whitespace_state_machine.get_state(state_nr_);
@@ -251,7 +306,7 @@ void LexerTableBuilder::connect_terminal_state_machines() {
   for (size_t i = 0; i < _terminal_state_machines.size(); ++i) {
     StateMachine& state_machine_terminal = _terminal_state_machines[i];
     StateNrType const state_nr_terminal = _result_tables._lexer_state_machine.get_unused_state_nr();
-    state_machine_terminal = StateMachinePruner(state_machine_terminal).enable_renumbering(state_nr_terminal).prune();
+    StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_terminal, ._state_nr_from_new = state_nr_terminal});
 
     state_machine_terminal.get_state_nrs().for_each_key([&](StateNrType state_nr_) { _result_tables._lexer_state_machine.get_or_create_state(state_nr_) = *state_machine_terminal.get_state(state_nr_); });
 
@@ -393,59 +448,6 @@ void LexerTableBuilder::write_dot(std::string_view filename_, pmt::util::smct::S
 
  GraphWriter().write_dot(writer_args, style_args);
  std::cout << "Wrote dot file: " << filename_ << '\n';
-}
-
-auto LexerTableBuilder::lookup_terminal_label_by_index(size_t index_) const -> std::string {
- assert(index_ < _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size() + 1);
-
- if (index_ >= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size()) {
-  return GrammarData::TERMINAL_LABEL_WHITESPACE;
- }
- if (index_ >= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size()) {
-  index_ -= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size();
-  return GrammarData::TERMINAL_COMMENT_CLOSE_PREFIX + std::to_string(index_);
- }
- if (index_ >= _grammar_data->_terminal_accepts.size()) {
-  index_ -= _grammar_data->_terminal_accepts.size();
-  return GrammarData::TERMINAL_COMMENT_OPEN_PREFIX + std::to_string(index_);
- }
-
- return _grammar_data->_terminal_accepts[index_]._label;
-}
-
-auto LexerTableBuilder::lookup_terminal_index_by_label(std::string_view label_) const -> size_t {
-  assert(std::is_sorted(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), [](auto const& lhs_, auto const& rhs_) { return lhs_._label < rhs_._label; }));
-
-  if (label_.starts_with(GrammarData::TERMINAL_RESERVED_PREFIX_CH)) {
-    return TerminalIndexAnonymous;
-  }
-
-  auto const it = std::lower_bound(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), label_, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
-
-  assert(it != _grammar_data->_terminal_accepts.end() && it->_label == label_);
-
-  return std::distance(_grammar_data->_terminal_accepts.begin(), it);
-}
-
-auto LexerTableBuilder::lookup_terminal_definition_by_index(size_t index_) const -> pmt::util::smrt::GenericAstPath {
- assert(index_ < _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size() + 2);
-
- if (index_ >= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size() + 1) {
-  return _grammar_data->_linecount_definition;
- }
- if (index_ >= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size()) {
-  return _grammar_data->_whitespace_definition;
- }
- if (index_ >= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size()) {
-  index_ -= _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size();
-  return _grammar_data->_comment_close_definitions[index_];
- }
- if (index_ >= _grammar_data->_terminal_accepts.size()) {
-  index_ -= _grammar_data->_terminal_accepts.size();
-  return _grammar_data->_comment_open_definitions[index_];
- }
-
- return _grammar_data->_terminal_accepts[index_]._definition_path;
 }
 
 }  // namespace pmt::parserbuilder

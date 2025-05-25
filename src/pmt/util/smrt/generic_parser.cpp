@@ -133,15 +133,15 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
       break;
      }
 
-     GenericLexer::LexReturn lexed;
-     if (consumed_from_queue < consume_from_queue) {
-      lexed = _lex_queue[consumed_from_queue];
-      ++consumed_from_queue;
-     } else {
-      _lex_queue.push_back(_lexer->lex(_parser_tables->get_lookahead_state_terminal_transitions(state_nr_conflict_cur)));
-      lexed = _lex_queue.back();
-     }
-     state_nr_conflict_cur = _parser_tables->get_lookahead_state_nr_next(state_nr_conflict_cur, SymbolType((SymbolKindTerminal << SymbolValueBitWidth) | lexed._accepted));
+     size_t const accepted = [&]() {
+      if (consumed_from_queue < consume_from_queue) {
+       return _lex_queue[consumed_from_queue++]._accepted;
+      } else {
+       _lex_queue.push_back(_lexer->lex(_parser_tables->get_lookahead_state_terminal_transitions(state_nr_conflict_cur)));
+       return _lex_queue.back()._accepted;
+      }
+     }();
+     state_nr_conflict_cur = _parser_tables->get_lookahead_state_nr_next(state_nr_conflict_cur, SymbolType((SymbolKindTerminal << SymbolValueBitWidth) | accepted));
     }
    }
    break;

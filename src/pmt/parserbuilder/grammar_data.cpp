@@ -27,6 +27,86 @@ auto GrammarData::construct_from_ast(GenericAst& ast_) -> GrammarData {
   return ret;
 }
 
+auto GrammarData::lookup_terminal_label_by_index(size_t index_) const -> std::string {
+ assert(index_ < _terminal_accepts.size() + _comment_open_definitions.size() + _comment_close_definitions.size() + 1);
+
+ if (index_ >= _terminal_accepts.size() + _comment_open_definitions.size() + _comment_close_definitions.size()) {
+  return GrammarData::TERMINAL_LABEL_WHITESPACE;
+ }
+ if (index_ >= _terminal_accepts.size() + _comment_open_definitions.size()) {
+  index_ -= _terminal_accepts.size() + _comment_open_definitions.size();
+  return GrammarData::TERMINAL_COMMENT_CLOSE_PREFIX + std::to_string(index_);
+ }
+ if (index_ >= _terminal_accepts.size()) {
+  index_ -= _terminal_accepts.size();
+  return GrammarData::TERMINAL_COMMENT_OPEN_PREFIX + std::to_string(index_);
+ }
+
+ return _terminal_accepts[index_]._label;
+}
+
+auto GrammarData::lookup_terminal_index_by_label(std::string_view label_) const -> size_t {
+  assert(std::is_sorted(_terminal_accepts.begin(), _terminal_accepts.end(), [](auto const& lhs_, auto const& rhs_) { return lhs_._label < rhs_._label; }));
+
+  if (label_.starts_with(GrammarData::TERMINAL_RESERVED_PREFIX_CH)) {
+    return LookupIndexAnonymous;
+  }
+
+  auto const it = std::lower_bound(_terminal_accepts.begin(), _terminal_accepts.end(), label_, [](auto const& lhs_, auto const& rhs_) { return FetchLabelString{}(lhs_) < FetchLabelString{}(rhs_); });
+
+  if (it == _terminal_accepts.end() && !label_.starts_with(GrammarData::TERMINAL_RESERVED_PREFIX_CH)) {
+    throw std::runtime_error("Terminal not found: " + std::string(label_));
+  }
+
+  return std::distance(_terminal_accepts.begin(), it);
+}
+
+auto GrammarData::lookup_terminal_definition_by_index(size_t index_) const -> pmt::util::smrt::GenericAstPath {
+ assert(index_ < _terminal_accepts.size() + _comment_open_definitions.size() + _comment_close_definitions.size() + 2);
+
+ if (index_ >= _terminal_accepts.size() + _comment_open_definitions.size() + _comment_close_definitions.size() + 1) {
+  return _linecount_definition;
+ }
+ if (index_ >= _terminal_accepts.size() + _comment_open_definitions.size() + _comment_close_definitions.size()) {
+  return _whitespace_definition;
+ }
+ if (index_ >= _terminal_accepts.size() + _comment_open_definitions.size()) {
+  index_ -= _terminal_accepts.size() + _comment_open_definitions.size();
+  return _comment_close_definitions[index_];
+ }
+ if (index_ >= _terminal_accepts.size()) {
+  index_ -= _terminal_accepts.size();
+  return _comment_open_definitions[index_];
+ }
+
+ return _terminal_accepts[index_]._definition_path;
+}
+
+auto GrammarData::lookup_nonterminal_label_by_index(size_t index_) const -> std::string {
+ return (index_ == _nonterminal_accepts.size()) ? TERMINAL_LABEL_START :
+        (index_ < _nonterminal_accepts.size()) ? _nonterminal_accepts[index_]._label :
+        "unknown";
+}
+
+auto GrammarData::lookup_nonterminal_index_by_label(std::string_view label_) const -> size_t {
+ if (label_ == GrammarData::TERMINAL_LABEL_START) {
+  return _nonterminal_accepts.size();
+ }
+ 
+ size_t const index = binary_find_index(_nonterminal_accepts.begin(), _nonterminal_accepts.end(), label_, [](auto const& lhs_, auto const& rhs_) { return FetchLabelString{}(lhs_) < FetchLabelString{}(rhs_); });
+ 
+ if (index == _nonterminal_accepts.size() && !label_.starts_with(GrammarData::TERMINAL_RESERVED_PREFIX_CH)) {
+  throw std::runtime_error("Nonterminal not found: " + std::string(label_));
+ }
+
+ return index;
+}
+
+auto GrammarData::lookup_nonterminal_definition_by_index(size_t index_) const -> GenericAstPath {
+ return (index_ == _nonterminal_accepts.size()) ? _start_nonterminal_definition :
+        _nonterminal_accepts[index_]._definition_path;
+}
+
 void GrammarData::initial_iteration(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_) {
   for (size_t i = 0; i < ast_.get_children_size(); ++i) {
     GenericAst const& child = *ast_.get_child_at(i);
@@ -331,7 +411,7 @@ auto GrammarData::try_find_terminal_accept_index_by_label(std::string const& lab
 auto GrammarData::try_find_nonterminal_accept_index_by_label(std::string const& label_) -> size_t {
   size_t const index = binary_find_index(_nonterminal_accepts.begin(), _nonterminal_accepts.end(), label_, [](auto const& lhs_, auto const& rhs_) { return FetchLabelString{}(lhs_) < FetchLabelString{}(rhs_); });
   if (index == _nonterminal_accepts.size()) {
-    throw std::runtime_error("Rule not found: " + label_);
+    throw std::runtime_error("Nonterminal not found: " + label_);
   }
   return index;
 }

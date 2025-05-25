@@ -9,6 +9,7 @@
 #include "pmt/util/smct/state_machine_pruner.hpp"
 #include "pmt/util/smct/graph_writer.hpp"
 #include "pmt/util/smct/state.hpp"
+#include "pmt/parserbuilder/state_machine_part_builder.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -40,19 +41,18 @@ auto ParserTableBuilder::build(GenericAst const& ast_, GrammarData const& gramma
 
  setup_parser_state_machine();
  write_nonterminal_state_machine_dot("Initial tables", _result_tables._parser_state_machine);
- _result_tables._parser_state_machine = StateMachineDeterminizer(_result_tables._parser_state_machine).determinize();
+ StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _result_tables._parser_state_machine});
  write_nonterminal_state_machine_dot("Determinized tables", _result_tables._parser_state_machine);
  StateMachineMinimizer::minimize(_result_tables._parser_state_machine);
  write_nonterminal_state_machine_dot("Minimized tables", _result_tables._parser_state_machine);
  extract_conflicts();
  write_nonterminal_state_machine_dot("Final tables", _result_tables._parser_state_machine);
  setup_lookahead_state_machine();
- _result_tables._lookahead_state_machine = StateMachineDeterminizer(_result_tables._lookahead_state_machine).determinize();
+ StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _result_tables._lookahead_state_machine});
  StateMachineMinimizer::minimize(_result_tables._lookahead_state_machine);
  write_lookahead_state_machine_dot("Lookahead tables", _result_tables._lookahead_state_machine);
 
  fill_terminal_transition_masks();
- check_terminal_transition_masks();
  fill_conflict_transition_masks();
  fill_nonterminal_data();
 
@@ -61,7 +61,19 @@ auto ParserTableBuilder::build(GenericAst const& ast_, GrammarData const& gramma
 
 void ParserTableBuilder::setup_parser_state_machine() {
  StateNrType const state_nr_start = _result_tables._parser_state_machine.create_new_state();
- StateMachinePart state_machine_part_nonterminal = _nonterminal_state_machine_part_builder.build([this](size_t index_) { return lookup_nonterminal_label_by_index(index_); }, [this](std::string_view name_) { return lookup_nonterminal_index_by_label(name_); }, [this](size_t index_) { return lookup_nonterminal_definition_by_index(index_); }, [&](std::string_view label_){return *_lexer_tables->terminal_label_to_index(label_);}, *_ast, _grammar_data->_start_nonterminal_definition, _result_tables._parser_state_machine);
+ StateMachinePart state_machine_part_nonterminal = StateMachinePartBuilder::build(
+  StateMachinePartBuilder::NonterminalBuildingArgs(
+   StateMachinePartBuilder::ArgsBase{
+    ._ast_root = *_ast,
+    ._dest_state_machine = _result_tables._parser_state_machine,
+    ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_nonterminal_definition_by_index(index_); },
+    ._starting_index = _grammar_data->_nonterminal_accepts.size()
+   },
+   [this](size_t index_) { return _grammar_data->lookup_nonterminal_label_by_index(index_); },
+   [this](std::string_view name_) { return _grammar_data->lookup_nonterminal_index_by_label(name_); },
+   [this](std::string_view label_) { return *_lexer_tables->terminal_label_to_index(label_); }
+  )
+ );
  StateNrType const state_nr_pre_end = _result_tables._parser_state_machine.create_new_state();
  State& state_pre_end = *_result_tables._parser_state_machine.get_state(state_nr_pre_end);
  StateNrType const state_nr_end = _result_tables._parser_state_machine.create_new_state();
@@ -245,7 +257,7 @@ void ParserTableBuilder::setup_lookahead_state_machine() {
 
    // merge this state machine into the partial conflict state machine
    StateNrType const state_nr_lookahead_start = partial_conflict_state_machine.get_unused_state_nr();
-   state_machine_lookahead = StateMachinePruner(state_machine_lookahead).enable_renumbering(state_nr_lookahead_start).prune();
+   StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_lookahead, ._state_nr_from_new = state_nr_lookahead_start});
    partial_conflict_state_machine.get_state(state_nr_partial_start)->add_epsilon_transition(state_nr_lookahead_start);
 
    state_machine_lookahead.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
@@ -253,11 +265,11 @@ void ParserTableBuilder::setup_lookahead_state_machine() {
    });
   });
 
-  partial_conflict_state_machine = StateMachineDeterminizer(partial_conflict_state_machine).determinize();
+  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = partial_conflict_state_machine});
   try_solve_partial_conflict(partial_conflict_state_machine, state_conflicting.get_symbols());
 
   StateNrType const state_nr_prune_start = _result_tables._lookahead_state_machine.get_unused_state_nr();
-  partial_conflict_state_machine = StateMachinePruner(partial_conflict_state_machine).enable_renumbering(state_nr_prune_start).prune();
+  StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = partial_conflict_state_machine, ._state_nr_from_new = state_nr_prune_start});
   _result_tables._lookahead_state_machine.get_state(StateNrStart)->add_epsilon_transition(state_nr_prune_start);
   partial_conflict_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
    _result_tables._lookahead_state_machine.get_or_create_state(state_nr_) = *partial_conflict_state_machine.get_state(state_nr_);
@@ -299,89 +311,6 @@ void ParserTableBuilder::fill_terminal_transition_masks() {
  });
 }
 
-void ParserTableBuilder::check_terminal_transition_masks() {
- // accept index -> other accept indices it can conflict with
- std::unordered_map<size_t, Bitset> terminal_accepts_masks;
- 
- _lexer_tables->_lexer_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
-  Bitset const& accepts = _lexer_tables->_lexer_state_machine.get_state(state_nr_)->get_accepts();
-  for (size_t i = 0; i < accepts.size(); ++i) {
-   if (!accepts.get(i)) {
-    continue;
-   }
-   auto itr_mask = terminal_accepts_masks.find(i);
-   if (itr_mask == terminal_accepts_masks.end()) {
-    itr_mask = terminal_accepts_masks.emplace(i, Bitset(_lexer_tables->get_accept_count(), false)).first;
-   }
-
-   itr_mask->second.inplace_or(accepts);
-   itr_mask->second.set(i, false);
-  }
- });
-
- // Check for conflicts in the parser state machine
- for (auto [state_nr, transitions] : _result_tables._parser_terminal_transition_masks) {
-  for (size_t i = 0; i < transitions.size(); ++i) {
-   if (!transitions.get(i) || i == _lexer_tables->get_start_accept_index()) {
-    continue;
-   }
-
-   auto const itr = terminal_accepts_masks.find(i);
-   
-   if (itr == terminal_accepts_masks.end()) {
-    continue;
-   }
-
-   transitions.set(i, false);
-   
-   if (transitions.clone_and(itr->second).any()) {
-    std::string conflict_message = "Error, Terminal '" + _lexer_tables->get_accept_index_label(i) + "' conflicts with: ";
-    std::string delim;
-    for (size_t j = 0; j < itr->second.size(); ++j) {
-     if (itr->second.get(j)) {
-      conflict_message += std::exchange(delim, ", ") + "'" + _lexer_tables->get_accept_index_label(j) + "'";
-     }
-    }
-    conflict_message += " in parser state " + std::to_string(state_nr) + "";
-    throw std::runtime_error(conflict_message);
-   }
-
-   transitions.set(i, true);
-  }
- }
-
- // Check for conflicts in the lookahead state machine
- for (auto [state_nr, transitions] : _result_tables._lookahead_terminal_transition_masks) {
-  for (size_t i = 0; i < transitions.size(); ++i) {
-   if (!transitions.get(i) || i == _lexer_tables->get_start_accept_index()) {
-    continue;
-   }
-
-   auto const itr = terminal_accepts_masks.find(i);
-   
-   if (itr == terminal_accepts_masks.end()) {
-    continue;
-   }
-
-   transitions.set(i, false);
-   
-   if (transitions.clone_and(itr->second).any()) {
-    std::string conflict_message = "Error, Terminal '" + _lexer_tables->get_accept_index_label(i) + "' conflicts with: ";
-    std::string delim;
-    for (size_t j = 0; j < itr->second.size(); ++j) {
-     if (itr->second.get(j)) {
-      conflict_message += std::exchange(delim, ", ") + "'" + _lexer_tables->get_accept_index_label(j) + "'";
-     }
-    }
-    conflict_message += " in lookahead state " + std::to_string(state_nr) + "";
-    throw std::runtime_error(conflict_message);
-   }
-
-   transitions.set(i, true);
-  }
- }
-}
-
 void ParserTableBuilder::fill_conflict_transition_masks() {
  _result_tables._parser_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
   State const& state = *_result_tables._parser_state_machine.get_state(state_nr_);
@@ -390,9 +319,14 @@ void ParserTableBuilder::fill_conflict_transition_masks() {
   if (conflict_symbols.empty()) {
    return;
   }
-  Bitset mask(_lexer_tables->get_accept_count(), false);
+  Bitset mask;
   conflict_symbols.for_each_key([&](SymbolType symbol_) {
    SymbolType const symbol_value = Symbol(symbol_).get_value();
+
+   if (mask.size() <= symbol_value) {
+    mask.resize(symbol_value + 1, false);
+   }
+
    mask.set(symbol_value, true);
    _result_tables._conflict_count = std::max(_result_tables._conflict_count, symbol_value + 1);
   });
@@ -461,7 +395,7 @@ void ParserTableBuilder::write_nonterminal_state_machine_dot(std::string title_,
 
  GraphWriter::StyleArgs style_args;
  style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-  return lookup_nonterminal_label_by_index(accepts_);
+  return _grammar_data->lookup_nonterminal_label_by_index(accepts_);
  };
 
  style_args._title = std::move(title_);
@@ -478,7 +412,7 @@ void ParserTableBuilder::write_nonterminal_state_machine_dot(std::string title_,
      ret += std::exchange(delim, ", ") + "+";
      break;
     case SymbolKindClose:
-     ret += std::exchange(delim, ", ") + lookup_nonterminal_label_by_index(symbol.get_value());
+     ret += std::exchange(delim, ", ") + _grammar_data->lookup_nonterminal_label_by_index(symbol.get_value());
      return;
     case SymbolKindConflict:
      ret += std::exchange(delim, ", ") + std::to_string(symbol.get_value());
@@ -596,22 +530,6 @@ void ParserTableBuilder::write_lookahead_state_machine_dot(std::string title_, p
  std::cout << "Wrote dot file: " << filename << '\n';
 }
 
-auto ParserTableBuilder::lookup_nonterminal_label_by_index(size_t index_) const -> std::string {
- //assert(index_ < _grammar_data->_nonterminal_accepts.size());
- return (index_ < _grammar_data->_nonterminal_accepts.size()) ? _grammar_data->_nonterminal_accepts[index_]._label : "unknown";
-}
-
-auto ParserTableBuilder::lookup_nonterminal_index_by_label(std::string_view label_) const -> size_t {
- size_t const index = binary_find_index(_grammar_data->_nonterminal_accepts.begin(), _grammar_data->_nonterminal_accepts.end(), label_, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
- assert(index != _grammar_data->_nonterminal_accepts.size());
- return index;
-}
-
-auto ParserTableBuilder::lookup_nonterminal_definition_by_index(size_t index_) const -> GenericAstPath {
- assert(index_ < _grammar_data->_nonterminal_accepts.size());
- return _grammar_data->_nonterminal_accepts[index_]._definition_path;
-}
-
 void ParserTableBuilder::find_conflicting_state_nrs()  {
  _result_tables._parser_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
   State const& state = *_result_tables._parser_state_machine.get_state(state_nr_);
@@ -675,7 +593,7 @@ void ParserTableBuilder::try_solve_partial_conflict(StateMachine& state_machine_
    });
  }
 
- state_machine_ = StateMachinePruner(state_machine_).prune();
+ StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_});
 
  // check that all conflict symbols exist at least once
  IntervalSet<SymbolType> seen;
