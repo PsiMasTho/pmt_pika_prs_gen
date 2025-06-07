@@ -15,10 +15,8 @@ class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
  struct WriterArgs {
   std::ostream& _os_header;
   std::ostream& _os_source;
-  std::ostream& _os_id_constants;
   std::istream& _is_header_skel;
   std::istream& _is_source_skel;
-  std::istream& _is_id_constants_skel;
   LexerTables const& _tables;
   std::string _namespace_name; // No namespace if empty
   std::string _class_name;
@@ -30,7 +28,6 @@ class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
  WriterArgs* _writer_args = nullptr;
  std::string _header;
  std::string _source;
- std::string _id_constants;
 
  public:
   // -$ Functions $-
@@ -40,7 +37,6 @@ class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
   private:
   void replace_in_header();
   void replace_in_source();
-  void replace_in_id_constants();
 
   void replace_namespace_open(std::string& str_);
   void replace_class_name(std::string& str_);
@@ -59,8 +55,6 @@ class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
   void replace_terminal_count(std::string& str_);
   void replace_start_terminal_index(std::string& str_);
   void replace_eoi_terminal_index(std::string& str_);
-
-  void replace_id_constants(std::string& str_);
 
   void replace_timestamp(std::string& str_);
 };

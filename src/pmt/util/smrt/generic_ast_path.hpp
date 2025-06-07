@@ -33,6 +33,7 @@ class GenericAstPath : public pmt::base::Hashable<GenericAstPath> {
 
   auto size() const -> size_t;
   auto empty() const -> bool;
+  auto back() const -> size_t;
 
   // - Resolution -
   auto resolve(GenericAst const& root_) const -> GenericAst const*;

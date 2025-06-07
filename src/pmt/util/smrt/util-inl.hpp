@@ -74,19 +74,17 @@ auto decode_accept_index(pmt::util::smrt::AcceptsIndexType index_) -> pmt::util:
 }
 
 auto get_state_nr_next_generic(std::ranges::random_access_range auto transitions_, std::ranges::random_access_range auto state_offsets_, std::ranges::random_access_range auto symbol_kind_offsets_, pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolKindType kind_, pmt::util::smrt::SymbolValueType symbol_) -> pmt::util::smrt::StateNrType {
- size_t const start = transitions_[state_offsets_[symbol_kind_offsets_[kind_] + state_nr_]];
- size_t const end = transitions_[state_offsets_[symbol_kind_offsets_[kind_] + state_nr_ + 1]];
+ size_t const start = state_offsets_[symbol_kind_offsets_[kind_] + state_nr_];
+ size_t const end = state_offsets_[symbol_kind_offsets_[kind_] + state_nr_ + 1];
  size_t const size = end - start;
- 
- size_t const partition = std::size(transitions_) / 3;
 
- size_t const lowers_offset = 0;
- std::span<typename decltype(transitions_)::value_type> const lowers(&transitions_[lowers_offset + start], size);
  
- size_t const uppers_offset = partition;
+ std::span<typename decltype(transitions_)::value_type> const lowers(&transitions_[start], size);
+ 
+ size_t const uppers_offset = std::size(transitions_) / 3;
  std::span<typename decltype(transitions_)::value_type> const uppers(&transitions_[uppers_offset + start], size);
 
- size_t const values_offset = 2 * partition;
+ size_t const values_offset = 2 * uppers_offset;
  std::span<typename decltype(transitions_)::value_type> const values(&transitions_[values_offset + start], size);
 
  size_t const idx = std::distance(lowers.begin(), std::lower_bound(lowers.begin(), lowers.end(), encode_symbol(symbol_), lowers_lt));

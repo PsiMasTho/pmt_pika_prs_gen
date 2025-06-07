@@ -16,20 +16,17 @@ namespace pmt::parserbuilder {
  namespace {
  }
 
- void LexerTableWriter::write(WriterArgs& writer_writer_args_) {
-  _writer_args = &writer_writer_args_;
+ void LexerTableWriter::write(WriterArgs& writer_args_) {
+  _writer_args = &writer_args_;
 
   _header = std::string(std::istreambuf_iterator<char>(_writer_args->_is_header_skel), std::istreambuf_iterator<char>());
   _source = std::string(std::istreambuf_iterator<char>(_writer_args->_is_source_skel), std::istreambuf_iterator<char>());
-  _id_constants = std::string(std::istreambuf_iterator<char>(_writer_args->_is_id_constants_skel), std::istreambuf_iterator<char>());
 
   replace_in_header();
   replace_in_source();
-  replace_in_id_constants();
 
   _writer_args->_os_header << _header;
   _writer_args->_os_source << _source;
-  _writer_args->_os_id_constants << _id_constants;
  }
 
  void LexerTableWriter::replace_in_header(){
@@ -57,11 +54,6 @@ namespace pmt::parserbuilder {
   replace_terminal_count(_source);
   replace_start_terminal_index(_source);
   replace_eoi_terminal_index(_source);
- }
- 
- void LexerTableWriter::replace_in_id_constants(){
-  replace_timestamp(_id_constants);
-  replace_id_constants(_id_constants);
  }
  
  void LexerTableWriter::replace_namespace_open(std::string& str_) {
@@ -189,16 +181,6 @@ void LexerTableWriter::replace_start_terminal_index(std::string& str_){
 void LexerTableWriter::replace_eoi_terminal_index(std::string& str_){
  std::string eoi_terminal_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_eoi_accept_index(), true);
  replace_skeleton_label(str_, "EOI_ACCEPT_INDEX", eoi_terminal_index_replacement);
-}
-
-void LexerTableWriter::replace_id_constants(std::string& str_) {
- std::string id_constants_replacement;
-
- for (GenericId::IdType i = _writer_args->_tables.get_min_id(); i < _writer_args->_tables.get_min_id() + _writer_args->_tables.get_id_count(); ++i) {
-  id_constants_replacement += _writer_args->_tables.id_to_string(i) + " = " + TableWriterCommon::as_hex(i, true) + ",\n";
- }
-
- replace_skeleton_label(str_, "ID_CONSTANTS", id_constants_replacement);
 }
 
 void LexerTableWriter::replace_timestamp(std::string& str_) {

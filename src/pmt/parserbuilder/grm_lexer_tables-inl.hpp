@@ -1,4 +1,4 @@
-/* Generated on: 2025-06-07 02:06:41 */
+/* Generated on: 2025-06-07 15:34:15 */
 TkBooleanLiteral = 0x0,
 TkGrammarPropertyComment = 0x1,
 TkGrammarPropertyNewline = 0x2,

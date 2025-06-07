@@ -87,7 +87,7 @@ std::array</* $replace PARSER_STATE_KINDS_TYPE */, /* $replace PARSER_STATE_KIND
 } // namespace
 
 auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolKindType kind_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
- return pmt::util::smrt::get_state_nr_next_generic(PARSER_TRANSITIONS, PARSER_TRANSITIONS_STATE_OFFSETS, PARSER_TRANSITIONS_SYMBOL_KIND_OFFSETS, kind_, state_nr_, symbol_);
+ return pmt::util::smrt::get_state_nr_next_generic(PARSER_TRANSITIONS, PARSER_TRANSITIONS_STATE_OFFSETS, PARSER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, kind_, symbol_);
 }
 
 auto /* $replace CLASS_NAME */::get_state_terminal_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
@@ -155,11 +155,11 @@ auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
 }
 
 auto /* $replace CLASS_NAME */::get_lookahead_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
- return pmt::util::smrt::get_state_nr_next_generic(LOOKAHEAD_TRANSITIONS, LOOKAHEAD_TRANSITIONS_STATE_OFFSETS, LOOKAHEAD_TRANSITIONS_SYMBOL_KIND_OFFSETS, pmt::util::smrt::SymbolKindCharacter, state_nr_, symbol_);
+ return pmt::util::smrt::get_state_nr_next_generic(LOOKAHEAD_TRANSITIONS, LOOKAHEAD_TRANSITIONS_STATE_OFFSETS, LOOKAHEAD_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::util::smrt::SymbolKindTerminal, symbol_);
 }
 
 auto /* $replace CLASS_NAME */::get_lookahead_state_terminal_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
- return pmt::base::Bitset::ChunkSpanConst(PARSER_TERMINAL_TRANSITION_MASKS.begin() + state_nr_ * /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
+ return pmt::base::Bitset::ChunkSpanConst(LOOKAHEAD_TERMINAL_TRANSITION_MASKS.begin() + state_nr_ * /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
 }
 
 auto /* $replace CLASS_NAME */::get_lookahead_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {

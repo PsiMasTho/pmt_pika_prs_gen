@@ -11,6 +11,8 @@
 #include "pmt/parserbuilder/lexer_table_writer.hpp"
 #include "pmt/parserbuilder/parser_table_builder.hpp"
 #include "pmt/parserbuilder/parser_table_writer.hpp"
+#include "pmt/parserbuilder/id_constants_writer.hpp"
+#include "pmt/parserbuilder/nonterminal_inliner.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
 #include "pmt/util/smrt/generic_parser.hpp"
 #include "pmt/util/smrt/generic_lexer.hpp"
@@ -52,16 +54,29 @@ auto report_terminal_overlaps(GrammarData const& grammar_data_, std::unordered_s
  std::cerr << msg << '\n';
 }
 
-void print_ast_from_generated_tables(std::string const& input_grammar_) {
+void print_ast_from_generated_tables(std::string const& input_text_) {
   LexerClass const lexer_tables;
-  GenericLexer lexer(input_grammar_, lexer_tables);
+  GenericLexer lexer(input_text_, lexer_tables);
   ParserClass const parser_tables;
   GenericParser parser;
   GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
 
   // -- Print AST --
   GenericAstPrinter::Args ast_printer_args{
-    ._id_to_string_fn = GrmAst::id_to_string,
+    ._id_to_string_fn = [&](GenericId::IdType id_) {
+        LexerClass const lexer_tables;
+        if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
+         return lexer_tables.id_to_string(id_);
+        }
+        
+        ParserClass const parser_tables;
+        if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
+         return parser_tables.id_to_string(id_);
+        }
+        
+        // If the id is not found in either lexer or parser tables, throw an error
+        throw std::runtime_error("Invalid id");
+    },
     ._out = std::cout,
     ._ast = *ast,
   };
@@ -79,15 +94,18 @@ auto main(int argc, char const* const* argv) -> int try {
   std::ifstream input_grammar_stream(args._input_grammar_file);
   std::string const input_grammar((std::istreambuf_iterator<char>(input_grammar_stream)), std::istreambuf_iterator<char>());
 
-  if (args._print_ast_from_generated_tables) {
-    print_ast_from_generated_tables(input_grammar);
-  }
+  std::ifstream test_file(args._input_test_file);
+  std::string const test_input((std::istreambuf_iterator<char>(test_file)), std::istreambuf_iterator<char>());
 
+  if (args._print_ast_from_generated_tables) {
+    print_ast_from_generated_tables(test_input);
+  }
 
   GrmLexer lexer(input_grammar);
   GenericAst::UniqueHandle ast = GrmParser::parse(lexer);
   
   GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
+  NonterminalInliner::do_inline(NonterminalInliner::Args{._grammar_data = grammar_data, ._ast = *ast});
 
   std::cout << "Building lexer tables...\n";
   LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
@@ -97,19 +115,15 @@ auto main(int argc, char const* const* argv) -> int try {
   std::cout << "Writing lexer tables to header and source files...\n";
   std::ofstream lexer_header_file(args._output_lexer_header_file);
   std::ofstream lexer_source_file(args._output_lexer_source_file);
-  std::ofstream lexer_id_constants_file(args._output_lexer_id_constants_file);
 
   std::ifstream lexer_header_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.hpp");
   std::ifstream lexer_source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_tables-skel.cpp");
-  std::ifstream lexer_id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/lexer_id_constants-skel.hpp");
 
   LexerTableWriter::WriterArgs table_writer_args{
    ._os_header = lexer_header_file,
    ._os_source = lexer_source_file,
-   ._os_id_constants = lexer_id_constants_file,
    ._is_header_skel = lexer_header_skel_file,
    ._is_source_skel = lexer_source_skel_file,
-   ._is_id_constants_skel = lexer_id_constants_skel_file,
    ._tables = lexer_tables,
    ._namespace_name = "pmt::parserbuilder",
    ._class_name = "LexerClass",
@@ -125,19 +139,15 @@ auto main(int argc, char const* const* argv) -> int try {
 
   std::ofstream parser_header_file(args._output_parser_header_file);
   std::ofstream parser_source_file(args._output_parser_source_file);
-  std::ofstream parser_id_constants_file(args._output_parser_id_constants_file);
 
   std::ifstream parser_header_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/parser_tables-skel.hpp");
   std::ifstream parser_source_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/parser_tables-skel.cpp");
-  std::ifstream parser_id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/parser_id_constants-skel.hpp");
 
   ParserTableWriter::WriterArgs parser_writer_args{
    ._os_header = parser_header_file,
    ._os_source = parser_source_file,
-   ._os_id_constants = parser_id_constants_file,
    ._is_header_skel = parser_header_skel_file,
    ._is_source_skel = parser_source_skel_file,
-   ._is_id_constants_skel = parser_id_constants_skel_file,
    ._tables = parser_tables,
    ._namespace_name = "pmt::parserbuilder",
    ._class_name = "ParserClass",
@@ -146,6 +156,19 @@ auto main(int argc, char const* const* argv) -> int try {
   ParserTableWriter parser_table_writer;
   parser_table_writer.write(parser_writer_args);
   std::cout << "Done writing parser tables\n";
+
+  std::ofstream id_constants_file(args._output_id_constants_file);
+  std::ifstream id_constants_skel_file("/home/pmt/repos/pmt/skel/pmt/parserbuilder/id_constants-skel.hpp");
+  IdConstantsWriter::WriterArgs id_constants_writer_args{
+   ._os_id_constants = id_constants_file,
+   ._is_id_constants_skel = id_constants_skel_file,
+   ._lexer_tables = lexer_tables,
+   ._parser_tables = parser_tables
+  };
+
+  IdConstantsWriter id_constants_writer;
+  id_constants_writer.write(id_constants_writer_args);
+  std::cout << "Done writing id constants\n";
 
   std::unordered_set<IntervalSet<AcceptsIndexType>> const overlapping_terminals = TerminalOverlapChecker::find_overlaps(
    TerminalOverlapChecker::Args{
@@ -156,9 +179,6 @@ auto main(int argc, char const* const* argv) -> int try {
   );
 
   report_terminal_overlaps(grammar_data, overlapping_terminals);
-
-  std::ifstream test_file(args._input_test_file);
-  std::string const test_input((std::istreambuf_iterator<char>(test_file)), std::istreambuf_iterator<char>());
 
   GenericLexer test_lexer(test_input, lexer_tables);
   GenericParser test_parser;

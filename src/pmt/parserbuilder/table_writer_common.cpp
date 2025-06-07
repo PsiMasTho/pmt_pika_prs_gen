@@ -4,6 +4,8 @@
 #include "pmt/util/smct/state_machine.hpp"
 #include "pmt/util/smrt/util.hpp"
 
+#include <map>
+
 namespace pmt::parserbuilder {
  using namespace pmt::util::smrt;
  using namespace pmt::util::smct;
@@ -28,13 +30,15 @@ void TableWriterCommon::replace_array(pmt::util::SkeletonReplacerBase& skeleton_
 }
 
 void TableWriterCommon::replace_transitions(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& prefix_, pmt::util::smct::StateMachine const& state_machine_) {
+ IntervalSet<StateNrType> state_nrs = state_machine_.get_state_nrs();
+ SymbolKindType kind_max = 0;
  // Build up a map of the transitions
  std::map<SymbolKindType, std::map<StateNrType, std::vector<std::pair<Interval<SymbolValueType>, StateNrType>>>> transitions_map;
- 
- state_machine_.get_state_nrs().for_each_key(
+ state_nrs.for_each_key(
   [&](StateNrType state_nr_) {
    state_machine_.get_state(state_nr_)->get_symbol_kinds().for_each_key(
     [&](SymbolKindType symbol_kind_) {
+     kind_max = std::max(kind_max, symbol_kind_);
      state_machine_.get_state(state_nr_)->get_symbol_transitions(symbol_kind_).for_each_interval(
       [&](StateNrType const state_nr_next_, Interval<SymbolValueType> const interval_) {
        transitions_map[symbol_kind_][state_nr_].emplace_back(Interval<SymbolValueType>(encode_symbol(interval_.get_lower()), encode_symbol(interval_.get_upper())), state_nr_next_);
@@ -44,23 +48,30 @@ void TableWriterCommon::replace_transitions(pmt::util::SkeletonReplacerBase& ske
    );
   }
  );
+
+ state_nrs.insert(Interval(state_nrs.highest() + 1));
+
+ // Add all state nrs to every kind
+ for (SymbolKindType kind = 0; kind <= kind_max; ++kind) {
+  state_nrs.for_each_key(
+   [&](StateNrType state_nr_) {
+    transitions_map[kind][state_nr_];
+   }
+  );
+ }
  
  // Calculate the kinds offsets
  std::vector<size_t> kinds_offsets;
  {
   auto itr_prev = transitions_map.begin();
-  SymbolKindType kind_prev = 0;
   for (auto itr_cur = itr_prev; itr_cur != transitions_map.end(); ++itr_cur) {
    if (itr_cur == transitions_map.begin()) {
     kinds_offsets.push_back(0);
     continue;
    } else {
-    while (kind_prev < itr_cur->first) {
-     kinds_offsets.push_back(kinds_offsets.back() + itr_prev->second.size());
-     kind_prev++;
-    }
+    kinds_offsets.push_back(kinds_offsets.back() + itr_prev->second.size());
    }
-    itr_prev = itr_cur;
+   itr_prev = itr_cur;
   }
  }
  
@@ -68,18 +79,14 @@ void TableWriterCommon::replace_transitions(pmt::util::SkeletonReplacerBase& ske
  std::vector<size_t> states_offsets; 
  for (auto const& [kind, transitions] : transitions_map) {
   auto itr_prev = transitions.begin();
-  StateNrType state_nr_prev = 0;
   for (auto itr_cur = itr_prev; itr_cur != transitions.end(); ++itr_cur) {
    if (itr_cur == transitions.begin()) {
-    states_offsets.push_back(0);
+    states_offsets.push_back((states_offsets.empty()) ? 0 : states_offsets.back()); 
     continue;
    } else {
-    while (state_nr_prev < itr_cur->first) {
-     states_offsets.push_back(states_offsets.back() + itr_prev->second.size());
-     state_nr_prev++;
-    }
+    states_offsets.push_back(states_offsets.back() + itr_prev->second.size());
    }
-   itr_prev = itr_cur;
+    itr_prev = itr_cur;
   }
  }
 

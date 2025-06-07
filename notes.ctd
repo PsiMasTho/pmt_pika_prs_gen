@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749231682">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749322084">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -202,7 +202,11 @@ just emit one inl file?
 transition masks need their own offsets
 ---
 lower bounds + upper bounds + values should be stored back to back since size is the same
-kind lookup should also be done in a back to back &lt;kinds&gt; -&gt; &lt;offsets&gt; sorted table</rich_text>
+kind lookup should also be done in a back to back &lt;kinds&gt; -&gt; &lt;offsets&gt; sorted table
+--
+rewrite grammar so that repetition expr and sequence modifier and hide is in front
+--
+inlining should be done on the grammar directly</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;

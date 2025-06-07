@@ -2,6 +2,7 @@
 
 #include "pmt/base/bitset_converter.hpp"
 #include "pmt/util/timestamp.hpp"
+#include "pmt/util/smrt/util.hpp"
 #include "pmt/parserbuilder/parser_tables.hpp"
 #include "pmt/parserbuilder/table_writer_common.hpp"
 
@@ -14,9 +15,6 @@ namespace pmt::parserbuilder {
 
  namespace {
 
- auto encode_parser_accept_index(size_t index_) -> size_t {
-  return index_ + 1;
- }
  }
 
  void ParserTableWriter::write(WriterArgs& writer_writer_args_) {
@@ -24,15 +22,12 @@ namespace pmt::parserbuilder {
 
   _header = std::string(std::istreambuf_iterator<char>(_writer_args->_is_header_skel), std::istreambuf_iterator<char>());
   _source = std::string(std::istreambuf_iterator<char>(_writer_args->_is_source_skel), std::istreambuf_iterator<char>());
-  _id_constants = std::string(std::istreambuf_iterator<char>(_writer_args->_is_id_constants_skel), std::istreambuf_iterator<char>());
 
   replace_in_header();
   replace_in_source();
-  replace_in_id_constants();
 
   _writer_args->_os_header << _header;
   _writer_args->_os_source << _source;
-  _writer_args->_os_id_constants << _id_constants;
  }
 
  void ParserTableWriter::replace_in_header(){
@@ -64,11 +59,6 @@ namespace pmt::parserbuilder {
   replace_parser_unpack(_source);
   replace_parser_hide(_source);
   replace_parser_merge(_source);
- }
- 
- void ParserTableWriter::replace_in_id_constants(){
-  replace_timestamp(_id_constants);
-  replace_id_constants(_id_constants);
  }
  
  void ParserTableWriter::replace_namespace_open(std::string& str_) {
@@ -127,7 +117,7 @@ void ParserTableWriter::replace_parser_accepts(std::string& str_){
 
  _writer_args->_tables.get_parser_state_machine().get_state_nrs().for_each_key(
    [&](pmt::util::smrt::StateNrType state_nr_) {
-    accepts.push_back(encode_parser_accept_index(_writer_args->_tables.get_state_accept_index(state_nr_)));
+    accepts.push_back(pmt::util::smrt::encode_accept_index(_writer_args->_tables.get_state_accept_index(state_nr_)));
    }
  );
 
@@ -259,16 +249,6 @@ void ParserTableWriter::replace_parser_merge(std::string& str_) {
  }
 
  TableWriterCommon::replace_array<Bitset::ChunkType>(*this, str_, "PARSER_MERGE", merge_flattened);
-}
-
-void ParserTableWriter::replace_id_constants(std::string& str_) {
- std::string id_constants_replacement;
-
- for (GenericId::IdType i = _writer_args->_tables.get_min_id(); i < _writer_args->_tables.get_min_id() + _writer_args->_tables.get_id_count(); ++i) {
-  id_constants_replacement += _writer_args->_tables.id_to_string(i) + " = " + TableWriterCommon::as_hex(i, true) + ",\n";
- }
-
- replace_skeleton_label(str_, "ID_CONSTANTS", id_constants_replacement);
 }
 
 void ParserTableWriter::replace_timestamp(std::string& str_) {

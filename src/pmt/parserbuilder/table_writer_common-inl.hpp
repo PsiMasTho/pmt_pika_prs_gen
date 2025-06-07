@@ -14,10 +14,6 @@ namespace pmt::parserbuilder {
 template <typename T_>
 requires std::integral<typename T_::value_type>
 void TableWriterCommon::replace_array(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, T_ begin_, T_ end_) {
-  if (begin_ == end_) {
-    return;
-  }
- 
   std::vector<std::string> entries_str;
   size_t max_width = 0;
   for (auto itr = begin_; itr != end_; ++itr) {

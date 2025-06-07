@@ -3,6 +3,8 @@
 #include "pmt/base/hash.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
 
+#include <cassert>
+
 namespace pmt::util::smrt {
 GenericAstPath::GenericAstPath(size_t index_)
  : _path({index_}) {
@@ -76,6 +78,11 @@ auto GenericAstPath::size() const -> size_t {
 
 auto GenericAstPath::empty() const -> bool {
   return _path.empty();
+}
+
+auto GenericAstPath::back() const -> size_t {
+ assert(!_path.empty());
+ return _path.back();
 }
 
 auto GenericAstPath::resolve(GenericAst const& root_) const -> GenericAst const* {

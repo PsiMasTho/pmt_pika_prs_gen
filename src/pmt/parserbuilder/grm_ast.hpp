@@ -8,8 +8,6 @@ namespace pmt::parserbuilder {
 class GrmAst {
  public:
   enum : pmt::util::smrt::GenericId::IdType {
-    //#include "pmt/parserbuilder/grm_lexer_tables-inl.hpp"
-    //#include "pmt/parserbuilder/grm_parser_tables-inl.hpp"
     // Terminals
     // - Literals
     TkStringLiteral = TOKEN_STRING_LITERAL,

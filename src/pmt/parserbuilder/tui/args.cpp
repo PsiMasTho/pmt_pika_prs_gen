@@ -28,11 +28,6 @@ Args::Args(int argc_, char const* const* argv_) {
         throw std::runtime_error("Missing argument for -sl");
       }
       _output_lexer_source_file = argv_[++i];
-    } else if (arg == "-cl") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -cl");
-      }
-      _output_lexer_id_constants_file = argv_[++i];
     } else if (arg == "-hp") {
       if (i + 1 >= argc_) {
         throw std::runtime_error("Missing argument for -hp");
@@ -43,11 +38,11 @@ Args::Args(int argc_, char const* const* argv_) {
         throw std::runtime_error("Missing argument for -sp");
       }
       _output_parser_source_file = argv_[++i];
-    } else if (arg == "-cp") {
+    } else if (arg == "-c") {
       if (i + 1 >= argc_) {
         throw std::runtime_error("Missing argument for -cp");
       }
-      _output_parser_id_constants_file = argv_[++i];
+      _output_id_constants_file = argv_[++i];
     } else if (arg == "-print-ast") {
       _print_ast_from_generated_tables = true;
     } else {
@@ -71,10 +66,6 @@ Args::Args(int argc_, char const* const* argv_) {
     throw std::runtime_error("Missing output lexer source file");
   }
 
-  if (_output_lexer_id_constants_file.empty()) {
-    throw std::runtime_error("Missing output lexer id constants file");
-  }
-
   if (_output_parser_header_file.empty()) {
     throw std::runtime_error("Missing output parser header file");
   }
@@ -83,8 +74,8 @@ Args::Args(int argc_, char const* const* argv_) {
     throw std::runtime_error("Missing output parser source file");
   }
 
-  if (_output_parser_id_constants_file.empty()) {
-    throw std::runtime_error("Missing output parser id constants file");
+  if (_output_id_constants_file.empty()) {
+    throw std::runtime_error("Missing output id constants file");
   }
 
   std::set<std::string> unique = {
@@ -92,13 +83,12 @@ Args::Args(int argc_, char const* const* argv_) {
     //_input_test_file, // Allow the test file to be the same as one of the others
     _output_lexer_header_file,
     _output_lexer_source_file,
-    _output_lexer_id_constants_file,
     _output_parser_header_file,
     _output_parser_source_file,
-    _output_parser_id_constants_file
+    _output_id_constants_file
   };
 
-  if (unique.size() != 7) {
+  if (unique.size() != 6) {
     throw std::runtime_error("Duplicate file names provided");
   }
 }

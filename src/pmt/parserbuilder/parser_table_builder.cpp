@@ -10,7 +10,6 @@
 #include "pmt/util/smct/state.hpp"
 #include "pmt/parserbuilder/state_machine_part_builder.hpp"
 #include "pmt/parserbuilder/parser_reachability_checker.hpp"
-#include "pmt/parserbuilder/parser_nonterminal_inliner.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -172,17 +171,6 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
  std::cout << "Wrote dot file: " << filename << '\n';
 }
 
-auto get_unpack_accepts(ParserTableBuilder::Args const& args_, Locals& locals_) -> IntervalSet<StateNrType> {
- IntervalSet<StateNrType> ret;
- for (AcceptsIndexType i = 0; i < args_._grammar_data._nonterminal_accepts.size(); ++i) {
-  if (!args_._grammar_data._nonterminal_accepts[i]._unpack) {
-   continue;
-  }
-  ret.insert(Interval<StateNrType>(i));
- }
-
- return ret;
-}
 }
 
 auto ParserTableBuilder::build(Args args_) -> ParserTables {
@@ -192,8 +180,6 @@ auto ParserTableBuilder::build(Args args_) -> ParserTables {
 
  setup_parser_state_machine(args_, locals);
  write_nonterminal_state_machine_dot(args_, locals, "Initial tables", locals._parser_state_machine);
- ParserNonterminalInliner::unpack(ParserNonterminalInliner::Args{._nonterminals_to_inline = get_unpack_accepts(args_, locals), ._parser_state_machine = locals._parser_state_machine});
- write_nonterminal_state_machine_dot(args_, locals, "Inlined tables", locals._parser_state_machine);
  ParserReachabilityChecker::check_reachability(ParserReachabilityChecker::Args{._fn_lookup_accept_index_by_label = [&](std::string_view label_) { return args_._grammar_data.lookup_nonterminal_index_by_label(label_); }, ._parser_state_machine = locals._parser_state_machine});
  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = locals._parser_state_machine});
  write_nonterminal_state_machine_dot(args_, locals, "Determinized tables", locals._parser_state_machine);
