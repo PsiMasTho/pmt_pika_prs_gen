@@ -45,6 +45,21 @@ Args::Args(int argc_, char const* const* argv_) {
       _output_id_constants_file = argv_[++i];
     } else if (arg == "-print-ast") {
       _print_ast_from_generated_tables = true;
+    } else if (arg == "-lexer-class-name"){
+      if (i + 1 >= argc_) {
+        throw std::runtime_error("Missing argument for -class-name");
+      }
+      _lexer_class_name = argv_[++i];
+    } else if (arg == "-parser-class-name") {
+      if (i + 1 >= argc_) {
+        throw std::runtime_error("Missing argument for -parser-class-name");
+      }
+      _parser_class_name = argv_[++i];
+    } else if (arg == "-namespace") {
+      if (i + 1 >= argc_) {
+        throw std::runtime_error("Missing argument for -namespace");
+      }
+      _namespace_name = argv_[++i];
     } else {
       throw std::runtime_error("Unknown argument: " + arg);
     }
@@ -76,6 +91,18 @@ Args::Args(int argc_, char const* const* argv_) {
 
   if (_output_id_constants_file.empty()) {
     throw std::runtime_error("Missing output id constants file");
+  }
+
+  if (_lexer_class_name.empty()) {
+   throw std::runtime_error("Missing lexer class name");
+  }
+  
+  if (_parser_class_name.empty()) {
+    throw std::runtime_error("Missing parser class name");
+  }
+
+  if (_namespace_name.empty()) {
+    throw std::runtime_error("Missing namespace name");
   }
 
   std::set<std::string> unique = {

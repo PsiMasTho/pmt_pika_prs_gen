@@ -5,133 +5,17 @@
 
 namespace pmt::parserbuilder {
 auto GrmAst::id_to_string(pmt::util::smrt::GenericId::IdType id_) -> std::string {
- //LexerClass const lexer_tables;
- //if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
- // return lexer_tables.id_to_string(id_);
- //}
- //
- //ParserClass const parser_tables;
- //if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
- // return parser_tables.id_to_string(id_);
- //}
- //
- //// If the id is not found in either lexer or parser tables, throw an error
- //throw std::runtime_error("Invalid id");
-
-switch (id_) {
-    case TkStringLiteral:
-      return "TkStringLiteral";
-    case TkIntegerLiteral:
-      return "TkIntegerLiteral";
-    case TkBooleanLiteral:
-      return "TkBooleanLiteral";
-    case TkTerminalIdentifier:
-      return "TkTerminalIdentifier";
-    case TkNonterminalIdentifier:
-      return "TkNonterminalIdentifier";
-    case TkEpsilon:
-      return "TkEpsilon";
-    case TkPipe:
-      return "TkPipe";
-    case TkSemiColon:
-      return "TkSemiColon";
-    case TkEquals:
-      return "TkEquals";
-    case TkComma:
-      return "TkComma";
-    case TkDoubleDot:
-      return "TkDoubleDot";
-    case TkOpenParen:
-      return "TkOpenParen";
-    case TkCloseParen:
-      return "TkCloseParen";
-    case TkOpenBrace:
-      return "TkOpenBrace";
-    case TkCloseBrace:
-      return "TkCloseBrace";
-    case TkOpenSquare:
-      return "TkOpenSquare";
-    case TkCloseSquare:
-      return "TkCloseSquare";
-    case TkOpenAngle:
-      return "TkOpenAngle";
-    case TkCloseAngle:
-      return "TkCloseAngle";
-    case TkPlus:
-      return "TkPlus";
-    case TkStar:
-      return "TkStar";
-    case TkQuestion:
-      return "TkQuestion";
-    case TkKwParameterUnpack:
-      return "TkKwParameterUnpack";
-    case TkKwParameterHide:
-      return "TkKwParameterHide";
-    case TkKwParameterMerge:
-      return "TkKwParameterMerge";
-    case TkKwParameterId:
-      return "TkKwParameterId";
-    case TkKwParameterCaseSensitive:
-      return "TkKwParameterCaseSensitive";
-    case TkGrammarPropertyStart:
-      return "TkGrammarPropertyStart";
-    case TkGrammarPropertyWhitespace:
-      return "TkGrammarPropertyWhitespace";
-    case TkGrammarPropertyComment:
-      return "TkGrammarPropertyComment";
-    case TkGrammarPropertyNewline:
-      return "TkGrammarPropertyNewline";
-    case TkGrammarPropertyCaseSensitive:
-      return "TkGrammarPropertyCaseSensitive";
-    case NtGrammar:
-      return "NtGrammar";
-    case NtTerminalProduction:
-      return "NtTerminalProduction";
-    case NtTerminalParameter:
-      return "NtTerminalParameter";
-    case NtTerminalDefinition:
-      return "NtTerminalDefinition";
-    case NtTerminalSequence:
-      return "NtTerminalSequence";
-    case NtTerminalChoices:
-      return "NtTerminalChoices";
-    case NtTerminalRepetition:
-      return "NtTerminalRepetition";
-    case NtTerminalRepetitionRange:
-      return "NtTerminalRepetitionRange";
-    case NtTerminalRange:
-      return "NtTerminalRange";
-    case NtNonterminalProduction:
-      return "NtNonterminalProduction";
-    case NtNonterminalParameter:
-      return "NtNonterminalParameter";
-    case NtNonterminalDefinition:
-      return "NtNonterminalDefinition";
-    case NtNonterminalSequence:
-      return "NtNonterminalSequence";
-    case NtNonterminalChoices:
-      return "NtNonterminalChoices";
-    case NtNonterminalRepetition:
-      return "NtNonterminalRepetition";
-    case NtNonterminalRepetitionRange:
-      return "NtNonterminalRepetitionRange";
-    case NtGrammarProperty:
-      return "NtGrammarProperty";
-    case NtGrammarPropertyWhitespace:
-      return "NtGrammarPropertyWhitespace";
-    case NtGrammarPropertyComment:
-      return "NtGrammarPropertyComment";
-    case NtGrammarPropertyCaseSensitive:
-      return "NtGrammarPropertyCaseSensitive";
-    case NtGrammarPropertyNewline:
-      return "NtGrammarPropertyNewline";
-    case NtTerminalDefinitionPairList:
-      return "NtTerminalDefinitionPairList";
-    case NtTerminalDefinitionPair:
-      return "NtTerminalDefinitionPair";
-    default:
-      throw std::runtime_error("Invalid id");
-  }
-
+ static GrmLexerTables const lexer_tables;
+ if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
+  return lexer_tables.id_to_string(id_);
+ }
+ 
+ static GrmParserTables const parser_tables;
+ if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
+  return parser_tables.id_to_string(id_);
+ }
+ 
+ // If the id is not found in either lexer or parser tables, throw an error
+ throw std::runtime_error("Invalid id");
 }
 }  // namespace pmt::parserbuilder

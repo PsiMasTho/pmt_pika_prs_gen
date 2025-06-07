@@ -1,4 +1,4 @@
-/* Generated on: 2025-06-07 22:39:26 */
+/* Generated on: 2025-06-07 23:45:55 */
 #pragma once
 
 #include <pmt/base/bitset.hpp>
@@ -6,7 +6,7 @@
 
 namespace pmt::parserbuilder {
 
-class ParserClass : public pmt::util::smrt::ParserTablesBase {
+class GrmParserTables : public pmt::util::smrt::ParserTablesBase {
  public:
   // -$ Functions $-
   // --$ Inherited: pmt::util::smrt::ParserTablesBase $--

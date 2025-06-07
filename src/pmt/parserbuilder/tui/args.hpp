@@ -19,6 +19,10 @@ class Args {
 
   std::string _output_id_constants_file;
 
+  std::string _lexer_class_name;
+  std::string _parser_class_name;
+  std::string _namespace_name;
+
   bool _print_ast_from_generated_tables = false;
 };
 

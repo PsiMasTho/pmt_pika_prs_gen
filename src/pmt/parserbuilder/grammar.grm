@@ -15,9 +15,7 @@ $string_char = ["A".."Z"] | // Uppercase letters
 
 $identifier_body = (10#95 | ["A".."Z"] | ["a".."z"]) (["A".."Z"] | ["a".."z"] | ["0".."9"] | 10#95)*;
 
-$decimal_integer <id            = "TkBase10Integer">             = ["0".."9"]+;
-$radixed_integer<id             = "TkRadixedInteger">            = $decimal_integer "#" (["A".."Z"] | ["a".."z"] | ["0".."9"])+;
-$integer_literal<id             = "TkIntegerLiteral">            = $decimal_integer | $radixed_integer;
+$integer_literal<id             = "TkIntegerLiteral">            = ["0".."9"]+ "#" (["A".."Z"] | ["a".."z"] | ["0".."9"])+;
 $string_literal<id              = "TkStringLiteral">             = 10#34 $string_char* 10#34;
 $boolean_literal<id             = "TkBooleanLiteral">            = "true" | "false";
 $terminal_identifier<id         = "TkTerminalIdentifier">        = "$" $identifier_body;
@@ -70,7 +68,7 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
 // - TERMINAL_EXPRESSION -
 %terminal_expression<id = "NtTerminalExpression"> = $terminal_identifier %repetition_expression?        |
                                                     $string_literal %repetition_expression?             |
-                                                    $radixed_integer %repetition_expression?            |
+                                                    $integer_literal %repetition_expression?            |
                                                     $kw_epsilon                                         |
                                                     %charset_expression  %repetition_expression?        |
                                                     "("~ %terminal_choices ")"~ %repetition_expression? |
@@ -129,7 +127,7 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
 %nonterminal_expression<id = "NtNonterminalExpression"> = $nonterminal_identifier %repetition_expression?         |
                                                           $terminal_identifier (%repetition_expression | $tilde)? |
                                                           $string_literal (%repetition_expression | $tilde)?      |
-                                                          $radixed_integer (%repetition_expression | $tilde)?     |
+                                                          $integer_literal (%repetition_expression | $tilde)?     |
                                                           $kw_epsilon                                             |
                                                           "("~ %nonterminal_choices ")"~ %repetition_expression?  |
                                                           "("~ %nonterminal_choices ")"~ %sequence_modifier?;

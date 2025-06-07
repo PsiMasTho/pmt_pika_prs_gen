@@ -2,8 +2,6 @@
 
 #include "pmt/parserbuilder/tui/args.hpp"
 #include "pmt/parserbuilder/grm_ast.hpp"
-#include "pmt/parserbuilder/grm_lexer.hpp"
-#include "pmt/parserbuilder/grm_parser.hpp"
 #include "pmt/parserbuilder/grm_lexer_tables.hpp"
 #include "pmt/parserbuilder/grm_parser_tables.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
@@ -54,38 +52,6 @@ auto report_terminal_overlaps(GrammarData const& grammar_data_, std::unordered_s
  std::cerr << msg << '\n';
 }
 
-void print_ast_from_generated_tables(std::string const& input_text_) {
-  LexerClass const lexer_tables;
-  GenericLexer lexer(input_text_, lexer_tables);
-  ParserClass const parser_tables;
-  GenericParser parser;
-  GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
-
-  // -- Print AST --
-  GenericAstPrinter::Args ast_printer_args{
-    ._id_to_string_fn = [&](GenericId::IdType id_) {
-        LexerClass const lexer_tables;
-        if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
-         return lexer_tables.id_to_string(id_);
-        }
-        
-        ParserClass const parser_tables;
-        if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
-         return parser_tables.id_to_string(id_);
-        }
-        
-        // If the id is not found in either lexer or parser tables, throw an error
-        throw std::runtime_error("Invalid id");
-    },
-    ._out = std::cout,
-    ._ast = *ast,
-  };
-
-  std::cout << "---BEGIN Printing AST from generated tables:\n";
-  GenericAstPrinter::print(ast_printer_args);
-  std::cout << "---END Printing AST from generated tables\n";
-}
-
 }  // namespace
 
 auto main(int argc, char const* const* argv) -> int try {
@@ -94,17 +60,24 @@ auto main(int argc, char const* const* argv) -> int try {
   std::ifstream input_grammar_stream(args._input_grammar_file);
   std::string const input_grammar((std::istreambuf_iterator<char>(input_grammar_stream)), std::istreambuf_iterator<char>());
 
-  std::ifstream test_file(args._input_test_file);
-  std::string const test_input((std::istreambuf_iterator<char>(test_file)), std::istreambuf_iterator<char>());
+  GrmLexerTables const lexer_tables;
+  GenericLexer lexer(input_grammar, lexer_tables);
+  GrmParserTables const parser_tables;
+  GenericParser parser;
+  GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
 
-  if (args._print_ast_from_generated_tables) {
-    print_ast_from_generated_tables(test_input);
-  }
+  GenericAstPrinter::Args ast_printer_args{
+    ._id_to_string_fn = [&](GenericId::IdType id_) {return GrmAst::id_to_string(id_);},
+    ._out = std::cout,
+    ._ast = *ast,
+  };
 
-  GrmLexer lexer(input_grammar);
-  GenericAst::UniqueHandle ast = GrmParser::parse(lexer);
-  
-  GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
+  std::cout << "---BEGIN Printing AST from generated tables:\n";
+  GenericAstPrinter::print(ast_printer_args);
+  std::cout << "---END Printing AST from generated tables\n";
+
+
+  /* GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
   NonterminalInliner::do_inline(NonterminalInliner::Args{._grammar_data = grammar_data, ._ast = *ast});
 
   std::cout << "Building lexer tables...\n";
@@ -125,8 +98,8 @@ auto main(int argc, char const* const* argv) -> int try {
    ._is_header_skel = lexer_header_skel_file,
    ._is_source_skel = lexer_source_skel_file,
    ._tables = lexer_tables,
-   ._namespace_name = "pmt::parserbuilder",
-   ._class_name = "LexerClass",
+   ._namespace_name = args._namespace_name,
+   ._class_name = args._lexer_class_name,
    ._header_include_path = std::filesystem::path(args._output_lexer_header_file).filename().string()
   };
 
@@ -149,8 +122,8 @@ auto main(int argc, char const* const* argv) -> int try {
    ._is_header_skel = parser_header_skel_file,
    ._is_source_skel = parser_source_skel_file,
    ._tables = parser_tables,
-   ._namespace_name = "pmt::parserbuilder",
-   ._class_name = "ParserClass",
+   ._namespace_name = args._namespace_name,
+   ._class_name = args._parser_class_name,
    ._header_include_path = std::filesystem::path(args._output_parser_header_file).filename().string()
   };
   ParserTableWriter parser_table_writer;
@@ -199,7 +172,7 @@ auto main(int argc, char const* const* argv) -> int try {
     ._indent_width = 2
   };
 
-  GenericAstPrinter::print(ast_printer_args);
+  GenericAstPrinter::print(ast_printer_args); */
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

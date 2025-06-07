@@ -1,4 +1,4 @@
-/* Generated on: 2025-06-07 22:39:25 */
+/* Generated on: 2025-06-07 23:45:54 */
 #include "grm_lexer_tables.hpp"
 
 #include <pmt/util/smrt/util.hpp>
@@ -54,19 +54,19 @@ std::array<uint8_t const, 0x1> const LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS =
 };
 
 std::array<pmt::base::Bitset::ChunkType const, 0x65> const LEXER_ACCEPTS = {
- 0x0000008000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000400, 0x0000000200, 0x0400000000, 0x0080000000, 0x0000000080, 0x0000000000, 0x0000000000,
- 0x0000800000, 0x0000000001, 0x0000000010, 0x0000000004, 0x0000000008, 0x0100000000, 0x0000000000, 0x0000000100, 0x0000000002, 0x0000000000, 0x0000000000,
- 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000040, 0x0000001000, 0x0000000020, 0x4000000000, 0x0000002000, 0x0000000000,
- 0x0000000000, 0x0000000000, 0x0000000000, 0x0010000000, 0x0000000000, 0x0000000000, 0x0000010000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0008000000,
- 0x0004000000, 0x0000000000, 0x0000000000, 0x0002000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000,
- 0x0001000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000,
- 0x0000000000, 0x0000000000, 0x0000000000, 0x0000200000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000100000, 0x0000000000, 0x0000000000, 0x0000000000,
- 0x0000000000, 0x0000000000, 0x0020000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000080000, 0x0000000000, 0x0000000000,
- 0x0000000000, 0x0000000000, 0x0000000000, 0x0000040000, 0x0000000000, 0x0200800000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000800, 0x0040000000,
- 0x2000000000, 0x1000000000
+ 0x0000008000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000400, 0x0000000200, 0x0100000000, 0x0040000000, 0x0000000080, 0x0000000000, 0x0000000000,
+ 0x0000000000, 0x0000000001, 0x0000000010, 0x0000000004, 0x0000000008, 0x0080000000, 0x0000000000, 0x0000000100, 0x0000000002, 0x0000000000, 0x0000000000,
+ 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000040, 0x0000001000, 0x0000000020, 0x1000000000, 0x0000002000, 0x0000000000,
+ 0x0000000000, 0x0000000000, 0x0000000000, 0x0008000000, 0x0000000000, 0x0000000000, 0x0000010000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0004000000,
+ 0x0002000000, 0x0000000000, 0x0000000000, 0x0001000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000,
+ 0x0000800000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000,
+ 0x0000000000, 0x0000000000, 0x0000000000, 0x0000100000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000080000, 0x0000000000, 0x0000000000, 0x0000000000,
+ 0x0000000000, 0x0000000000, 0x0010000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000040000, 0x0000000000, 0x0000000000,
+ 0x0000000000, 0x0000000000, 0x0000000000, 0x0000020000, 0x0000000000, 0x0000400000, 0x0000000000, 0x0000000000, 0x0000000000, 0x0000000800, 0x0020000000,
+ 0x0800000000, 0x0400000000
 };
 
-std::array<char const* const, 0x27> const LEXER_ACCEPT_LABELS = {
+std::array<char const* const, 0x25> const LEXER_ACCEPT_LABELS = {
  "@direct_0",
  "@direct_1",
  "@direct_10",
@@ -84,7 +84,6 @@ std::array<char const* const, 0x27> const LEXER_ACCEPT_LABELS = {
  "@linecount",
  "@start",
  "boolean_literal",
- "decimal_integer",
  "grammar_property_comment",
  "grammar_property_newline",
  "grammar_property_start",
@@ -100,7 +99,6 @@ std::array<char const* const, 0x27> const LEXER_ACCEPT_LABELS = {
  "nonterminal_identifier",
  "plus",
  "question",
- "radixed_integer",
  "star",
  "string_char",
  "string_literal",
@@ -108,17 +106,16 @@ std::array<char const* const, 0x27> const LEXER_ACCEPT_LABELS = {
  "tilde"
 };
 
-std::array<pmt::util::smrt::GenericId::IdType, 0x27> const LEXER_ACCEPT_IDS = {
+std::array<pmt::util::smrt::GenericId::IdType, 0x25> const LEXER_ACCEPT_IDS = {
  0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe,
  0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffe, 0xfffffffffffffffd, 0xfffffffffffffffb, 0xfffffffffffffffc,
- 0x0000000000000000, 0x0000000000000001, 0x0000000000000002, 0x0000000000000003, 0x0000000000000004, 0x0000000000000005, 0xfffffffffffffffe, 0x0000000000000006,
+ 0x0000000000000000, 0x0000000000000001, 0x0000000000000002, 0x0000000000000003, 0x0000000000000004, 0xfffffffffffffffe, 0x0000000000000005, 0x0000000000000006,
  0x0000000000000007, 0x0000000000000008, 0x0000000000000009, 0x000000000000000a, 0x000000000000000b, 0x000000000000000c, 0x000000000000000d, 0x000000000000000e,
- 0x000000000000000f, 0x0000000000000010, 0x0000000000000011, 0xfffffffffffffffe, 0x0000000000000012, 0x0000000000000013, 0x0000000000000014
+ 0x000000000000000f, 0xfffffffffffffffe, 0x0000000000000010, 0x0000000000000011, 0x0000000000000012
 };
 
-std::array<char const* const, 0x15> const ID_NAMES = {
+std::array<char const* const, 0x13> const ID_NAMES = {
  "TkBooleanLiteral",
- "TkBase10Integer",
  "TkGrammarPropertyComment",
  "TkGrammarPropertyNewline",
  "TkGrammarPropertyStart",
@@ -133,7 +130,6 @@ std::array<char const* const, 0x15> const ID_NAMES = {
  "TkNonterminalIdentifier",
  "TkPlus",
  "TkQuestion",
- "TkRadixedInteger",
  "TkStar",
  "TkStringLiteral",
  "TkTerminalIdentifier",
@@ -146,51 +142,51 @@ std::array<uint8_t const, 0x1> const LINECOUNT_ACCEPTS = {
 
 } // namespace
 
-auto LexerClass::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
+auto GrmLexerTables::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
  return pmt::util::smrt::get_state_nr_next_generic(LEXER_TRANSITIONS, LEXER_TRANSITIONS_STATE_OFFSETS, LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::util::smrt::SymbolKindCharacter, symbol_);
 }
 
-auto LexerClass::get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto GrmLexerTables::get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(LEXER_ACCEPTS.begin() + state_nr_ * 0x1, 0x1);
 }
 
-auto LexerClass::get_accept_count() const -> size_t {
- return 0x27;
+auto GrmLexerTables::get_accept_count() const -> size_t {
+ return 0x25;
 }
 
-auto LexerClass::get_start_accept_index() const -> size_t {
+auto GrmLexerTables::get_start_accept_index() const -> size_t {
  return 0xf;
 }
 
-auto LexerClass::get_eoi_accept_index() const -> size_t {
+auto GrmLexerTables::get_eoi_accept_index() const -> size_t {
  return 0xd;
 }
 
-auto LexerClass::get_accept_index_label(size_t index_) const -> std::string {
+auto GrmLexerTables::get_accept_index_label(size_t index_) const -> std::string {
  return LEXER_ACCEPT_LABELS[index_];
 }
 
-auto LexerClass::get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
+auto GrmLexerTables::get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
  return LEXER_ACCEPT_IDS[index_];
 }
 
-auto LexerClass::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {
+auto GrmLexerTables::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {
  return ID_NAMES[id_ - 0x0];
 }
 
-auto LexerClass::get_min_id() const -> pmt::util::smrt::GenericId::IdType {
+auto GrmLexerTables::get_min_id() const -> pmt::util::smrt::GenericId::IdType {
  return 0x0;
 }
 
-auto LexerClass::get_id_count() const -> size_t {
- return 0x15;
+auto GrmLexerTables::get_id_count() const -> size_t {
+ return 0x13;
 }
 
-auto LexerClass::get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
+auto GrmLexerTables::get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
  return pmt::util::smrt::get_state_nr_next_generic(LINECOUNT_TRANSITIONS, LINECOUNT_TRANSITIONS_STATE_OFFSETS, LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::util::smrt::SymbolKindCharacter, symbol_);
 }
 
-auto LexerClass::is_linecount_state_nr_accepting(pmt::util::smrt::SymbolValueType state_nr_) const -> bool {
+auto GrmLexerTables::is_linecount_state_nr_accepting(pmt::util::smrt::SymbolValueType state_nr_) const -> bool {
  return std::binary_search(LINECOUNT_ACCEPTS.begin(), LINECOUNT_ACCEPTS.end(), state_nr_);
 }
 
