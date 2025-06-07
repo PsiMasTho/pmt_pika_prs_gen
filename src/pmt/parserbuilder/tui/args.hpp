@@ -18,6 +18,8 @@ class Args {
   std::string _output_parser_header_file;
   std::string _output_parser_source_file;
   std::string _output_parser_id_constants_file;
+
+  bool _print_ast_from_generated_tables = false;
 };
 
 }  // namespace pmt::parserbuilder::tui

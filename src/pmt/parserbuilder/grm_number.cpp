@@ -90,7 +90,7 @@ auto GrmNumber::get_repetition_number(GenericAst const& token_) -> std::optional
 }
 
 auto GrmNumber::get_repetition_range(GenericAst const& repetition_) -> RepetitionRangeType {
-  assert(repetition_.get_id() == GrmAst::NtTerminalRepetitionRange || repetition_.get_id() == GrmAst::NtNonterminalRepetitionRange);
+  assert(repetition_.get_id() == GrmAst::NtNonterminalRepetitionRange || repetition_.get_id() == GrmAst::NtTerminalRepetitionRange);
 
   switch (repetition_.get_children_size()) {
     case 1: {

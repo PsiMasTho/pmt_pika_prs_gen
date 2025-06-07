@@ -16,6 +16,8 @@ namespace pmt::parserbuilder {
 class LexerTableBuilder {
   // -$ Data $-
   LexerTables _result_tables;
+  pmt::util::smct::StateMachine _lexer_state_machine;
+  pmt::util::smct::StateMachine _linecount_state_machine;
   std::vector<pmt::util::smct::StateMachine> _terminal_state_machines;
   std::vector<pmt::util::smct::StateMachine> _comment_open_state_machines;
   std::vector<pmt::util::smct::StateMachine> _comment_close_state_machines;

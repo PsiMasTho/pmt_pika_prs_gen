@@ -1,18 +1,23 @@
 #include "pmt/parserbuilder/grammar_data.hpp"
 
 #include "pmt/parserbuilder/tui/args.hpp"
+#include "pmt/parserbuilder/grm_ast.hpp"
 #include "pmt/parserbuilder/grm_lexer.hpp"
 #include "pmt/parserbuilder/grm_parser.hpp"
+#include "pmt/parserbuilder/grm_lexer_tables.hpp"
+#include "pmt/parserbuilder/grm_parser_tables.hpp"
 #include "pmt/parserbuilder/lexer_tables.hpp"
 #include "pmt/parserbuilder/lexer_table_builder.hpp"
 #include "pmt/parserbuilder/lexer_table_writer.hpp"
 #include "pmt/parserbuilder/parser_table_builder.hpp"
 #include "pmt/parserbuilder/parser_table_writer.hpp"
 #include "pmt/util/smrt/generic_ast.hpp"
+#include "pmt/util/smrt/generic_parser.hpp"
+#include "pmt/util/smrt/generic_lexer.hpp"
 #include "pmt/util/smrt/generic_ast_printer.hpp"
 #include "pmt/util/smrt/generic_lexer.hpp"
 #include "pmt/util/smrt/generic_parser.hpp"
-#include "pmt/parserbuilder/terminal_conflict_checker.hpp"
+#include "pmt/parserbuilder/terminal_overlap_checker.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -22,8 +27,49 @@ using namespace pmt::parserbuilder;
 using namespace pmt::parserbuilder::tui;
 using namespace pmt::util::smrt;
 using namespace pmt::util::smct;
+using namespace pmt::base;
 
 namespace {
+
+auto report_terminal_overlaps(GrammarData const& grammar_data_, std::unordered_set<IntervalSet<AcceptsIndexType>> const& overlapping_terminals_) {
+ if (overlapping_terminals_.empty()) {
+  return;
+ }
+ 
+ std::string msg = "Warning: Terminal overlaps found for: ";
+ std::string delim_1;
+ for (auto const& accepts : overlapping_terminals_) {
+  std::string delim_2;
+  msg += std::exchange(delim_1, ", ") + "{";
+  
+  accepts.for_each_key([&](AcceptsIndexType i_) {
+   msg += std::exchange(delim_2, ", ") + grammar_data_.lookup_terminal_label_by_index(i_);
+  });
+  
+  msg += "}";
+ }
+
+ std::cerr << msg << '\n';
+}
+
+void print_ast_from_generated_tables(std::string const& input_grammar_) {
+  LexerClass const lexer_tables;
+  GenericLexer lexer(input_grammar_, lexer_tables);
+  ParserClass const parser_tables;
+  GenericParser parser;
+  GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
+
+  // -- Print AST --
+  GenericAstPrinter::Args ast_printer_args{
+    ._id_to_string_fn = GrmAst::id_to_string,
+    ._out = std::cout,
+    ._ast = *ast,
+  };
+
+  std::cout << "---BEGIN Printing AST from generated tables:\n";
+  GenericAstPrinter::print(ast_printer_args);
+  std::cout << "---END Printing AST from generated tables\n";
+}
 
 }  // namespace
 
@@ -33,8 +79,14 @@ auto main(int argc, char const* const* argv) -> int try {
   std::ifstream input_grammar_stream(args._input_grammar_file);
   std::string const input_grammar((std::istreambuf_iterator<char>(input_grammar_stream)), std::istreambuf_iterator<char>());
 
+  if (args._print_ast_from_generated_tables) {
+    print_ast_from_generated_tables(input_grammar);
+  }
+
+
   GrmLexer lexer(input_grammar);
   GenericAst::UniqueHandle ast = GrmParser::parse(lexer);
+  
   GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
 
   std::cout << "Building lexer tables...\n";
@@ -69,7 +121,7 @@ auto main(int argc, char const* const* argv) -> int try {
   std::cout << "Done writing lexer tables\n";
 
   std::cout << "Building parser tables...\n";
-  ParserTables parser_tables = ParserTableBuilder{}.build(*ast, grammar_data, lexer_tables);
+  ParserTables parser_tables = ParserTableBuilder::build(ParserTableBuilder::Args(*ast, grammar_data, lexer_tables));
 
   std::ofstream parser_header_file(args._output_parser_header_file);
   std::ofstream parser_source_file(args._output_parser_source_file);
@@ -95,13 +147,15 @@ auto main(int argc, char const* const* argv) -> int try {
   parser_table_writer.write(parser_writer_args);
   std::cout << "Done writing parser tables\n";
 
-  TerminalConflictChecker::check_conflicts(
-   TerminalConflictChecker::Args{
-    ._state_machine = parser_tables._parser_state_machine,
+  std::unordered_set<IntervalSet<AcceptsIndexType>> const overlapping_terminals = TerminalOverlapChecker::find_overlaps(
+   TerminalOverlapChecker::Args{
+    ._state_machine = parser_tables.get_parser_state_machine(),
     ._grammar_data = grammar_data,
     ._ast = *ast,
    }
   );
+
+  report_terminal_overlaps(grammar_data, overlapping_terminals);
 
   std::ifstream test_file(args._input_test_file);
   std::string const test_input((std::istreambuf_iterator<char>(test_file)), std::istreambuf_iterator<char>());

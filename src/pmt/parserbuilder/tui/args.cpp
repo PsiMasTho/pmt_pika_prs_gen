@@ -48,6 +48,8 @@ Args::Args(int argc_, char const* const* argv_) {
         throw std::runtime_error("Missing argument for -cp");
       }
       _output_parser_id_constants_file = argv_[++i];
+    } else if (arg == "-print-ast") {
+      _print_ast_from_generated_tables = true;
     } else {
       throw std::runtime_error("Unknown argument: " + arg);
     }
@@ -87,7 +89,7 @@ Args::Args(int argc_, char const* const* argv_) {
 
   std::set<std::string> unique = {
     _input_grammar_file,
-    _input_test_file,
+    //_input_test_file, // Allow the test file to be the same as one of the others
     _output_lexer_header_file,
     _output_lexer_source_file,
     _output_lexer_id_constants_file,
@@ -96,7 +98,7 @@ Args::Args(int argc_, char const* const* argv_) {
     _output_parser_id_constants_file
   };
 
-  if (unique.size() != 8) {
+  if (unique.size() != 7) {
     throw std::runtime_error("Duplicate file names provided");
   }
 }

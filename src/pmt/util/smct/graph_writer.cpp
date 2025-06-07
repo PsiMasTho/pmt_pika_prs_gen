@@ -1,12 +1,12 @@
 #include "pmt/util/smct/graph_writer.hpp"
 
 #include "pmt/asserts.hpp"
-#include "pmt/base/bitset.hpp"
-#include "pmt/base/bitset_converter.hpp"
 #include "pmt/util/smct/state_machine.hpp"
 #include "pmt/util/timestamp.hpp"
 
 #include <ios>
+#include <set>
+#include <unordered_set>
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -34,11 +34,11 @@ auto GraphWriter::accepts_to_label_default(size_t accepts_) -> std::string {
  return std::to_string(accepts_);
 }
 
-auto GraphWriter::symbols_to_label_default(pmt::base::IntervalSet<SymbolType> const& symbols_) -> std::string {
+auto GraphWriter::symbols_to_label_default(SymbolKindType, IntervalSet<SymbolValueType> const& symbols_) -> std::string {
  std::string ret;
  std::string delim;
 
- symbols_.for_each_interval([&](Interval<SymbolType> interval_) {
+ symbols_.for_each_interval([&](Interval<SymbolValueType> interval_) {
    ret += std::exchange(delim, ", ");
    if (interval_.get_lower() == interval_.get_upper()) {
      ret += to_displayable(interval_.get_lower());
@@ -50,19 +50,19 @@ auto GraphWriter::symbols_to_label_default(pmt::base::IntervalSet<SymbolType> co
  return ret;
 }
 
-auto GraphWriter::symbol_kind_to_edge_color_default(pmt::util::smrt::SymbolType) -> Color {
+auto GraphWriter::symbol_kind_to_edge_color_default(SymbolKindType) -> Color {
  return Color{._r = 0, ._g = 0, ._b = 0};
 }
 
-auto GraphWriter::symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType) -> EdgeStyle {
+auto GraphWriter::symbol_kind_to_edge_style_default(SymbolKindType) -> EdgeStyle {
  return EdgeStyle::Solid;
 }
 
-auto GraphWriter::symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolType kind_) -> FontFlags {
+auto GraphWriter::symbol_kind_to_font_flags_default(SymbolKindType kind_) -> FontFlags {
  return FontFlags::None;
 }
 
-auto GraphWriter::symbol_kind_to_font_color_default(pmt::util::smrt::SymbolType) -> Color {
+auto GraphWriter::symbol_kind_to_font_color_default(SymbolKindType) -> Color {
  return Color{._r = 0, ._g = 0, ._b = 0};
 }
 
@@ -133,27 +133,20 @@ void GraphWriter::replace_epsilon_edges(std::string& str_){
 
 void GraphWriter::replace_symbol_edges(std::string& str_) {
  // <symbol_kind -> <state_nr -> <state_nr_next -> label_text>>
- std::unordered_map<SymbolType, std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>>> labels;
+ std::unordered_map<SymbolKindType, std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::string>>> labels;
 
  _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
   State const& state = *_writer_args->_state_machine.get_state(state_nr_);
 
-  state.get_symbol_transitions().for_each_interval(
-   [&](StateNrType state_nr_next_, Interval<SymbolType> interval_) {
-    SymbolType const kind_max = Symbol(interval_.get_upper()).get_kind();
-    for (SymbolType kind_i = Symbol(interval_.get_lower()).get_kind(); kind_i <= kind_max; ++kind_i) {
-     Interval<SymbolType> const kind_mask(Symbol(kind_i, 0).get_combined(), Symbol(kind_i, SymbolValueMax).get_combined());
-     std::optional<Interval<SymbolType>> const kind_symbol_interval = kind_mask.clone_and(interval_);
-     if (kind_symbol_interval.has_value()) {
-       std::string& label = labels[kind_i][state_nr_][state_nr_next_];
-       if (!label.empty()) {
-        label += ", ";
-       }
-       label += _style_args._symbols_to_label_fn(IntervalSet<SymbolType>(*kind_symbol_interval));
-     }
+  state.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+   state.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_, Interval<SymbolValueType> interval_) {
+    std::string& label = labels[kind_][state_nr_][state_nr_next_];
+    if (!label.empty()) {
+      label += ", ";
     }
-   }
-  );
+    label += _style_args._symbols_to_label_fn(kind_, IntervalSet<SymbolValueType>(interval_));
+   });
+  });
  });
 
  std::string space;
@@ -175,13 +168,12 @@ void GraphWriter::replace_accepts_label(std::string& str_) {
 }
 
 void GraphWriter::replace_accepts_table(std::string& str_) {
- std::unordered_map<size_t, std::set<StateNrType>> accepts;
+ std::unordered_map<AcceptsIndexType, std::set<StateNrType>> accepts;
  _writer_args->_state_machine.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
    State const& state = *_writer_args->_state_machine.get_state(state_nr_);
-   std::set<size_t> const accepts_set = pmt::base::BitsetConverter::to_set(state.get_accepts());
-   for (size_t accept : accepts_set) {
-     accepts[accept].insert(state_nr_);
-   }
+   state.get_accepts().for_each_key([&](AcceptsIndexType accept_index_) {
+    accepts[accept_index_].insert(state_nr_);
+   });
  });
 
  std::string accepts_table_replacement = R"(<TABLE BORDER="0" CELLBORDER="1">)";
@@ -208,8 +200,8 @@ void GraphWriter::replace_timestamp(std::string& str_) {
  replace_skeleton_label(str_, "TIMESTAMP", pmt::util::get_timestamp());
 }
 
-auto GraphWriter::is_displayable(SymbolType symbol_) -> bool {
-  static std::unordered_set<SymbolType> const DISPLAYABLES = {
+auto GraphWriter::is_displayable(SymbolValueType symbol_) -> bool {
+  static std::unordered_set<SymbolValueType> const DISPLAYABLES = {
    // clang-format off
       '!', '#', '$', '%', '(', ')', '*', ',', '-', '.', '@', '^', '_',
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -221,7 +213,7 @@ auto GraphWriter::is_displayable(SymbolType symbol_) -> bool {
   return DISPLAYABLES.contains(symbol_);
 }
 
-auto GraphWriter::to_displayable(SymbolType symbol_) -> std::string {
+auto GraphWriter::to_displayable(SymbolValueType symbol_) -> std::string {
   if (is_displayable(symbol_)) {
     return R"(')" + std::string(1, symbol_) + R"(')";
   } else if (symbol_ == SymbolValueEoi) {

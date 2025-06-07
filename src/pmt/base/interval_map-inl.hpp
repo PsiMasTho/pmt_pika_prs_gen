@@ -6,6 +6,8 @@
 
 #include "pmt/base/algo.hpp"
 
+#include <cassert>
+
 namespace pmt::base {
 template <std::integral KEY_, typename VALUE_>
 IntervalMap<KEY_, VALUE_>::IntervalMap(IntervalMap const& other_)
@@ -252,7 +254,8 @@ auto IntervalMap<KEY_, VALUE_>::contains(KEY_ key_) const -> bool {
 
 template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::get_by_index(size_t index_) const -> std::pair<VALUE_ const&, Interval<KEY_>> {
-  return {_values[index_], Interval<KEY_>(get_lowers()[index_], get_uppers()[index_])};
+ assert(index_ < size());
+ return {_values[index_], Interval<KEY_>(get_lowers()[index_], get_uppers()[index_])};
 }
 
 template <std::integral KEY_, typename VALUE_>
@@ -313,6 +316,15 @@ template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::highest() const -> KEY_ {
   assert(!empty());
   return get_uppers()[size() - 1];
+}
+
+template <std::integral KEY_, typename VALUE_>
+auto IntervalMap<KEY_, VALUE_>::get_keys() const -> IntervalSet<KEY_> {
+  IntervalSet<KEY_> ret;
+  for_each_interval([&ret](VALUE_ const&, Interval<KEY_> const interval_) {
+    ret.insert(interval_);
+  });
+  return ret;
 }
 
 template <std::integral KEY_, typename VALUE_>

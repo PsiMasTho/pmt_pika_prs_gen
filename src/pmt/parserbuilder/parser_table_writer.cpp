@@ -1,5 +1,6 @@
 #include "pmt/parserbuilder/parser_table_writer.hpp"
 
+#include "pmt/base/bitset_converter.hpp"
 #include "pmt/util/timestamp.hpp"
 #include "pmt/parserbuilder/parser_tables.hpp"
 #include "pmt/parserbuilder/table_writer_common.hpp"
@@ -16,7 +17,6 @@ namespace pmt::parserbuilder {
  auto encode_parser_accept_index(size_t index_) -> size_t {
   return index_ + 1;
  }
-
  }
 
  void ParserTableWriter::write(WriterArgs& writer_writer_args_) {
@@ -48,14 +48,12 @@ namespace pmt::parserbuilder {
   replace_class_name(_source);
   replace_namespace_close(_source);
   replace_header_include_path(_source);
-  replace_parser_transitions(_source);
+  replace_transitions(_source);
   replace_state_kinds(_source);
-  replace_parser_terminal_transition_masks(_source);
-  replace_parser_conflict_transition_masks(_source);
-  replace_lookahead_terminal_transition_masks(_source);
-  replace_lookahead_transitions(_source);
+  replace_transition_masks(_source);
   replace_parser_accepts(_source);
   replace_parser_accept_count(_source);
+  replace_parser_conflict_count(_source);
   replace_lookahead_accepts(_source);
   replace_parser_accepts_labels(_source);
   replace_parser_accepts_ids(_source);
@@ -99,193 +97,42 @@ namespace pmt::parserbuilder {
   replace_skeleton_label(str_, "HEADER_INCLUDE_PATH", _writer_args->_header_include_path);
  }
 
-void ParserTableWriter::replace_parser_transitions(std::string& str_) {
-  std::vector<SymbolType> lower_bounds;
-  std::vector<SymbolType> upper_bounds;
-  std::vector<StateNrType> values;
-  std::vector<size_t> offsets{0};
- 
-   _writer_args->_tables._parser_state_machine.get_state_nrs().for_each_key(
-     [&](pmt::util::smrt::StateNrType state_nr_) {
-       State const& state = *_writer_args->_tables._parser_state_machine.get_state(state_nr_);
-       IntervalMap<SymbolType, StateNrType> const& symbol_transitions = state.get_symbol_transitions();
-       symbol_transitions.for_each_interval([&](StateNrType value_, Interval<SymbolType> interval_){
-           lower_bounds.push_back(interval_.get_lower());
-           upper_bounds.push_back(interval_.get_upper());
-           values.push_back(value_);
-       });
-       offsets.push_back(offsets.back() + symbol_transitions.size());
-     }
-   );
-
-   {
-    std::stringstream lower_bounds_replacement;
-    TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, lower_bounds);
-    replace_skeleton_label(str_, "PARSER_LOWER_BOUNDS", lower_bounds_replacement.str());
-   }
-   std::string const lower_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(lower_bounds);
-   replace_skeleton_label(str_, "PARSER_LOWER_BOUNDS_TYPE", lower_bounds_type_replacement);
-   
-   std::stringstream upper_bounds_replacement;
-   {
-    TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, upper_bounds);
-    replace_skeleton_label(str_, "PARSER_UPPER_BOUNDS", upper_bounds_replacement.str());
-   }
-   std::string const upper_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(upper_bounds);
-   replace_skeleton_label(str_, "PARSER_UPPER_BOUNDS_TYPE", upper_bounds_type_replacement);
-
-   std::stringstream values_replacement;
-   {
-    TableWriterCommon::write_single_entries<StateNrType>(values_replacement, values);
-    replace_skeleton_label(str_, "PARSER_VALUES", values_replacement.str());
-   }
-   std::string const values_type_replacement = TableWriterCommon::get_smallest_unsigned_type<StateNrType>(values);
-   replace_skeleton_label(str_, "PARSER_VALUES_TYPE", values_type_replacement);
-
-   std::stringstream offsets_replacement;
-   {
-    TableWriterCommon::write_single_entries<size_t>(offsets_replacement, offsets);
-    replace_skeleton_label(str_, "PARSER_OFFSETS", offsets_replacement.str());
-   }
-   std::string const offsets_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(offsets);
-   replace_skeleton_label(str_, "PARSER_OFFSETS_TYPE", offsets_type_replacement);
+void ParserTableWriter::replace_transitions(std::string& str_) {
+ TableWriterCommon::replace_transitions(*this, str_, "PARSER_", _writer_args->_tables.get_parser_state_machine());
+ TableWriterCommon::replace_transitions(*this, str_, "LOOKAHEAD_", _writer_args->_tables.get_lookahead_state_machine());
 }
 
 void ParserTableWriter::replace_state_kinds(std::string& str_) {
   std::vector<size_t> state_kinds;
-  state_kinds.reserve(_writer_args->_tables._parser_state_machine.get_state_nrs().size());
-  _writer_args->_tables._parser_state_machine.get_state_nrs().for_each_key(
+  state_kinds.reserve(_writer_args->_tables.get_parser_state_machine().get_state_nrs().size());
+  _writer_args->_tables.get_parser_state_machine().get_state_nrs().for_each_key(
     [&](pmt::util::smrt::StateNrType state_nr_) {
       state_kinds.push_back(_writer_args->_tables.get_state_kind(state_nr_));
     }
   );
 
-  std::stringstream state_kinds_replacement;
-  TableWriterCommon::write_single_entries<size_t>(state_kinds_replacement, state_kinds);
-  replace_skeleton_label(str_, "STATE_KINDS", state_kinds_replacement.str());
-  std::string const state_kinds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(state_kinds);
-  replace_skeleton_label(str_, "STATE_KINDS_TYPE", state_kinds_type_replacement);
+  TableWriterCommon::replace_array<size_t>(*this, str_, "PARSER_STATE_KINDS", state_kinds);
 }
 
-void ParserTableWriter::replace_parser_terminal_transition_masks(std::string& str_) {
- std::vector<Bitset::ChunkType> terminal_transition_masks_flattened;
- size_t const chunk_count = Bitset::get_required_chunk_count(_writer_args->_tables._parser_terminal_transition_masks.begin()->second.size());
- _writer_args->_tables._parser_state_machine.get_state_nrs().for_each_key(
-   [&](pmt::util::smrt::StateNrType state_nr_) {
-    Bitset::ChunkSpanConst const chunks = _writer_args->_tables.get_state_terminal_transitions(state_nr_);
-    for (size_t i = 0; i < chunk_count; ++i) {
-      terminal_transition_masks_flattened.push_back((i < chunks.size()) ? chunks[i] : Bitset::ALL_SET_MASKS[false]);
-    }
-   });
+void ParserTableWriter::replace_transition_masks(std::string& str_) {
+ TableWriterCommon::replace_transition_masks(*this, str_, "PARSER_TERMINAL_", _writer_args->_tables.get_parser_state_machine().get_state_count(), [&](pmt::util::smrt::StateNrType state_nr_) {return _writer_args->_tables.get_state_terminal_transitions(state_nr_);});
+ TableWriterCommon::replace_transition_masks(*this, str_, "PARSER_HIDDEN_TERMINAL_", _writer_args->_tables.get_parser_state_machine().get_state_count(), [&](pmt::util::smrt::StateNrType state_nr_) {return _writer_args->_tables.get_state_hidden_terminal_transitions(state_nr_);});
+ TableWriterCommon::replace_transition_masks(*this, str_, "PARSER_CONFLICT_", _writer_args->_tables.get_parser_state_machine().get_state_count(), [&](pmt::util::smrt::StateNrType state_nr_) {return _writer_args->_tables.get_state_conflict_transitions(state_nr_);});
 
- std::stringstream terminal_transition_masks_replacement;
- TableWriterCommon::write_single_entries<Bitset::ChunkType>(terminal_transition_masks_replacement, terminal_transition_masks_flattened);
- replace_skeleton_label(str_, "PARSER_TERMINAL_TRANSITION_MASKS", terminal_transition_masks_replacement.str());
- replace_skeleton_label(str_, "PARSER_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT", TableWriterCommon::as_hex(chunk_count, true));
-}
-
-void ParserTableWriter::replace_parser_conflict_transition_masks(std::string& str_) {
- std::vector<Bitset::ChunkType> conflict_transition_masks_flattened;
- size_t const chunk_count = _writer_args->_tables._lookahead_terminal_transition_masks.empty() ? 0 : Bitset::get_required_chunk_count(_writer_args->_tables._parser_conflict_transition_masks.begin()->second.size());
- _writer_args->_tables._parser_state_machine.get_state_nrs().for_each_key(
-   [&](pmt::util::smrt::StateNrType state_nr_) {
-    Bitset::ChunkSpanConst const chunks = _writer_args->_tables.get_state_conflict_transitions(state_nr_);
-    for (size_t i = 0; i < chunk_count; ++i) {
-      conflict_transition_masks_flattened.push_back((i < chunks.size()) ? chunks[i] : Bitset::ALL_SET_MASKS[false]);
-    }
-   });
-
- std::stringstream conflict_transition_masks_replacement;
- TableWriterCommon::write_single_entries<Bitset::ChunkType>(conflict_transition_masks_replacement, conflict_transition_masks_flattened);
- replace_skeleton_label(str_, "PARSER_CONFLICT_TRANSITION_MASKS", conflict_transition_masks_replacement.str());
- replace_skeleton_label(str_, "PARSER_CONFLICT_TRANSITION_MASKS_CHUNK_COUNT", TableWriterCommon::as_hex(chunk_count, true));
- replace_skeleton_label(str_, "PARSER_CONFLICT_COUNT", TableWriterCommon::as_hex(_writer_args->_tables.get_conflict_count(), true));
-}
-
-void ParserTableWriter::replace_lookahead_terminal_transition_masks(std::string& str_) {
- std::vector<Bitset::ChunkType> terminal_transition_masks_flattened;
- size_t const chunk_count = _writer_args->_tables._lookahead_terminal_transition_masks.empty() ? 0 : Bitset::get_required_chunk_count(_writer_args->_tables._lookahead_terminal_transition_masks.begin()->second.size());
- _writer_args->_tables._lookahead_state_machine.get_state_nrs().for_each_key(
-   [&](pmt::util::smrt::StateNrType state_nr_) {
-    Bitset::ChunkSpanConst const chunks = _writer_args->_tables.get_lookahead_state_terminal_transitions(state_nr_);
-    for (size_t i = 0; i < chunk_count; ++i) {
-      terminal_transition_masks_flattened.push_back((i < chunks.size()) ? chunks[i] : Bitset::ALL_SET_MASKS[false]);
-    }
-   });
-
- std::stringstream terminal_transition_masks_replacement;
- TableWriterCommon::write_single_entries<Bitset::ChunkType>(terminal_transition_masks_replacement, terminal_transition_masks_flattened);
- replace_skeleton_label(str_, "LOOKAHEAD_TERMINAL_TRANSITION_MASKS", terminal_transition_masks_replacement.str());
- replace_skeleton_label(str_, "LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT", TableWriterCommon::as_hex(chunk_count, true));
-}
-
-void ParserTableWriter::replace_lookahead_transitions(std::string& str_) {
-  std::vector<SymbolType> lower_bounds;
-  std::vector<SymbolType> upper_bounds;
-  std::vector<StateNrType> values;
-  std::vector<size_t> offsets{0};
- 
-   _writer_args->_tables._lookahead_state_machine.get_state_nrs().for_each_key(
-     [&](pmt::util::smrt::StateNrType state_nr_) {
-       State const& state = *_writer_args->_tables._lookahead_state_machine.get_state(state_nr_);
-       IntervalMap<SymbolType, StateNrType> const& symbol_transitions = state.get_symbol_transitions();
-       symbol_transitions.for_each_interval([&](StateNrType value_, Interval<SymbolType> interval_){
-           lower_bounds.push_back(interval_.get_lower());
-           upper_bounds.push_back(interval_.get_upper());
-           values.push_back(value_);
-       });
-       offsets.push_back(offsets.back() + symbol_transitions.size());
-     }
-   );
-
-   {
-    std::stringstream lower_bounds_replacement;
-    TableWriterCommon::write_single_entries<SymbolType>(lower_bounds_replacement, lower_bounds);
-    replace_skeleton_label(str_, "LOOKAHEAD_LOWER_BOUNDS", lower_bounds_replacement.str());
-   }
-   std::string const lower_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(lower_bounds);
-   replace_skeleton_label(str_, "LOOKAHEAD_LOWER_BOUNDS_TYPE", lower_bounds_type_replacement);
-   
-   std::stringstream upper_bounds_replacement;
-   {
-    TableWriterCommon::write_single_entries<SymbolType>(upper_bounds_replacement, upper_bounds);
-    replace_skeleton_label(str_, "LOOKAHEAD_UPPER_BOUNDS", upper_bounds_replacement.str());
-   }
-   std::string const upper_bounds_type_replacement = TableWriterCommon::get_smallest_unsigned_type<SymbolType>(upper_bounds);
-   replace_skeleton_label(str_, "LOOKAHEAD_UPPER_BOUNDS_TYPE", upper_bounds_type_replacement);
-
-   std::stringstream values_replacement;
-   {
-    TableWriterCommon::write_single_entries<StateNrType>(values_replacement, values);
-    replace_skeleton_label(str_, "LOOKAHEAD_VALUES", values_replacement.str());
-   }
-   std::string const values_type_replacement = TableWriterCommon::get_smallest_unsigned_type<StateNrType>(values);
-   replace_skeleton_label(str_, "LOOKAHEAD_VALUES_TYPE", values_type_replacement);
-
-   std::stringstream offsets_replacement;
-   {
-    TableWriterCommon::write_single_entries<size_t>(offsets_replacement, offsets);
-    replace_skeleton_label(str_, "LOOKAHEAD_OFFSETS", offsets_replacement.str());
-   }
-   std::string const offsets_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(offsets);
-   replace_skeleton_label(str_, "LOOKAHEAD_OFFSETS_TYPE", offsets_type_replacement);
+ TableWriterCommon::replace_transition_masks(*this, str_, "LOOKAHEAD_TERMINAL_", _writer_args->_tables.get_lookahead_state_machine().get_state_count(), [&](pmt::util::smrt::StateNrType state_nr_) {return _writer_args->_tables.get_lookahead_state_terminal_transitions(state_nr_);});
 }
 
 void ParserTableWriter::replace_parser_accepts(std::string& str_){
  std::vector<size_t> accepts;
 
- _writer_args->_tables._parser_state_machine.get_state_nrs().for_each_key(
+ _writer_args->_tables.get_parser_state_machine().get_state_nrs().for_each_key(
    [&](pmt::util::smrt::StateNrType state_nr_) {
     accepts.push_back(encode_parser_accept_index(_writer_args->_tables.get_state_accept_index(state_nr_)));
    }
  );
 
- std::stringstream accepts_replacement;
- TableWriterCommon::write_single_entries<size_t>(accepts_replacement, accepts);
- replace_skeleton_label(str_, "PARSER_ACCEPTS", accepts_replacement.str());
-
- std::string const accepts_type_replacement = TableWriterCommon::get_smallest_unsigned_type<size_t>(accepts);
- replace_skeleton_label(str_, "PARSER_ACCEPTS_TYPE", accepts_type_replacement);
+ TableWriterCommon::replace_array<size_t>(*this, str_, "PARSER_ACCEPTS", accepts);
+ replace_skeleton_label(str_, "PARSER_ACCEPT_CHUNK_COUNT", TableWriterCommon::as_hex(Bitset::get_required_chunk_count(_writer_args->_tables.get_accept_count()), true));
 }
 
 void ParserTableWriter::replace_parser_accept_count(std::string& str_) {
@@ -293,22 +140,26 @@ void ParserTableWriter::replace_parser_accept_count(std::string& str_) {
  replace_skeleton_label(str_, "PARSER_ACCEPT_COUNT", parser_accept_count_replacement);
 }
 
+void ParserTableWriter::replace_parser_conflict_count(std::string& str_) {
+ replace_skeleton_label(str_, "PARSER_CONFLICT_COUNT", TableWriterCommon::as_hex(_writer_args->_tables.get_conflict_count(), true));
+}
+
 void ParserTableWriter::replace_lookahead_accepts(std::string& str_) {
   std::vector<Bitset::ChunkType> accepts_flattened;
 
   size_t accept_count = 0;
-  _writer_args->_tables._lookahead_state_machine.get_state_nrs().for_each_key(
+  _writer_args->_tables.get_lookahead_state_machine().get_state_nrs().for_each_key(
     [&](pmt::util::smrt::StateNrType state_nr_) {
-      State const& state = *_writer_args->_tables._lookahead_state_machine.get_state(state_nr_);
-      size_t const cur = state.get_accepts().popcnt() == 0 ? 0 : state.get_accepts().countl(false);
+      State const& state = *_writer_args->_tables.get_lookahead_state_machine().get_state(state_nr_);
+      size_t const cur = state.get_accepts().popcnt() == 0 ? 0 : state.get_accepts().get_by_index(0).get_lower();
       accept_count = std::max(accept_count, cur);
     }
    );
 
-  _writer_args->_tables._lookahead_state_machine.get_state_nrs().for_each_key(
+  _writer_args->_tables.get_lookahead_state_machine().get_state_nrs().for_each_key(
     [&](pmt::util::smrt::StateNrType state_nr_) {
-      State const& state = *_writer_args->_tables._lookahead_state_machine.get_state(state_nr_);
-      Bitset accepts = state.get_accepts();
+      State const& state = *_writer_args->_tables.get_lookahead_state_machine().get_state(state_nr_);
+      Bitset accepts = BitsetConverter::from_interval_set(state.get_accepts());
       if (accepts.size() < accept_count) {
         accepts.resize(accept_count, false);
       }
@@ -318,34 +169,28 @@ void ParserTableWriter::replace_lookahead_accepts(std::string& str_) {
     }
    );
  
-  std::stringstream accepts_replacement;
-  TableWriterCommon::write_single_entries<Bitset::ChunkType>(accepts_replacement, accepts_flattened);
-  replace_skeleton_label(str_, "LOOKAHEAD_ACCEPTS", accepts_replacement.str());
+  TableWriterCommon::replace_array<Bitset::ChunkType>(*this, str_, "LOOKAHEAD_ACCEPTS", accepts_flattened);
   replace_skeleton_label(str_, "LOOKAHEAD_ACCEPTS_CHUNK_COUNT", TableWriterCommon::as_hex(Bitset::get_required_chunk_count(accept_count), true));
 }
 
 void ParserTableWriter::replace_parser_accepts_labels(std::string& str_){
-  std::vector<std::string> accepts_labels;
-  accepts_labels.reserve(_writer_args->_tables._nonterminal_data.size());
-  for (ParserTables::NonterminalData const& terminal_data : _writer_args->_tables._nonterminal_data) {
-   accepts_labels.push_back(terminal_data._label);
+  std::vector<std::string> accept_labels;
+  accept_labels.reserve(_writer_args->_tables.get_accept_count());
+  for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
+   accept_labels.push_back(_writer_args->_tables.get_accept_index_label(i));
   }
 
-  std::stringstream terminal_labels_replacement;
-  TableWriterCommon::write_single_entries(terminal_labels_replacement, accepts_labels);
-  replace_skeleton_label(str_, "PARSER_ACCEPTS_LABELS", terminal_labels_replacement.str());
+  TableWriterCommon::replace_array(*this, str_, "PARSER_ACCEPT_LABELS", accept_labels);
 }
 
 void ParserTableWriter::replace_parser_accepts_ids(std::string& str_) {
-  std::vector<GenericId::IdType> ids;
-  ids.reserve(_writer_args->_tables._nonterminal_data.size());
-  for (ParserTables::NonterminalData const& terminal_data : _writer_args->_tables._nonterminal_data) {
-   ids.push_back(terminal_data._id);
+  std::vector<GenericId::IdType> accept_ids;
+  accept_ids.reserve(_writer_args->_tables.get_accept_count());
+  for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
+   accept_ids.push_back(_writer_args->_tables.get_accept_index_id(i));
   }
 
-  std::stringstream terminal_ids_replacement;
-  TableWriterCommon::write_single_entries<GenericId::IdType>(terminal_ids_replacement, ids);
-  replace_skeleton_label(str_, "PARSER_ACCEPTS_IDS", terminal_ids_replacement.str());
+  TableWriterCommon::replace_array<GenericId::IdType>(*this, str_, "PARSER_ACCEPT_IDS", accept_ids);
 }
 
 void ParserTableWriter::replace_parser_eoi_accept_index(std::string& str_) {
@@ -354,9 +199,14 @@ void ParserTableWriter::replace_parser_eoi_accept_index(std::string& str_) {
 }
 
 void ParserTableWriter::replace_id_names(std::string& str_) {
-  std::stringstream id_names_replacement;
-  TableWriterCommon::write_single_entries(id_names_replacement, _writer_args->_tables._id_names);
-  replace_skeleton_label(str_, "ID_NAMES", id_names_replacement.str());
+ std::vector<std::string> id_names;
+ id_names.reserve(_writer_args->_tables.get_id_count());
+
+ for (GenericId::IdType i = _writer_args->_tables.get_min_id(); i < _writer_args->_tables.get_min_id() + _writer_args->_tables.get_id_count(); ++i) {
+  id_names.push_back(_writer_args->_tables.id_to_string(i));
+ }
+
+ TableWriterCommon::replace_array(*this, str_, "ID_NAMES", id_names);
 }
 
 void ParserTableWriter::replace_min_id(std::string& str_) {
@@ -371,8 +221,8 @@ void ParserTableWriter::replace_id_count(std::string& str_) {
 
 void ParserTableWriter::replace_parser_unpack(std::string& str_) {
  Bitset unpack;
- for (size_t i = 0; i < _writer_args->_tables._nonterminal_data.size(); ++i) {
-  unpack.push_back(_writer_args->_tables._nonterminal_data[i]._unpack);
+ for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
+  unpack.push_back(_writer_args->_tables.get_accept_index_unpack(i));
  }
 
  std::vector<Bitset::ChunkType> unpack_flattened;
@@ -380,15 +230,13 @@ void ParserTableWriter::replace_parser_unpack(std::string& str_) {
   unpack_flattened.push_back(chunk);
  }
 
- std::stringstream unpack_replacement;
- TableWriterCommon::write_single_entries<Bitset::ChunkType>(unpack_replacement, unpack_flattened);
- replace_skeleton_label(str_, "PARSER_UNPACK", unpack_replacement.str());
+ TableWriterCommon::replace_array<Bitset::ChunkType>(*this, str_, "PARSER_UNPACK", unpack_flattened);
 }
 
 void ParserTableWriter::replace_parser_hide(std::string& str_) {
  Bitset hide;
- for (size_t i = 0; i < _writer_args->_tables._nonterminal_data.size(); ++i) {
-  hide.push_back(_writer_args->_tables._nonterminal_data[i]._hide);
+ for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
+  hide.push_back(_writer_args->_tables.get_accept_index_hide(i));
  }
 
  std::vector<Bitset::ChunkType> hide_flattened;
@@ -396,15 +244,13 @@ void ParserTableWriter::replace_parser_hide(std::string& str_) {
   hide_flattened.push_back(chunk);
  }
 
- std::stringstream hide_replacement;
- TableWriterCommon::write_single_entries<Bitset::ChunkType>(hide_replacement, hide_flattened);
- replace_skeleton_label(str_, "PARSER_HIDE", hide_replacement.str());
+ TableWriterCommon::replace_array<Bitset::ChunkType>(*this, str_, "PARSER_HIDE", hide_flattened);
 }
 
 void ParserTableWriter::replace_parser_merge(std::string& str_) {
  Bitset merge;
- for (size_t i = 0; i < _writer_args->_tables._nonterminal_data.size(); ++i) {
-  merge.push_back(_writer_args->_tables._nonterminal_data[i]._merge);
+ for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
+  merge.push_back(_writer_args->_tables.get_accept_index_merge(i));
  }
 
  std::vector<Bitset::ChunkType> merge_flattened;
@@ -412,15 +258,14 @@ void ParserTableWriter::replace_parser_merge(std::string& str_) {
   merge_flattened.push_back(chunk);
  }
 
- std::stringstream merge_replacement;
- TableWriterCommon::write_single_entries<Bitset::ChunkType>(merge_replacement, merge_flattened);
- replace_skeleton_label(str_, "PARSER_MERGE", merge_replacement.str());
+ TableWriterCommon::replace_array<Bitset::ChunkType>(*this, str_, "PARSER_MERGE", merge_flattened);
 }
 
 void ParserTableWriter::replace_id_constants(std::string& str_) {
  std::string id_constants_replacement;
- for (size_t i = 0; i < _writer_args->_tables._id_names.size(); ++i) {
-  id_constants_replacement += _writer_args->_tables._id_names[i] + " = "  + TableWriterCommon::as_hex(i + _writer_args->_tables.get_min_id(), true) + ",\n";
+
+ for (GenericId::IdType i = _writer_args->_tables.get_min_id(); i < _writer_args->_tables.get_min_id() + _writer_args->_tables.get_id_count(); ++i) {
+  id_constants_replacement += _writer_args->_tables.id_to_string(i) + " = " + TableWriterCommon::as_hex(i, true) + ",\n";
  }
 
  replace_skeleton_label(str_, "ID_CONSTANTS", id_constants_replacement);

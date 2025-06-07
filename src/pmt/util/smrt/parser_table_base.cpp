@@ -26,13 +26,4 @@ auto ParserTablesBase::id_to_string(GenericId::IdType id_) const -> std::string 
  return std::to_string(id_);
 }
 
-auto ParserTablesBase::get_min_id() const -> GenericId::IdType {
- return 0;
-}
-
-auto ParserTablesBase::get_id_count() const -> size_t {
- return 0;
-}
-
-
 }

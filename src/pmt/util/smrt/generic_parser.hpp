@@ -29,6 +29,7 @@ class GenericParser {
  ParserTablesBase const* _parser_tables = nullptr;
  StateNrType _state_nr_cur = StateNrStart;
  GenericAst::UniqueHandle _ast_root = nullptr;
+ size_t _conflict_count = 0;
 
  public:
  auto parse(GenericLexer& lexer_, ParserTablesBase const& parser_tables_) -> GenericAst::UniqueHandle;

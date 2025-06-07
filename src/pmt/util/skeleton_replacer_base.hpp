@@ -17,7 +17,7 @@ namespace pmt::util {
   // -$ Data $-
   std::unordered_map<std::string, std::regex, HeterogeneousHasher, std::equal_to<>> _label_to_regex_map;
   
-  protected:
+  public:
   // -$ Functions $-
   // --$ Other $--
   void replace_skeleton_label(std::string& dest_, std::string_view label_, std::string const& replacement_);

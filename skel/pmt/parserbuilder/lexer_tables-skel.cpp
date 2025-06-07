@@ -1,144 +1,83 @@
 /* Generated on: /* $replace TIMESTAMP */ */
 #include "/* $replace HEADER_INCLUDE_PATH */"
 
-#include <algorithm>
+#include <pmt/util/smrt/util.hpp>
 
 /* $replace NAMESPACE_OPEN */
 
 namespace {
-/* $replace LOWER_BOUNDS_TYPE */ const LOWER_BOUNDS[] = {
-/* $replace LOWER_BOUNDS */
+std::array</* $replace LEXER_TRANSITIONS_TYPE */, /* $replace LEXER_TRANSITIONS_SIZE */> const LEXER_TRANSITIONS = {
+/* $replace LEXER_TRANSITIONS */
 };
 
-/* $replace UPPER_BOUNDS_TYPE */ const UPPER_BOUNDS[] = {
-/* $replace UPPER_BOUNDS */
+std::array</* $replace LEXER_TRANSITIONS_STATE_OFFSETS_TYPE */, /* $replace LEXER_TRANSITIONS_STATE_OFFSETS_SIZE */> const LEXER_TRANSITIONS_STATE_OFFSETS = {
+/* $replace LEXER_TRANSITIONS_STATE_OFFSETS */
 };
 
-/* $replace VALUES_TYPE */ const VALUES[] = {
-/* $replace VALUES */
+std::array</* $replace LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS_TYPE */, /* $replace LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS_SIZE */> const LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS = {
+/* $replace LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS */
 };
 
-/* $replace OFFSETS_TYPE */ const OFFSETS[] = {
-/* $replace OFFSETS */
+std::array</* $replace LINECOUNT_TRANSITIONS_TYPE */, /* $replace LINECOUNT_TRANSITIONS_SIZE */> const LINECOUNT_TRANSITIONS = {
+/* $replace LINECOUNT_TRANSITIONS */
 };
 
-pmt::base::Bitset::ChunkType const TERMINALS[] = {
-/* $replace TERMINALS */
+std::array</* $replace LINECOUNT_TRANSITIONS_STATE_OFFSETS_TYPE */, /* $replace LINECOUNT_TRANSITIONS_STATE_OFFSETS_SIZE */> const LINECOUNT_TRANSITIONS_STATE_OFFSETS = {
+/* $replace LINECOUNT_TRANSITIONS_STATE_OFFSETS */
 };
 
-char const* const TERMINAL_LABELS[] = {
-/* $replace TERMINAL_LABELS */
+std::array</* $replace LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS_TYPE */, /* $replace LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS_SIZE */> const LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS = {
+/* $replace LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS */
 };
 
-pmt::util::smrt::GenericId::IdType const TERMINAL_IDS[] = {
-/* $replace TERMINAL_IDS */
+std::array<pmt::base::Bitset::ChunkType const, /* $replace LEXER_ACCEPTS_SIZE */> const LEXER_ACCEPTS = {
+/* $replace LEXER_ACCEPTS */
 };
 
-char const* const ID_NAMES[] = {
+std::array<char const* const, /* $replace LEXER_ACCEPT_LABELS_SIZE */> const LEXER_ACCEPT_LABELS = {
+/* $replace LEXER_ACCEPT_LABELS */
+};
+
+std::array<pmt::util::smrt::GenericId::IdType, /* $replace LEXER_ACCEPT_IDS_SIZE */> const LEXER_ACCEPT_IDS = {
+/* $replace LEXER_ACCEPT_IDS */
+};
+
+std::array<char const* const, /* $replace ID_NAMES_SIZE */> const ID_NAMES = {
 /* $replace ID_NAMES */
 };
 
-/* $replace LINECOUNT_LOWER_BOUNDS_TYPE */ const NEWLINE_LOWER_BOUNDS[] = {
-/* $replace LINECOUNT_LOWER_BOUNDS */
-};
-
-/* $replace LINECOUNT_UPPER_BOUNDS_TYPE */ const LINECOUNT_UPPER_BOUNDS[] = {
-/* $replace LINECOUNT_UPPER_BOUNDS */
-};
-
-/* $replace LINECOUNT_VALUES_TYPE */ const LINECOUNT_VALUES[] = {
-/* $replace LINECOUNT_VALUES */
-};
-
-/* $replace LINECOUNT_OFFSETS_TYPE */ const LINECOUNT_OFFSETS[] = {
-/* $replace LINECOUNT_OFFSETS */
-};
-
-/* $replace LINECOUNT_ACCEPTS_TYPE */ const LINECOUNT_ACCEPTS[] = {
+std::array</* $replace LINECOUNT_ACCEPTS_TYPE */, /* $replace LINECOUNT_ACCEPTS_SIZE */> const LINECOUNT_ACCEPTS = {
 /* $replace LINECOUNT_ACCEPTS */
 };
 
-pmt::base::Bitset::ChunkType const HIDES[] = {
-/* $replace HIDES */
-};
-
-auto access_bit(std::span<pmt::base::Bitset::ChunkType const> bitset_, size_t index_) -> bool {
- size_t const chunk_index = index_ / pmt::base::Bitset::ChunkBit;
- size_t const bit_index = index_ % pmt::base::Bitset::ChunkBit;
- return (bitset_[chunk_index] & (1 << bit_index)) != 0;
-}
-
-auto encode_symbol(pmt::util::smrt::SymbolType symbol_) -> pmt::util::smrt::SymbolType {
- return (symbol_ == pmt::util::smrt::SymbolValueMax) ? 0 : symbol_ + 1;
-}
-
-auto decode_symbol(pmt::util::smrt::SymbolType symbol_) -> pmt::util::smrt::SymbolType {
- return (symbol_ == 0) ? pmt::util::smrt::SymbolValueMax : symbol_ - 1;
-}
-
-auto lowers_lt(pmt::util::smrt::SymbolType lhs_, pmt::util::smrt::SymbolType rhs_) -> bool {
- return decode_symbol(lhs_) < decode_symbol(rhs_);
-}
-
-template <typename LOWER_T_, typename UPPER_T_, typename VALUE_T_, typename OFFSET_T_>
-auto get_state_nr_next_generic( std::span<LOWER_T_ const> lowers_, std::span<UPPER_T_ const> uppers_, std::span<VALUE_T_ const> values_, std::span<OFFSET_T_ const> offsets_, pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) -> pmt::util::smrt::StateNrType {
- std::span<LOWER_T_ const> lowers_span(&lowers_[offsets_[state_nr_]], offsets_[state_nr_ + 1] - offsets_[state_nr_]);
- std::span<UPPER_T_ const> uppers_span(&uppers_[offsets_[state_nr_]], offsets_[state_nr_ + 1] - offsets_[state_nr_]);
-
- size_t const idx = std::distance(lowers_span.begin(), std::lower_bound(lowers_span.begin(), lowers_span.end(), encode_symbol(symbol_), lowers_lt));
-
- if (idx == lowers_span.size()) {
-  if (idx == 0 || symbol_ > decode_symbol(uppers_span[idx - 1])) {
-   return pmt::util::smrt::StateNrSink;
-  }
-  return values_[offsets_[state_nr_] + idx - 1];
- }
-
- if (symbol_ < decode_symbol(lowers_span[idx])) {
-  if (idx == 0) {
-   return pmt::util::smrt::StateNrSink;
-  }
-  if (symbol_ <= decode_symbol(uppers_span[idx - 1])) {
-   return values_[offsets_[state_nr_] + idx - 1];
-  }
-  return pmt::util::smrt::StateNrSink;
- }
-
- return values_[offsets_[state_nr_] + idx];
-}
-
 } // namespace
 
-auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {
- return get_state_nr_next_generic</* $replace LOWER_BOUNDS_TYPE */, /* $replace UPPER_BOUNDS_TYPE */, /* $replace VALUES_TYPE */, /* $replace OFFSETS_TYPE */>(LOWER_BOUNDS, UPPER_BOUNDS, VALUES, OFFSETS, state_nr_, symbol_);
+auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
+ return pmt::util::smrt::get_state_nr_next_generic(LEXER_TRANSITIONS, LEXER_TRANSITIONS_STATE_OFFSETS, LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS, pmt::util::smrt::SymbolKindCharacter, state_nr_, symbol_);
 }
 
 auto /* $replace CLASS_NAME */::get_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
- return pmt::base::Bitset::ChunkSpanConst(TERMINALS + state_nr_ * /* $replace TERMINAL_CHUNK_COUNT */, /* $replace TERMINAL_CHUNK_COUNT */);
+ return pmt::base::Bitset::ChunkSpanConst(LEXER_ACCEPTS.begin() + state_nr_ * /* $replace LEXER_ACCEPT_CHUNK_COUNT */, /* $replace LEXER_ACCEPT_CHUNK_COUNT */);
 }
 
 auto /* $replace CLASS_NAME */::get_accept_count() const -> size_t {
- return /* $replace TERMINAL_COUNT */;
+ return /* $replace LEXER_ACCEPT_COUNT */;
 }
 
 auto /* $replace CLASS_NAME */::get_start_accept_index() const -> size_t {
- return /* $replace START_TERMINAL_INDEX */;
+ return /* $replace START_ACCEPT_INDEX */;
 }
 
 auto /* $replace CLASS_NAME */::get_eoi_accept_index() const -> size_t {
- return /* $replace EOI_TERMINAL_INDEX */;
+ return /* $replace EOI_ACCEPT_INDEX */;
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> std::string {
- return TERMINAL_LABELS[index_];
-}
-
-auto /* $replace CLASS_NAME */::get_accept_index_hide(size_t index_) const -> bool {
- return access_bit(HIDES, index_);
+ return LEXER_ACCEPT_LABELS[index_];
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
- return TERMINAL_IDS[index_];
+ return LEXER_ACCEPT_IDS[index_];
 }
 
 auto /* $replace CLASS_NAME */::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {
@@ -153,12 +92,12 @@ auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
  return /* $replace ID_COUNT */;
 }
 
-auto /* $replace CLASS_NAME */::get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolType symbol_) const -> pmt::util::smrt::StateNrType {
- return get_state_nr_next_generic</* $replace LINECOUNT_LOWER_BOUNDS_TYPE */, /* $replace LINECOUNT_UPPER_BOUNDS_TYPE */, /* $replace LINECOUNT_VALUES_TYPE */, /* $replace LINECOUNT_OFFSETS_TYPE */>(NEWLINE_LOWER_BOUNDS, LINECOUNT_UPPER_BOUNDS, LINECOUNT_VALUES, LINECOUNT_OFFSETS, state_nr_, symbol_);
+auto /* $replace CLASS_NAME */::get_linecount_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
+ return pmt::util::smrt::get_state_nr_next_generic(LINECOUNT_TRANSITIONS, LINECOUNT_TRANSITIONS_STATE_OFFSETS, LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS, pmt::util::smrt::SymbolKindCharacter, state_nr_, symbol_);
 }
 
-auto /* $replace CLASS_NAME */::is_linecount_state_nr_accepting(pmt::util::smrt::SymbolType state_nr_) const -> bool {
- return std::binary_search(LINECOUNT_ACCEPTS, LINECOUNT_ACCEPTS + /* $replace LINECOUNT_ACCEPTS_COUNT */, state_nr_);
+auto /* $replace CLASS_NAME */::is_linecount_state_nr_accepting(pmt::util::smrt::SymbolValueType state_nr_) const -> bool {
+ return std::binary_search(LINECOUNT_ACCEPTS.begin(), LINECOUNT_ACCEPTS.end(), state_nr_);
 }
 
 /* $replace NAMESPACE_CLOSE */

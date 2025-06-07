@@ -33,7 +33,6 @@ class GrammarData {
     std::string _label;
     std::string _id_name;
     pmt::util::smrt::GenericAstPath _definition_path;
-    bool _hide : 1 = HIDE_DEFAULT;
     bool _accepted : 1 = false;
   };
 
@@ -88,7 +87,6 @@ class GrammarData {
  private:
   static void initial_iteration(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_);
   static void initial_iteration_handle_grammar_property(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
-  static void initial_iteration_handle_grammar_property_case_sensitive(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
   static void initial_iteration_handle_grammar_property_start(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
   static void initial_iteration_handle_grammar_property_whitespace(GrammarData& grammar_data_, pmt::util::smrt::GenericAstPath const& path_);
   static void initial_iteration_handle_grammar_property_comment(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_);
@@ -99,13 +97,17 @@ class GrammarData {
   static void add_reserved_terminal_accepts(GrammarData& grammar_data_);
   static void add_reserved_nonterminal_accepts(GrammarData& grammar_data_);
 
+  static void create_eoi_terminal_definition(GrammarData& grammar_data_, pmt::util::smrt::GenericAst& ast_);
+
   static void sort_terminal_accepts_by_label(GrammarData& grammar_data_);
   static void sort_nonterminal_accepts_by_label(GrammarData& grammar_data_);
 
   static void check_terminal_uniqueness(GrammarData& grammar_data_);
+  static void check_nonterminal_uniqueness(GrammarData& grammar_data_);
   static void check_start_nonterminal_label_defined(GrammarData& grammar_data_);
 
   static void final_iteration(GrammarData& grammar_data_, pmt::util::smrt::GenericAst& ast_);
+  static auto direct_terminal_definition_to_string(GrammarData& grammar_data_, pmt::util::smrt::GenericAst const& ast_, pmt::util::smrt::GenericAstPath const& path_) -> std::string;
 
   auto try_find_terminal_accept_index_by_label(std::string const& label_) -> size_t;
   auto try_find_nonterminal_accept_index_by_label(std::string const& label_) -> size_t;

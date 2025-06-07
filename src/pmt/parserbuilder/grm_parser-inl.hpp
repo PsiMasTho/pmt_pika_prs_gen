@@ -211,17 +211,17 @@ typedef union {
 #define ParseCTX_PARAM
 #define ParseCTX_FETCH
 #define ParseCTX_STORE
-#define YYNSTATE             86
-#define YYNRULE              73
+#define YYNSTATE             87
+#define YYNRULE              74
 #define YYNTOKEN             34
-#define YY_MAX_SHIFT         85
-#define YY_MIN_SHIFTREDUCE   146
-#define YY_MAX_SHIFTREDUCE   218
-#define YY_ERROR_ACTION      219
-#define YY_ACCEPT_ACTION     220
-#define YY_NO_ACTION         221
-#define YY_MIN_REDUCE        222
-#define YY_MAX_REDUCE        294
+#define YY_MAX_SHIFT         86
+#define YY_MIN_SHIFTREDUCE   147
+#define YY_MAX_SHIFTREDUCE   220
+#define YY_ERROR_ACTION      221
+#define YY_ACCEPT_ACTION     222
+#define YY_NO_ACTION         223
+#define YY_MIN_REDUCE        224
+#define YY_MAX_REDUCE        297
 /************* End control #defines *******************************************/
 #define YY_NLOOKAHEAD ((int)(sizeof(yy_lookahead)/sizeof(yy_lookahead[0])))
 
@@ -289,28 +289,29 @@ typedef union {
 **  yy_default[]       Default action for each state.
 **
 *********** Begin parsing tables **********************************************/
-#define YY_ACTTAB_COUNT (198)
+#define YY_ACTTAB_COUNT (203)
 static const YYACTIONTYPE yy_action[] = {
- /*     0 */   222,   20,   22,   66,   44,   37,   72,   19,   22,   44,
- /*    10 */    37,  220,    7,  224,  225,  226,  227,   69,   68,   34,
- /*    20 */   195,  194,  200,  223,  225,  226,  227,   35,   11,   54,
- /*    30 */    46,   51,   48,   57,   54,   46,   51,   48,   57,  164,
- /*    40 */   165,    4,  163,   73,  166,   41,   72,   19,   22,   25,
- /*    50 */    10,  248,   45,   42,   28,   84,   14,   24,   47,  248,
- /*    60 */    23,   84,   14,   24,  259,  248,   39,   14,   24,   49,
- /*    70 */   248,  247,   84,   14,   24,   50,  248,   13,   84,   14,
- /*    80 */    24,   78,  248,  201,   84,   14,   24,   12,  248,   15,
- /*    90 */    24,   85,  248,  167,   84,   14,   24,   36,  248,   63,
- /*   100 */    61,   59,   65,  204,  203,  202,   43,   32,   19,   22,
- /*   110 */    31,  260,  170,  169,  168,   75,   21,   77,   38,  231,
- /*   120 */    30,  292,  174,  175,  213,   67,   29,   70,   33,   71,
- /*   130 */    26,   82,    9,  210,   83,  230,  281,   80,   40,   79,
- /*   140 */   207,   16,  206,  180,  177,   81,  215,  176,    6,    1,
- /*   150 */   214,  293,    2,  212,    3,   18,  218,   17,   52,   53,
- /*   160 */   211,   55,  188,   56,   58,  187,   60,  186,  185,   62,
- /*   170 */    64,  182,  199,  221,    8,  157,   13,  156,  181,  197,
- /*   180 */    74,  209,   76,  208,    5,  153,  221,   12,  221,  221,
- /*   190 */    27,  152,  221,  221,  221,  173,  179,  178,
+ /*     0 */   224,   20,   22,   66,   44,   37,   73,   19,   22,   44,
+ /*    10 */    37,  222,    7,  226,  227,  228,  229,   69,   68,   34,
+ /*    20 */    70,  195,  202,  225,  227,  228,  229,   35,   11,   54,
+ /*    30 */    46,   51,   48,   57,   54,   46,   51,   48,   57,  165,
+ /*    40 */   166,    4,  164,   74,  167,   41,   73,   19,   22,   25,
+ /*    50 */    10,  250,   45,   42,   28,   85,   14,   24,   47,  250,
+ /*    60 */    23,   85,   14,   24,  261,  250,   39,   14,   24,   49,
+ /*    70 */   250,  249,   85,   14,   24,   50,  250,   13,   85,   14,
+ /*    80 */    24,   79,  250,  203,   85,   14,   24,   12,  250,   15,
+ /*    90 */    24,   86,  250,  168,   85,   14,   24,   36,  250,   63,
+ /*   100 */    61,   59,   65,  206,  205,  204,   43,   32,   19,   22,
+ /*   110 */    31,  262,  171,  170,  169,   76,   21,   78,   38,  233,
+ /*   120 */    30,  295,  175,  176,  215,   67,   29,   71,   33,   72,
+ /*   130 */    26,   83,    9,  212,   84,  232,  284,   81,   40,   80,
+ /*   140 */   209,   16,  208,  181,  178,   82,  217,  177,    6,    1,
+ /*   150 */   216,  296,    2,  214,    3,   18,  220,   17,   52,   53,
+ /*   160 */   213,   55,  189,   56,   58,  188,   60,  187,  186,   62,
+ /*   170 */    64,  183,  201,  223,    8,  223,  158,   13,  223,  199,
+ /*   180 */   182,  157,   12,  211,  210,  223,   75,   77,  174,  197,
+ /*   190 */   154,  153,   27,    5,  223,  223,  223,  223,  223,  223,
+ /*   200 */   180,  223,  179,
 };
 static const YYCODETYPE yy_lookahead[] = {
  /*     0 */     0,   53,   54,   49,    4,    5,   52,   53,   54,    4,
@@ -330,17 +331,17 @@ static const YYCODETYPE yy_lookahead[] = {
  /*   140 */    15,   18,   15,   15,   15,   48,    8,   15,    9,    9,
  /*   150 */     8,   57,    9,    8,   10,    9,   15,   18,    5,    9,
  /*   160 */     8,    3,    3,    9,    9,    3,    9,    3,    1,    9,
- /*   170 */     9,    8,   23,   58,    9,    3,    7,    1,    8,   23,
- /*   180 */     9,   15,    9,   15,    9,    8,   58,    7,   58,   58,
- /*   190 */    11,    8,   58,   58,   58,   17,   15,   15,   58,   58,
- /*   200 */    58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
+ /*   170 */     9,    8,   23,   58,    9,   58,    3,    7,   58,   23,
+ /*   180 */     8,    1,    7,   15,   15,   58,    9,    9,   17,   23,
+ /*   190 */     8,    8,   11,    9,   58,   58,   58,   58,   58,   58,
+ /*   200 */    15,   58,   15,   58,   58,   58,   58,   58,   58,   58,
  /*   210 */    58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
  /*   220 */    58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
- /*   230 */    58,   58,
+ /*   230 */    58,   58,   58,   58,   58,   58,   58,
 };
-#define YY_SHIFT_COUNT    (85)
+#define YY_SHIFT_COUNT    (86)
 #define YY_SHIFT_MIN      (0)
-#define YY_SHIFT_MAX      (183)
+#define YY_SHIFT_MAX      (187)
 static const unsigned char yy_shift_ofst[] = {
  /*     0 */     5,   38,   38,   38,   38,   38,   38,    0,   16,   16,
  /*    10 */    38,   16,   38,   16,   38,   38,   75,   90,   27,   16,
@@ -349,8 +350,8 @@ static const unsigned char yy_shift_ofst[] = {
  /*    40 */   129,  128,  132,   43,  139,  138,  140,  142,  143,  141,
  /*    50 */   144,  146,  145,  153,  150,  152,  158,  154,  159,  155,
  /*    60 */   162,  157,  164,  160,  167,  161,  163,  165,  149,  156,
- /*    70 */   166,  168,  169,  170,  172,  171,  176,  173,  177,  175,
- /*    80 */   178,  179,  181,  182,  180,  183,
+ /*    70 */   166,  168,  169,  170,  172,  173,  177,  180,  178,  182,
+ /*    80 */   184,  171,  181,  185,  187,  175,  183,
 };
 #define YY_REDUCE_COUNT (29)
 #define YY_REDUCE_MIN   (-52)
@@ -361,15 +362,15 @@ static const signed char yy_reduce_ofst[] = {
  /*    20 */     6,   13,   81,   81,   25,   25,   93,   89,   97,   94,
 };
 static const YYACTIONTYPE yy_default[] = {
- /*     0 */   219,  219,  219,  219,  219,  219,  219,  219,  219,  219,
- /*    10 */   219,  219,  219,  219,  235,  236,  219,  219,  219,  266,
- /*    20 */   267,  219,  268,  269,  237,  238,  219,  219,  219,  219,
- /*    30 */   219,  219,  219,  219,  219,  219,  219,  219,  219,  219,
- /*    40 */   219,  219,  219,  219,  219,  219,  219,  219,  219,  219,
- /*    50 */   219,  219,  219,  219,  219,  219,  219,  219,  219,  219,
- /*    60 */   219,  219,  219,  219,  219,  219,  219,  219,  274,  272,
- /*    70 */   219,  219,  265,  219,  219,  219,  219,  219,  219,  219,
- /*    80 */   219,  219,  219,  219,  234,  219,
+ /*     0 */   221,  221,  221,  221,  221,  221,  221,  221,  221,  221,
+ /*    10 */   221,  221,  221,  221,  237,  238,  221,  221,  221,  268,
+ /*    20 */   269,  221,  270,  271,  239,  240,  221,  221,  221,  221,
+ /*    30 */   221,  221,  221,  221,  221,  221,  221,  221,  221,  221,
+ /*    40 */   221,  221,  221,  221,  221,  221,  221,  221,  221,  221,
+ /*    50 */   221,  221,  221,  221,  221,  221,  221,  221,  221,  221,
+ /*    60 */   221,  221,  221,  221,  221,  221,  221,  221,  277,  275,
+ /*    70 */   273,  221,  221,  267,  221,  221,  221,  221,  221,  221,
+ /*    80 */   221,  221,  221,  221,  221,  236,  221,
 };
 /********** End of lemon-generated parsing tables *****************************/
 
@@ -591,29 +592,30 @@ static const char *const yyRuleName[] = {
  /*  47 */ "rule_sequence ::= rule_sequence rule_expression",
  /*  48 */ "rule_expression ::= TOKEN_RULE_IDENTIFIER",
  /*  49 */ "rule_expression ::= TOKEN_TERMINAL_IDENTIFIER",
- /*  50 */ "rule_expression ::= TOKEN_STRING_LITERAL",
- /*  51 */ "rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE",
- /*  52 */ "rule_expression ::= TOKEN_INTEGER_LITERAL",
- /*  53 */ "rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE",
- /*  54 */ "rule_expression ::= TOKEN_EPSILON",
- /*  55 */ "rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN",
- /*  56 */ "rule_expression ::= rule_expression TOKEN_QUESTION",
- /*  57 */ "rule_expression ::= rule_expression TOKEN_STAR",
- /*  58 */ "rule_expression ::= rule_expression TOKEN_PLUS",
- /*  59 */ "rule_expression ::= rule_expression rule_repetition_range",
- /*  60 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE",
- /*  61 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE",
- /*  62 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
- /*  63 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
- /*  64 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
- /*  65 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON",
- /*  66 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON",
- /*  67 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON",
- /*  68 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON",
- /*  69 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON",
- /*  70 */ "terminal_definition_pair_list ::= terminal_definition_pair",
- /*  71 */ "terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair",
- /*  72 */ "terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE",
+ /*  50 */ "rule_expression ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_TILDE",
+ /*  51 */ "rule_expression ::= TOKEN_STRING_LITERAL",
+ /*  52 */ "rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE",
+ /*  53 */ "rule_expression ::= TOKEN_INTEGER_LITERAL",
+ /*  54 */ "rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE",
+ /*  55 */ "rule_expression ::= TOKEN_EPSILON",
+ /*  56 */ "rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN",
+ /*  57 */ "rule_expression ::= rule_expression TOKEN_QUESTION",
+ /*  58 */ "rule_expression ::= rule_expression TOKEN_STAR",
+ /*  59 */ "rule_expression ::= rule_expression TOKEN_PLUS",
+ /*  60 */ "rule_expression ::= rule_expression rule_repetition_range",
+ /*  61 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE",
+ /*  62 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE",
+ /*  63 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
+ /*  64 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
+ /*  65 */ "rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE",
+ /*  66 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON",
+ /*  67 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON",
+ /*  68 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON",
+ /*  69 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON",
+ /*  70 */ "grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON",
+ /*  71 */ "terminal_definition_pair_list ::= terminal_definition_pair",
+ /*  72 */ "terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair",
+ /*  73 */ "terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE",
 };
 #endif /* NDEBUG */
 
@@ -1279,29 +1281,30 @@ static const YYCODETYPE yyRuleInfoLhs[] = {
     53,  /* (47) rule_sequence ::= rule_sequence rule_expression */
     54,  /* (48) rule_expression ::= TOKEN_RULE_IDENTIFIER */
     54,  /* (49) rule_expression ::= TOKEN_TERMINAL_IDENTIFIER */
-    54,  /* (50) rule_expression ::= TOKEN_STRING_LITERAL */
-    54,  /* (51) rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE */
-    54,  /* (52) rule_expression ::= TOKEN_INTEGER_LITERAL */
-    54,  /* (53) rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE */
-    54,  /* (54) rule_expression ::= TOKEN_EPSILON */
-    54,  /* (55) rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN */
-    54,  /* (56) rule_expression ::= rule_expression TOKEN_QUESTION */
-    54,  /* (57) rule_expression ::= rule_expression TOKEN_STAR */
-    54,  /* (58) rule_expression ::= rule_expression TOKEN_PLUS */
-    54,  /* (59) rule_expression ::= rule_expression rule_repetition_range */
-    55,  /* (60) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
-    55,  /* (61) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
-    55,  /* (62) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-    55,  /* (63) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-    55,  /* (64) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-    39,  /* (65) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON */
-    39,  /* (66) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON */
-    39,  /* (67) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON */
-    39,  /* (68) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
-    39,  /* (69) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
-    56,  /* (70) terminal_definition_pair_list ::= terminal_definition_pair */
-    56,  /* (71) terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair */
-    57,  /* (72) terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE */
+    54,  /* (50) rule_expression ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_TILDE */
+    54,  /* (51) rule_expression ::= TOKEN_STRING_LITERAL */
+    54,  /* (52) rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE */
+    54,  /* (53) rule_expression ::= TOKEN_INTEGER_LITERAL */
+    54,  /* (54) rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE */
+    54,  /* (55) rule_expression ::= TOKEN_EPSILON */
+    54,  /* (56) rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN */
+    54,  /* (57) rule_expression ::= rule_expression TOKEN_QUESTION */
+    54,  /* (58) rule_expression ::= rule_expression TOKEN_STAR */
+    54,  /* (59) rule_expression ::= rule_expression TOKEN_PLUS */
+    54,  /* (60) rule_expression ::= rule_expression rule_repetition_range */
+    55,  /* (61) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
+    55,  /* (62) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
+    55,  /* (63) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+    55,  /* (64) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+    55,  /* (65) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+    39,  /* (66) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON */
+    39,  /* (67) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON */
+    39,  /* (68) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON */
+    39,  /* (69) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
+    39,  /* (70) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
+    56,  /* (71) terminal_definition_pair_list ::= terminal_definition_pair */
+    56,  /* (72) terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair */
+    57,  /* (73) terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE */
 };
 
 /* For rule J, yyRuleInfoNRhs[J] contains the negative of the number
@@ -1357,29 +1360,30 @@ static const signed char yyRuleInfoNRhs[] = {
    -2,  /* (47) rule_sequence ::= rule_sequence rule_expression */
    -1,  /* (48) rule_expression ::= TOKEN_RULE_IDENTIFIER */
    -1,  /* (49) rule_expression ::= TOKEN_TERMINAL_IDENTIFIER */
-   -1,  /* (50) rule_expression ::= TOKEN_STRING_LITERAL */
-   -2,  /* (51) rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE */
-   -1,  /* (52) rule_expression ::= TOKEN_INTEGER_LITERAL */
-   -2,  /* (53) rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE */
-   -1,  /* (54) rule_expression ::= TOKEN_EPSILON */
-   -3,  /* (55) rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN */
-   -2,  /* (56) rule_expression ::= rule_expression TOKEN_QUESTION */
-   -2,  /* (57) rule_expression ::= rule_expression TOKEN_STAR */
-   -2,  /* (58) rule_expression ::= rule_expression TOKEN_PLUS */
-   -2,  /* (59) rule_expression ::= rule_expression rule_repetition_range */
-   -3,  /* (60) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
-   -4,  /* (61) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
-   -4,  /* (62) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-   -5,  /* (63) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-   -3,  /* (64) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
-   -4,  /* (65) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON */
-   -4,  /* (66) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON */
-   -4,  /* (67) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON */
-   -4,  /* (68) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
-   -4,  /* (69) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
-   -1,  /* (70) terminal_definition_pair_list ::= terminal_definition_pair */
-   -3,  /* (71) terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair */
-   -5,  /* (72) terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE */
+   -2,  /* (50) rule_expression ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_TILDE */
+   -1,  /* (51) rule_expression ::= TOKEN_STRING_LITERAL */
+   -2,  /* (52) rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE */
+   -1,  /* (53) rule_expression ::= TOKEN_INTEGER_LITERAL */
+   -2,  /* (54) rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE */
+   -1,  /* (55) rule_expression ::= TOKEN_EPSILON */
+   -3,  /* (56) rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN */
+   -2,  /* (57) rule_expression ::= rule_expression TOKEN_QUESTION */
+   -2,  /* (58) rule_expression ::= rule_expression TOKEN_STAR */
+   -2,  /* (59) rule_expression ::= rule_expression TOKEN_PLUS */
+   -2,  /* (60) rule_expression ::= rule_expression rule_repetition_range */
+   -3,  /* (61) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
+   -4,  /* (62) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
+   -4,  /* (63) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+   -5,  /* (64) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+   -3,  /* (65) rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+   -4,  /* (66) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON */
+   -4,  /* (67) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON */
+   -4,  /* (68) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON */
+   -4,  /* (69) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
+   -4,  /* (70) grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */
+   -1,  /* (71) terminal_definition_pair_list ::= terminal_definition_pair */
+   -3,  /* (72) terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair */
+   -5,  /* (73) terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE */
 };
 
 static void yy_accept(yyParser*);  /* Forward Declaration */
@@ -1473,7 +1477,7 @@ static YYACTIONTYPE yy_reduce(
  *ast_ = std::move(A);
  (*ast_)->set_id(pmt::parserbuilder::GrmAst::NtGrammar);
 }
-#line 1477 "grm_parser.cpp"
+#line 1481 "grm_parser.cpp"
   yy_destructor(A);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
 }
@@ -1489,7 +1493,7 @@ static YYACTIONTYPE yy_reduce(
  A = std::move(B);
  A->give_child_at_back(std::move(C));
 }
-#line 1493 "grm_parser.cpp"
+#line 1497 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
@@ -1506,7 +1510,7 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children);
  A->give_child_at_back(std::move(B));
 }
-#line 1510 "grm_parser.cpp"
+#line 1514 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
@@ -1524,9 +1528,9 @@ static YYACTIONTYPE yy_reduce(
       case 46: /* rule_sequence ::= rule_expression */ yytestcase(yyruleno==46);
       case 48: /* rule_expression ::= TOKEN_RULE_IDENTIFIER */ yytestcase(yyruleno==48);
       case 49: /* rule_expression ::= TOKEN_TERMINAL_IDENTIFIER */ yytestcase(yyruleno==49);
-      case 50: /* rule_expression ::= TOKEN_STRING_LITERAL */ yytestcase(yyruleno==50);
-      case 52: /* rule_expression ::= TOKEN_INTEGER_LITERAL */ yytestcase(yyruleno==52);
-      case 54: /* rule_expression ::= TOKEN_EPSILON */ yytestcase(yyruleno==54);
+      case 51: /* rule_expression ::= TOKEN_STRING_LITERAL */ yytestcase(yyruleno==51);
+      case 53: /* rule_expression ::= TOKEN_INTEGER_LITERAL */ yytestcase(yyruleno==53);
+      case 55: /* rule_expression ::= TOKEN_EPSILON */ yytestcase(yyruleno==55);
 {
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
@@ -1534,7 +1538,7 @@ static YYACTIONTYPE yy_reduce(
 {
  A = std::move(B);
 }
-#line 1538 "grm_parser.cpp"
+#line 1542 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
@@ -1552,7 +1556,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1556 "grm_parser.cpp"
+#line 1560 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0), std::move(A));
@@ -1576,7 +1580,7 @@ static YYACTIONTYPE yy_reduce(
  A->unpack(1);
  A->give_child_at_back(std::move(D));
 }
-#line 1580 "grm_parser.cpp"
+#line 1584 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_destructor(D);
@@ -1587,7 +1591,7 @@ static YYACTIONTYPE yy_reduce(
       case 14: /* terminal_choices ::= terminal_choices TOKEN_PIPE terminal_sequence */ yytestcase(yyruleno==14);
       case 37: /* rule_parameter_list ::= rule_parameter_list TOKEN_COMMA rule_parameter */ yytestcase(yyruleno==37);
       case 45: /* rule_choices ::= rule_choices TOKEN_PIPE rule_sequence */ yytestcase(yyruleno==45);
-      case 71: /* terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair */ yytestcase(yyruleno==71);
+      case 72: /* terminal_definition_pair_list ::= terminal_definition_pair_list TOKEN_COMMA terminal_definition_pair */ yytestcase(yyruleno==72);
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
   pmt::util::smrt::GenericAst::UniqueHandle A;
@@ -1598,7 +1602,7 @@ static YYACTIONTYPE yy_reduce(
  A = std::move(B);
  A->give_child_at_back(std::move(C));
 }
-#line 1602 "grm_parser.cpp"
+#line 1606 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0), std::move(A));
@@ -1617,7 +1621,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1621 "grm_parser.cpp"
+#line 1625 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0), std::move(A));
@@ -1632,7 +1636,7 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalDefinition);
  A->give_child_at_back(std::move(B));
 }
-#line 1636 "grm_parser.cpp"
+#line 1640 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
@@ -1646,7 +1650,7 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalChoices);
  A->give_child_at_back(std::move(B));
 }
-#line 1650 "grm_parser.cpp"
+#line 1654 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
@@ -1660,13 +1664,13 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalSequence);
  A->give_child_at_back(std::move(B));
 }
-#line 1664 "grm_parser.cpp"
+#line 1668 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
         break;
       case 21: /* terminal_expression ::= TOKEN_OPEN_PAREN terminal_choices TOKEN_CLOSE_PAREN */
-      case 55: /* rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN */ yytestcase(yyruleno==55);
+      case 56: /* rule_expression ::= TOKEN_OPEN_PAREN rule_choices TOKEN_CLOSE_PAREN */ yytestcase(yyruleno==56);
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
@@ -1676,7 +1680,7 @@ static YYACTIONTYPE yy_reduce(
 {
  A = std::move(B);
 }
-#line 1680 "grm_parser.cpp"
+#line 1684 "grm_parser.cpp"
   yy_destructor(B);
 }
         break;
@@ -1703,7 +1707,7 @@ static YYACTIONTYPE yy_reduce(
 
  A->give_child_at_back(std::move(repetition_info));
 }
-#line 1707 "grm_parser.cpp"
+#line 1711 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
@@ -1727,7 +1731,7 @@ static YYACTIONTYPE yy_reduce(
  repetition_info->give_child_at_back(std::move(comma));
  A->give_child_at_back(std::move(repetition_info));
 }
-#line 1731 "grm_parser.cpp"
+#line 1735 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
@@ -1755,7 +1759,7 @@ static YYACTIONTYPE yy_reduce(
 
  A->give_child_at_back(std::move(repetition_info));
 }
-#line 1759 "grm_parser.cpp"
+#line 1763 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
@@ -1771,7 +1775,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1775 "grm_parser.cpp"
+#line 1779 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
@@ -1791,7 +1795,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1795 "grm_parser.cpp"
+#line 1799 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
 }
@@ -1808,7 +1812,7 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalRepetitionRange);
  A->give_child_at_back(std::move(B));
 }
-#line 1812 "grm_parser.cpp"
+#line 1816 "grm_parser.cpp"
   yy_destructor(B);
 }
         break;
@@ -1826,7 +1830,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1830 "grm_parser.cpp"
+#line 1834 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
 }
@@ -1846,7 +1850,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(C));
  A->give_child_at_back(std::move(D));
 }
-#line 1850 "grm_parser.cpp"
+#line 1854 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_destructor(D);
@@ -1865,7 +1869,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1869 "grm_parser.cpp"
+#line 1873 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0), std::move(A));
@@ -1889,7 +1893,7 @@ static YYACTIONTYPE yy_reduce(
  A->unpack(1);
  A->give_child_at_back(std::move(D));
 }
-#line 1893 "grm_parser.cpp"
+#line 1897 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_destructor(D);
@@ -1911,7 +1915,7 @@ static YYACTIONTYPE yy_reduce(
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 1915 "grm_parser.cpp"
+#line 1919 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0), std::move(A));
@@ -1926,7 +1930,7 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalDefinition);
  A->give_child_at_back(std::move(B));
 }
-#line 1930 "grm_parser.cpp"
+#line 1934 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
@@ -1940,7 +1944,7 @@ static YYACTIONTYPE yy_reduce(
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalChoices);
  A->give_child_at_back(std::move(B));
 }
-#line 1944 "grm_parser.cpp"
+#line 1948 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
@@ -1962,34 +1966,35 @@ static YYACTIONTYPE yy_reduce(
   A->unpack(A->get_children_size() - 1);
  }
 }
-#line 1966 "grm_parser.cpp"
+#line 1970 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
         break;
-      case 51: /* rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE */
-      case 53: /* rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE */ yytestcase(yyruleno==53);
+      case 50: /* rule_expression ::= TOKEN_TERMINAL_IDENTIFIER TOKEN_TILDE */
+      case 52: /* rule_expression ::= TOKEN_STRING_LITERAL TOKEN_TILDE */ yytestcase(yyruleno==52);
+      case 54: /* rule_expression ::= TOKEN_INTEGER_LITERAL TOKEN_TILDE */ yytestcase(yyruleno==54);
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 368 "grm_parser.y"
+#line 364 "grm_parser.y"
 {
- A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalHiddenDirect);
+ A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalHidden);
  A->give_child_at_back(std::move(B));
 }
-#line 1983 "grm_parser.cpp"
+#line 1988 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
         break;
-      case 56: /* rule_expression ::= rule_expression TOKEN_QUESTION */
+      case 57: /* rule_expression ::= rule_expression TOKEN_QUESTION */
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 391 "grm_parser.y"
+#line 396 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetition);
  A->give_child_at_back(std::move(B));
@@ -2007,17 +2012,17 @@ static YYACTIONTYPE yy_reduce(
 
  A->give_child_at_back(std::move(repetition_info));
 }
-#line 2011 "grm_parser.cpp"
+#line 2016 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
         break;
-      case 57: /* rule_expression ::= rule_expression TOKEN_STAR */
+      case 58: /* rule_expression ::= rule_expression TOKEN_STAR */
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 409 "grm_parser.y"
+#line 414 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetition);
  A->give_child_at_back(std::move(B));
@@ -2031,17 +2036,17 @@ static YYACTIONTYPE yy_reduce(
  repetition_info->give_child_at_back(std::move(comma));
  A->give_child_at_back(std::move(repetition_info));
 }
-#line 2035 "grm_parser.cpp"
+#line 2040 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
         break;
-      case 58: /* rule_expression ::= rule_expression TOKEN_PLUS */
+      case 59: /* rule_expression ::= rule_expression TOKEN_PLUS */
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 423 "grm_parser.y"
+#line 428 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetition);
  A->give_child_at_back(std::move(B));
@@ -2059,64 +2064,64 @@ static YYACTIONTYPE yy_reduce(
 
  A->give_child_at_back(std::move(repetition_info));
 }
-#line 2063 "grm_parser.cpp"
+#line 2068 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
         break;
-      case 59: /* rule_expression ::= rule_expression rule_repetition_range */
+      case 60: /* rule_expression ::= rule_expression rule_repetition_range */
 {
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
   auto &C=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 441 "grm_parser.y"
+#line 446 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetition);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 2079 "grm_parser.cpp"
+#line 2084 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0), std::move(A));
 }
         break;
-      case 60: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
-      case 64: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */ yytestcase(yyruleno==64);
+      case 61: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_CLOSE_BRACE */
+      case 65: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */ yytestcase(yyruleno==65);
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   auto &A=yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 448 "grm_parser.y"
+#line 453 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetitionRange);
  A->give_child_at_back(std::move(B));
 }
-#line 2097 "grm_parser.cpp"
+#line 2102 "grm_parser.cpp"
   yy_destructor(B);
 }
         break;
-      case 61: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
-      case 62: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */ yytestcase(yyruleno==62);
+      case 62: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_CLOSE_BRACE */
+      case 63: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */ yytestcase(yyruleno==63);
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   auto &A=yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
   auto &C=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 453 "grm_parser.y"
+#line 458 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetitionRange);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 2115 "grm_parser.cpp"
+#line 2120 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
 }
         break;
-      case 63: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
+      case 64: /* rule_repetition_range ::= TOKEN_OPEN_BRACE TOKEN_INTEGER_LITERAL TOKEN_COMMA TOKEN_INTEGER_LITERAL TOKEN_CLOSE_BRACE */
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
@@ -2124,57 +2129,57 @@ static YYACTIONTYPE yy_reduce(
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
   auto &C=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
   auto &D=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 465 "grm_parser.y"
+#line 470 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtNonterminalRepetitionRange);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
  A->give_child_at_back(std::move(D));
 }
-#line 2135 "grm_parser.cpp"
+#line 2140 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_destructor(D);
 }
         break;
-      case 65: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON */
-      case 66: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON */ yytestcase(yyruleno==66);
-      case 67: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON */ yytestcase(yyruleno==67);
-      case 68: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */ yytestcase(yyruleno==68);
-      case 69: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */ yytestcase(yyruleno==69);
+      case 66: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_CASE_SENSITIVE TOKEN_EQUALS TOKEN_BOOLEAN_LITERAL TOKEN_SEMICOLON */
+      case 67: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_START TOKEN_EQUALS TOKEN_RULE_IDENTIFIER TOKEN_SEMICOLON */ yytestcase(yyruleno==67);
+      case 68: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_COMMENT TOKEN_EQUALS terminal_definition_pair_list TOKEN_SEMICOLON */ yytestcase(yyruleno==68);
+      case 69: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_NEWLINE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */ yytestcase(yyruleno==69);
+      case 70: /* grammar_property ::= TOKEN_GRAMMAR_PROPERTY_WHITESPACE TOKEN_EQUALS terminal_definition TOKEN_SEMICOLON */ yytestcase(yyruleno==70);
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
   auto &C=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 478 "grm_parser.y"
+#line 483 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtGrammarProperty);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 2158 "grm_parser.cpp"
+#line 2163 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0), std::move(A));
 }
         break;
-      case 70: /* terminal_definition_pair_list ::= terminal_definition_pair */
+      case 71: /* terminal_definition_pair_list ::= terminal_definition_pair */
 {
   pmt::util::smrt::GenericAst::UniqueHandle A;
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0));
-#line 509 "grm_parser.y"
+#line 514 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalDefinitionPairList);
  A->give_child_at_back(std::move(B));
 }
-#line 2173 "grm_parser.cpp"
+#line 2178 "grm_parser.cpp"
   yy_destructor(B);
   yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[0].minor.yy0), std::move(A));
 }
         break;
-      case 72: /* terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE */
+      case 73: /* terminal_definition_pair ::= TOKEN_OPEN_BRACE terminal_definition TOKEN_COMMA terminal_definition TOKEN_CLOSE_BRACE */
 {
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
   yy_destructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-2].minor.yy0));
@@ -2182,13 +2187,13 @@ static YYACTIONTYPE yy_reduce(
   auto &A=yy_constructor<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-4].minor.yy0));
   auto &B=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-3].minor.yy0));
   auto &C=yy_cast<pmt::util::smrt::GenericAst::UniqueHandle>(std::addressof(yymsp[-1].minor.yy0));
-#line 520 "grm_parser.y"
+#line 525 "grm_parser.y"
 {
  A = pmt::util::smrt::GenericAst::construct(pmt::util::smrt::GenericAst::Tag::Children, pmt::parserbuilder::GrmAst::NtTerminalDefinitionPair);
  A->give_child_at_back(std::move(B));
  A->give_child_at_back(std::move(C));
 }
-#line 2192 "grm_parser.cpp"
+#line 2197 "grm_parser.cpp"
   yy_destructor(B);
   yy_destructor(C);
 }
@@ -2257,7 +2262,7 @@ static void yy_syntax_error(
 #line 8 "grm_parser.y"
 
   throw std::runtime_error("Syntax error");
-#line 2261 "grm_parser.cpp"
+#line 2266 "grm_parser.cpp"
 /************ End %syntax_error code ******************************************/
   ParseARG_STORE /* Suppress warning about unused %extra_argument variable */
   ParseCTX_STORE

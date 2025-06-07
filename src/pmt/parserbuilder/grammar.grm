@@ -1,0 +1,138 @@
+@start = %grammar;
+
+@comment = {"/*", "*/"},
+           {"//", 16#A};
+
+@whitespace = " " | 16#A;
+
+@newline = 16#A;
+
+$string_char = ["A".."Z"] | // Uppercase letters
+               ["a".."z"] | // Lowercase letters
+               ["0".."9"] | // Digits
+               10#33 | [10#35..10#47] | [10#58..10#64] | [10#91..10#96] | [10#123..10#126] | // Punctuation, except double quote
+               10#32; // Space
+
+$identifier_body = (10#95 | ["A".."Z"] | ["a".."z"]) (["A".."Z"] | ["a".."z"] | ["0".."9"] | 10#95)*;
+
+$string_literal<id              = "TkStringLiteral">             = 10#34 $string_char* 10#34;
+$integer_literal<id             = "TkIntegerLiteral">            = ["0".."9"]+ 10#35 (["A".."Z"] | ["a".."z"] | ["0".."9"])+;
+$boolean_literal<id             = "TkBooleanLiteral">            = "true" | "false";
+$terminal_identifier<id         = "TkTerminalIdentifier">        = "$" $identifier_body;
+$nonterminal_identifier<id      = "TkNonterminalIdentifier">     = "%" $identifier_body;
+$plus<id                        = "TkPlus">                      = "+";
+$star<id                        = "TkStar">                      = "*";
+$tilde<id                       = "TkTilde">                     = "~";
+$question<id                    = "TkQuestion">                  = "?";
+$kw_epsilon<id                  = "TkEpsilon">                   = "epsilon";
+$kw_anyorder<id                 = "TkAnyorder">                  = "@anyorder";
+$kw_anyorder_optional<id        = "TkAnyorderOptional">          = "@anyorder_optional";
+$kw_parameter_unpack<id         = "TkKwParameterUnpack">         = "unpack";
+$kw_parameter_hide<id           = "TkKwParameterHide">           = "hide";
+$kw_parameter_merge<id          = "TkKwParameterMerge">          = "merge";
+$kw_parameter_id<id             = "TkKwParameterId">             = "id";
+$grammar_property_start<id      = "TkGrammarPropertyStart">      = "@start";
+$grammar_property_whitespace<id = "TkGrammarPropertyWhitespace"> = "@whitespace";
+$grammar_property_newline<id    = "TkGrammarPropertyNewline">    = "@newline";
+$grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
+
+// - GRAMMAR -
+%grammar<unpack = true> = %statement_list;
+
+// - STATEMENT_LIST -
+%statement_list<unpack = true> = %statement+;
+
+// - STATEMENT -
+%statement<unpack = true> = %terminal_production    |
+                            %nonterminal_production |
+                            %grammar_property;
+
+// - TERMINAL_PRODUCTION -
+%terminal_production<id = "NtTerminalProduction"> = $terminal_identifier "="~ %terminal_definition ";"~ |
+                                                    $terminal_identifier "<"~ %terminal_parameter_list ">"~ "="~ %terminal_definition ";"~;
+
+// - TERMINAL_PARAMETER_LIST -
+%terminal_parameter_list<unpack = true> = %terminal_parameter (","~ %terminal_parameter)*;
+
+// - TERMINAL_PARAMETER -
+%terminal_parameter<id = "NtTerminalParameter"> = $kw_parameter_id "="~ $string_literal;
+
+// - TERMINAL_DEFINITION -
+%terminal_definition<id = "NtTerminalDefinition"> = %terminal_choices;
+
+// - TERMINAL_CHOICES -
+%terminal_choices<id = "NtTerminalChoices"> = %terminal_sequence ("|"~ %terminal_sequence)*;
+
+// - TERMINAL_SEQUENCE -
+%terminal_sequence<id = "NtTerminalSequence"> = %terminal_expression+;
+
+// - TERMINAL_EXPRESSION -
+%terminal_expression<id = "NtTerminalExpression"> = $terminal_identifier %repetition_expression? |
+                                                    $string_literal %repetition_expression?      |
+                                                    $integer_literal %repetition_expression?     |
+                                                    $kw_epsilon %repetition_expression?          |
+                                                    %range_expression  %repetition_expression?   |
+                                                    "("~ %terminal_choices ")"~ %repetition_expression?;
+
+// - RANGE_EXPRESSION -
+%range_expression<id = "NtTerminalRange"> = "["~ %range_literal ".."~ %range_literal "]"~;
+
+// - RANGE_LITERAL -
+%range_literal = $string_literal |
+                 $integer_literal;
+
+// - REPETITION_RANGE -
+%repetition_range<id = "NtRepetitionRange"> = "{"~ $integer_literal? "," $integer_literal? "}"~ |
+                                              "{"~ $integer_literal "}"~;
+
+// - REPETITION_EXPRESSION -
+%repetition_expression<id = "NtRepetitionExpression"> = $question |
+                                                        $star     |
+                                                        $plus     |
+                                                        %repetition_range;
+
+// - SEQUENCE_MODIFIER -
+%sequence_modifier<id = "NtSequenceModifier"> = "{"~ $kw_anyorder | $kw_anyorder_optional "}"~;
+
+// - RULE_PRODUCTION -
+%nonterminal_production<id = "NtNonterminalProduction"> = $nonterminal_identifier "="~ %nonterminal_definition ";"~ |
+                                                          $nonterminal_identifier "<"~ %nonterminal_parameter_list ">"~ "="~ %nonterminal_definition ";"~;
+
+// - RULE_PARAMETER_LIST -
+%nonterminal_parameter_list = %nonterminal_parameter (","~ %nonterminal_parameter)*;
+
+// - RULE_PARAMETER -
+%nonterminal_parameter<id = "NtNonterminalParameter"> = $kw_parameter_id "="~ $string_literal      |
+                                                        $kw_parameter_unpack "="~ $boolean_literal |
+                                                        $kw_parameter_hide "="~ $boolean_literal   |
+                                                        $kw_parameter_merge "="~ $boolean_literal;
+
+// - RULE_DEFINITION -
+%nonterminal_definition<id = "NtNonterminalDefinition"> = %nonterminal_choices;
+
+// - RULE_CHOICES -
+%nonterminal_choices<id = "NtNonterminalChoices"> = %nonterminal_sequence ("|"~ %nonterminal_sequence)*;
+
+// - RULE_SEQUENCE -
+%nonterminal_sequence<id = "NtNonterminalSequence"> = %nonterminal_expression+;
+
+// - RULE_EXPRESSION -
+%nonterminal_expression<id = "NtNonterminalExpression"> = $nonterminal_identifier %repetition_expression?         |
+                                                          $terminal_identifier (%repetition_expression | $tilde)? |
+                                                          $string_literal (%repetition_expression | $tilde)?      |
+                                                          $integer_literal (%repetition_expression | $tilde)?     |
+                                                          $kw_epsilon %repetition_expression?                     |
+                                                          "("~ %nonterminal_choices ")"~ %repetition_expression?;
+// - GRAMMAR_PROPERTY -
+%grammar_property<id = "NtGrammarProperty"> = $grammar_property_start      "="~ $nonterminal_identifier ";"~        |
+                                              $grammar_property_start      "="~ %terminal_definition_pair_list ";"~ |
+                                              $grammar_property_newline    "="~ %terminal_definition ";"~           |
+                                              $grammar_property_comment    "="~ %terminal_definition ";"~           |
+                                              $grammar_property_comment    "="~ %terminal_definition_pair_list ";"~ |
+                                              $grammar_property_whitespace "="~ %terminal_definition ";"~;
+
+// - TERMINAL_DEFINITION_PAIR_LIST -
+%terminal_definition_pair_list = %terminal_definition_pair (","~ %terminal_definition_pair)*;
+
+// - TERMINAL_DEFINITION_PAIR -
+%terminal_definition_pair = "{"~ %terminal_definition ","~ %terminal_definition "}"~;

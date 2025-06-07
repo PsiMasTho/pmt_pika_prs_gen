@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1748118468">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749231682">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -140,7 +140,69 @@ some modifiers may be incompatible like unpack and id
 ---
 check conflicts twice, one for the nonterminal state machine, one for lookahead,
 +
-no need to check transition masks in the ParserTableBuilder (?)</rich_text>
+no need to check transition masks in the ParserTableBuilder (?)
+---
+implement rank feature
+hidden terminals
+seperate symbol kind instead of bitmasking
+---
+add a chartype grammar property
+---
+start accept index needs to be set for each transition mask again
+---
+parser transitions now need to be written differently since kinds are stored seperately
+-&gt; TerminalTransitions
+-&gt; HiddenTerminalTransitions
+-&gt; OpenTransitions
+-&gt; CloseTransitions
+-&gt; ConflictTransitions
++
+rename upper and lower bounds in lexer skell to the symbol name smt like CharacterSymbolTransitions
+---
+process_range_stage_0 needs to add a range directly instead of iterating
+--
+common code can be factored out of lexer_table_writer and parser_table_writer
++
+finish changing c style arrays to std::array in the skel files
+---
+fix duplicate rule definitions
+---
+conflict resolution not fully working yet, see sandbox_17
++
+factor out lookahead generation into another class
+---
+replace size_t with AcceptsIndexType
+---
+genericparser should query if a terminal is hidden or not instead of trying to get next state twice
+--
+name "terminals" visible_terminals to distinguish from hidden ?
+---
+emit hidden terminal transition masks in parser_table_writer
+--
+graph writer callbacks should take entire IntervalSets now
+--
+terminal conflict checking is a bit weird now because it ignores whitespace
++
+force whitespace between tokens - toggle with a grammar property?
+@whitespace_setting = optional / mandatory &lt;- something like that
++
+maybe optional whitespace can just be built into the definition like
+@whitespace = " "? makes it optional... this doesnt handle comments
++
+===&gt; terminal conflicts should not be a fatal error, just warning and the whitespace and comments should be left as-is
+---
+genericparser should probably have a static parse fn
+---
+transformations need to happen on the AST after parsing, the newly created Ids should come after in the enum
+---
+rm *.svg *.dot; cls &amp;&amp; ~/pmt_parserbuilder_tui -g ~/repos/pmt/src/pmt/parserbuilder/grammar.grm -sl ~/repos/pmt/src/pmt/parserbuilder/grm_lexer_tables.cpp -hl ~/repos/pmt/src/pmt/parserbuilder/grm_lexer_tables.hpp -cl ~/repos/pmt/src/pmt/parserbuilder/grm_lexer_tables-inl.hpp -sp ~/repos/pmt/src/pmt/parserbuilder/grm_parser_tables.cpp -hp ~/repos/pmt/src/pmt/parserbuilder/grm_parser_tables.hpp -cp ~/repos/pmt/src/pmt/parserbuilder/grm_parser_tables-inl.hpp -t ~/repos/pmt/src/pmt/parserbuilder/grammar.grm
+--
+just emit one inl file?
+---
+transition masks need their own offsets
+---
+lower bounds + upper bounds + values should be stored back to back since size is the same
+kind lookup should also be done in a back to back &lt;kinds&gt; -&gt; &lt;offsets&gt; sorted table</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;

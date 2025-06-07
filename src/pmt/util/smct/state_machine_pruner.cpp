@@ -42,8 +42,10 @@ void follow_epsilon_transitions(StateMachinePruner::Args& args_, Locals& locals_
 }
 
 void follow_symbol_transitions(StateMachinePruner::Args& args_, Locals& locals_, State const& state_old_) {
- state_old_.get_symbol_transitions().for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolType> const& interval_) {
-  push_and_visit(args_, locals_, state_nr_next_old_);
+ state_old_.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+  state_old_.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
+   push_and_visit(args_, locals_, state_nr_next_old_);
+  });
  });
 }
 
@@ -54,8 +56,10 @@ void copy_epsilon_transitions(Locals& locals_, StateMachine& state_machine_new_,
 }
 
 void copy_symbol_transitions(Locals& locals_, StateMachine& state_machine_new_, State const& state_old_, State& state_new_) {
- state_old_.get_symbol_transitions().for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolType> const& interval_) {
-  state_new_.add_symbol_transition(interval_, locals_._old_to_new.find(state_nr_next_old_)->second);
+ state_old_.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+  state_old_.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
+   state_new_.add_symbol_transition(kind_, interval_, locals_._old_to_new.find(state_nr_next_old_)->second);
+  });
  });
 }
 

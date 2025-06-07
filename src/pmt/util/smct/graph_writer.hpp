@@ -50,11 +50,11 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   };
  
   using AcceptsToLabelFn = std::function<std::string(size_t)>;
-  using SymbolsToLabelFn = std::function<std::string(pmt::base::IntervalSet<pmt::util::smrt::SymbolType> const&)>;
-  using SymbolKindToEdgeColorFn = std::function<Color(pmt::util::smrt::SymbolType)>;
-  using SymbolKindToEdgeStyleFn = std::function<EdgeStyle(pmt::util::smrt::SymbolType)>;
-  using SymbolKindToFontFlagsFn = std::function<FontFlags(pmt::util::smrt::SymbolType)>;
-  using SymbolKindToFontColorFn = std::function<Color(pmt::util::smrt::SymbolType)>;
+  using SymbolsToLabelFn = std::function<std::string(pmt::util::smrt::SymbolKindType, pmt::base::IntervalSet<pmt::util::smrt::SymbolValueType> const&)>;
+  using SymbolKindToEdgeColorFn = std::function<Color(pmt::util::smrt::SymbolKindType)>;
+  using SymbolKindToEdgeStyleFn = std::function<EdgeStyle(pmt::util::smrt::SymbolKindType)>;
+  using SymbolKindToFontFlagsFn = std::function<FontFlags(pmt::util::smrt::SymbolKindType)>;
+  using SymbolKindToFontColorFn = std::function<Color(pmt::util::smrt::SymbolKindType)>;
 
   struct WriterArgs {
    std::ostream& _os_graph;
@@ -91,11 +91,11 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   // -$ Functions $-
   // --$ Other $--
   static auto accepts_to_label_default(size_t accepts_) -> std::string;
-  static auto symbols_to_label_default(pmt::base::IntervalSet<pmt::util::smrt::SymbolType> const& symbols_) -> std::string;
-  static auto symbol_kind_to_edge_color_default(pmt::util::smrt::SymbolType kind_) -> Color;
-  static auto symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolType kind_) -> EdgeStyle;
-  static auto symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolType kind_) -> FontFlags;
-  static auto symbol_kind_to_font_color_default(pmt::util::smrt::SymbolType kind_) -> Color;
+  static auto symbols_to_label_default(pmt::util::smrt::SymbolKindType kind_, pmt::base::IntervalSet<pmt::util::smrt::SymbolValueType> const& symbols_) -> std::string;
+  static auto symbol_kind_to_edge_color_default(pmt::util::smrt::SymbolKindType kind_) -> Color;
+  static auto symbol_kind_to_edge_style_default(pmt::util::smrt::SymbolKindType kind_) -> EdgeStyle;
+  static auto symbol_kind_to_font_flags_default(pmt::util::smrt::SymbolKindType kind_) -> FontFlags;
+  static auto symbol_kind_to_font_color_default(pmt::util::smrt::SymbolKindType kind_) -> Color;
 
   void write_dot(WriterArgs& writer_args_, StyleArgs style_args_);
 
@@ -115,8 +115,8 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
 
   void replace_timestamp(std::string& str_);
 
-  static auto is_displayable(pmt::util::smrt::SymbolType symbol_) -> bool;
-  static auto to_displayable(pmt::util::smrt::SymbolType symbol_) -> std::string;
+  static auto is_displayable(pmt::util::smrt::SymbolValueType symbol_) -> bool;
+  static auto to_displayable(pmt::util::smrt::SymbolValueType symbol_) -> std::string;
 
   static auto to_string(EdgeStyle edge_style_) -> std::string;
   static auto to_string(NodeShape node_shape_) -> std::string;

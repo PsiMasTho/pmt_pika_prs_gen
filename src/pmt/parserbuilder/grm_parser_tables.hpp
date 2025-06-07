@@ -1,12 +1,12 @@
-/* Generated on: /* $replace TIMESTAMP */ */
+/* Generated on: 2025-06-07 02:06:42 */
 #pragma once
 
 #include <pmt/base/bitset.hpp>
 #include <pmt/util/smrt/parser_tables_base.hpp>
 
-/* $replace NAMESPACE_OPEN */
+namespace pmt::parserbuilder {
 
-class /* $replace CLASS_NAME */ : public pmt::util::smrt::ParserTablesBase {
+class ParserClass : public pmt::util::smrt::ParserTablesBase {
  public:
   // -$ Functions $-
   // --$ Inherited: pmt::util::smrt::ParserTablesBase $--
@@ -32,4 +32,4 @@ class /* $replace CLASS_NAME */ : public pmt::util::smrt::ParserTablesBase {
   auto get_lookahead_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
 };
 
-/* $replace NAMESPACE_CLOSE */
+} // namespace pmt::parserbuilder

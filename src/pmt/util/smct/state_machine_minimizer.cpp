@@ -1,47 +1,48 @@
 #include "pmt/util/smct/state_machine_minimizer.hpp"
 
-#include "pmt/base/bitset.hpp"
-#include "pmt/base/bitset_converter.hpp"
 #include "pmt/util/smct/state_machine.hpp"
 #include "pmt/util/smrt/state_machine_primitives.hpp"
+
+#include <unordered_set>
 
 namespace pmt::util::smct {
 using namespace pmt::base;
 using namespace pmt::util::smrt;
 
 namespace {
-auto get_alphabet(StateMachine const& state_machine_) -> IntervalSet<SymbolType> {
-  IntervalSet<SymbolType> alphabet;
+auto get_alphabet(StateMachine const& state_machine_) -> std::unordered_set<Symbol> {
+  std::unordered_set<Symbol> ret;
 
   state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
     State const& state = *state_machine_.get_state(state_nr_);
-    IntervalSet<SymbolType> const symbols = state.get_symbols();
-    alphabet.inplace_or(symbols);
+    state.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+     state.get_symbol_values(kind_).for_each_key([&](SymbolValueType value_) {
+        ret.insert(Symbol(kind_, value_));
+      });
+    });
   });
 
-  return alphabet;
+  return ret;
 }
 
 auto get_initial_partitions(StateMachine const& state_machine_) -> std::unordered_set<IntervalSet<StateNrType>> {
   // Initialize partitions where a partition is a set of states that have the same combination of accepts
 
   // <accepts, state_nrs>
-  // Using IntervalSet<size_t> instead of Bitset for accepts because the bitsets
-  // may be different sizes and that can mess with the comparison and hashing
-  std::unordered_map<IntervalSet<size_t>, IntervalSet<StateNrType>> by_accepts;
+  std::unordered_map<IntervalSet<AcceptsIndexType>, IntervalSet<StateNrType>> by_accepts;
 
   state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
     State const& state = *state_machine_.get_state(state_nr_);
-    IntervalSet<size_t> accepts = BitsetConverter::to_interval_set(state.get_accepts());
+    IntervalSet<AcceptsIndexType> const& accepts = state.get_accepts();
     auto itr = by_accepts.find(accepts);
     if (itr == by_accepts.end()) {
-      itr = by_accepts.insert_or_assign(std::move(accepts), IntervalSet<StateNrType>()).first;
+      itr = by_accepts.insert_or_assign(accepts, IntervalSet<StateNrType>()).first;
     }
     itr->second.insert(Interval<StateNrType>(state_nr_));
   });
 
   // Insert the sink state, it has no accepts
-  by_accepts[IntervalSet<size_t>{}].insert(Interval<StateNrType>(StateNrSink));
+  by_accepts[IntervalSet<AcceptsIndexType>{}].insert(Interval<StateNrType>(StateNrSink));
 
   std::unordered_set<IntervalSet<StateNrType>> ret;
 
@@ -52,7 +53,7 @@ auto get_initial_partitions(StateMachine const& state_machine_) -> std::unordere
   return ret;
 }
 
-auto get_equivalence_partitions(StateMachine const& state_machine_, IntervalSet<SymbolType> const& alphabet_, std::unordered_set<IntervalSet<StateNrType>> initial_partitions_) -> std::unordered_set<IntervalSet<StateNrType>> {
+auto get_equivalence_partitions(StateMachine const& state_machine_, std::unordered_set<Symbol> const& alphabet_, std::unordered_set<IntervalSet<StateNrType>> initial_partitions_) -> std::unordered_set<IntervalSet<StateNrType>> {
   std::unordered_set<IntervalSet<StateNrType>> w = initial_partitions_;
 
   IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
@@ -61,7 +62,7 @@ auto get_equivalence_partitions(StateMachine const& state_machine_, IntervalSet<
     IntervalSet<StateNrType> a = *w.begin();
     w.erase(w.begin());
 
-    alphabet_.for_each_key([&](SymbolType c_) {
+    for (Symbol const& c : alphabet_) {
       IntervalSet<StateNrType> x;
 
       // Add the sink state
@@ -70,7 +71,7 @@ auto get_equivalence_partitions(StateMachine const& state_machine_, IntervalSet<
       state_nrs.for_each_key([&](StateNrType state_nr_from_) {
         // Note: state_nr_to will be the sink if there is no transition, so
         // that is handled here
-        StateNrType const state_nr_to = state_machine_.get_state(state_nr_from_)->get_symbol_transition(Symbol(c_));
+        StateNrType const state_nr_to = state_machine_.get_state(state_nr_from_)->get_symbol_transition(c);
         if (a.contains(state_nr_to)) {
           x.insert(Interval<StateNrType>(state_nr_from_));
         }
@@ -103,7 +104,7 @@ auto get_equivalence_partitions(StateMachine const& state_machine_, IntervalSet<
       }
 
       initial_partitions_ = std::move(p_new);
-    });
+    }
   }
 
   return initial_partitions_;
@@ -167,23 +168,18 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
 
     equivalence_partition_cur->for_each_key([&](StateNrType state_nr_old_) {
       State const& state_old = *state_machine_.get_state(state_nr_old_);
-      Bitset const& accepts_old = state_old.get_accepts();
-
-      // Set up the accepts
-      if (accepts_old.popcnt() != 0) {
-        state_cur.get_accepts().resize(accepts_old.size(), false);
-        state_cur.get_accepts().inplace_or(accepts_old);
-      }
+      state_cur.get_accepts().inplace_or(state_old.get_accepts());
 
       // Set up the transitions
-      state_old.get_symbols().for_each_key([&](SymbolType symbol_) {
-        StateNrType const state_nr_next_old = state_old.get_symbol_transition(Symbol(symbol_));
-        if (state_nr_next_old == StateNrSink) {
+      state_old.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+       state_old.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
+        if (state_nr_next_old_ == StateNrSink) {
           return;
         }
-        IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old)->second;
+        IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old_)->second;
         StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
-        state_cur.add_symbol_transition(Symbol(symbol_), state_nr_next_new);
+        state_cur.add_symbol_transition(kind_, interval_, state_nr_next_new);
+       });
       });
     });
   }

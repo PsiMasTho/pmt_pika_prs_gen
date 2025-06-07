@@ -1,24 +1,41 @@
 #pragma once
 
-#include <ostream>
+#include "pmt/fw_decl.hpp"
+#include "pmt/base/bitset.hpp"
+#include "pmt/util/skeleton_replacer_base.hpp"
+#include "pmt/util/smrt/state_machine_primitives.hpp"
+
 #include <string>
 #include <span>
 #include <concepts>
+#include <functional>
+
+PMT_FW_DECL_NS_CLASS(pmt::util::smct, StateMachine)
+
 
 namespace pmt::parserbuilder {
 
 class TableWriterCommon {
  public:
+ // -$ Types / Constants $-
+ using TransitionMaskQueryFn = std::function<pmt::base::Bitset::ChunkSpanConst(pmt::util::smrt::StateNrType)>;
+
+ // -$ Functions $-
+ // --$ Other $--
+
  template <typename T_>
  requires std::integral<typename T_::value_type>
- static void write_single_entries(std::ostream& os_, T_ begin_, T_ end_);
+ static void replace_array(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, T_ begin_, T_ end_);
 
  template <std::integral T_>
- static void write_single_entries(std::ostream& os_, std::span<T_ const> const& entries_);
+ static void replace_array(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, std::span<T_ const> const& entries_);
+ static void replace_array(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, std::span<std::string const> const& entries_);
 
- static void write_single_entries(std::ostream& os_, std::span<std::string const> const& entries_);
+ static void replace_transitions(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& prefix_, pmt::util::smct::StateMachine const& state_machine_);
 
  static auto as_hex(std::integral auto value_, bool hex_prefix_ = true) -> std::string;
+
+ static void replace_transition_masks(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, pmt::util::smrt::StateNrType state_nr_max_, TransitionMaskQueryFn const& fn_query_mask_);
 
  template <typename T_>
  requires std::integral<typename T_::value_type>

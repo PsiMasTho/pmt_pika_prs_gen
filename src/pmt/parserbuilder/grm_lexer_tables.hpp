@@ -1,12 +1,12 @@
-/* Generated on: /* $replace TIMESTAMP */ */
+/* Generated on: 2025-06-07 02:06:41 */
 #pragma once
 
 #include <pmt/base/bitset.hpp>
 #include <pmt/util/smrt/lexer_tables_base.hpp>
 
-/* $replace NAMESPACE_OPEN */
+namespace pmt::parserbuilder {
 
-class /* $replace CLASS_NAME */ : public pmt::util::smrt::LexerTablesBase {
+class LexerClass : public pmt::util::smrt::LexerTablesBase {
  public:
   // -$ Functions $-
   // --$ Inherited: pmt::util::smrt::LexerTablesBase $--
@@ -24,4 +24,4 @@ class /* $replace CLASS_NAME */ : public pmt::util::smrt::LexerTablesBase {
   auto is_linecount_state_nr_accepting(pmt::util::smrt::SymbolValueType state_nr_) const -> bool override;
 };
 
-/* $replace NAMESPACE_CLOSE */
+} // namespace pmt::parserbuilder

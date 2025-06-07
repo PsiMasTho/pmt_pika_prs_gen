@@ -13,7 +13,7 @@ PMT_FW_DECL_NS_CLASS(pmt::util::smrt, LexerTablesBase);
 namespace pmt::util::smrt {
 
 class GenericLexer {
- public:
+  public:
   // -$ Types / Constants $-
   class LexReturn {
    public:
@@ -28,9 +28,11 @@ class GenericLexer {
   std::vector<pmt::base::Bitset::ChunkType> _accepts_valid;
   LexerTablesBase const& _lexer_tables;
   std::string_view _input;
-  SourcePosition _source_position;
   size_t _cursor;
-  pmt::util::smrt::StateNrType _state_nr_newline;
+  size_t _linecount_cursor;
+  size_t _linecount_last = 0;
+  SourcePosition::LinenoType _linecount_at_last = 1;
+  pmt::util::smrt::StateNrType _state_nr_linecount;
 
  public:
   // -$ Functions $-
@@ -42,7 +44,9 @@ class GenericLexer {
   auto lex(pmt::base::Bitset::ChunkSpanConst accepts_) -> LexReturn;
 
   auto get_eoi_accept_index() const -> size_t;
-  auto get_accept_index_hide(size_t index_) const -> bool;
+
+ private:
+  auto get_source_position_at(size_t p_) -> SourcePosition;
 };
 
 }  // namespace pmt::util::smrt

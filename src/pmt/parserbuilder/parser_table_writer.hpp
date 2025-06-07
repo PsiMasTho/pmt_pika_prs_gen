@@ -6,6 +6,7 @@
 #include <ostream>
 
 PMT_FW_DECL_NS_CLASS(pmt::parserbuilder, ParserTables)
+PMT_FW_DECL_NS_CLASS(pmt::util::smct, StateMachine)
 
 namespace pmt::parserbuilder {
 
@@ -47,14 +48,12 @@ class ParserTableWriter : public pmt::util::SkeletonReplacerBase {
   void replace_namespace_close(std::string& str_);
 
   void replace_header_include_path(std::string& str_);
-  void replace_parser_transitions(std::string& str_);
+  void replace_transitions(std::string& str_);
   void replace_state_kinds(std::string& str_);
-  void replace_parser_terminal_transition_masks(std::string& str_);
-  void replace_parser_conflict_transition_masks(std::string& str_);
-  void replace_lookahead_terminal_transition_masks(std::string& str_);
-  void replace_lookahead_transitions(std::string& str_);
+  void replace_transition_masks(std::string& str_);
   void replace_parser_accepts(std::string& str_);
   void replace_parser_accept_count(std::string& str_);
+  void replace_parser_conflict_count(std::string& str_);
   void replace_lookahead_accepts(std::string& str_);
   void replace_parser_accepts_labels(std::string& str_);
   void replace_parser_accepts_ids(std::string& str_);

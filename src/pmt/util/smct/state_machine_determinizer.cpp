@@ -90,13 +90,24 @@ auto get_moves(StateMachineDeterminizer::Args args_, IntervalSet<StateNrType> co
   return ret;
 }
 
-auto get_symbols(StateMachineDeterminizer::Args args_, IntervalSet<StateNrType> const& state_nrs_from_) -> IntervalSet<SymbolType> {
-  IntervalSet<SymbolType> ret;
+auto get_kinds(StateMachineDeterminizer::Args args_, IntervalSet<StateNrType> const& state_nrs_from_) -> IntervalSet<SymbolKindType> {
+  IntervalSet<SymbolKindType> ret;
 
   state_nrs_from_.for_each_key([&](StateNrType state_nr_from_) {
     State const& state_from = *args_._state_machine.get_state(state_nr_from_);
-    IntervalSet<SymbolType> const symbols = state_from.get_symbols();
-    ret.inplace_or(symbols);
+    IntervalSet<SymbolKindType> const kinds = state_from.get_symbol_kinds();
+    ret.inplace_or(kinds);
+  });
+
+  return ret;
+}
+
+auto get_symbols(StateMachineDeterminizer::Args args_, SymbolKindType kind_, IntervalSet<StateNrType> const& state_nrs_from_) -> IntervalSet<SymbolValueType> {
+  IntervalSet<SymbolValueType> ret;
+
+  state_nrs_from_.for_each_key([&](StateNrType state_nr_from_) {
+    State const& state_from = *args_._state_machine.get_state(state_nr_from_);
+    ret.inplace_or(state_from.get_symbol_values(kind_));
   });
 
   return ret;
@@ -121,18 +132,14 @@ void StateMachineDeterminizer::determinize(Args args_) {
    // Set up the accepts
    state_nr_set_cur.for_each_key([&](StateNrType state_nr_old_) {
      State const& state_old = *args_._state_machine.get_state(state_nr_old_);
-     Bitset const& accepts_old = state_old.get_accepts();
-     if (accepts_old.empty()) {
-       return;
-     }
-     Bitset& accepts_cur = state_cur.get_accepts();
-     accepts_cur.resize(accepts_old.size(), false);
-     accepts_cur.inplace_or(accepts_old);
+     state_cur.get_accepts().inplace_or(state_old.get_accepts());
    });
 
    // Set up the transitions
-   get_symbols(args_, state_nr_set_cur).for_each_key([&](SymbolType symbol_) {
-    state_cur.add_symbol_transition(Symbol(symbol_), push_and_visit(locals, get_e_closure(args_, locals, get_moves(args_, state_nr_set_cur, Symbol(symbol_)))));
+   get_kinds(args_, state_nr_set_cur).for_each_key([&](SymbolKindType kind_) {
+    get_symbols(args_, kind_, state_nr_set_cur).for_each_key([&](SymbolValueType symbol_) {
+     state_cur.add_symbol_transition(Symbol(kind_, symbol_), push_and_visit(locals, get_e_closure(args_, locals, get_moves(args_, state_nr_set_cur, Symbol(kind_, symbol_)))));
+    });
    });
   }
 

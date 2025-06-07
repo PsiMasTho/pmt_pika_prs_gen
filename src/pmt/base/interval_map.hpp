@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pmt/base/amortized_growth.hpp"
+#include "pmt/base/interval_set.hpp"
 #include "pmt/base/interval_container_common.hpp"
 
 #include <concepts>
@@ -55,6 +56,8 @@ class IntervalMap {
   // undefined behavior if the container is empty
   auto lowest() const -> KEY_;
   auto highest() const -> KEY_;
+
+  auto get_keys() const -> IntervalSet<KEY_>;
 
   // iteration
   template <std::invocable<VALUE_ const&, Interval<KEY_>> F_>

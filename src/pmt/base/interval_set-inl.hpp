@@ -7,6 +7,8 @@
 #include "pmt/base/algo.hpp"
 #include "pmt/base/hash.hpp"
 
+#include <cassert>
+
 namespace pmt::base {
 
 template <std::integral KEY_>
@@ -154,7 +156,8 @@ auto IntervalSet<KEY_>::contains(KEY_ key_) const -> bool {
 
 template <std::integral KEY_>
 auto IntervalSet<KEY_>::get_by_index(size_t index_) const -> Interval<KEY_> {
-  return Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]);
+ assert(index_ < size());
+ return Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]);
 }
 
 template <std::integral KEY_>

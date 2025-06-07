@@ -13,7 +13,7 @@ namespace pmt::parserbuilder {
 
 template <typename T_>
 requires std::integral<typename T_::value_type>
-void TableWriterCommon::write_single_entries(std::ostream& os_, T_ begin_, T_ end_) {
+void TableWriterCommon::replace_array(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, T_ begin_, T_ end_) {
   if (begin_ == end_) {
     return;
   }
@@ -34,22 +34,27 @@ void TableWriterCommon::write_single_entries(std::ostream& os_, T_ begin_, T_ en
 
   size_t const entries_per_line = calculate_numeric_entries_per_line(max_width);
 
+  std::string replacement_str;
   std::string delim;
   for (size_t i = 0; i < entries_str.size(); ++i) {
     if (i == 0) {
-      os_ << " ";
+      replacement_str += " ";
     } else if (i % entries_per_line == 0) {
-      os_ << ",\n ";
+      replacement_str += ",\n ";
     } else {
-      os_ << ", ";
+      replacement_str += ", ";
     }
-    os_ << entries_str[i];
+    replacement_str += entries_str[i];
   }
+
+  skeleton_replacer_.replace_skeleton_label(str_, label_, replacement_str);
+  skeleton_replacer_.replace_skeleton_label(str_, label_ + "_TYPE", TableWriterCommon::get_smallest_unsigned_type<T_>(begin_, end_) + " const");
+  skeleton_replacer_.replace_skeleton_label(str_, label_ + "_SIZE", TableWriterCommon::as_hex(std::distance(begin_, end_), true));
 }
 
 template <std::integral T_>
-void TableWriterCommon::write_single_entries(std::ostream& os_, std::span<T_ const> const& entries_) {
- write_single_entries(os_, entries_.begin(), entries_.end());
+void TableWriterCommon::replace_array(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, std::span<T_ const> const& entries_) {
+ replace_array(skeleton_replacer_, str_, label_, entries_.begin(), entries_.end());
 }
 
 auto TableWriterCommon::as_hex(std::integral auto value_, bool hex_prefix_) -> std::string {
