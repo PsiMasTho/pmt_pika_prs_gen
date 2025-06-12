@@ -11,6 +11,7 @@
 #include "pmt/parser/builder/parser_table_writer.hpp"
 #include "pmt/parser/builder/id_constants_writer.hpp"
 #include "pmt/parser/grammar/nonterminal_inliner.hpp"
+#include "pmt/parser/grammar/post_parse.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/rt/generic_parser.hpp"
 #include "pmt/parser/rt/generic_lexer.hpp"
@@ -55,6 +56,28 @@ auto report_terminal_overlaps(GrammarData const& grammar_data_, std::unordered_s
  std::cerr << msg << '\n';
 }
 
+auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHandle {
+  pmt::parser::grammar::LexerTables const lexer_tables;
+  GenericLexer lexer(input_grammar_, lexer_tables);
+  pmt::parser::grammar::ParserTables const parser_tables;
+  GenericParser parser;
+  GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
+  PostParse::transform(PostParse::Args{._ast_root = *ast});
+
+  GenericAstPrinter::Args ast_printer_args{
+    ._id_to_string_fn = [&](GenericId::IdType id_) {return Ast::id_to_string(id_);},
+    ._out = std::cout,
+    ._ast = *ast,
+  };
+
+
+  std::cout << "---BEGIN Printing AST from generated tables:\n";
+  GenericAstPrinter::print(ast_printer_args);
+  std::cout << "---END Printing AST from generated tables\n";
+
+  return ast;
+}
+
 }  // namespace
 
 auto main(int argc, char const* const* argv) -> int try {
@@ -63,28 +86,13 @@ auto main(int argc, char const* const* argv) -> int try {
   std::ifstream input_grammar_stream(args._input_grammar_file);
   std::string const input_grammar((std::istreambuf_iterator<char>(input_grammar_stream)), std::istreambuf_iterator<char>());
 
-  pmt::parser::grammar::LexerTables const lexer_tables;
-  GenericLexer lexer(input_grammar, lexer_tables);
-  pmt::parser::grammar::ParserTables const parser_tables;
-  GenericParser parser;
-  GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
+  GenericAst::UniqueHandle ast = get_grammar_ast(input_grammar);
 
-  GenericAstPrinter::Args ast_printer_args{
-    ._id_to_string_fn = [&](GenericId::IdType id_) {return Ast::id_to_string(id_);},
-    ._out = std::cout,
-    ._ast = *ast,
-  };
-
-  std::cout << "---BEGIN Printing AST from generated tables:\n";
-  GenericAstPrinter::print(ast_printer_args);
-  std::cout << "---END Printing AST from generated tables\n";
-
-
-  /* GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
+  GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
   NonterminalInliner::do_inline(NonterminalInliner::Args{._grammar_data = grammar_data, ._ast = *ast});
 
   std::cout << "Building lexer tables...\n";
-  LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
+  pmt::parser::builder::LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
 
   std::cout << "Lexer tables built successfully\n";
 
@@ -111,7 +119,7 @@ auto main(int argc, char const* const* argv) -> int try {
   std::cout << "Done writing lexer tables\n";
 
   std::cout << "Building parser tables...\n";
-  ParserTables parser_tables = ParserTableBuilder::build(ParserTableBuilder::Args(*ast, grammar_data, lexer_tables));
+  pmt::parser::builder::ParserTables parser_tables = ParserTableBuilder::build(ParserTableBuilder::Args(*ast, grammar_data, lexer_tables));
 
   std::ofstream parser_header_file(args._output_parser_header_file);
   std::ofstream parser_source_file(args._output_parser_source_file);
@@ -156,6 +164,8 @@ auto main(int argc, char const* const* argv) -> int try {
 
   report_terminal_overlaps(grammar_data, overlapping_terminals);
 
+  std::ifstream input_test_stream(args._input_test_file);
+  std::string const test_input((std::istreambuf_iterator<char>(input_test_stream)), std::istreambuf_iterator<char>());
   GenericLexer test_lexer(test_input, lexer_tables);
   GenericParser test_parser;
   GenericAst::UniqueHandle test_ast = test_parser.parse(test_lexer, parser_tables);
@@ -175,7 +185,7 @@ auto main(int argc, char const* const* argv) -> int try {
     ._indent_width = 2
   };
 
-  GenericAstPrinter::print(ast_printer_args); */
+  GenericAstPrinter::print(ast_printer_args);
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

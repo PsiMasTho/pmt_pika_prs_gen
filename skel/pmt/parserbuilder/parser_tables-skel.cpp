@@ -1,7 +1,8 @@
 /* Generated on: /* $replace TIMESTAMP */ */
 #include "/* $replace HEADER_INCLUDE_PATH */"
 
-#include <pmt/util/smrt/util.hpp>
+#include <pmt/parser/rt/util.hpp>
+#include <pmt/parser/primitives.hpp>
 
 #include <array>
 

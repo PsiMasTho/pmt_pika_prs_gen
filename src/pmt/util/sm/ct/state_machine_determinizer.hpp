@@ -16,6 +16,7 @@ class StateMachineDeterminizer {
     StateNrType _state_nr_from = StateNrStart;
   };
 
+ // -$ Functions $-
  // --$ Other $--
   static void determinize(Args args_);
 };

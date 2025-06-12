@@ -1,5 +1,6 @@
 #include "pmt/parser/grammar/repetition_range.hpp"
 
+#include "pmt/asserts.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/generic_ast.hpp"
 
@@ -20,26 +21,42 @@ auto get_repetition_number(GenericAst const& token_) -> std::optional<Number::Nu
 }
 
 RepetitionRange::RepetitionRange(pmt::parser::GenericAst const &ast_) {
-  assert(ast_.get_id() == Ast::NtNonterminalRepetitionRange || ast_.get_id() == Ast::NtTerminalRepetitionRange);
-
-  switch (ast_.get_children_size()) {
-    case 1: {
-      std::optional<Number::NumberType> num = get_repetition_number(*ast_.get_child_at(0));
-      _lower = num.value_or(0);
-      _upper = num;
+  switch (ast_.get_id()) {
+   case Ast::TkPlus: {
+    _lower = 1;
+   } break;
+   case Ast::TkStar: {
+    _lower = 0;
+    _upper = std::nullopt;
+   } break;
+   case Ast::TkQuestion: {
+    _lower = 0;
+    _upper = 1;
+   } break;
+   case Ast::NtRepetitionRange: {
+    switch (ast_.get_children_size()) {
+      case 1: {
+        std::optional<Number::NumberType> num = get_repetition_number(*ast_.get_child_at(0));
+        _lower = num.value_or(0);
+        _upper = num;
+      }
+      case 2: {
+        _lower = get_repetition_number(*ast_.get_child_at(0)).value_or(0);
+        _upper = get_repetition_number(*ast_.get_child_at(1));
+      }
+      case 3: {
+        _lower = get_repetition_number(*ast_.get_child_at(0)).value_or(0);
+        _upper = get_repetition_number(*ast_.get_child_at(2));
+      }
+      default:
+        throw std::runtime_error("Invalid repetition range: wrong number of children");
     }
-    case 2: {
-      _lower = get_repetition_number(*ast_.get_child_at(0)).value_or(0);
-      _upper = get_repetition_number(*ast_.get_child_at(1));
-    }
-    case 3: {
-      _lower = get_repetition_number(*ast_.get_child_at(0)).value_or(0);
-      _upper = get_repetition_number(*ast_.get_child_at(2));
-    }
-    default:
-      throw std::runtime_error("Invalid repetition range: wrong number of children");
+   } break;
+   default: {
+    pmt::unreachable();
+   }
   }
-
+ 
   if (_upper.has_value() && _upper.value() < _lower) {
     throw std::runtime_error("Invalid repetition range: upper bound is less than lower bound");
   }

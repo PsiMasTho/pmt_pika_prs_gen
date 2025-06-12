@@ -4,6 +4,7 @@
 #include "pmt/base/algo.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/number.hpp"
+#include "pmt/parser/grammar/string_literal.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/primitives.hpp"
 
@@ -142,7 +143,8 @@ void GrammarData::initial_iteration_handle_grammar_property(GrammarData& grammar
       initial_iteration_handle_grammar_property_whitespace(grammar_data_, property_value_position);
       break;
     case Ast::TkGrammarPropertyComment:
-      initial_iteration_handle_grammar_property_comment(grammar_data_, ast_, property_value_position);
+     // in the case of comments, the pairs follow right after the property name 
+      initial_iteration_handle_grammar_property_comment(grammar_data_, ast_, path_);
       break;
     case Ast::TkGrammarPropertyNewline:
       initial_iteration_handle_grammar_property_newline(grammar_data_, property_value_position);
@@ -164,7 +166,7 @@ void GrammarData::initial_iteration_handle_grammar_property_whitespace(GrammarDa
 
 void GrammarData::initial_iteration_handle_grammar_property_comment(GrammarData& grammar_data_, GenericAst const& ast_, GenericAstPath const& path_) {
   GenericAst const& terminal_definition_pair_list = *path_.resolve(ast_);
-  for (size_t i = 0; i < terminal_definition_pair_list.get_children_size(); ++i) {
+  for (size_t i = 1; i < terminal_definition_pair_list.get_children_size(); ++i) {
     grammar_data_._comment_open_definitions.push_back(path_.clone_push({i, 0}));
     grammar_data_._comment_close_definitions.push_back(path_.clone_push({i, 1}));
   }
@@ -187,7 +189,7 @@ void GrammarData::initial_iteration_handle_terminal_production(GrammarData& gram
       case Ast::NtTerminalParameter: {
         switch (child.get_child_at(0)->get_id()) {
           case Ast::TkKwParameterId:
-            terminal_id_name = child.get_child_at(1)->get_string();
+            terminal_id_name = StringLiteral(*child.get_child_at(1)).get_value();
             break;
         }
       } break;
@@ -222,7 +224,7 @@ void GrammarData::initial_iteration_handle_nonterminal_production(GrammarData& g
       case Ast::NtNonterminalParameter: {
         switch (child.get_child_at(0)->get_id()) {
           case Ast::TkKwParameterId:
-            nonterminal_id_name = child.get_child_at(1)->get_string();
+            nonterminal_id_name = StringLiteral(*child.get_child_at(1)).get_value();
             break;
           case Ast::TkKwParameterMerge:
             nonterminal_merge = child.get_child_at(1)->get_string() == "true";
@@ -317,9 +319,6 @@ void GrammarData::check_start_nonterminal_label_defined(GrammarData& grammar_dat
 void GrammarData::final_iteration(GrammarData& grammar_data_, GenericAst& ast_) {
   std::vector<GenericAstPath> pending;
   std::unordered_set<GenericAstPath> visited;
-  std::vector<std::string> terminals_direct_labels;
-  std::vector<GenericAstPath> terminals_direct_definitions;
-  std::unordered_map<std::string, std::string> terminal_direct_string_to_label;
 
   auto const push_and_visit = [&pending, &visited](GenericAstPath const& path_) {
     if (visited.contains(path_)) {
@@ -346,20 +345,15 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, GenericAst& ast_) 
       case Ast::TkNonterminalIdentifier:
         push_and_visit(grammar_data_._nonterminal_accepts[grammar_data_.try_find_nonterminal_accept_index_by_label(path_cur.resolve(ast_)->get_string())]._definition_path);
         break;      
-      case Ast::NtTerminalDefinition:
       case Ast::NtNonterminalDefinition:
-      case Ast::NtTerminalChoices:
-      case Ast::NtTerminalSequence:
+      case Ast::NtNonterminalExpression:
       case Ast::NtNonterminalChoices:
       case Ast::NtNonterminalSequence:
         for (size_t i = 0; i < path_cur.resolve(ast_)->get_children_size(); ++i) {
           push_and_visit(path_cur.clone_push(i));
         }
         break;
-      case Ast::NtTerminalRepetition:
-        push_and_visit(path_cur.clone_push(0));
-        break;
-      case Ast::NtNonterminalRepetition:
+      case Ast::NtRepetitionExpression:
         push_and_visit(path_cur.clone_push(0));
         break;
       case Ast::NtTerminalHidden:
@@ -367,67 +361,10 @@ void GrammarData::final_iteration(GrammarData& grammar_data_, GenericAst& ast_) 
         break;
       case Ast::TkStringLiteral:
       case Ast::TkIntegerLiteral: {
-       std::string const terminal_direct_string = direct_terminal_definition_to_string(grammar_data_, ast_, path_cur);
-       auto itr = terminal_direct_string_to_label.find(terminal_direct_string);
-       if (itr == terminal_direct_string_to_label.end()) {
-        std::string const terminal_direct_label = TERMINAL_DIRECT_PREFIX + std::to_string(terminals_direct_labels.size());
-        terminals_direct_labels.push_back(terminal_direct_label);
-
-        GenericAstPath const definition_path = (id_cur == Ast::NtTerminalHidden) ? path_cur.clone_push(0) : path_cur;
-
-         GenericAst::UniqueHandle terminal_direct_production = GenericAst::construct(GenericAst::Tag::Children, Ast::NtTerminalProduction);
-         GenericAst::UniqueHandle terminal_direct_production_label = GenericAst::construct(GenericAst::Tag::String, Ast::TkTerminalIdentifier);
-         terminal_direct_production_label->set_string(terminal_direct_label);
-         terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_label));
-         GenericAst::UniqueHandle terminal_direct_production_definition = GenericAst::construct(GenericAst::Tag::Children, Ast::NtTerminalDefinition);
-         terminal_direct_production_definition->give_child_at_back(GenericAst::clone(*definition_path.resolve(ast_)));
-         terminal_direct_production->give_child_at_back(std::move(terminal_direct_production_definition));
-         ast_.give_child_at_back(std::move(terminal_direct_production));
-
-         GenericAstPath const path_direct_definition({ast_.get_children_size() - 1, 1});
-         terminals_direct_definitions.push_back(path_direct_definition);
-
-         itr = terminal_direct_string_to_label.emplace(terminal_direct_string, terminal_direct_label).first;
-        }
-
-        GenericAst::UniqueHandle replacement = GenericAst::construct(GenericAst::Tag::String, Ast::TkTerminalIdentifier);
-        replacement->set_string(itr->second);
-
-        GenericAst::swap(*path_cur.resolve(ast_), *replacement);
       } break;
     }
   }
-
-  while (!terminals_direct_labels.empty()) {
-    size_t const index_direct = grammar_data_._terminal_accepts.size();
-
-    grammar_data_._terminal_accepts.emplace_back();
-    grammar_data_._terminal_accepts.back()._label = std::move(terminals_direct_labels.back());
-    grammar_data_._terminal_accepts.back()._id_name = GenericId::id_to_string(GenericId::IdDefault);
-    grammar_data_._terminal_accepts.back()._definition_path = std::move(terminals_direct_definitions.back());
-    grammar_data_._terminal_accepts.back()._accepted = true;
-
-    terminals_direct_labels.pop_back();
-    terminals_direct_definitions.pop_back();
-  }
-
-  sort_terminal_accepts_by_label(grammar_data_);
 }
-
-auto GrammarData::direct_terminal_definition_to_string(GrammarData& grammar_data_, GenericAst const& ast_, GenericAstPath const& path_) -> std::string {
- GenericAst const& terminal_definition = *path_.resolve(ast_);
- switch (terminal_definition.get_id()) {
-  case Ast::TkStringLiteral:
-   return terminal_definition.get_string();
-    break;
-  case Ast::TkIntegerLiteral:
-    return std::string(1, Number(terminal_definition).get_value());
-   break;
-  default:
-   pmt::unreachable();
- }
-}
-
 
 auto GrammarData::try_find_terminal_accept_index_by_label(std::string const& label_) -> size_t {
   size_t const index = binary_find_index(_terminal_accepts.begin(), _terminal_accepts.end(), label_, [](auto const& lhs_, auto const& rhs_) { return FetchLabelString{}(lhs_) < FetchLabelString{}(rhs_); });

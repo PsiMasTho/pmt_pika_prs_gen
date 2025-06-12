@@ -50,7 +50,7 @@ void TableWriterCommon::replace_transitions(pmt::util::SkeletonReplacerBase& ske
   }
  );
 
- state_nrs.insert(Interval(state_nrs.highest() + 1));
+ state_nrs.insert(Interval((state_nrs.empty()) ? 0 : state_nrs.highest() + 1));
 
  // Add all state nrs to every kind
  for (SymbolKindType kind = 0; kind <= kind_max; ++kind) {
@@ -146,6 +146,8 @@ void TableWriterCommon::replace_transition_masks(pmt::util::SkeletonReplacerBase
 
 auto TableWriterCommon::calculate_numeric_entries_per_line(size_t max_width_) -> size_t {
  switch (max_width_) {
+  case 0:
+   return 0;
   case 1:
    return 25;
   case 2:

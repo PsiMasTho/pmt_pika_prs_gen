@@ -8,6 +8,8 @@ namespace pmt::util::sm::ct {
 
 class StateMachineMinimizer {
  public:
+  // -$ Functions $-
+  // --$ Other $--
   static void minimize(StateMachine& state_machine_);
 };
 

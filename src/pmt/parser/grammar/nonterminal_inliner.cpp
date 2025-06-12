@@ -46,13 +46,15 @@ auto check_inlineable(NonterminalInliner::Args const& args_, AcceptsIndexType ac
       push_and_visit(*args_._grammar_data.lookup_nonterminal_definition_by_index(index).resolve(args_._ast));
     } break;      
     case Ast::NtNonterminalDefinition:
+    case Ast::NtNonterminalExpression:
     case Ast::NtNonterminalChoices:
     case Ast::NtNonterminalSequence:
       for (size_t i = 0; i < node.get_children_size(); ++i) {
         push_and_visit(*node.get_child_at(i));
       }
       break;
-    case Ast::NtNonterminalRepetition:
+    case Ast::NtRepetitionExpression:
+    case Ast::NtSequenceModifier:
       push_and_visit(*node.get_child_at(0));
       break;
     default:
@@ -107,13 +109,15 @@ void perform_inline(NonterminalInliner::Args& args_, AcceptsIndexType accepts_in
       push_and_visit(parent_path);
     } break;      
     case Ast::NtNonterminalDefinition:
+    case Ast::NtNonterminalExpression:
     case Ast::NtNonterminalChoices:
     case Ast::NtNonterminalSequence:
       for (size_t i = 0; i < node.get_children_size(); ++i) {
         push_and_visit(path.clone_push(i));
       }
       break;
-    case Ast::NtNonterminalRepetition:
+    case Ast::NtRepetitionExpression:
+    case Ast::NtSequenceModifier:
       push_and_visit(path.clone_push(0));
       break;
     default:

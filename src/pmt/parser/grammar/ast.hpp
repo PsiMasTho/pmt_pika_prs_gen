@@ -10,8 +10,6 @@ class Ast {
    #include "pmt/parser/grammar/id_constants-inl.hpp"
    NtTerminalRepetition,
    NtNonterminalRepetition,
-   NtNonterminalRepetitionRange,
-   NtTerminalRepetitionRange,
    NtTerminalHidden,
    TkComma,
    NtTerminalRange,

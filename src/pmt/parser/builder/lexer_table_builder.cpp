@@ -41,9 +41,11 @@ auto LexerTableBuilder::build(GenericAst const& ast_, GrammarData const& grammar
   fill_terminal_data();
   StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _lexer_state_machine});
   StateMachineMinimizer::minimize(_lexer_state_machine);
-  write_dot("linecount_state_machine.dot", _linecount_state_machine);
-  StateMachineMinimizer::minimize(_linecount_state_machine);
   write_dot("lexer_tables.dot", _lexer_state_machine);
+  
+  StateMachineMinimizer::minimize(_linecount_state_machine);
+  write_dot("linecount_state_machine.dot", _linecount_state_machine);
+
   validate_result();
 
   _result_tables.set_lexer_state_machine(std::move(_lexer_state_machine));

@@ -107,7 +107,6 @@ class GrammarData {
   static void check_start_nonterminal_label_defined(GrammarData& grammar_data_);
 
   static void final_iteration(GrammarData& grammar_data_, GenericAst& ast_);
-  static auto direct_terminal_definition_to_string(GrammarData& grammar_data_, GenericAst const& ast_, GenericAstPath const& path_) -> std::string;
 
   auto try_find_terminal_accept_index_by_label(std::string const& label_) -> size_t;
   auto try_find_nonterminal_accept_index_by_label(std::string const& label_) -> size_t;

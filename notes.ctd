@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749405256">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749766839">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -218,7 +218,11 @@ define terminal actions
 
 !parens_to_square = {
  $.empty() || (($.front() == "(" &amp;&amp; $.back() == ")") &amp;&amp; $.front() = "[", $.front() = "]")
-};</rich_text>
+};
+--
+ids should not be seperated for terminals and nonterminals, they should be shared
+--
+factor out pushing for NonterminalInliner::perform_inline and NonterminalInliner::check_inlineable</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;

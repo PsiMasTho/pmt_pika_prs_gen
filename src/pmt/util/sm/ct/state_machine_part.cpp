@@ -3,6 +3,7 @@
 #include "pmt/util/sm/ct/state_machine.hpp"
 
 namespace pmt::util::sm::ct {
+using namespace pmt::base;
 
 StateMachinePart::StateMachinePart(StateNrType incoming_state_nr_)
  : _incoming_state_nr(incoming_state_nr_) {
@@ -21,7 +22,11 @@ void StateMachinePart::clear_incoming_state_nr() {
 }
 
 void StateMachinePart::add_outgoing_symbol_transition(StateNrType state_nr_from_, Symbol symbol_) {
-  _outgoing_symbol_transitions[state_nr_from_].insert(symbol_);
+  _outgoing_symbol_transitions[state_nr_from_][symbol_.get_kind()].insert(Interval(symbol_.get_value()));
+}
+
+void StateMachinePart::add_outgoing_symbol_transition(StateNrType state_nr_from_, SymbolKindType kind_, Interval<SymbolValueType> interval_) {
+  _outgoing_symbol_transitions[state_nr_from_][kind_].insert(interval_);
 }
 
 void StateMachinePart::add_outgoing_epsilon_transition(StateNrType state_nr_from_) {
@@ -46,10 +51,12 @@ void StateMachinePart::merge_outgoing_transitions(StateMachinePart& other_) {
 void StateMachinePart::connect_outgoing_transitions_to(StateNrType state_nr_to_, StateMachine& state_machine_) {
   state_machine_.get_or_create_state(state_nr_to_);
 
-  for (auto const& [state_nr_from, symbols] : _outgoing_symbol_transitions) {
+  for (auto const& [state_nr_from, symbol_kinds_to_values] : _outgoing_symbol_transitions) {
     State& state_from = state_machine_.get_or_create_state(state_nr_from);
-    for (auto const symbol : symbols) {
-      state_from.add_symbol_transition(symbol, state_nr_to_);
+    for (auto const& [kind, values] : symbol_kinds_to_values) {
+     values.for_each_interval([&](Interval<SymbolValueType> const& interval_) {
+        state_from.add_symbol_transition(kind, interval_, state_nr_to_);
+      }); 
     }
   }
 

@@ -6,6 +6,8 @@
 #include "pmt/util/sm/primitives.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/parser/grammar/repetition_range.hpp"
+#include "pmt/parser/grammar/charset.hpp"
+#include "pmt/parser/grammar/string_literal.hpp"
 
 namespace pmt::parser::builder {
 using namespace pmt::base;
@@ -84,7 +86,6 @@ void process_sequence_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Lo
   locals_._callstack.emplace_back();
   locals_._callstack.back()._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(locals_._callstack[frame_idx_]._idx);
   locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
-  
 }
 
 void process_sequence_stage_1(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
@@ -220,31 +221,32 @@ void process_string_literal_stage_0(StateMachinePartBuilder::ArgsBase const& arg
 
   GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
 
-  for (size_t i = 1; i < expr_cur.get_string().size(); ++i) {
+  std::string const& str_literal = StringLiteral(expr_cur).get_value();
+
+  for (size_t i = 1; i < str_literal.size(); ++i) {
     StateNrType state_nr_cur = args_._dest_state_machine.create_new_state();
     State* state_cur = args_._dest_state_machine.get_state(state_nr_cur);
 
-    state_prev->add_symbol_transition(Symbol(SymbolKindCharacter, expr_cur.get_string()[i - 1]), state_nr_cur);
+    state_prev->add_symbol_transition(Symbol(SymbolKindCharacter, str_literal[i - 1]), state_nr_cur);
     state_prev = state_cur;
     state_nr_prev = state_nr_cur;
   }
 
-  locals_._ret_part.add_outgoing_symbol_transition(state_nr_prev, Symbol(SymbolKindCharacter, expr_cur.get_string().back()));
+  locals_._ret_part.add_outgoing_symbol_transition(state_nr_prev, Symbol(SymbolKindCharacter, str_literal.back()));
 }
 
-void process_range_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
+void process_charset_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
   // Create a new incoming state
   StateNrType state_nr_incoming = args_._dest_state_machine.create_new_state();
   locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
 
   GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
 
-  SymbolValueType const min = Number(*expr_cur.get_child_at(0)).get_value();
-  SymbolValueType const max = Number(*expr_cur.get_child_at(1)).get_value();
-
-  for (SymbolValueType i = min; i <= max; ++i) {
-    locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindCharacter, i));
-  }
+  Charset(expr_cur).get_values().for_each_interval(
+   [&](Interval<SymbolValueType> const& interval_) {
+     locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, SymbolKindCharacter, interval_);
+   }
+  );
 }
 
 void process_integer_literal_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
@@ -353,6 +355,8 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
  switch (locals_._callstack[frame_idx_]._expression_type) {
    case Ast::NtNonterminalDefinition:
    case Ast::NtTerminalDefinition:
+   case Ast::NtNonterminalExpression:
+   case Ast::NtTerminalExpression:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_definition_stage_0(args_, locals_, frame_idx_);
@@ -390,8 +394,7 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           pmt::unreachable();
       }
       break;
-    case Ast::NtNonterminalRepetition:
-    case Ast::NtTerminalRepetition:
+    case Ast::NtRepetitionExpression:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_repetition_stage_0(args_, locals_, frame_idx_);
@@ -432,10 +435,10 @@ void dispatch(StateMachinePartBuilder::TerminalBuildingArgs const& args_, Locals
           pmt::unreachable();
       }
       break;
-    case Ast::NtTerminalRange:
+    case Ast::NtTerminalCharset:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
-          process_range_stage_0(args_, locals_, frame_idx_);
+          process_charset_stage_0(args_, locals_, frame_idx_);
           break;
         default:
           pmt::unreachable();

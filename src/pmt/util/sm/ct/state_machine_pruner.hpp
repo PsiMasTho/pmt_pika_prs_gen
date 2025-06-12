@@ -19,7 +19,8 @@ class StateMachinePruner {
     std::optional<StateNrType> _state_nr_from_new = std::nullopt;
   };
 
- // --$ Other $--
+  // -$ Functions $-
+  // --$ Other $--
   static void prune(Args args_);
 };
 

@@ -80,6 +80,11 @@ auto GenericAstPath::empty() const -> bool {
   return _path.empty();
 }
 
+auto GenericAstPath::front() const -> size_t {
+  assert(!_path.empty());
+  return _path.front();
+}
+
 auto GenericAstPath::back() const -> size_t {
  assert(!_path.empty());
  return _path.back();
