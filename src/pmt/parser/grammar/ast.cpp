@@ -16,16 +16,8 @@ auto Ast::id_to_string(GenericId::IdType id_) -> std::string {
   }
 
   switch (id_) {
-    case NtTerminalRepetition:
-      return "NtTerminalRepetition";
-    case NtNonterminalRepetition:
-      return "NtNonterminalRepetition";
     case NtTerminalHidden:
       return "NtTerminalHidden";
-    case TkComma:
-      return "TkComma";
-    case NtTerminalRange:
-      return "NtTerminalRange";
     default:
       throw std::runtime_error("Invalid id");
   }

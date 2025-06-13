@@ -1,4 +1,5 @@
 /* Generated on: /* $replace TIMESTAMP */ */
+// clang-format off
 #pragma once
 
 #include <pmt/base/bitset.hpp>
@@ -25,3 +26,4 @@ class /* $replace CLASS_NAME */ : public pmt::parser::rt::LexerTablesBase {
 };
 
 /* $replace NAMESPACE_CLOSE */
+// clang-format on

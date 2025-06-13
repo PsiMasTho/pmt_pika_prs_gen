@@ -8,11 +8,7 @@ class Ast {
  public:
   enum : GenericId::IdType {
 #include "pmt/parser/grammar/id_constants-inl.hpp"
-    NtTerminalRepetition,
-    NtNonterminalRepetition,
     NtTerminalHidden,
-    TkComma,
-    NtTerminalRange,
   };
 
   static auto id_to_string(GenericId::IdType id_) -> std::string;

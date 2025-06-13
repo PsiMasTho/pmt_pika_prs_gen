@@ -1,117 +1,83 @@
 #include "pmt/parser/builder/tui/args.hpp"
 
-#include <set>
 #include <stdexcept>
+
+#include "argh/argh.h"
 
 namespace pmt::parser::builder::tui {
 
-Args::Args(int argc_, char const* const* argv_) {
-  for (int i = 1; i < argc_; ++i) {
-    std::string const arg = argv_[i];
-    if (arg == "-g") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -g");
-      }
-      _input_grammar_file = argv_[++i];
-    } else if (arg == "-t") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -t");
-      }
-      _input_test_file = argv_[++i];
-    } else if (arg == "-hl") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -hl");
-      }
-      _output_lexer_header_file = argv_[++i];
-    } else if (arg == "-sl") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -sl");
-      }
-      _output_lexer_source_file = argv_[++i];
-    } else if (arg == "-hp") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -hp");
-      }
-      _output_parser_header_file = argv_[++i];
-    } else if (arg == "-sp") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -sp");
-      }
-      _output_parser_source_file = argv_[++i];
-    } else if (arg == "-c") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -c");
-      }
-      _output_id_constants_file = argv_[++i];
-    } else if (arg == "-print-ast") {
-      _print_ast_from_generated_tables = true;
-    } else if (arg == "-lexer-class-name") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -class-name");
-      }
-      _lexer_class_name = argv_[++i];
-    } else if (arg == "-parser-class-name") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -parser-class-name");
-      }
-      _parser_class_name = argv_[++i];
-    } else if (arg == "-namespace") {
-      if (i + 1 >= argc_) {
-        throw std::runtime_error("Missing argument for -namespace");
-      }
-      _namespace_name = argv_[++i];
-    } else {
-      throw std::runtime_error("Unknown argument: " + arg);
+namespace {
+void try_fetch_required_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& out_value_) {
+  if (!(cmdl_(arg_name_) >> out_value_)) {
+    throw std::runtime_error("Missing required argument: --" + arg_name_);
+  }
+}
+
+void try_open_file_from_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& file_stream_) {
+  std::string file_path;
+  try_fetch_required_arg(cmdl_, arg_name_, file_path);
+  file_stream_.open(file_path);
+  if (!file_stream_.is_open()) {
+    throw std::runtime_error("Failed to open file: " + file_path);
+  }
+}
+
+void try_fetch_optional_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& out_value_) {
+  cmdl_(arg_name_) >> out_value_;
+}
+
+void try_open_optional_file_from_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& optional_file_stream_) {
+  std::string file_path;
+  try_fetch_optional_arg(cmdl_, arg_name_, file_path);
+  if (!file_path.empty()) {
+    optional_file_stream_.emplace(file_path);
+    if (!optional_file_stream_->is_open()) {
+      throw std::runtime_error("Failed to open file: " + file_path);
+    }
+  } else {
+    optional_file_stream_.reset();
+  }
+}
+
+void try_fetch_optional_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& out_value_, auto const& default_value_) {
+  if (!(cmdl_(arg_name_) >> out_value_)) {
+    out_value_ = default_value_;
+  }
+}
+
+void try_open_required_file_from_optional_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& file_stream_, std::string const& default_file_path_) {
+  std::string file_path;
+  try_fetch_optional_arg(cmdl_, arg_name_, file_path, default_file_path_);
+  if (!file_path.empty()) {
+    file_stream_.open(file_path);
+    if (!file_stream_.is_open()) {
+      throw std::runtime_error("Failed to open file: " + file_path);
     }
   }
+}
+}  // namespace
 
-  if (_input_grammar_file.empty()) {
-    throw std::runtime_error("Missing input grammar file");
-  }
+Args::Args(int argc_, char const* const* argv_) {
+  argh::parser cmdl;
+  cmdl.parse(argc_, argv_, argh::parser::PREFER_PARAM_FOR_UNREG_OPTION);
 
-  if (_input_test_file.empty()) {
-    throw std::runtime_error("Missing input test file");
-  }
-
-  if (_output_lexer_header_file.empty()) {
-    throw std::runtime_error("Missing output lexer header file");
-  }
-
-  if (_output_lexer_source_file.empty()) {
-    throw std::runtime_error("Missing output lexer source file");
-  }
-
-  if (_output_parser_header_file.empty()) {
-    throw std::runtime_error("Missing output parser header file");
-  }
-
-  if (_output_parser_source_file.empty()) {
-    throw std::runtime_error("Missing output parser source file");
-  }
-
-  if (_output_id_constants_file.empty()) {
-    throw std::runtime_error("Missing output id constants file");
-  }
-
-  if (_lexer_class_name.empty()) {
-    throw std::runtime_error("Missing lexer class name");
-  }
-
-  if (_parser_class_name.empty()) {
-    throw std::runtime_error("Missing parser class name");
-  }
-
-  if (_namespace_name.empty()) {
-    throw std::runtime_error("Missing namespace name");
-  }
-
-  std::set<std::string> unique = {_input_grammar_file,
-                                  //_input_test_file, // Allow the test file to be the same as one of the others
-                                  _output_lexer_header_file, _output_lexer_source_file, _output_parser_header_file, _output_parser_source_file, _output_id_constants_file};
-
-  if (unique.size() != 6) {
-    throw std::runtime_error("Duplicate file names provided");
-  }
+  try_open_file_from_arg(cmdl, "input-grammar-file", _input_grammar_file);
+  try_open_optional_file_from_arg(cmdl, "input-test-file", _input_test_file);
+  try_fetch_required_arg(cmdl, "output-lexer-header-file", _lexer_header_include_filename);
+  try_open_file_from_arg(cmdl, "output-lexer-header-file", _output_lexer_header_file);
+  try_open_file_from_arg(cmdl, "output-lexer-source-file", _output_lexer_source_file);
+  try_open_required_file_from_optional_arg(cmdl, "lexer-header-skel-file", _lexer_header_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/lexer_tables-skel.hpp");
+  try_open_required_file_from_optional_arg(cmdl, "lexer-source-skel-file", _lexer_source_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/lexer_tables-skel.cpp");
+  try_fetch_required_arg(cmdl, "output-parser-header-file", _parser_header_include_filename);
+  try_open_file_from_arg(cmdl, "output-parser-header-file", _output_parser_header_file);
+  try_open_file_from_arg(cmdl, "output-parser-source-file", _output_parser_source_file);
+  try_open_required_file_from_optional_arg(cmdl, "parser-header-skel-file", _parser_header_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/parser_tables-skel.hpp");
+  try_open_required_file_from_optional_arg(cmdl, "parser-source-skel-file", _parser_source_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/parser_tables-skel.cpp");
+  try_open_file_from_arg(cmdl, "output-id-constants-file", _output_id_constants_file);
+  try_open_required_file_from_optional_arg(cmdl, "id-constants-skel-file", _id_constants_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/id_constants-skel.hpp");
+  try_fetch_required_arg(cmdl, "lexer-class-name", _lexer_class_name);
+  try_fetch_required_arg(cmdl, "parser-class-name", _parser_class_name);
+  try_fetch_required_arg(cmdl, "namespace-name", _namespace_name);
 }
 
 }  // namespace pmt::parser::builder::tui

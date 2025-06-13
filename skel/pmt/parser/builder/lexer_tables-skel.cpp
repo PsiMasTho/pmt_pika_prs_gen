@@ -1,4 +1,5 @@
 /* Generated on: /* $replace TIMESTAMP */ */
+// clang-format off
 #include "/* $replace HEADER_INCLUDE_PATH */"
 
 #include <pmt/parser/rt/util.hpp>
@@ -102,3 +103,4 @@ auto /* $replace CLASS_NAME */::is_linecount_state_nr_accepting(pmt::util::sm::S
 }
 
 /* $replace NAMESPACE_CLOSE */
+// clang-format on
