@@ -13,8 +13,8 @@ class Number {
   // -$ Types / Constants $-
   using NumberType = uint64_t;
 
-  private:
   // -$ Data $-
+  private:
   NumberType _value;
 
   public:

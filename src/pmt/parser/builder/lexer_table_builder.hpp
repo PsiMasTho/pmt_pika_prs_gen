@@ -45,7 +45,7 @@ class LexerTableBuilder {
   void fill_terminal_data();
   void validate_result();
 
-  void write_dot(std::string_view filename_, pmt::util::sm::ct::StateMachine const& state_machine_) const;
+  void write_dot(std::string_view filename_, std::string_view title_, pmt::util::sm::ct::StateMachine const& state_machine_) const;
 };
 
 }  // namespace pmt::parserbuilder

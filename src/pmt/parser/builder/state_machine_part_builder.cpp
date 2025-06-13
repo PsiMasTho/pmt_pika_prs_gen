@@ -6,6 +6,8 @@
 #include "pmt/util/sm/primitives.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/parser/grammar/repetition_range.hpp"
+#include "pmt/parser/grammar/index_permutation_generator.hpp"
+#include "pmt/parser/grammar/permute.hpp"
 #include "pmt/parser/grammar/charset.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
 
@@ -27,6 +29,9 @@ class Frame {
   size_t _idx_chunk = 0;
   size_t _nonterminal_idx_cur;
   StateNrType _state_nr_open_cur;
+  IndexPermutationGenerator _index_permutation_generator;
+  std::vector<size_t> _index_permutation;
+  bool _is_permuted : 1 = false;
 
   size_t _terminal_idx_cur;
 
@@ -80,16 +85,32 @@ void process_definition_stage_0(StateMachinePartBuilder::ArgsBase const& args_, 
 }
 
 void process_sequence_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
+ ++locals_._callstack[frame_idx_]._stage;
+
+ if (!locals_._callstack[frame_idx_]._is_permuted) {
+  std::generate_n(std::back_inserter(locals_._callstack[frame_idx_]._index_permutation), locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root)->get_children_size(), [n = 0]() mutable { return n++; });
+  locals_._callstack[frame_idx_]._is_permuted = true;
+ }
+
+ if (locals_._callstack[frame_idx_]._index_permutation.empty()) {
+  locals_._ret_part = build_epsilon(args_);
+  return;
+ }
+
+ locals_._keep_current_frame = true;
+}
+
+void process_sequence_stage_1(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
   locals_._keep_current_frame = true;
   ++locals_._callstack[frame_idx_]._stage;
 
   locals_._callstack.emplace_back();
-  locals_._callstack.back()._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(locals_._callstack[frame_idx_]._idx);
+  locals_._callstack.back()._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(locals_._callstack[frame_idx_]._index_permutation[locals_._callstack[frame_idx_]._idx]);
   locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
 }
 
-void process_sequence_stage_1(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
-  locals_._callstack[frame_idx_]._stage = 0;
+void process_sequence_stage_2(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
+  --locals_._callstack[frame_idx_]._stage;
   ++locals_._callstack[frame_idx_]._idx;
 
   // If is first
@@ -103,11 +124,55 @@ void process_sequence_stage_1(StateMachinePartBuilder::ArgsBase const& args_, Lo
   }
 
   // If is last
-  if (locals_._callstack[frame_idx_]._idx == locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root)->get_children_size()) {
+  if (locals_._callstack[frame_idx_]._idx == locals_._callstack[frame_idx_]._index_permutation.size()) {
     locals_._ret_part = locals_._callstack[frame_idx_]._sub_part;
   } else {
     locals_._keep_current_frame = true;
   }
+}
+
+void process_permute_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
+  locals_._keep_current_frame = true;
+  ++locals_._callstack[frame_idx_]._stage;
+  
+  Permute const permute(*locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root));
+  locals_._callstack[frame_idx_]._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(0); // 0th index has the sequence
+  locals_._callstack[frame_idx_]._index_permutation_generator = IndexPermutationGenerator(permute.get_min_items(), permute.get_max_items(), permute.get_sequence_length());
+
+  StateNrType state_nr_incoming = args_._dest_state_machine.create_new_state();
+  locals_._callstack[frame_idx_]._state_cur = args_._dest_state_machine.get_state(state_nr_incoming);
+  locals_._callstack[frame_idx_]._sub_part.set_incoming_state_nr(state_nr_incoming);
+}
+
+void process_permute_stage_1(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
+  locals_._keep_current_frame = true;
+  ++locals_._callstack[frame_idx_]._stage;
+
+  locals_._callstack.emplace_back();
+  locals_._callstack.back()._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path;
+  locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
+
+  // Set up the permutation for the sequence
+  std::ranges::copy(locals_._callstack[frame_idx_]._index_permutation_generator.get_permutation().value(), std::back_inserter(locals_._callstack.back()._index_permutation));
+  locals_._callstack.back()._is_permuted = true;
+}
+
+void process_permute_stage_2(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
+  --locals_._callstack[frame_idx_]._stage;
+  ++locals_._callstack[frame_idx_]._idx;
+
+  locals_._callstack[frame_idx_]._state_cur->add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
+  locals_._callstack[frame_idx_]._sub_part.merge_outgoing_transitions(locals_._ret_part);
+
+  locals_._callstack[frame_idx_]._idx = 0;
+  locals_._callstack[frame_idx_]._index_permutation_generator.advance();
+
+  if (locals_._callstack[frame_idx_]._index_permutation_generator.get_permutation().has_value()) {
+    locals_._keep_current_frame = true;
+    return;
+  }
+
+  locals_._ret_part = locals_._callstack[frame_idx_]._sub_part;
 }
 
 void process_choices_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
@@ -374,6 +439,9 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
         case 1:
           process_sequence_stage_1(args_, locals_, frame_idx_);
           break;
+        case 2:
+          process_sequence_stage_2(args_, locals_, frame_idx_);
+          break;
         default:
           pmt::unreachable();
       }
@@ -409,6 +477,21 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           pmt::unreachable();
       }
       break;
+      case Ast::NtSequenceModifier:
+       switch (locals_._callstack[frame_idx_]._stage) {
+        case 0:
+          process_permute_stage_0(args_, locals_, frame_idx_);
+          break;
+        case 1:
+          process_permute_stage_1(args_, locals_, frame_idx_);
+          break;
+        case 2:
+          process_permute_stage_2(args_, locals_, frame_idx_);
+          break;
+        default:
+          pmt::unreachable();
+       }
+       break;
       case Ast::TkEpsilon:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:

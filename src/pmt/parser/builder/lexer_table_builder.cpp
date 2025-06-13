@@ -41,10 +41,10 @@ auto LexerTableBuilder::build(GenericAst const& ast_, GrammarData const& grammar
   fill_terminal_data();
   StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _lexer_state_machine});
   StateMachineMinimizer::minimize(_lexer_state_machine);
-  write_dot("lexer_tables.dot", _lexer_state_machine);
+  write_dot("lexer_state_machine.dot", "Final tables", _lexer_state_machine);
   
   StateMachineMinimizer::minimize(_linecount_state_machine);
-  write_dot("linecount_state_machine.dot", _linecount_state_machine);
+  write_dot("linecount_state_machine.dot", "Linecount tables", _linecount_state_machine);
 
   validate_result();
 
@@ -380,7 +380,7 @@ void LexerTableBuilder::validate_result() {
       }
     });
 
-    throw std::runtime_error("Initial state accepts terminal(s): " + msg);
+    throw std::runtime_error("Error, initial state accepts terminal(s): " + msg);
   }
 
   size_t accepts_start_count = 0;
@@ -402,7 +402,7 @@ void LexerTableBuilder::validate_result() {
   }
 }
 
-void LexerTableBuilder::write_dot(std::string_view filename_, pmt::util::sm::ct::StateMachine const& state_machine_) const {
+void LexerTableBuilder::write_dot(std::string_view filename_, std::string_view title_, pmt::util::sm::ct::StateMachine const& state_machine_) const {
  static size_t const DOT_FILE_MAX_STATES = 750;
  if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
   std::cerr << "Skipping dot file write of " << filename_ << " because it has " << state_machine_.get_state_count() << " states, which is more than the limit of " << DOT_FILE_MAX_STATES << '\n';
@@ -419,6 +419,7 @@ void LexerTableBuilder::write_dot(std::string_view filename_, pmt::util::sm::ct:
  };
 
  GraphWriter::StyleArgs style_args;
+ style_args._title = title_;
  style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {return _result_tables.get_accept_index_label(accepts_);};
 
  GraphWriter().write_dot(writer_args, style_args);

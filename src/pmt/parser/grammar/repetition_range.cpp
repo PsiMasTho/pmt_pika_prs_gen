@@ -9,9 +9,7 @@
 namespace pmt::parser::grammar {
 namespace {
 auto get_repetition_number(GenericAst const& token_) -> std::optional<Number::NumberType> {
- assert(token_.get_id() == Ast::TkIntegerLiteral);
-  
- if (token_.get_id() == Ast::TkComma) {
+ if (token_.get_id() != Ast::TkIntegerLiteral) {
     return std::nullopt;
  }
 
@@ -39,15 +37,15 @@ RepetitionRange::RepetitionRange(pmt::parser::GenericAst const &ast_) {
         std::optional<Number::NumberType> num = get_repetition_number(*ast_.get_child_at(0));
         _lower = num.value_or(0);
         _upper = num;
-      }
+      } break;
       case 2: {
         _lower = get_repetition_number(*ast_.get_child_at(0)).value_or(0);
         _upper = get_repetition_number(*ast_.get_child_at(1));
-      }
+      } break;
       case 3: {
         _lower = get_repetition_number(*ast_.get_child_at(0)).value_or(0);
         _upper = get_repetition_number(*ast_.get_child_at(2));
-      }
+      } break;
       default:
         throw std::runtime_error("Invalid repetition range: wrong number of children");
     }

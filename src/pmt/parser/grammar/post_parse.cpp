@@ -1,6 +1,7 @@
 #include "pmt/parser/grammar/post_parse.hpp"
 
 #include "pmt/asserts.hpp"
+#include "pmt/base/match.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/grammar/number.hpp"
@@ -19,6 +20,7 @@
 #include <unordered_map>
 
 namespace pmt::parser::grammar {
+using namespace pmt::base;
 using namespace pmt::parser;
 using namespace pmt::util::sm;
 
@@ -87,9 +89,9 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
     } break;
     case Ast::NtSequenceModifier: {
      static std::string const ERROR_MSG = "Error: Invalid sequence modifier";
-     if ((locals_._ast_cur->get_child_at(0)->get_id() != Ast::NtTerminalChoices && locals_._ast_cur->get_child_at(0)->get_id() != Ast::NtNonterminalChoices) ||
+     if (Match::is_none_of(locals_._ast_cur->get_child_at(0)->get_id(), Ast::NtTerminalChoices, Ast::NtNonterminalChoices) ||
          locals_._ast_cur->get_child_at(0)->get_children_size() != 1 ||
-         (locals_._ast_cur->get_child_at(0)->get_child_at(0)->get_id() != Ast::NtTerminalSequence && locals_._ast_cur->get_child_at(0)->get_child_at(0)->get_id() != Ast::NtNonterminalSequence)) {
+         Match::is_none_of(locals_._ast_cur->get_child_at(0)->get_child_at(0)->get_id(), Ast::NtTerminalSequence, Ast::NtNonterminalSequence)) {
       throw std::runtime_error(ERROR_MSG);
      }
      locals_._ast_cur->unpack(0);
