@@ -13,4 +13,4 @@ class StateMachineMinimizer {
   static void minimize(StateMachine& state_machine_);
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

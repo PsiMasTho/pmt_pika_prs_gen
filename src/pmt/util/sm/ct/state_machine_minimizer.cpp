@@ -14,11 +14,7 @@ auto get_alphabet(StateMachine const& state_machine_) -> std::unordered_set<Symb
 
   state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
     State const& state = *state_machine_.get_state(state_nr_);
-    state.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
-     state.get_symbol_values(kind_).for_each_key([&](SymbolValueType value_) {
-        ret.insert(Symbol(kind_, value_));
-      });
-    });
+    state.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) { state.get_symbol_values(kind_).for_each_key([&](SymbolValueType value_) { ret.insert(Symbol(kind_, value_)); }); });
   });
 
   return ret;
@@ -158,7 +154,7 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
 
   if (auto const itr = equivalence_partition_mapping_.find(StateNrStart); itr != equivalence_partition_mapping_.end()) {
     push_and_visit(itr->second);
-  } 
+  }
 
   while (!pending.empty()) {
     IntervalSet<StateNrType> const* equivalence_partition_cur = take();
@@ -171,14 +167,14 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
 
       // Set up the transitions
       state_old.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
-       state_old.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
-        if (state_nr_next_old_ == StateNrSink) {
-          return;
-        }
-        IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old_)->second;
-        StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
-        state_cur.add_symbol_transition(kind_, interval_, state_nr_next_new);
-       });
+        state_old.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
+          if (state_nr_next_old_ == StateNrSink) {
+            return;
+          }
+          IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old_)->second;
+          StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
+          state_cur.add_symbol_transition(kind_, interval_, state_nr_next_new);
+        });
       });
     });
   }
@@ -189,9 +185,9 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
 }  // namespace
 
 void StateMachineMinimizer::minimize(StateMachine& state_machine_) {
- std::unordered_set<IntervalSet<StateNrType>> const p = get_equivalence_partitions(state_machine_, get_alphabet(state_machine_), get_initial_partitions(state_machine_));
- std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(state_machine_, p);
- state_machine_ = rebuild_minimized_state_machine(state_machine_, state_nr_to_equiv_partition);
+  std::unordered_set<IntervalSet<StateNrType>> const p = get_equivalence_partitions(state_machine_, get_alphabet(state_machine_), get_initial_partitions(state_machine_));
+  std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(state_machine_, p);
+  state_machine_ = rebuild_minimized_state_machine(state_machine_, state_nr_to_equiv_partition);
 }
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

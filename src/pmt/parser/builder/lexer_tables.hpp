@@ -1,12 +1,12 @@
 #pragma once
 
+#include "pmt/parser/generic_id.hpp"
+#include "pmt/parser/rt/lexer_tables_base.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/util/sm/primitives.hpp"
-#include "pmt/parser/rt/lexer_tables_base.hpp"
-#include "pmt/parser/generic_id.hpp"
 
-#include <string>
 #include <map>
+#include <string>
 
 namespace pmt::parser::builder {
 
@@ -26,7 +26,7 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   std::unordered_map<std::string, GenericId::IdType> _name_to_id;
   std::vector<TerminalData> _terminal_data;
 
-  public:
+ public:
   // --$ Inherited: pmt::util::sm::LexerTablesBase $--
   auto get_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
   auto get_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
@@ -51,7 +51,6 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   void add_terminal_data(std::string label_, std::string const& id_name_);
 
   auto terminal_label_to_index(std::string_view label_) const -> std::optional<size_t>;
-
 };
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::builder

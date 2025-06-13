@@ -1,15 +1,15 @@
 #include "pmt/parser/builder/state_machine_part_builder.hpp"
 
 #include "pmt/asserts.hpp"
-#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/generic_ast.hpp"
-#include "pmt/util/sm/primitives.hpp"
-#include "pmt/parser/primitives.hpp"
-#include "pmt/parser/grammar/repetition_range.hpp"
+#include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/charset.hpp"
 #include "pmt/parser/grammar/index_permutation_generator.hpp"
 #include "pmt/parser/grammar/permute.hpp"
-#include "pmt/parser/grammar/charset.hpp"
+#include "pmt/parser/grammar/repetition_range.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
+#include "pmt/parser/primitives.hpp"
+#include "pmt/util/sm/primitives.hpp"
 
 namespace pmt::parser::builder {
 using namespace pmt::base;
@@ -22,7 +22,7 @@ namespace {
 class Frame {
  public:
   StateMachinePart _sub_part;
-  GenericId::IdType _expression_type; // Type of expression that this frame is processing
+  GenericId::IdType _expression_type;  // Type of expression that this frame is processing
   size_t _stage = 0;                   // Stage of processing, simulates executing other frames before returning to this one
   size_t _idx = 0;
   size_t _idx_max = 0;
@@ -35,7 +35,7 @@ class Frame {
 
   size_t _terminal_idx_cur;
 
-  GenericAstPath _expr_cur_path; // The expression that this frame is processing
+  GenericAstPath _expr_cur_path;  // The expression that this frame is processing
 
   StateMachinePart _choices;
   StateMachinePart _chunk;
@@ -79,25 +79,25 @@ auto build_epsilon(StateMachinePartBuilder::ArgsBase const& args_) -> StateMachi
 }
 
 void process_definition_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
- locals_._callstack.emplace_back();
- locals_._callstack.back()._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(0);
- locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
+  locals_._callstack.emplace_back();
+  locals_._callstack.back()._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(0);
+  locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
 }
 
 void process_sequence_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
- ++locals_._callstack[frame_idx_]._stage;
+  ++locals_._callstack[frame_idx_]._stage;
 
- if (!locals_._callstack[frame_idx_]._is_permuted) {
-  std::generate_n(std::back_inserter(locals_._callstack[frame_idx_]._index_permutation), locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root)->get_children_size(), [n = 0]() mutable { return n++; });
-  locals_._callstack[frame_idx_]._is_permuted = true;
- }
+  if (!locals_._callstack[frame_idx_]._is_permuted) {
+    std::generate_n(std::back_inserter(locals_._callstack[frame_idx_]._index_permutation), locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root)->get_children_size(), [n = 0]() mutable { return n++; });
+    locals_._callstack[frame_idx_]._is_permuted = true;
+  }
 
- if (locals_._callstack[frame_idx_]._index_permutation.empty()) {
-  locals_._ret_part = build_epsilon(args_);
-  return;
- }
+  if (locals_._callstack[frame_idx_]._index_permutation.empty()) {
+    locals_._ret_part = build_epsilon(args_);
+    return;
+  }
 
- locals_._keep_current_frame = true;
+  locals_._keep_current_frame = true;
 }
 
 void process_sequence_stage_1(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
@@ -134,9 +134,9 @@ void process_sequence_stage_2(StateMachinePartBuilder::ArgsBase const& args_, Lo
 void process_permute_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
   locals_._keep_current_frame = true;
   ++locals_._callstack[frame_idx_]._stage;
-  
+
   Permute const permute(*locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root));
-  locals_._callstack[frame_idx_]._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(0); // 0th index has the sequence
+  locals_._callstack[frame_idx_]._expr_cur_path = locals_._callstack[frame_idx_]._expr_cur_path.clone_push(0);  // 0th index has the sequence
   locals_._callstack[frame_idx_]._index_permutation_generator = IndexPermutationGenerator(permute.get_min_items(), permute.get_max_items(), permute.get_sequence_length());
 
   StateNrType state_nr_incoming = args_._dest_state_machine.create_new_state();
@@ -307,11 +307,7 @@ void process_charset_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Loc
 
   GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
 
-  Charset(expr_cur).get_values().for_each_interval(
-   [&](Interval<SymbolValueType> const& interval_) {
-     locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, SymbolKindCharacter, interval_);
-   }
-  );
+  Charset(expr_cur).get_values().for_each_interval([&](Interval<SymbolValueType> const& interval_) { locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, SymbolKindCharacter, interval_); });
 }
 
 void process_integer_literal_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, size_t frame_idx_) {
@@ -324,58 +320,58 @@ void process_epsilon_stage_0(StateMachinePartBuilder::ArgsBase const& args_, Loc
   locals_._ret_part = build_epsilon(args_);
 }
 
-void process_nonterminal_identifier_stage_0(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_){
- GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
+void process_nonterminal_identifier_stage_0(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
+  GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
 
- std::string const& nonterminal_label = expr_cur.get_string();
- locals_._callstack[frame_idx_]._nonterminal_idx_cur = args_._fn_rev_lookup_nonterminal_label(nonterminal_label);
+  std::string const& nonterminal_label = expr_cur.get_string();
+  locals_._callstack[frame_idx_]._nonterminal_idx_cur = args_._fn_rev_lookup_nonterminal_label(nonterminal_label);
 
- auto itr_close = locals_._nonterminal_idx_to_state_nr_close.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
- if (itr_close == locals_._nonterminal_idx_to_state_nr_close.end()) {
-  itr_close = locals_._nonterminal_idx_to_state_nr_close.emplace(locals_._callstack[frame_idx_]._nonterminal_idx_cur, args_._dest_state_machine.create_new_state()).first;
-  State& state_close = *args_._dest_state_machine.get_state(itr_close->second);
-  state_close.get_accepts().insert(Interval(locals_._callstack[frame_idx_]._nonterminal_idx_cur));
- }
+  auto itr_close = locals_._nonterminal_idx_to_state_nr_close.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
+  if (itr_close == locals_._nonterminal_idx_to_state_nr_close.end()) {
+    itr_close = locals_._nonterminal_idx_to_state_nr_close.emplace(locals_._callstack[frame_idx_]._nonterminal_idx_cur, args_._dest_state_machine.create_new_state()).first;
+    State& state_close = *args_._dest_state_machine.get_state(itr_close->second);
+    state_close.get_accepts().insert(Interval(locals_._callstack[frame_idx_]._nonterminal_idx_cur));
+  }
 
- locals_._callstack[frame_idx_]._state_nr_open_cur = args_._dest_state_machine.create_new_state();
+  locals_._callstack[frame_idx_]._state_nr_open_cur = args_._dest_state_machine.create_new_state();
 
- auto itr_post_open = locals_._nonterminal_idx_to_state_nr_post_open.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
- if (itr_post_open == locals_._nonterminal_idx_to_state_nr_post_open.end()) {
-  StateNrType const state_nr_post_open = args_._dest_state_machine.create_new_state();
-  locals_._nonterminal_idx_to_state_nr_post_open.emplace(locals_._callstack[frame_idx_]._nonterminal_idx_cur, state_nr_post_open);
-  ++locals_._callstack[frame_idx_]._stage;
-  locals_._keep_current_frame = true;
-  locals_._callstack.emplace_back();
-  locals_._callstack.back()._expr_cur_path = args_._fn_lookup_definition(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
-  locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
- } else {
-  locals_._ret_part.connect_outgoing_transitions_to(itr_post_open->second, args_._dest_state_machine);
-  locals_._ret_part.set_incoming_state_nr(locals_._callstack[frame_idx_]._state_nr_open_cur);
-  locals_._ret_part.add_outgoing_symbol_transition(locals_._callstack[frame_idx_]._state_nr_open_cur, Symbol(SymbolKindClose, locals_._callstack[frame_idx_]._nonterminal_idx_cur));
-  State& state_open = *args_._dest_state_machine.get_state(locals_._callstack[frame_idx_]._state_nr_open_cur);
-  state_open.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), itr_post_open->second);
- }
+  auto itr_post_open = locals_._nonterminal_idx_to_state_nr_post_open.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
+  if (itr_post_open == locals_._nonterminal_idx_to_state_nr_post_open.end()) {
+    StateNrType const state_nr_post_open = args_._dest_state_machine.create_new_state();
+    locals_._nonterminal_idx_to_state_nr_post_open.emplace(locals_._callstack[frame_idx_]._nonterminal_idx_cur, state_nr_post_open);
+    ++locals_._callstack[frame_idx_]._stage;
+    locals_._keep_current_frame = true;
+    locals_._callstack.emplace_back();
+    locals_._callstack.back()._expr_cur_path = args_._fn_lookup_definition(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
+    locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
+  } else {
+    locals_._ret_part.connect_outgoing_transitions_to(itr_post_open->second, args_._dest_state_machine);
+    locals_._ret_part.set_incoming_state_nr(locals_._callstack[frame_idx_]._state_nr_open_cur);
+    locals_._ret_part.add_outgoing_symbol_transition(locals_._callstack[frame_idx_]._state_nr_open_cur, Symbol(SymbolKindClose, locals_._callstack[frame_idx_]._nonterminal_idx_cur));
+    State& state_open = *args_._dest_state_machine.get_state(locals_._callstack[frame_idx_]._state_nr_open_cur);
+    state_open.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), itr_post_open->second);
+  }
 }
 
-void process_nonterminal_identifier_stage_1(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_){
- State& state_incoming = *args_._dest_state_machine.get_state(locals_._callstack[frame_idx_]._state_nr_open_cur);
- StateNrType const state_nr_close = locals_._nonterminal_idx_to_state_nr_close.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur)->second;
- StateNrType const state_nr_post_open = locals_._nonterminal_idx_to_state_nr_post_open.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur)->second;
- State& state_post_open = *args_._dest_state_machine.get_state(state_nr_post_open);
- state_incoming.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), state_nr_post_open);
- state_post_open.add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
- locals_._ret_part.set_incoming_state_nr(locals_._callstack[frame_idx_]._state_nr_open_cur);
- locals_._ret_part.connect_outgoing_transitions_to(state_nr_close, args_._dest_state_machine);
- locals_._ret_part.add_outgoing_symbol_transition(locals_._callstack[frame_idx_]._state_nr_open_cur, Symbol(SymbolKindClose, locals_._callstack[frame_idx_]._nonterminal_idx_cur));
+void process_nonterminal_identifier_stage_1(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
+  State& state_incoming = *args_._dest_state_machine.get_state(locals_._callstack[frame_idx_]._state_nr_open_cur);
+  StateNrType const state_nr_close = locals_._nonterminal_idx_to_state_nr_close.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur)->second;
+  StateNrType const state_nr_post_open = locals_._nonterminal_idx_to_state_nr_post_open.find(locals_._callstack[frame_idx_]._nonterminal_idx_cur)->second;
+  State& state_post_open = *args_._dest_state_machine.get_state(state_nr_post_open);
+  state_incoming.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), state_nr_post_open);
+  state_post_open.add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
+  locals_._ret_part.set_incoming_state_nr(locals_._callstack[frame_idx_]._state_nr_open_cur);
+  locals_._ret_part.connect_outgoing_transitions_to(state_nr_close, args_._dest_state_machine);
+  locals_._ret_part.add_outgoing_symbol_transition(locals_._callstack[frame_idx_]._state_nr_open_cur, Symbol(SymbolKindClose, locals_._callstack[frame_idx_]._nonterminal_idx_cur));
 
- locals_._nonterminal_idx_to_state_nr_post_open.erase(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
+  locals_._nonterminal_idx_to_state_nr_post_open.erase(locals_._callstack[frame_idx_]._nonterminal_idx_cur);
 }
 
 void process_terminal_identifier_stage_0(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
- GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
- StateNrType const state_nr_incoming = args_._dest_state_machine.create_new_state();
- locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
- locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindTerminal, args_._fn_rev_lookup_terminal_label(expr_cur.get_string())));
+  GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.resolve(args_._ast_root);
+  StateNrType const state_nr_incoming = args_._dest_state_machine.create_new_state();
+  locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
+  locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindTerminal, args_._fn_rev_lookup_terminal_label(expr_cur.get_string())));
 }
 
 void process_terminal_identifier_stage_0(StateMachinePartBuilder::TerminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
@@ -410,18 +406,18 @@ void process_terminal_identifier_stage_1(Locals& locals_, size_t frame_idx_) {
 }
 
 void process_hidden_terminal_stage_0(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
- GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.inplace_push(0).resolve(args_._ast_root);
- StateNrType const state_nr_incoming = args_._dest_state_machine.create_new_state();
- locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
- locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindHiddenTerminal, args_._fn_rev_lookup_terminal_label(expr_cur.get_string())));
+  GenericAst const& expr_cur = *locals_._callstack[frame_idx_]._expr_cur_path.inplace_push(0).resolve(args_._ast_root);
+  StateNrType const state_nr_incoming = args_._dest_state_machine.create_new_state();
+  locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
+  locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(SymbolKindHiddenTerminal, args_._fn_rev_lookup_terminal_label(expr_cur.get_string())));
 }
 
 void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
- switch (locals_._callstack[frame_idx_]._expression_type) {
-   case Ast::NtNonterminalDefinition:
-   case Ast::NtTerminalDefinition:
-   case Ast::NtNonterminalExpression:
-   case Ast::NtTerminalExpression:
+  switch (locals_._callstack[frame_idx_]._expression_type) {
+    case Ast::NtNonterminalDefinition:
+    case Ast::NtTerminalDefinition:
+    case Ast::NtNonterminalExpression:
+    case Ast::NtTerminalExpression:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_definition_stage_0(args_, locals_, frame_idx_);
@@ -430,8 +426,8 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           pmt::unreachable();
       }
       break;
-   case Ast::NtNonterminalSequence:
-   case Ast::NtTerminalSequence:
+    case Ast::NtNonterminalSequence:
+    case Ast::NtTerminalSequence:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_sequence_stage_0(args_, locals_, frame_idx_);
@@ -477,8 +473,8 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           pmt::unreachable();
       }
       break;
-      case Ast::NtSequenceModifier:
-       switch (locals_._callstack[frame_idx_]._stage) {
+    case Ast::NtSequenceModifier:
+      switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_permute_stage_0(args_, locals_, frame_idx_);
           break;
@@ -490,9 +486,9 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           break;
         default:
           pmt::unreachable();
-       }
-       break;
-      case Ast::TkEpsilon:
+      }
+      break;
+    case Ast::TkEpsilon:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_epsilon_stage_0(args_, locals_, frame_idx_);
@@ -502,9 +498,9 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
       }
       break;
     default: {
-     pmt::unreachable();
+      pmt::unreachable();
     }
- }
+  }
 }
 
 void dispatch(StateMachinePartBuilder::TerminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
@@ -556,28 +552,28 @@ void dispatch(StateMachinePartBuilder::TerminalBuildingArgs const& args_, Locals
 
 void dispatch(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, size_t frame_idx_) {
   switch (locals_._callstack[frame_idx_]._expression_type) {
-  case Ast::TkNonterminalIdentifier:
-    switch (locals_._callstack[frame_idx_]._stage) {
-      case 0:
-        process_nonterminal_identifier_stage_0(args_, locals_, frame_idx_);
-        break;
-      case 1:
-        process_nonterminal_identifier_stage_1(args_, locals_, frame_idx_);
-        break;
-      default:
-        pmt::unreachable();
-    }
-    break;
-  case Ast::TkTerminalIdentifier:
-    switch (locals_._callstack[frame_idx_]._stage) {
-      case 0:
-        process_terminal_identifier_stage_0(args_, locals_, frame_idx_);
-        break;
-      default:
-        pmt::unreachable();
-    }
-    break;
-   case Ast::NtTerminalHidden:
+    case Ast::TkNonterminalIdentifier:
+      switch (locals_._callstack[frame_idx_]._stage) {
+        case 0:
+          process_nonterminal_identifier_stage_0(args_, locals_, frame_idx_);
+          break;
+        case 1:
+          process_nonterminal_identifier_stage_1(args_, locals_, frame_idx_);
+          break;
+        default:
+          pmt::unreachable();
+      }
+      break;
+    case Ast::TkTerminalIdentifier:
+      switch (locals_._callstack[frame_idx_]._stage) {
+        case 0:
+          process_terminal_identifier_stage_0(args_, locals_, frame_idx_);
+          break;
+        default:
+          pmt::unreachable();
+      }
+      break;
+    case Ast::NtTerminalHidden:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_hidden_terminal_stage_0(args_, locals_, frame_idx_);
@@ -586,55 +582,55 @@ void dispatch(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Loc
           pmt::unreachable();
       }
       break;
-  default: {
-    dispatch_common(args_, locals_, frame_idx_);
+    default: {
+      dispatch_common(args_, locals_, frame_idx_);
+    }
   }
- }
 }
 
 auto build_common(auto const& args_, Locals& locals_) -> StateMachinePart {
- locals_._callstack.emplace_back();
- locals_._callstack.back()._expr_cur_path = args_._fn_lookup_definition(args_._starting_index);
- locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
+  locals_._callstack.emplace_back();
+  locals_._callstack.back()._expr_cur_path = args_._fn_lookup_definition(args_._starting_index);
+  locals_._callstack.back()._expression_type = locals_._callstack.back()._expr_cur_path.resolve(args_._ast_root)->get_id();
 
- while (!locals_._callstack.empty()) {
-  locals_._keep_current_frame = false; 
-  size_t const frame_idx = locals_._callstack.size() - 1;
-  dispatch(args_, locals_, frame_idx);
-  if (!locals_._keep_current_frame) {
-   locals_._callstack.erase(locals_._callstack.begin() + frame_idx);
+  while (!locals_._callstack.empty()) {
+    locals_._keep_current_frame = false;
+    size_t const frame_idx = locals_._callstack.size() - 1;
+    dispatch(args_, locals_, frame_idx);
+    if (!locals_._keep_current_frame) {
+      locals_._callstack.erase(locals_._callstack.begin() + frame_idx);
+    }
   }
- }
 
- return std::move(locals_._ret_part);
+  return std::move(locals_._ret_part);
 }
 
 }  // namespace
 
 StateMachinePartBuilder::TerminalBuildingArgs::TerminalBuildingArgs(ArgsBase base_, LabelLookupFn fn_lookup_terminal_label_, ReverseLabelLookupFn fn_rev_lookup_terminal_label_)
-: ArgsBase(std::move(base_)),
-  _fn_lookup_terminal_label(std::move(fn_lookup_terminal_label_)),
-  _fn_rev_lookup_terminal_label(std::move(fn_rev_lookup_terminal_label_)) {
+ : ArgsBase(std::move(base_))
+ , _fn_lookup_terminal_label(std::move(fn_lookup_terminal_label_))
+ , _fn_rev_lookup_terminal_label(std::move(fn_rev_lookup_terminal_label_)) {
 }
 
 StateMachinePartBuilder::NonterminalBuildingArgs::NonterminalBuildingArgs(ArgsBase base_, LabelLookupFn fn_lookup_nonterminal_label_, ReverseLabelLookupFn fn_rev_lookup_nonterminal_label_, ReverseLabelLookupFn fn_rev_lookup_terminal_label_)
-: ArgsBase(std::move(base_)),
-  _fn_lookup_nonterminal_label(std::move(fn_lookup_nonterminal_label_)),
-  _fn_rev_lookup_nonterminal_label(std::move(fn_rev_lookup_nonterminal_label_)),
-  _fn_rev_lookup_terminal_label(std::move(fn_rev_lookup_terminal_label_)) {
+ : ArgsBase(std::move(base_))
+ , _fn_lookup_nonterminal_label(std::move(fn_lookup_nonterminal_label_))
+ , _fn_rev_lookup_nonterminal_label(std::move(fn_rev_lookup_nonterminal_label_))
+ , _fn_rev_lookup_terminal_label(std::move(fn_rev_lookup_terminal_label_)) {
 }
 
 auto StateMachinePartBuilder::build(TerminalBuildingArgs const& args_) -> StateMachinePart {
- Locals locals;
- locals._terminal_idx_stack_contents.insert(Interval<size_t>(args_._starting_index));
- locals._terminal_idx_stack.push_back(args_._starting_index);
+  Locals locals;
+  locals._terminal_idx_stack_contents.insert(Interval<size_t>(args_._starting_index));
+  locals._terminal_idx_stack.push_back(args_._starting_index);
 
- return build_common(args_, locals);
+  return build_common(args_, locals);
 }
 
 auto StateMachinePartBuilder::build(NonterminalBuildingArgs const& args_) -> StateMachinePart {
- Locals locals;
- return build_common(args_, locals);
+  Locals locals;
+  return build_common(args_, locals);
 }
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::builder

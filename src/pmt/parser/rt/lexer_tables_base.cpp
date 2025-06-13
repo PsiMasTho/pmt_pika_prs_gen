@@ -15,4 +15,4 @@ auto LexerTablesBase::id_to_string(GenericId::IdType id_) const -> std::string {
   return std::to_string(id_);
 }
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser::rt

@@ -1,9 +1,9 @@
 #include "pmt/parser/rt/generic_lexer.hpp"
 
 #include "pmt/base/numeric_cast.hpp"
+#include "pmt/parser/primitives.hpp"
 #include "pmt/parser/rt/lexer_tables_base.hpp"
 #include "pmt/parser/rt/util.hpp"
-#include "pmt/parser/primitives.hpp"
 
 #include <cassert>
 #include <utility>
@@ -12,9 +12,7 @@ namespace pmt::parser::rt {
 using namespace pmt::base;
 using namespace pmt::util::sm;
 
-namespace {
-
-}
+namespace {}
 
 GenericLexer::GenericLexer(std::string_view input_, LexerTablesBase const& lexer_tables_)
  : _accept_count(lexer_tables_.get_accept_count())
@@ -24,8 +22,7 @@ GenericLexer::GenericLexer(std::string_view input_, LexerTablesBase const& lexer
  , _input(input_)
  , _cursor(0)
  , _linecount_cursor(0)
- , _state_nr_linecount(StateNrStart)
-{
+ , _state_nr_linecount(StateNrStart) {
 }
 
 auto GenericLexer::lex() -> LexReturn {
@@ -53,8 +50,8 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
     }
 
     if (countl < _accept_count) {
-     te = p;
-     id = _lexer_tables.get_accept_index_id(countl);
+      te = p;
+      id = _lexer_tables.get_accept_index_id(countl);
     }
 
     if (p == _input.size() + 1) {
@@ -66,48 +63,48 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
   }
 
   if (id != GenericId::IdUninitialized && countl < _accept_count) {
-   LexReturn ret;
-   ret._accepted = countl;
-   ret._token._token = std::string_view(_input.data() + _cursor, te - _cursor);
-   ret._token._id = id;
-   ret._token._source_position = get_source_position_at(_cursor);
-   _cursor = te;
-   return ret;
+    LexReturn ret;
+    ret._accepted = countl;
+    ret._token._token = std::string_view(_input.data() + _cursor, te - _cursor);
+    ret._token._id = id;
+    ret._token._source_position = get_source_position_at(_cursor);
+    _cursor = te;
+    return ret;
   } else {
-   std::string message = "Lexing error, expected to match: ";
-   std::string delim;
-   for (size_t i = 0; i < _accept_count; ++i) {
-    if (get_bit(accepts_, i)) {
-     message += std::exchange(delim, ", ") + "'" + _lexer_tables.get_accept_index_label(i) + "'";
+    std::string message = "Lexing error, expected to match: ";
+    std::string delim;
+    for (size_t i = 0; i < _accept_count; ++i) {
+      if (get_bit(accepts_, i)) {
+        message += std::exchange(delim, ", ") + "'" + _lexer_tables.get_accept_index_label(i) + "'";
+      }
     }
-   }
 
-   SourcePosition const source_position = get_source_position_at(_cursor);
-   message += " at line: " + std::to_string(source_position._lineno) + ", column: " + std::to_string(source_position._colno);
-   throw std::runtime_error(message);
+    SourcePosition const source_position = get_source_position_at(_cursor);
+    message += " at line: " + std::to_string(source_position._lineno) + ", column: " + std::to_string(source_position._colno);
+    throw std::runtime_error(message);
   }
 }
 
 auto GenericLexer::get_eoi_accept_index() const -> size_t {
- return _lexer_tables.get_eoi_accept_index();
+  return _lexer_tables.get_eoi_accept_index();
 }
 
 auto GenericLexer::get_source_position_at(size_t p_) -> SourcePosition {
- assert(_linecount_last <= p_);
- 
- while (_linecount_cursor < p_) {
-  if (_lexer_tables.is_linecount_state_nr_accepting(_state_nr_linecount)) {
-   _linecount_last = _linecount_cursor;
-   ++_linecount_at_last;
-   _state_nr_linecount = StateNrStart;
+  assert(_linecount_last <= p_);
+
+  while (_linecount_cursor < p_) {
+    if (_lexer_tables.is_linecount_state_nr_accepting(_state_nr_linecount)) {
+      _linecount_last = _linecount_cursor;
+      ++_linecount_at_last;
+      _state_nr_linecount = StateNrStart;
+    }
+
+    SymbolValueType const symbol = (p_ == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolValueType>(_input[_linecount_cursor]);
+    _state_nr_linecount = _lexer_tables.get_linecount_state_nr_next(_state_nr_linecount, symbol);
+    ++_linecount_cursor;
   }
 
-  SymbolValueType const symbol = (p_ == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolValueType>(_input[_linecount_cursor]);
-  _state_nr_linecount = _lexer_tables.get_linecount_state_nr_next(_state_nr_linecount, symbol);
-  ++_linecount_cursor;
- }
-
- return SourcePosition(_linecount_at_last, (_linecount_cursor - _linecount_last) + 1);
+  return SourcePosition(_linecount_at_last, (_linecount_cursor - _linecount_last) + 1);
 }
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser::rt

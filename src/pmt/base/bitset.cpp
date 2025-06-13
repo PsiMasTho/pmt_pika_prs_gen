@@ -70,7 +70,7 @@ auto Bitset::operator=(Bitset const& other_) -> Bitset& {
   swap_tmp = _capacity_idx;
   _capacity_idx = tmp._capacity_idx;
   tmp._capacity_idx = swap_tmp;
-  
+
   return *this;
 }
 

@@ -20,4 +20,4 @@ class SourcePosition {
   SourcePosition() = default;
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

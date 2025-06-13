@@ -1,7 +1,7 @@
 #include "pmt/parser/builder/tui/args.hpp"
 
-#include <stdexcept>
 #include <set>
+#include <stdexcept>
 
 namespace pmt::parser::builder::tui {
 
@@ -45,7 +45,7 @@ Args::Args(int argc_, char const* const* argv_) {
       _output_id_constants_file = argv_[++i];
     } else if (arg == "-print-ast") {
       _print_ast_from_generated_tables = true;
-    } else if (arg == "-lexer-class-name"){
+    } else if (arg == "-lexer-class-name") {
       if (i + 1 >= argc_) {
         throw std::runtime_error("Missing argument for -class-name");
       }
@@ -94,9 +94,9 @@ Args::Args(int argc_, char const* const* argv_) {
   }
 
   if (_lexer_class_name.empty()) {
-   throw std::runtime_error("Missing lexer class name");
+    throw std::runtime_error("Missing lexer class name");
   }
-  
+
   if (_parser_class_name.empty()) {
     throw std::runtime_error("Missing parser class name");
   }
@@ -105,19 +105,13 @@ Args::Args(int argc_, char const* const* argv_) {
     throw std::runtime_error("Missing namespace name");
   }
 
-  std::set<std::string> unique = {
-    _input_grammar_file,
-    //_input_test_file, // Allow the test file to be the same as one of the others
-    _output_lexer_header_file,
-    _output_lexer_source_file,
-    _output_parser_header_file,
-    _output_parser_source_file,
-    _output_id_constants_file
-  };
+  std::set<std::string> unique = {_input_grammar_file,
+                                  //_input_test_file, // Allow the test file to be the same as one of the others
+                                  _output_lexer_header_file, _output_lexer_source_file, _output_parser_header_file, _output_parser_source_file, _output_id_constants_file};
 
   if (unique.size() != 6) {
     throw std::runtime_error("Duplicate file names provided");
   }
 }
 
-}  // namespace pmt::parserbuilder::exe
+}  // namespace pmt::parser::builder::tui

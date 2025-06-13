@@ -210,4 +210,4 @@ void GenericAst::unpack(size_t index_) {
   }
 }
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

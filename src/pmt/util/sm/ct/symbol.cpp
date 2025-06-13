@@ -4,9 +4,7 @@
 
 namespace pmt::util::sm::ct {
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 Symbol::Symbol(SymbolKindType kind_, SymbolValueType value_)
  : _kind(kind_)
@@ -36,4 +34,4 @@ void Symbol::set_value(SymbolValueType value_) {
   _value = value_;
 }
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

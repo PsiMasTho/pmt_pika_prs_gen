@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstddef>
-#include <vector>
-#include <span>
 #include <optional>
+#include <span>
+#include <vector>
 
 namespace pmt::parser::grammar {
 
@@ -30,4 +30,4 @@ class IndexPermutationGenerator {
   void init_permutation();
 };
 
-}
+}  // namespace pmt::parser::grammar

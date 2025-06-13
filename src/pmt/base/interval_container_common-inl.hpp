@@ -44,20 +44,20 @@ auto Interval<T_>::hash() const -> size_t {
 
 template <std::integral T_>
 void Interval<T_>::inplace_or(Interval const& other_) {
- _lower = std::min(_lower, other_.get_lower());
- _upper = std::max(_upper, other_.get_upper());
+  _lower = std::min(_lower, other_.get_lower());
+  _upper = std::max(_upper, other_.get_upper());
 }
 
 template <std::integral T_>
 auto Interval<T_>::clone_and(Interval const& other_) const -> std::optional<Interval> {
- Interval const* higher = _lower < other_.get_lower() ? this : &other_;
- Interval const* lower = (higher == this) ? &other_ : this;
- 
- if (higher->get_lower() > lower->get_upper()) {
-   return std::nullopt;
- }
+  Interval const* higher = _lower < other_.get_lower() ? this : &other_;
+  Interval const* lower = (higher == this) ? &other_ : this;
 
- return Interval{std::max(higher->get_lower(), lower->get_lower()), std::min(higher->get_upper(), lower->get_upper())};
+  if (higher->get_lower() > lower->get_upper()) {
+    return std::nullopt;
+  }
+
+  return Interval{std::max(higher->get_lower(), lower->get_lower()), std::min(higher->get_upper(), lower->get_upper())};
 }
 
 template <std::integral T_>

@@ -4,10 +4,10 @@
 
 #include <cassert>
 #include <iostream>
+#include <optional>
 #include <random>
 #include <string>
 #include <unordered_map>
-#include <optional>
 
 namespace pmt::base::test {
 

@@ -12,28 +12,28 @@ namespace pmt::parser::builder {
 
 class IdConstantsWriter : public pmt::util::SkeletonReplacerBase {
  public:
- // -$ Types / Constants $-
- struct WriterArgs {
-  std::ostream& _os_id_constants;
-  std::istream& _is_id_constants_skel;
-  LexerTables const& _lexer_tables;
-  ParserTables const& _parser_tables;
- };
+  // -$ Types / Constants $-
+  struct WriterArgs {
+    std::ostream& _os_id_constants;
+    std::istream& _is_id_constants_skel;
+    LexerTables const& _lexer_tables;
+    ParserTables const& _parser_tables;
+  };
 
  private:
- // -$ Data $-
- WriterArgs* _writer_args = nullptr;
- std::string _id_constants;
+  // -$ Data $-
+  WriterArgs* _writer_args = nullptr;
+  std::string _id_constants;
 
  public:
   // -$ Functions $-
   // --$ Other $--
   void write(WriterArgs& writer_args_);
 
-  private:
+ private:
   void replace_id_constants(std::string& str_);
 
   void replace_timestamp(std::string& str_);
 };
 
-}
+}  // namespace pmt::parser::builder

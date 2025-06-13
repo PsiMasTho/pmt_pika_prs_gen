@@ -54,7 +54,7 @@ std::array</* $replace LINECOUNT_ACCEPTS_TYPE */, /* $replace LINECOUNT_ACCEPTS_
 } // namespace
 
 auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
- return pmt::util::smrt::get_state_nr_next_generic(LEXER_TRANSITIONS, LEXER_TRANSITIONS_STATE_OFFSETS, LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
+ return pmt::parser::rt::get_state_nr_next_generic(LEXER_TRANSITIONS, LEXER_TRANSITIONS_STATE_OFFSETS, LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
 }
 
 auto /* $replace CLASS_NAME */::get_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
@@ -94,7 +94,7 @@ auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
 }
 
 auto /* $replace CLASS_NAME */::get_linecount_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
- return pmt::util::smrt::get_state_nr_next_generic(LINECOUNT_TRANSITIONS, LINECOUNT_TRANSITIONS_STATE_OFFSETS, LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
+ return pmt::parser::rt::get_state_nr_next_generic(LINECOUNT_TRANSITIONS, LINECOUNT_TRANSITIONS_STATE_OFFSETS, LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
 }
 
 auto /* $replace CLASS_NAME */::is_linecount_state_nr_accepting(pmt::util::sm::SymbolValueType state_nr_) const -> bool {

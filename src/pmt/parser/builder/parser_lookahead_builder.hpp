@@ -13,9 +13,9 @@ class ParserLookaheadBuilder {
 
   class Args {
    public:
-   pmt::util::sm::ct::StateMachine& _parser_state_machine;
-   pmt::base::IntervalSet<pmt::util::sm::StateNrType> _conflicting_state_nrs; // returned by extract_conflicts
-   LabelLookupFn _fn_lookup_terminal_label;
+    pmt::util::sm::ct::StateMachine& _parser_state_machine;
+    pmt::base::IntervalSet<pmt::util::sm::StateNrType> _conflicting_state_nrs;  // returned by extract_conflicts
+    LabelLookupFn _fn_lookup_terminal_label;
   };
 
   // -$ Functions $-
@@ -24,4 +24,4 @@ class ParserLookaheadBuilder {
   static auto extract_conflicts(pmt::util::sm::ct::StateMachine& state_machine_) -> pmt::base::IntervalSet<pmt::util::sm::StateNrType>;
 };
 
-}
+}  // namespace pmt::parser::builder

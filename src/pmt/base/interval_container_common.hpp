@@ -4,9 +4,9 @@
 
 #include <concepts>
 #include <cstddef>
+#include <optional>
 #include <span>
 #include <utility>
-#include <optional>
 
 namespace pmt::base {
 

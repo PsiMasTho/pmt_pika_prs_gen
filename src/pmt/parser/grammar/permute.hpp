@@ -15,11 +15,11 @@ class Permute {
   size_t _max_items;
 
  public:
-  explicit Permute(pmt::parser::GenericAst const &ast_); // Should be NtSequenceModifier
+  explicit Permute(pmt::parser::GenericAst const &ast_);  // Should be NtSequenceModifier
 
   auto get_sequence_length() const -> size_t;
   auto get_min_items() const -> size_t;
   auto get_max_items() const -> size_t;
 };
 
-}
+}  // namespace pmt::parser::grammar

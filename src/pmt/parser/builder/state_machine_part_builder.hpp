@@ -1,10 +1,10 @@
 #pragma once
 
 #include "pmt/fw_decl.hpp"
+#include "pmt/parser/generic_ast_path.hpp"
 #include "pmt/parser/grammar/number.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/util/sm/ct/state_machine_part.hpp"
-#include "pmt/parser/generic_ast_path.hpp"
 
 #include <functional>
 #include <string>
@@ -22,25 +22,25 @@ class StateMachinePartBuilder {
 
   class ArgsBase {
    public:
-   GenericAst const& _ast_root;
-   pmt::util::sm::ct::StateMachine& _dest_state_machine;
-   DefinitionLookupFn _fn_lookup_definition;
-   size_t _starting_index;
+    GenericAst const& _ast_root;
+    pmt::util::sm::ct::StateMachine& _dest_state_machine;
+    DefinitionLookupFn _fn_lookup_definition;
+    size_t _starting_index;
   };
 
   class TerminalBuildingArgs : public ArgsBase {
    public:
-   TerminalBuildingArgs(ArgsBase base_, LabelLookupFn fn_lookup_terminal_label_, ReverseLabelLookupFn fn_rev_lookup_terminal_label_);
-   LabelLookupFn _fn_lookup_terminal_label;
-   ReverseLabelLookupFn _fn_rev_lookup_terminal_label;
+    TerminalBuildingArgs(ArgsBase base_, LabelLookupFn fn_lookup_terminal_label_, ReverseLabelLookupFn fn_rev_lookup_terminal_label_);
+    LabelLookupFn _fn_lookup_terminal_label;
+    ReverseLabelLookupFn _fn_rev_lookup_terminal_label;
   };
 
   class NonterminalBuildingArgs : public ArgsBase {
    public:
-   NonterminalBuildingArgs(ArgsBase base_, LabelLookupFn fn_lookup_nonterminal_label_, ReverseLabelLookupFn fn_rev_lookup_nonterminal_label_, ReverseLabelLookupFn fn_rev_lookup_terminal_label_);
-   LabelLookupFn _fn_lookup_nonterminal_label;
-   ReverseLabelLookupFn _fn_rev_lookup_nonterminal_label;
-   ReverseLabelLookupFn _fn_rev_lookup_terminal_label;
+    NonterminalBuildingArgs(ArgsBase base_, LabelLookupFn fn_lookup_nonterminal_label_, ReverseLabelLookupFn fn_rev_lookup_nonterminal_label_, ReverseLabelLookupFn fn_rev_lookup_terminal_label_);
+    LabelLookupFn _fn_lookup_nonterminal_label;
+    ReverseLabelLookupFn _fn_rev_lookup_nonterminal_label;
+    ReverseLabelLookupFn _fn_rev_lookup_terminal_label;
   };
 
   // --$ Other $--
@@ -48,4 +48,4 @@ class StateMachinePartBuilder {
   static auto build(NonterminalBuildingArgs const& args_) -> pmt::util::sm::ct::StateMachinePart;
 };
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::builder

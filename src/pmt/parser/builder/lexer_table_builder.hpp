@@ -10,7 +10,6 @@
 PMT_FW_DECL_NS_CLASS(pmt::parser, GenericAst);
 PMT_FW_DECL_NS_CLASS(pmt::parser::grammar, GrammarData);
 
-
 namespace pmt::parser::builder {
 
 class LexerTableBuilder {
@@ -48,4 +47,4 @@ class LexerTableBuilder {
   void write_dot(std::string_view filename_, std::string_view title_, pmt::util::sm::ct::StateMachine const& state_machine_) const;
 };
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::builder

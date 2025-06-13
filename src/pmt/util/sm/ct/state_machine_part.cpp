@@ -54,9 +54,7 @@ void StateMachinePart::connect_outgoing_transitions_to(StateNrType state_nr_to_,
   for (auto const& [state_nr_from, symbol_kinds_to_values] : _outgoing_symbol_transitions) {
     State& state_from = state_machine_.get_or_create_state(state_nr_from);
     for (auto const& [kind, values] : symbol_kinds_to_values) {
-     values.for_each_interval([&](Interval<SymbolValueType> const& interval_) {
-        state_from.add_symbol_transition(kind, interval_, state_nr_to_);
-      }); 
+      values.for_each_interval([&](Interval<SymbolValueType> const& interval_) { state_from.add_symbol_transition(kind, interval_, state_nr_to_); });
     }
   }
 
@@ -67,4 +65,4 @@ void StateMachinePart::connect_outgoing_transitions_to(StateNrType state_nr_to_,
   clear_outgoing_transitions();
 }
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

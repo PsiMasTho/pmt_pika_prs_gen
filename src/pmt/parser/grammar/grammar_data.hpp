@@ -1,11 +1,11 @@
 #pragma once
 
-#include "pmt/parser/generic_ast_path.hpp"
 #include "pmt/base/overloaded.hpp"
+#include "pmt/parser/generic_ast_path.hpp"
 
+#include <limits>
 #include <string>
 #include <vector>
-#include <limits>
 
 namespace pmt::parser::grammar {
 
@@ -17,13 +17,13 @@ class GrammarData {
   };
 
   static inline char const TERMINAL_RESERVED_PREFIX_CH = '@';
-  static inline std::string const TERMINAL_DIRECT_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "direct_";               // NOLINT
-  static inline std::string const TERMINAL_COMMENT_OPEN_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_open_";   // NOLINT
-  static inline std::string const TERMINAL_COMMENT_CLOSE_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_close_"; // NOLINT
-  static inline std::string const TERMINAL_LABEL_WHITESPACE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "whitespace";         // NOLINT
-  static inline std::string const TERMINAL_LABEL_START = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "start";                   // NOLINT
-  static inline std::string const LABEL_EOI = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "eoi";                                // NOLINT
-  static inline std::string const TERMINAL_LABEL_LINECOUNT = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "linecount";           // NOLINT
+  static inline std::string const TERMINAL_DIRECT_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "direct_";                // NOLINT
+  static inline std::string const TERMINAL_COMMENT_OPEN_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_open_";    // NOLINT
+  static inline std::string const TERMINAL_COMMENT_CLOSE_PREFIX = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "comment_close_";  // NOLINT
+  static inline std::string const TERMINAL_LABEL_WHITESPACE = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "whitespace";          // NOLINT
+  static inline std::string const TERMINAL_LABEL_START = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "start";                    // NOLINT
+  static inline std::string const LABEL_EOI = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "eoi";                                 // NOLINT
+  static inline std::string const TERMINAL_LABEL_LINECOUNT = std::string(1, TERMINAL_RESERVED_PREFIX_CH) + "linecount";            // NOLINT
 
   static inline bool const MERGE_DEFAULT = false;
   static inline bool const UNPACK_DEFAULT = false;
@@ -45,19 +45,15 @@ class GrammarData {
     bool _hide : 1 = HIDE_DEFAULT;
   };
 
-  using FetchLabelString = decltype(pmt::base::Overloaded{
-   [](TerminalAcceptData const& data_) { return data_._label; },
-   [](NonterminalAcceptData const& data_) { return data_._label; },
-   [](std::string const& data_) { return data_; },
-   [](std::string_view const& data_) { return std::string(data_); }
-  });
+  using FetchLabelString = decltype(pmt::base::Overloaded{[](TerminalAcceptData const& data_) { return data_._label; }, [](NonterminalAcceptData const& data_) { return data_._label; }, [](std::string const& data_) { return data_; },
+                                                          [](std::string_view const& data_) {
+                                                            return std::string(data_);
+                                                          }});
 
-  using FetchIdNameString = decltype(pmt::base::Overloaded{
-   [](TerminalAcceptData const& data_) { return data_._id_name; },
-   [](NonterminalAcceptData const& data_) { return data_._id_name; },
-   [](std::string const& data_) { return data_; },
-   [](std::string_view const& data_) { return std::string(data_); }
-  });
+  using FetchIdNameString = decltype(pmt::base::Overloaded{[](TerminalAcceptData const& data_) { return data_._id_name; }, [](NonterminalAcceptData const& data_) { return data_._id_name; }, [](std::string const& data_) { return data_; },
+                                                           [](std::string_view const& data_) {
+                                                             return std::string(data_);
+                                                           }});
 
   // -$ Data $-
   // terminals
@@ -112,4 +108,4 @@ class GrammarData {
   auto try_find_nonterminal_accept_index_by_label(std::string const& label_) -> size_t;
 };
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::grammar

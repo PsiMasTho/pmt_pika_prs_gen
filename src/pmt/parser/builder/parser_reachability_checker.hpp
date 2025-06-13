@@ -16,12 +16,12 @@ class ParserReachabilityChecker {
 
   class Args {
    public:
-   AcceptLookupFn _fn_lookup_accept_index_by_label;
-   pmt::util::sm::ct::StateMachine const& _parser_state_machine;
+    AcceptLookupFn _fn_lookup_accept_index_by_label;
+    pmt::util::sm::ct::StateMachine const& _parser_state_machine;
   };
 
   // -$ Functions $-
   // --$ Other $--
   static void check_reachability(Args args_);
 };
-}
+}  // namespace pmt::parser::builder

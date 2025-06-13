@@ -10,7 +10,7 @@ PMT_FW_DECL_NS_CLASS(pmt::util::sm::ct, StateMachine)
 namespace pmt::util::sm::ct {
 
 class StateMachinePruner {
- // -$ Types / Constants $-
+  // -$ Types / Constants $-
  public:
   class Args {
    public:
@@ -24,4 +24,4 @@ class StateMachinePruner {
   static void prune(Args args_);
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

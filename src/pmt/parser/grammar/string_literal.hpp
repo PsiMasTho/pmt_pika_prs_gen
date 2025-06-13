@@ -13,11 +13,11 @@ class StringLiteral {
   // -$ Types / Constants $-
   using StringType = std::string;
 
-  private:
+ private:
   // -$ Data $-
   StringType _value;
 
-  public:
+ public:
   // -$ Functions $-
   // --$ Lifetime $--
   explicit StringLiteral(pmt::parser::GenericAst const &ast_);
@@ -26,4 +26,4 @@ class StringLiteral {
   [[nodiscard]] auto get_value() const -> StringType;
 };
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::grammar

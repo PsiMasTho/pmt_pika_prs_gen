@@ -9,7 +9,7 @@ namespace pmt::parser::builder {
 
 class TerminalOverlapChecker {
  public:
- // -$ Types / Constants $-
+  // -$ Types / Constants $-
  public:
   class Args {
    public:
@@ -19,8 +19,8 @@ class TerminalOverlapChecker {
     pmt::util::sm::StateNrType _state_nr_from = pmt::util::sm::StateNrStart;
   };
 
- // --$ Other $--
- static auto find_overlaps(Args args_) -> std::unordered_set<pmt::base::IntervalSet<pmt::util::sm::AcceptsIndexType>>;
+  // --$ Other $--
+  static auto find_overlaps(Args args_) -> std::unordered_set<pmt::base::IntervalSet<pmt::util::sm::AcceptsIndexType>>;
 };
 
-}
+}  // namespace pmt::parser::builder

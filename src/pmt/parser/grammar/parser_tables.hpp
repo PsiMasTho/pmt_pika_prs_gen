@@ -32,4 +32,4 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
 };
 
-} // namespace pmt::parserbuilder
+}  // namespace pmt::parser::grammar

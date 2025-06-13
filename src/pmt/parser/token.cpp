@@ -13,4 +13,4 @@ auto Token::to_ast() const -> GenericAst::UniqueHandle {
   return ret;
 }
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

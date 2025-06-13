@@ -14,8 +14,8 @@ class NonterminalInliner {
   // -$ Types / Constants $-
   class Args {
    public:
-   GrammarData& _grammar_data;
-   pmt::parser::GenericAst& _ast;
+    GrammarData& _grammar_data;
+    pmt::parser::GenericAst& _ast;
   };
 
   // -$ Functions $-
@@ -23,4 +23,4 @@ class NonterminalInliner {
   static auto do_inline(Args args_) -> size_t;
 };
 
-}
+}  // namespace pmt::parser::grammar

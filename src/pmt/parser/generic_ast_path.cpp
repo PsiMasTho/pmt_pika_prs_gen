@@ -86,8 +86,8 @@ auto GenericAstPath::front() const -> size_t {
 }
 
 auto GenericAstPath::back() const -> size_t {
- assert(!_path.empty());
- return _path.back();
+  assert(!_path.empty());
+  return _path.back();
 }
 
 auto GenericAstPath::resolve(GenericAst const& root_) const -> GenericAst const* {
@@ -114,4 +114,4 @@ auto GenericAstPath::hash() const -> size_t {
   return seed;
 }
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

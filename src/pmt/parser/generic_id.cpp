@@ -1,7 +1,7 @@
 #include "pmt/parser/generic_id.hpp"
 
-#include <stdexcept>
 #include <regex>
+#include <stdexcept>
 
 namespace pmt::parser {
 
@@ -51,8 +51,8 @@ auto GenericId::is_generic_id(IdType id_) -> bool {
 }
 
 auto GenericId::is_generic_id(std::string_view str_) -> bool {
- static const std::regex generic_id_regex = std::regex(R"(^Id(?:Uninitialized|Default|Eoi|Start|Root|Newline|Reserved\d+)$)", std::regex::optimize);
+  static const std::regex generic_id_regex = std::regex(R"(^Id(?:Uninitialized|Default|Eoi|Start|Root|Newline|Reserved\d+)$)", std::regex::optimize);
   return std::regex_match(str_.data(), generic_id_regex);
 }
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

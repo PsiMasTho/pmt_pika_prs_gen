@@ -50,4 +50,4 @@ class GenericAstPath : public pmt::base::Hashable<GenericAstPath> {
   std::vector<size_t> _path;
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

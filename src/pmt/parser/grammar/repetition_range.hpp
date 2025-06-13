@@ -14,7 +14,7 @@ class RepetitionRange {
   Number::NumberType _lower = 0;
   std::optional<Number::NumberType> _upper;
 
-  public:
+ public:
   // -$ Functions $-
   // --$ Lifetime $--
   RepetitionRange() = default;
@@ -28,4 +28,4 @@ class RepetitionRange {
   void set_upper(std::optional<Number::NumberType> upper_);
 };
 
-}
+}  // namespace pmt::parser::grammar

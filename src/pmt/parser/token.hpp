@@ -22,4 +22,4 @@ class Token {
   auto to_ast() const -> GenericAst::UniqueHandle;
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

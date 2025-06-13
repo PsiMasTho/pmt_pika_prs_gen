@@ -13,7 +13,7 @@ namespace pmt::base {
 
 template <std::integral KEY_>
 IntervalSet<KEY_>::IntervalSet(Interval<KEY_> interval_)
-: IntervalSet() {
+ : IntervalSet() {
   insert(interval_);
 }
 
@@ -156,8 +156,8 @@ auto IntervalSet<KEY_>::contains(KEY_ key_) const -> bool {
 
 template <std::integral KEY_>
 auto IntervalSet<KEY_>::get_by_index(size_t index_) const -> Interval<KEY_> {
- assert(index_ < size());
- return Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]);
+  assert(index_ < size());
+  return Interval<KEY_>(get_lowers()[index_], get_uppers()[index_]);
 }
 
 template <std::integral KEY_>

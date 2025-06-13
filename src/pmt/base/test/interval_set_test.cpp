@@ -4,9 +4,9 @@
 #include "pmt/base/interval_set.hpp"
 
 #include <cassert>
+#include <optional>
 #include <random>
 #include <unordered_set>
-#include <optional>
 
 namespace pmt::base::test {
 

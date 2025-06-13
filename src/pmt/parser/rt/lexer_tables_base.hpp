@@ -31,4 +31,4 @@ class LexerTablesBase {
   virtual auto is_linecount_state_nr_accepting(pmt::util::sm::StateNrType state_nr_) const -> bool = 0;
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser::rt

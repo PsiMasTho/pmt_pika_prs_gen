@@ -1,10 +1,10 @@
 #include "pmt/parser/grammar/nonterminal_inliner.hpp"
 
 #include "pmt/base/interval_set.hpp"
+#include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/util/sm/primitives.hpp"
-#include "pmt/parser/generic_ast.hpp"
 
 #include <unordered_set>
 
@@ -28,38 +28,38 @@ auto check_inlineable(NonterminalInliner::Args const& args_, AcceptsIndexType ac
   };
 
   auto const take = [&]() -> GenericAst const& {
-   GenericAst const& ret = *pending.back();
-   pending.pop_back();
-   return ret;
+    GenericAst const& ret = *pending.back();
+    pending.pop_back();
+    return ret;
   };
 
   push_and_visit(*args_._grammar_data._nonterminal_accepts[accepts_index_]._definition_path.resolve(args_._ast));
 
   while (!pending.empty()) {
-   GenericAst const& node = take();
-   switch (node.get_id()) {
-    case Ast::TkNonterminalIdentifier: {
-      AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_label(node.get_string());
-      if (index == accepts_index_) {
-       return false;
-      }
-      push_and_visit(*args_._grammar_data.lookup_nonterminal_definition_by_index(index).resolve(args_._ast));
-    } break;      
-    case Ast::NtNonterminalDefinition:
-    case Ast::NtNonterminalExpression:
-    case Ast::NtNonterminalChoices:
-    case Ast::NtNonterminalSequence:
-      for (size_t i = 0; i < node.get_children_size(); ++i) {
-        push_and_visit(*node.get_child_at(i));
-      }
-      break;
-    case Ast::NtRepetitionExpression:
-    case Ast::NtSequenceModifier:
-      push_and_visit(*node.get_child_at(0));
-      break;
-    default:
-      break;
-   }
+    GenericAst const& node = take();
+    switch (node.get_id()) {
+      case Ast::TkNonterminalIdentifier: {
+        AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_label(node.get_string());
+        if (index == accepts_index_) {
+          return false;
+        }
+        push_and_visit(*args_._grammar_data.lookup_nonterminal_definition_by_index(index).resolve(args_._ast));
+      } break;
+      case Ast::NtNonterminalDefinition:
+      case Ast::NtNonterminalExpression:
+      case Ast::NtNonterminalChoices:
+      case Ast::NtNonterminalSequence:
+        for (size_t i = 0; i < node.get_children_size(); ++i) {
+          push_and_visit(*node.get_child_at(i));
+        }
+        break;
+      case Ast::NtRepetitionExpression:
+      case Ast::NtSequenceModifier:
+        push_and_visit(*node.get_child_at(0));
+        break;
+      default:
+        break;
+    }
   }
 
   return true;
@@ -81,76 +81,76 @@ void perform_inline(NonterminalInliner::Args& args_, AcceptsIndexType accepts_in
   };
 
   auto const take = [&]() -> GenericAstPath {
-   GenericAstPath const ret = pending.back();
-   pending.pop_back();
-   return ret;
+    GenericAstPath const ret = pending.back();
+    pending.pop_back();
+    return ret;
   };
 
   for (GrammarData::NonterminalAcceptData const& accept_data : args_._grammar_data._nonterminal_accepts) {
-   push_and_visit(accept_data._definition_path);
+    push_and_visit(accept_data._definition_path);
   }
 
   while (!pending.empty()) {
-   GenericAstPath const path = take();
-   GenericAst& node = *path.resolve(args_._ast);
+    GenericAstPath const path = take();
+    GenericAst& node = *path.resolve(args_._ast);
 
-   switch (node.get_id()) {
-    case Ast::TkNonterminalIdentifier: {
-      AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_label(node.get_string());
-      if (index != accepts_index_) {
-       break;
-      }
-      GenericAstPath const parent_path = path.clone_pop();
-      GenericAst& parent_node = *parent_path.resolve(args_._ast);
-      parent_node.take_child_at(path.back());
-      parent_node.give_child_at(path.back(), GenericAst::clone(*definition_path.resolve(args_._ast)));
-      // We changed this expression, so we need to re-visit
-      visited.erase(path);
-      push_and_visit(parent_path);
-    } break;      
-    case Ast::NtNonterminalDefinition:
-    case Ast::NtNonterminalExpression:
-    case Ast::NtNonterminalChoices:
-    case Ast::NtNonterminalSequence:
-      for (size_t i = 0; i < node.get_children_size(); ++i) {
-        push_and_visit(path.clone_push(i));
-      }
-      break;
-    case Ast::NtRepetitionExpression:
-    case Ast::NtSequenceModifier:
-      push_and_visit(path.clone_push(0));
-      break;
-    default:
-      break;
-   }
+    switch (node.get_id()) {
+      case Ast::TkNonterminalIdentifier: {
+        AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_label(node.get_string());
+        if (index != accepts_index_) {
+          break;
+        }
+        GenericAstPath const parent_path = path.clone_pop();
+        GenericAst& parent_node = *parent_path.resolve(args_._ast);
+        parent_node.take_child_at(path.back());
+        parent_node.give_child_at(path.back(), GenericAst::clone(*definition_path.resolve(args_._ast)));
+        // We changed this expression, so we need to re-visit
+        visited.erase(path);
+        push_and_visit(parent_path);
+      } break;
+      case Ast::NtNonterminalDefinition:
+      case Ast::NtNonterminalExpression:
+      case Ast::NtNonterminalChoices:
+      case Ast::NtNonterminalSequence:
+        for (size_t i = 0; i < node.get_children_size(); ++i) {
+          push_and_visit(path.clone_push(i));
+        }
+        break;
+      case Ast::NtRepetitionExpression:
+      case Ast::NtSequenceModifier:
+        push_and_visit(path.clone_push(0));
+        break;
+      default:
+        break;
+    }
   }
 }
 
 auto get_nonterminals_to_inline(GrammarData const& grammar_data_) -> IntervalSet<AcceptsIndexType> {
- IntervalSet<StateNrType> ret;
- for (AcceptsIndexType i = 0; i < grammar_data_._nonterminal_accepts.size(); ++i) {
-  if (!grammar_data_._nonterminal_accepts[i]._unpack) {
-   continue;
+  IntervalSet<StateNrType> ret;
+  for (AcceptsIndexType i = 0; i < grammar_data_._nonterminal_accepts.size(); ++i) {
+    if (!grammar_data_._nonterminal_accepts[i]._unpack) {
+      continue;
+    }
+    ret.insert(Interval<AcceptsIndexType>(i));
   }
-  ret.insert(Interval<AcceptsIndexType>(i));
- }
 
- return ret;
+  return ret;
 }
 
-}
+}  // namespace
 
 auto NonterminalInliner::do_inline(Args args_) -> size_t {
- size_t ret = 0;
- get_nonterminals_to_inline(args_._grammar_data).for_each_key([&](AcceptsIndexType const accepts_index_) {
-  if (!check_inlineable(args_, accepts_index_)) {
-   return;
-  }
-  perform_inline(args_, accepts_index_);
-  ++ret;
- });
+  size_t ret = 0;
+  get_nonterminals_to_inline(args_._grammar_data).for_each_key([&](AcceptsIndexType const accepts_index_) {
+    if (!check_inlineable(args_, accepts_index_)) {
+      return;
+    }
+    perform_inline(args_, accepts_index_);
+    ++ret;
+  });
 
- return ret;
+  return ret;
 }
 
-}
+}  // namespace pmt::parser::grammar

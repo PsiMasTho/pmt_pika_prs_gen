@@ -1,7 +1,7 @@
 #include "pmt/util/sm/ct/state_machine_determinizer.hpp"
 
-#include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/base/interval_set.hpp"
+#include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/util/sm/ct/symbol.hpp"
 
 namespace pmt::util::sm::ct {
@@ -18,22 +18,22 @@ class Locals {
 };
 
 auto push_and_visit(Locals& locals_, IntervalSet<StateNrType> state_nr_set_) -> StateNrType {
- if (auto const itr = locals_._old_to_new.find(state_nr_set_); itr != locals_._old_to_new.end()) {
-   return itr->second;
- }
+  if (auto const itr = locals_._old_to_new.find(state_nr_set_); itr != locals_._old_to_new.end()) {
+    return itr->second;
+  }
 
- StateNrType const state_nr = locals_._output_state_machine.get_unused_state_nr();
- locals_._output_state_machine.get_or_create_state(state_nr);
- locals_._new_to_old.insert_or_assign(state_nr, state_nr_set_);
- locals_._old_to_new.insert_or_assign(state_nr_set_, state_nr);
- locals_._pending.push_back(state_nr);
- return state_nr;
+  StateNrType const state_nr = locals_._output_state_machine.get_unused_state_nr();
+  locals_._output_state_machine.get_or_create_state(state_nr);
+  locals_._new_to_old.insert_or_assign(state_nr, state_nr_set_);
+  locals_._old_to_new.insert_or_assign(state_nr_set_, state_nr);
+  locals_._pending.push_back(state_nr);
+  return state_nr;
 }
 
 auto take(Locals& locals_) -> StateNrType {
- StateNrType ret = locals_._pending.back();
- locals_._pending.pop_back();
- return ret;
+  StateNrType ret = locals_._pending.back();
+  locals_._pending.pop_back();
+  return ret;
 }
 
 auto get_e_closure(StateMachineDeterminizer::Args args_, Locals& locals_, StateNrType state_nr_from_) -> IntervalSet<StateNrType> {
@@ -112,37 +112,33 @@ auto get_symbols(StateMachineDeterminizer::Args args_, SymbolKindType kind_, Int
   return ret;
 }
 
-}
+}  // namespace
 
 void StateMachineDeterminizer::determinize(Args args_) {
   if (args_._state_machine.get_state_count() == 0) {
     return;
   }
- 
+
   Locals locals;
 
   push_and_visit(locals, get_e_closure(args_, locals, args_._state_nr_from));
 
   while (!locals._pending.empty()) {
-   StateNrType const state_nr_cur = take(locals);
-   State& state_cur = locals._output_state_machine.get_or_create_state(state_nr_cur);
-   IntervalSet<StateNrType> const& state_nr_set_cur = locals._new_to_old.find(state_nr_cur)->second;
+    StateNrType const state_nr_cur = take(locals);
+    State& state_cur = locals._output_state_machine.get_or_create_state(state_nr_cur);
+    IntervalSet<StateNrType> const& state_nr_set_cur = locals._new_to_old.find(state_nr_cur)->second;
 
-   // Set up the accepts
-   state_nr_set_cur.for_each_key([&](StateNrType state_nr_old_) {
-     State const& state_old = *args_._state_machine.get_state(state_nr_old_);
-     state_cur.get_accepts().inplace_or(state_old.get_accepts());
-   });
-
-   // Set up the transitions
-   get_kinds(args_, state_nr_set_cur).for_each_key([&](SymbolKindType kind_) {
-    get_symbols(args_, kind_, state_nr_set_cur).for_each_key([&](SymbolValueType symbol_) {
-     state_cur.add_symbol_transition(Symbol(kind_, symbol_), push_and_visit(locals, get_e_closure(args_, locals, get_moves(args_, state_nr_set_cur, Symbol(kind_, symbol_)))));
+    // Set up the accepts
+    state_nr_set_cur.for_each_key([&](StateNrType state_nr_old_) {
+      State const& state_old = *args_._state_machine.get_state(state_nr_old_);
+      state_cur.get_accepts().inplace_or(state_old.get_accepts());
     });
-   });
+
+    // Set up the transitions
+    get_kinds(args_, state_nr_set_cur).for_each_key([&](SymbolKindType kind_) { get_symbols(args_, kind_, state_nr_set_cur).for_each_key([&](SymbolValueType symbol_) { state_cur.add_symbol_transition(Symbol(kind_, symbol_), push_and_visit(locals, get_e_closure(args_, locals, get_moves(args_, state_nr_set_cur, Symbol(kind_, symbol_))))); }); });
   }
 
   args_._state_machine = std::move(locals._output_state_machine);
 }
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

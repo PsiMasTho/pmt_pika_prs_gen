@@ -13,7 +13,7 @@ inline void set_bit(pmt::base::Bitset::ChunkSpan bitset_, size_t index_);
 
 inline auto get_bit(pmt::base::Bitset::ChunkSpanConst bitset_, size_t index_) -> bool;
 
-inline void bitwise_and(pmt::base::Bitset::ChunkSpan bitset_, pmt::base::Bitset::ChunkSpanConst lhs_ , pmt::base::Bitset::ChunkSpanConst rhs_);
+inline void bitwise_and(pmt::base::Bitset::ChunkSpan bitset_, pmt::base::Bitset::ChunkSpanConst lhs_, pmt::base::Bitset::ChunkSpanConst rhs_);
 
 inline auto encode_symbol(pmt::util::sm::SymbolValueType symbol_) -> pmt::util::sm::SymbolValueType;
 
@@ -27,6 +27,6 @@ inline auto decode_accept_index(pmt::util::sm::AcceptsIndexType index_) -> pmt::
 
 auto get_state_nr_next_generic(std::ranges::random_access_range auto transitions_, std::ranges::random_access_range auto state_offsets_, std::ranges::random_access_range auto symbol_kind_offsets_, pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolKindType kind_, pmt::util::sm::SymbolValueType symbol_) -> pmt::util::sm::StateNrType;
 
-}
+}  // namespace pmt::parser::rt
 
 #include "pmt/parser/rt/util-inl.hpp"

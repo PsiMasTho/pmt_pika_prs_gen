@@ -2,10 +2,10 @@
 
 #include "pmt/parser/generic_id.hpp"
 
+#include <deque>
 #include <memory>
 #include <string>
 #include <variant>
-#include <deque>
 
 namespace pmt::parser {
 
@@ -80,4 +80,4 @@ class GenericAst {
   void unpack(size_t index_);
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser

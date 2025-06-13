@@ -49,4 +49,4 @@ auto StateMachine::get_state_count() const -> size_t {
   return _states.size();
 }
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

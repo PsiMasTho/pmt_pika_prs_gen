@@ -1,8 +1,8 @@
 #pragma once
 
-#include "pmt/fw_decl.hpp"
-#include "pmt/base/interval_set.hpp"
 #include "pmt/base/interval_map.hpp"
+#include "pmt/base/interval_set.hpp"
+#include "pmt/fw_decl.hpp"
 #include "pmt/util/sm/ct/symbol.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
@@ -41,4 +41,4 @@ class StateMachinePart {
   void connect_outgoing_transitions_to(StateNrType state_nr_to_, StateMachine& state_machine_);
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

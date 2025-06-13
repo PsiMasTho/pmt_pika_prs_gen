@@ -5,17 +5,17 @@
 namespace pmt::parser {
 
 enum : pmt::util::sm::SymbolKindType {
- SymbolKindCharacter = 0ull,
- SymbolKindTerminal = 1ull,
- SymbolKindHiddenTerminal = 2ull,
- SymbolKindOpen = 3ull,
- SymbolKindClose = 4ull,
- SymbolKindConflict = 5ull,
+  SymbolKindCharacter = 0ull,
+  SymbolKindTerminal = 1ull,
+  SymbolKindHiddenTerminal = 2ull,
+  SymbolKindOpen = 3ull,
+  SymbolKindClose = 4ull,
+  SymbolKindConflict = 5ull,
 };
 
 enum : pmt::util::sm::SymbolValueType {
- SymbolValueEoi = pmt::util::sm::SymbolValueMax,
- SymbolValueOpen = 0ull,
+  SymbolValueEoi = pmt::util::sm::SymbolValueMax,
+  SymbolValueOpen = 0ull,
 };
 
-}
+}  // namespace pmt::parser

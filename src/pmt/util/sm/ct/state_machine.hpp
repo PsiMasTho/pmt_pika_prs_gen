@@ -38,4 +38,4 @@ class StateMachine {
   auto get_state_count() const -> size_t;
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

@@ -41,4 +41,4 @@ class State {
   auto get_symbol_values(SymbolKindType kind_) const -> pmt::base::IntervalSet<SymbolValueType>;
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

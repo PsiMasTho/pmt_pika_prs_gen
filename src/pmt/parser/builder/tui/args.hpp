@@ -26,4 +26,4 @@ class Args {
   bool _print_ast_from_generated_tables = false;
 };
 
-}  // namespace pmt::parserbuilder::tui
+}  // namespace pmt::parser::builder::tui

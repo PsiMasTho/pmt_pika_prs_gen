@@ -33,4 +33,4 @@ class Symbol : public pmt::base::Hashable<Symbol> {
   void set_value(SymbolValueType value_);
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

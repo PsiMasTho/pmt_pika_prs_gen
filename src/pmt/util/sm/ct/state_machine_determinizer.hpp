@@ -16,9 +16,9 @@ class StateMachineDeterminizer {
     StateNrType _state_nr_from = StateNrStart;
   };
 
- // -$ Functions $-
- // --$ Other $--
+  // -$ Functions $-
+  // --$ Other $--
   static void determinize(Args args_);
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

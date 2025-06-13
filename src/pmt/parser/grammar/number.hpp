@@ -14,10 +14,10 @@ class Number {
   using NumberType = uint64_t;
 
   // -$ Data $-
-  private:
+ private:
   NumberType _value;
 
-  public:
+ public:
   // -$ Functions $-
   // --$ Lifetime $--
   explicit Number(pmt::parser::GenericAst const &ast_);
@@ -26,4 +26,4 @@ class Number {
   [[nodiscard]] auto get_value() const -> NumberType;
 };
 
-}  // namespace pmt::parserbuilder
+}  // namespace pmt::parser::grammar

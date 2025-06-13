@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/parser/rt/parser_tables_base.hpp"
+#include "pmt/util/sm/ct/state_machine.hpp"
 
 #include <map>
 #include <unordered_map>
@@ -35,10 +35,10 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
 
   GenericId::IdType _min_id;
 
-  public:
+ public:
   // -$ Functions $-
   // --$ Lifetime $--
-  explicit ParserTables(GenericId::IdType min_id_); 
+  explicit ParserTables(GenericId::IdType min_id_);
 
   // --$ Inherited: pmt::parser::rt::ParserTablesBase $--
   auto get_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolKindType kind_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
@@ -82,4 +82,4 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   void fill_lookahead_terminal_transition_masks();
 };
 
-}
+}  // namespace pmt::parser::builder

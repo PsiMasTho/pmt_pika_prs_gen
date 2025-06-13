@@ -11,30 +11,30 @@ namespace pmt::parser::builder {
 
 class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
  public:
- // -$ Types / Constants $-
- struct WriterArgs {
-  std::ostream& _os_header;
-  std::ostream& _os_source;
-  std::istream& _is_header_skel;
-  std::istream& _is_source_skel;
-  LexerTables const& _tables;
-  std::string _namespace_name; // No namespace if empty
-  std::string _class_name;
-  std::string _header_include_path;
- };
+  // -$ Types / Constants $-
+  struct WriterArgs {
+    std::ostream& _os_header;
+    std::ostream& _os_source;
+    std::istream& _is_header_skel;
+    std::istream& _is_source_skel;
+    LexerTables const& _tables;
+    std::string _namespace_name;  // No namespace if empty
+    std::string _class_name;
+    std::string _header_include_path;
+  };
 
  private:
- // -$ Data $-
- WriterArgs* _writer_args = nullptr;
- std::string _header;
- std::string _source;
+  // -$ Data $-
+  WriterArgs* _writer_args = nullptr;
+  std::string _header;
+  std::string _source;
 
  public:
   // -$ Functions $-
   // --$ Other $--
   void write(WriterArgs& writer_args_);
 
-  private:
+ private:
   void replace_in_header();
   void replace_in_source();
 
@@ -59,4 +59,4 @@ class LexerTableWriter : public pmt::util::SkeletonReplacerBase {
   void replace_timestamp(std::string& str_);
 };
 
-}
+}  // namespace pmt::parser::builder

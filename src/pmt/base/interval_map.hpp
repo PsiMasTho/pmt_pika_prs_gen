@@ -1,8 +1,8 @@
 #pragma once
 
 #include "pmt/base/amortized_growth.hpp"
-#include "pmt/base/interval_set.hpp"
 #include "pmt/base/interval_container_common.hpp"
+#include "pmt/base/interval_set.hpp"
 
 #include <concepts>
 #include <memory>
@@ -62,7 +62,7 @@ class IntervalMap {
   // iteration
   template <std::invocable<VALUE_ const&, Interval<KEY_>> F_>
   void for_each_interval(F_&& f_) const;
-  
+
   template <std::invocable<VALUE_ const&, KEY_> F_>
   void for_each_key(F_&& f_) const;
 

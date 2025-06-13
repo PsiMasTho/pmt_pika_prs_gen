@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pmt/fw_decl.hpp"
 #include "pmt/base/bitset.hpp"
-#include "pmt/parser/token.hpp"
+#include "pmt/fw_decl.hpp"
 #include "pmt/parser/source_position.hpp"
+#include "pmt/parser/token.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
 #include <string_view>
@@ -13,7 +13,7 @@ PMT_FW_DECL_NS_CLASS(pmt::parser::rt, LexerTablesBase);
 namespace pmt::parser::rt {
 
 class GenericLexer {
-  public:
+ public:
   // -$ Types / Constants $-
   class LexReturn {
    public:
@@ -49,4 +49,4 @@ class GenericLexer {
   auto get_source_position_at(size_t p_) -> SourcePosition;
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::parser::rt

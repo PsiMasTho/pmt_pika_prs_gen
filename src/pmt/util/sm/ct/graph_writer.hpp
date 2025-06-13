@@ -2,8 +2,8 @@
 
 #include "pmt/base/interval_set.hpp"
 #include "pmt/fw_decl.hpp"
-#include "pmt/util/sm/primitives.hpp"
 #include "pmt/util/skeleton_replacer_base.hpp"
+#include "pmt/util/sm/primitives.hpp"
 
 #include <functional>
 #include <iosfwd>
@@ -15,32 +15,32 @@ namespace pmt::util::sm::ct {
 
 class GraphWriter : public pmt::util::SkeletonReplacerBase {
  public:
- // -$ Types / Constants $-
-  enum class EdgeStyle : size_t{
-   Dashed,
-   Dotted,
-   Solid,
-   Bold
+  // -$ Types / Constants $-
+  enum class EdgeStyle : size_t {
+    Dashed,
+    Dotted,
+    Solid,
+    Bold
   };
 
   enum class NodeShape : size_t {
-   Box,
-   Circle,
-   DoubleCircle,
-   Ellipse,
-   Octagon,
-   DoubleOctagon,
+    Box,
+    Circle,
+    DoubleCircle,
+    Ellipse,
+    Octagon,
+    DoubleOctagon,
   };
 
   enum class LayoutDirection : size_t {
-   TopToBottom,
-   LeftToRight,
+    TopToBottom,
+    LeftToRight,
   };
 
   enum FontFlags : size_t {
-   None = 0,
-   Bold = 1 << 0,
-   Italic = 1 << 1,
+    None = 0,
+    Bold = 1 << 0,
+    Italic = 1 << 1,
   };
 
   struct Color {
@@ -48,7 +48,7 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
     uint8_t _g = std::numeric_limits<uint8_t>::max();
     uint8_t _b = std::numeric_limits<uint8_t>::max();
   };
- 
+
   using AcceptsToLabelFn = std::function<std::string(size_t)>;
   using SymbolsToLabelFn = std::function<std::string(SymbolKindType, pmt::base::IntervalSet<SymbolValueType> const&)>;
   using SymbolKindToEdgeColorFn = std::function<Color(SymbolKindType)>;
@@ -57,37 +57,37 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   using SymbolKindToFontColorFn = std::function<Color(SymbolKindType)>;
 
   struct WriterArgs {
-   std::ostream& _os_graph;
-   std::istream& _is_graph_skel;
-   StateMachine const& _state_machine;
+    std::ostream& _os_graph;
+    std::istream& _is_graph_skel;
+    StateMachine const& _state_machine;
   };
 
   struct StyleArgs {
-   StyleArgs();
-   AcceptsToLabelFn _accepts_to_label_fn;
-   SymbolsToLabelFn _symbols_to_label_fn;
-   SymbolKindToEdgeColorFn _symbol_kind_to_edge_color_fn;
-   SymbolKindToEdgeStyleFn _symbol_kind_to_edge_style_fn;
-   SymbolKindToFontFlagsFn _symbol_kind_to_font_flags_fn;
-   SymbolKindToFontColorFn _symbol_kind_to_font_color_fn;
-   std::string _title = "State Machine";
-   std::string _accepts_label = "Accepts";
-   Color _accepting_node_color = Color{._r = 0, ._g = 0, ._b = 255};
-   NodeShape _accepting_node_shape = NodeShape::DoubleCircle;
-   Color _nonaccepting_node_color = Color{._r = 0, ._g = 0, ._b = 0};
-   NodeShape _nonaccepting_node_shape = NodeShape::Circle;
-   Color _epsilon_edge_color = Color{._r = 0, ._g = 255, ._b = 0};
-   EdgeStyle _epsilon_edge_style = EdgeStyle::Solid;
-   LayoutDirection _layout_direction = LayoutDirection::LeftToRight;
+    StyleArgs();
+    AcceptsToLabelFn _accepts_to_label_fn;
+    SymbolsToLabelFn _symbols_to_label_fn;
+    SymbolKindToEdgeColorFn _symbol_kind_to_edge_color_fn;
+    SymbolKindToEdgeStyleFn _symbol_kind_to_edge_style_fn;
+    SymbolKindToFontFlagsFn _symbol_kind_to_font_flags_fn;
+    SymbolKindToFontColorFn _symbol_kind_to_font_color_fn;
+    std::string _title = "State Machine";
+    std::string _accepts_label = "Accepts";
+    Color _accepting_node_color = Color{._r = 0, ._g = 0, ._b = 255};
+    NodeShape _accepting_node_shape = NodeShape::DoubleCircle;
+    Color _nonaccepting_node_color = Color{._r = 0, ._g = 0, ._b = 0};
+    NodeShape _nonaccepting_node_shape = NodeShape::Circle;
+    Color _epsilon_edge_color = Color{._r = 0, ._g = 255, ._b = 0};
+    EdgeStyle _epsilon_edge_style = EdgeStyle::Solid;
+    LayoutDirection _layout_direction = LayoutDirection::LeftToRight;
   };
 
-  private:
+ private:
   // -$ Data $-
   std::ostream* _os = nullptr;
   WriterArgs* _writer_args = nullptr;
   StyleArgs _style_args;
 
-  public:
+ public:
   // -$ Functions $-
   // --$ Other $--
   static auto accepts_to_label_default(size_t accepts_) -> std::string;
@@ -127,4 +127,4 @@ class GraphWriter : public pmt::util::SkeletonReplacerBase {
   static auto apply_font_color(std::string str_, Color color_) -> std::string;
 };
 
-}  // namespace pmt::util::smct
+}  // namespace pmt::util::sm::ct

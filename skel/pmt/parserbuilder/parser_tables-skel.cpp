@@ -45,7 +45,7 @@ std::array</* $replace ID_NAMES_TYPE */, /* $replace ID_NAMES_SIZE */> const ID_
 /* $replace ID_NAMES */
 };
 
-std::array<pmt::util::smrt::GenericId::IdType const, /* $replace PARSER_ACCEPT_IDS_SIZE */> const PARSER_ACCEPT_IDS = {
+std::array<pmt::parser::GenericId::IdType const, /* $replace PARSER_ACCEPT_IDS_SIZE */> const PARSER_ACCEPT_IDS = {
 /* $replace PARSER_ACCEPT_IDS */
 };
 
@@ -87,28 +87,28 @@ std::array</* $replace PARSER_STATE_KINDS_TYPE */, /* $replace PARSER_STATE_KIND
 
 } // namespace
 
-auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolKindType kind_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
- return pmt::util::smrt::get_state_nr_next_generic(PARSER_TRANSITIONS, PARSER_TRANSITIONS_STATE_OFFSETS, PARSER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, kind_, symbol_);
+auto /* $replace CLASS_NAME */::get_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolKindType kind_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
+ return pmt::parser::rt::get_state_nr_next_generic(PARSER_TRANSITIONS, PARSER_TRANSITIONS_STATE_OFFSETS, PARSER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, kind_, symbol_);
 }
 
-auto /* $replace CLASS_NAME */::get_state_terminal_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto /* $replace CLASS_NAME */::get_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(PARSER_TERMINAL_TRANSITION_MASKS.begin() + state_nr_ * /* $replace PARSER_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace PARSER_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
 }
 
-auto /* $replace CLASS_NAME */::get_state_hidden_terminal_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto /* $replace CLASS_NAME */::get_state_hidden_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS.begin() + state_nr_ * /* $replace PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
 }
 
-auto /* $replace CLASS_NAME */::get_state_conflict_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto /* $replace CLASS_NAME */::get_state_conflict_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(PARSER_CONFLICT_TRANSITION_MASKS.begin() + state_nr_ * /* $replace PARSER_CONFLICT_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace PARSER_CONFLICT_TRANSITION_MASKS_CHUNK_COUNT */);
 }
 
-auto /* $replace CLASS_NAME */::get_state_kind(pmt::util::smrt::StateNrType state_nr_) const -> StateKind {
+auto /* $replace CLASS_NAME */::get_state_kind(pmt::util::sm::StateNrType state_nr_) const -> StateKind {
  return static_cast<StateKind>(PARSER_STATE_KINDS[state_nr_]);
 }
 
-auto /* $replace CLASS_NAME */::get_state_accept_index(pmt::util::smrt::StateNrType state_nr_) const -> size_t {
- return pmt::util::smrt::decode_accept_index(PARSER_ACCEPTS[state_nr_]);
+auto /* $replace CLASS_NAME */::get_state_accept_index(pmt::util::sm::StateNrType state_nr_) const -> size_t {
+ return pmt::parser::rt::decode_accept_index(PARSER_ACCEPTS[state_nr_]);
 }
 
 auto /* $replace CLASS_NAME */::get_eoi_accept_index() const -> size_t {
@@ -128,26 +128,26 @@ auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> s
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_unpack(size_t index_) const -> bool {
- return pmt::util::smrt::get_bit(PARSER_UNPACK, index_);
+ return pmt::parser::rt::get_bit(PARSER_UNPACK, index_);
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_hide(size_t index_) const -> bool {
- return pmt::util::smrt::get_bit(PARSER_HIDE, index_);
+ return pmt::parser::rt::get_bit(PARSER_HIDE, index_);
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_merge(size_t index_) const -> bool {
- return pmt::util::smrt::get_bit(PARSER_MERGE, index_);
+ return pmt::parser::rt::get_bit(PARSER_MERGE, index_);
 }
 
-auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::util::smrt::GenericId::IdType {
+auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType {
  return PARSER_ACCEPT_IDS[index_];
 }
 
-auto /* $replace CLASS_NAME */::id_to_string(pmt::util::smrt::GenericId::IdType id_) const -> std::string {
+auto /* $replace CLASS_NAME */::id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string {
  return ID_NAMES[id_ - /* $replace MIN_ID */];
 }
 
-auto /* $replace CLASS_NAME */::get_min_id() const -> pmt::util::smrt::GenericId::IdType {
+auto /* $replace CLASS_NAME */::get_min_id() const -> pmt::parser::GenericId::IdType {
  return /* $replace MIN_ID */;
 }
 
@@ -155,15 +155,15 @@ auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
  return /* $replace ID_COUNT */;
 }
 
-auto /* $replace CLASS_NAME */::get_lookahead_state_nr_next(pmt::util::smrt::StateNrType state_nr_, pmt::util::smrt::SymbolValueType symbol_) const -> pmt::util::smrt::StateNrType {
- return pmt::util::smrt::get_state_nr_next_generic(LOOKAHEAD_TRANSITIONS, LOOKAHEAD_TRANSITIONS_STATE_OFFSETS, LOOKAHEAD_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::util::smrt::SymbolKindTerminal, symbol_);
+auto /* $replace CLASS_NAME */::get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
+ return pmt::parser::rt::get_state_nr_next_generic(LOOKAHEAD_TRANSITIONS, LOOKAHEAD_TRANSITIONS_STATE_OFFSETS, LOOKAHEAD_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindTerminal, symbol_);
 }
 
-auto /* $replace CLASS_NAME */::get_lookahead_state_terminal_transitions(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto /* $replace CLASS_NAME */::get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(LOOKAHEAD_TERMINAL_TRANSITION_MASKS.begin() + state_nr_ * /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
 }
 
-auto /* $replace CLASS_NAME */::get_lookahead_state_accepts(pmt::util::smrt::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto /* $replace CLASS_NAME */::get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(LOOKAHEAD_ACCEPTS.begin() + state_nr_ * /* $replace LOOKAHEAD_ACCEPTS_CHUNK_COUNT */, /* $replace LOOKAHEAD_ACCEPTS_CHUNK_COUNT */);
 }
 

@@ -21,7 +21,7 @@ class ParserTableBuilder {
 
   // -$ Functions $-
   // --$ Other $--
- static auto build(Args args_) -> ParserTables;
+  static auto build(Args args_) -> ParserTables;
 };
 
-}
+}  // namespace pmt::parser::builder

@@ -24,4 +24,4 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   auto is_linecount_state_nr_accepting(pmt::util::sm::SymbolValueType state_nr_) const -> bool override;
 };
 
-} // namespace pmt::parserbuilder
+}  // namespace pmt::parser::grammar

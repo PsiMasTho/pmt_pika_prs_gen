@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <cstddef>
 
 namespace pmt::util::sm {
 
@@ -17,15 +17,15 @@ enum : StateNrType {
 };
 
 enum : SymbolKindType {
- SymbolKindMax = std::numeric_limits<SymbolKindType>::max(),
+  SymbolKindMax = std::numeric_limits<SymbolKindType>::max(),
 };
 
 enum : SymbolValueType {
- SymbolValueMax = std::numeric_limits<SymbolValueType>::max(),
+  SymbolValueMax = std::numeric_limits<SymbolValueType>::max(),
 };
 
 enum : size_t {
- AcceptIndexInvalid = std::numeric_limits<size_t>::max(),
+  AcceptIndexInvalid = std::numeric_limits<size_t>::max(),
 };
 
-}  // namespace pmt::util::smrt
+}  // namespace pmt::util::sm
