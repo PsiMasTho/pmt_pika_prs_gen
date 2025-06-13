@@ -117,13 +117,11 @@ auto main(int argc, char const* const* argv) -> int try {
   IdConstantsWriter id_constants_writer;
   id_constants_writer.write(id_constants_writer_args);
 
-  std::unordered_set<IntervalSet<AcceptsIndexType>> const overlapping_terminals = TerminalOverlapChecker::find_overlaps(TerminalOverlapChecker::Args{
+  report_terminal_overlaps(grammar_data, TerminalOverlapChecker::find_overlaps(TerminalOverlapChecker::Args{
    ._state_machine = parser_tables.get_parser_state_machine(),
    ._grammar_data = grammar_data,
    ._ast = *ast,
-  });
-
-  report_terminal_overlaps(grammar_data, overlapping_terminals);
+  }));
   test_tables(args, lexer_tables, parser_tables);
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
