@@ -3,7 +3,6 @@
 #include "pmt/base/bitset.hpp"
 #include "pmt/fw_decl.hpp"
 #include "pmt/parser/generic_ast.hpp"
-#include "pmt/parser/generic_ast_path.hpp"
 #include "pmt/parser/rt/generic_lexer.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
@@ -18,7 +17,7 @@ class GenericParser {
   // -$ Types / Constants $-
   struct StackItem {
     pmt::util::sm::StateNrType _state_nr;
-    GenericAstPath _ast_path;
+    GenericAst* _ast;
   };
 
   // -$ Data $-

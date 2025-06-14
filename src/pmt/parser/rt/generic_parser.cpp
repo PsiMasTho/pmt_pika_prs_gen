@@ -5,18 +5,18 @@
 #include "pmt/parser/rt/parser_tables_base.hpp"
 #include "pmt/parser/rt/util.hpp"
 
+#include <cassert>
+
 namespace pmt::parser::rt {
 using namespace pmt::base;
 using namespace pmt::util::sm;
 
 namespace {
-auto add_child(GenericAst::UniqueHandle& root_, GenericAst::UniqueHandle child_, GenericAstPath const& path_) -> size_t {
-  GenericAst* const parent = path_.resolve(*root_);
+auto add_child(GenericAst& parent_, GenericAst::UniqueHandle child_) -> GenericAst* {
+  assert(parent_.get_tag() == GenericAst::Tag::Children);
 
-  assert(parent->get_tag() == GenericAst::Tag::Children);
-
-  parent->give_child_at_back(std::move(child_));
-  return parent->get_children_size() - 1;
+  parent_.give_child_at_back(std::move(child_));
+  return parent_.get_child_at_back();
 }
 
 }  // namespace
@@ -35,11 +35,11 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
       break;
     }
 
-    GenericAstPath ast_path_cur = _parse_stack.empty() ? GenericAstPath{} : _parse_stack.back()._ast_path;
+    GenericAst& ast_cur = _parse_stack.empty() ? *_ast_root.get() : *_parse_stack.back()._ast;
 
     switch (_parser_tables->get_state_kind(_state_nr_cur)) {
       case ParserTablesBase::StateTypeOpen: {
-        StackItem stack_item{._state_nr = _state_nr_cur, ._ast_path = ast_path_cur.inplace_push(add_child(_ast_root, GenericAst::construct(GenericAst::Tag::Children), ast_path_cur))};
+        StackItem stack_item{._state_nr = _state_nr_cur, ._ast = add_child(ast_cur, GenericAst::construct(GenericAst::Tag::Children))};
         _parse_stack.push_back(stack_item);
         _state_nr_cur = _parser_tables->get_state_nr_next(_state_nr_cur, SymbolKindOpen, SymbolValueOpen);
       } break;
@@ -52,21 +52,19 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
         }
 
         StackItem const stack_item = parse_stack_take();
-        GenericAst* const parent = stack_item._ast_path.resolve(*_ast_root);
-        parent->set_id(_parser_tables->get_accept_index_id(accept_idx));
+        ast_cur.set_id(_parser_tables->get_accept_index_id(accept_idx));
 
         if (_parser_tables->get_accept_index_merge(accept_idx)) {
-          parent->merge();
+          ast_cur.merge();
         }
 
+        GenericAst& grandparent = _parse_stack.empty() ? *_ast_root.get() : *_parse_stack.back()._ast;
         if (_parser_tables->get_accept_index_unpack(accept_idx)) {
-          GenericAst* const grandparent = stack_item._ast_path.clone_pop().resolve(*_ast_root);
-          grandparent->unpack(grandparent->get_children_size() - 1);
+          grandparent.unpack(grandparent.get_children_size() - 1);
         }
 
         if (_parser_tables->get_accept_index_hide(accept_idx)) {
-          GenericAst* const grandparent = stack_item._ast_path.clone_pop().resolve(*_ast_root);
-          grandparent->take_child_at_back();
+          grandparent.take_child_at_back();
         }
 
         _state_nr_cur = _parser_tables->get_state_nr_next(stack_item._state_nr, SymbolKindClose, accept_idx);
@@ -84,7 +82,7 @@ auto GenericParser::parse(GenericLexer& lexer_, ParserTablesBase const& parser_t
           _state_nr_cur = _parser_tables->get_state_nr_next(_state_nr_cur, SymbolKindHiddenTerminal, lexed._accepted);
         } else {
           _state_nr_cur = _parser_tables->get_state_nr_next(_state_nr_cur, SymbolKindTerminal, lexed._accepted);
-          add_child(_ast_root, lexed._token.to_ast(), ast_path_cur);
+          add_child(ast_cur, lexed._token.to_ast());
         }
       } break;
       case ParserTablesBase::StateTypeConflict: {
