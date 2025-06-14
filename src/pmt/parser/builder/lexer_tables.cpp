@@ -1,6 +1,6 @@
 #include "pmt/parser/builder/lexer_tables.hpp"
 
-#include "pmt/parser/grammar/grammar_data.hpp"
+#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/symbol.hpp"
 
@@ -49,11 +49,11 @@ auto LexerTables::get_accept_count() const -> size_t {
 }
 
 auto LexerTables::get_start_accept_index() const -> size_t {
-  return *terminal_label_to_index(GrammarData::TERMINAL_LABEL_START);
+  return *terminal_label_to_index(Ast::TERMINAL_NAME_START);
 }
 
 auto LexerTables::get_eoi_accept_index() const -> size_t {
-  return *terminal_label_to_index(GrammarData::LABEL_EOI);
+  return *terminal_label_to_index(Ast::NAME_EOI);
 }
 
 auto LexerTables::get_accept_index_label(size_t index_) const -> std::string {
@@ -62,18 +62,6 @@ auto LexerTables::get_accept_index_label(size_t index_) const -> std::string {
 
 auto LexerTables::get_accept_index_id(size_t index_) const -> GenericId::IdType {
   return _terminal_data[index_]._id;
-}
-
-auto LexerTables::id_to_string(GenericId::IdType id_) const -> std::string {
-  return _id_to_name.find(id_)->second;
-}
-
-auto LexerTables::get_min_id() const -> GenericId::IdType {
-  return _id_to_name.empty() ? 0 : _id_to_name.begin()->first;
-}
-
-auto LexerTables::get_id_count() const -> size_t {
-  return _id_to_name.size();
 }
 
 auto LexerTables::get_linecount_state_nr_next(StateNrType state_nr_, SymbolValueType symbol_) const -> StateNrType {
@@ -103,20 +91,8 @@ auto LexerTables::get_linecount_state_machine() const -> pmt::util::sm::ct::Stat
   return _linecount_state_machine;
 }
 
-void LexerTables::add_terminal_data(std::string label_, std::string const& id_name_) {
-  auto const itr = _name_to_id.find(id_name_);
-  if (itr != _name_to_id.end()) {
-    // If the ID already exists, we can just use it
-    _terminal_data.push_back(TerminalData{._label = std::move(label_), ._id = itr->second});
-    return;
-  }
-  if (GenericId::is_generic_id(id_name_)) {
-    _terminal_data.push_back(TerminalData{._label = std::move(label_), ._id = GenericId::string_to_id(id_name_)});
-    return;
-  }
-  _terminal_data.push_back(TerminalData{._label = std::move(label_), ._id = _id_to_name.size()});
-  _name_to_id[id_name_] = _terminal_data.back()._id;
-  _id_to_name[_terminal_data.back()._id] = id_name_;
+void LexerTables::add_terminal_data(std::string label_, GenericId::IdType id_value_) {
+  _terminal_data.push_back(TerminalData{._label = std::move(label_), ._id = id_value_});
 }
 
 auto LexerTables::terminal_label_to_index(std::string_view label_) const -> std::optional<size_t> {

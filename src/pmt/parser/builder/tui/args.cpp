@@ -75,6 +75,8 @@ Args::Args(int argc_, char const* const* argv_) {
   try_open_required_file_from_optional_arg(cmdl, "parser-source-skel-file", _parser_source_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/parser_tables-skel.cpp");
   try_open_file_from_arg(cmdl, "output-id-constants-file", _output_id_constants_file);
   try_open_required_file_from_optional_arg(cmdl, "id-constants-skel-file", _id_constants_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/id_constants-skel.hpp");
+  try_open_file_from_arg(cmdl, "output-id-strings-file", _output_id_strings_file);
+  try_open_required_file_from_optional_arg(cmdl, "id-strings-skel-file", _id_strings_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/id_strings-skel.hpp");
   try_fetch_required_arg(cmdl, "lexer-class-name", _lexer_class_name);
   try_fetch_required_arg(cmdl, "parser-class-name", _parser_class_name);
   try_fetch_required_arg(cmdl, "namespace-name", _namespace_name);

@@ -31,6 +31,10 @@ class Args {
 
   std::ifstream _id_constants_skel_file;
 
+  std::ofstream _output_id_strings_file;
+
+  std::ifstream _id_strings_skel_file;
+
   std::string _lexer_class_name;
   std::string _parser_class_name;
   std::string _namespace_name;

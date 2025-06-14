@@ -6,7 +6,6 @@
 #include "pmt/parser/generic_ast_path.hpp"
 #include "pmt/parser/generic_id.hpp"
 #include "pmt/parser/grammar/ast.hpp"
-#include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/grammar/number.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
 #include "pmt/util/sm/primitives.hpp"
@@ -164,7 +163,7 @@ void handle_direct_terminal(PostParse::Args& args_, Locals& locals_) {
 
   auto itr = locals_._terminal_direct_display_names_to_names.find(terminal_direct_display_name);
   if (itr == locals_._terminal_direct_display_names_to_names.end()) {
-    std::string const terminal_direct_name = GrammarData::TERMINAL_DIRECT_PREFIX + std::to_string(locals_._terminal_direct_display_names_to_names.size());
+    std::string const terminal_direct_name = Ast::TERMINAL_DIRECT_PREFIX + std::to_string(locals_._terminal_direct_display_names_to_names.size());
     add_terminal_definition(args_._ast_root, terminal_direct_name, GenericId::id_to_string(GenericId::IdDefault), *locals_._ast_cur);
     itr = locals_._terminal_direct_display_names_to_names.emplace(terminal_direct_display_name, terminal_direct_name).first;
   }

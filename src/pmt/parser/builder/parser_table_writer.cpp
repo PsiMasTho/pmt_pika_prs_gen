@@ -52,9 +52,6 @@ void ParserTableWriter::replace_in_source() {
   replace_parser_accepts_labels(_source);
   replace_parser_accepts_ids(_source);
   replace_parser_eoi_accept_index(_source);
-  replace_id_names(_source);
-  replace_min_id(_source);
-  replace_id_count(_source);
   replace_parser_unpack(_source);
   replace_parser_hide(_source);
   replace_parser_merge(_source);
@@ -173,27 +170,6 @@ void ParserTableWriter::replace_parser_accepts_ids(std::string& str_) {
 void ParserTableWriter::replace_parser_eoi_accept_index(std::string& str_) {
   std::string const eoi_accept_index_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_eoi_accept_index(), true);
   replace_skeleton_label(str_, "EOI_ACCEPT_INDEX", eoi_accept_index_replacement);
-}
-
-void ParserTableWriter::replace_id_names(std::string& str_) {
-  std::vector<std::string> id_names;
-  id_names.reserve(_writer_args->_tables.get_id_count());
-
-  for (GenericId::IdType i = _writer_args->_tables.get_min_id(); i < _writer_args->_tables.get_min_id() + _writer_args->_tables.get_id_count(); ++i) {
-    id_names.push_back(_writer_args->_tables.id_to_string(i));
-  }
-
-  TableWriterCommon::replace_array(*this, str_, "ID_NAMES", id_names);
-}
-
-void ParserTableWriter::replace_min_id(std::string& str_) {
-  std::string const min_id_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_min_id(), true);
-  replace_skeleton_label(str_, "MIN_ID", min_id_replacement);
-}
-
-void ParserTableWriter::replace_id_count(std::string& str_) {
-  std::string const id_count_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_id_count(), true);
-  replace_skeleton_label(str_, "ID_COUNT", id_count_replacement);
 }
 
 void ParserTableWriter::replace_parser_unpack(std::string& str_) {

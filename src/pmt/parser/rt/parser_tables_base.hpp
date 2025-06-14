@@ -36,9 +36,6 @@ class ParserTablesBase {
   virtual auto get_accept_index_hide(size_t index_) const -> bool;
   virtual auto get_accept_index_merge(size_t index_) const -> bool;
   virtual auto get_accept_index_id(size_t index_) const -> GenericId::IdType;
-  virtual auto id_to_string(GenericId::IdType id_) const -> std::string;
-  virtual auto get_min_id() const -> GenericId::IdType = 0;
-  virtual auto get_id_count() const -> size_t = 0;
 
   // Lookahead tables
   virtual auto get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType = 0;

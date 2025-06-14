@@ -1,25 +1,20 @@
 #include "pmt/parser/grammar/ast.hpp"
 
-#include "pmt/parser/grammar/lexer_tables.hpp"
-#include "pmt/parser/grammar/parser_tables.hpp"
+#include <stdexcept>
 
 namespace pmt::parser::grammar {
+namespace {
+char const* const ID_STRINGS[] = {
+#include "pmt/parser/grammar/id_strings-inl.hpp"
+  "NtTerminalHidden",
+};
+}
+
 auto Ast::id_to_string(GenericId::IdType id_) -> std::string {
-  static LexerTables const lexer_tables;
-  if (id_ < lexer_tables.get_min_id() + lexer_tables.get_id_count()) {
-    return lexer_tables.id_to_string(id_);
-  }
+ if (id_ < std::size(ID_STRINGS)) {
+  return ID_STRINGS[id_];
+ } 
 
-  static ParserTables const parser_tables;
-  if (id_ < parser_tables.get_min_id() + parser_tables.get_id_count()) {
-    return parser_tables.id_to_string(id_);
-  }
-
-  switch (id_) {
-    case NtTerminalHidden:
-      return "NtTerminalHidden";
-    default:
-      throw std::runtime_error("Invalid id");
-  }
+ throw std::runtime_error("Invalid id");
 }
 }  // namespace pmt::parser::grammar

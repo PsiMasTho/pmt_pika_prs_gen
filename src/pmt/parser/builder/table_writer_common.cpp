@@ -3,6 +3,7 @@
 #include "pmt/asserts.hpp"
 #include "pmt/parser/rt/util.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
+#include "pmt/util/timestamp.hpp"
 
 #include <map>
 
@@ -130,6 +131,10 @@ void TableWriterCommon::replace_transition_masks(pmt::util::SkeletonReplacerBase
   TableWriterCommon::replace_array<Bitset::ChunkType>(skeleton_replacer_, str_, label_ + "TRANSITION_MASKS", terminal_transition_masks_flattened);
   skeleton_replacer_.replace_skeleton_label(str_, label_ + "TRANSITION_MASKS_CHUNK_COUNT", TableWriterCommon::as_hex(chunk_count, true));
   skeleton_replacer_.replace_skeleton_label(str_, label_ + "TRANSITION_MASKS_SIZE", TableWriterCommon::as_hex(terminal_transition_masks_flattened.size(), true));
+}
+
+void TableWriterCommon::replace_timestamp(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_) {
+  skeleton_replacer_.replace_skeleton_label(str_, "TIMESTAMP", pmt::util::get_timestamp());
 }
 
 auto TableWriterCommon::calculate_numeric_entries_per_line(size_t max_width_) -> size_t {

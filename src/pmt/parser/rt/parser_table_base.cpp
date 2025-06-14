@@ -22,8 +22,4 @@ auto ParserTablesBase::get_accept_index_id(size_t) const -> GenericId::IdType {
   return GenericId::IdUninitialized;
 }
 
-auto ParserTablesBase::id_to_string(GenericId::IdType id_) const -> std::string {
-  return std::to_string(id_);
-}
-
 }  // namespace pmt::parser::rt

@@ -24,9 +24,6 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_accept_index_hide(size_t index_) const -> bool override;
   auto get_accept_index_merge(size_t index_) const -> bool override;
   auto get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType override;
-  auto id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string override;
-  auto get_min_id() const -> pmt::parser::GenericId::IdType override;
-  auto get_id_count() const -> size_t override;
   auto get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
   auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
   auto get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;

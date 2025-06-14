@@ -4,6 +4,7 @@
 #include "pmt/base/interval_set.hpp"
 #include "pmt/parser/builder/state_machine_part_builder.hpp"
 #include "pmt/parser/generic_ast.hpp"
+#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/graph_writer.hpp"
@@ -60,7 +61,7 @@ void LexerTableBuilder::setup_whitespace_state_machine() {
 
   size_t const index_whitespace = _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size();
   StateMachinePart fsm_part_whitespace = StateMachinePartBuilder::build(StateMachinePartBuilder::TerminalBuildingArgs(
-   StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = _whitespace_state_machine, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_whitespace}, [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }));
+   StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = _whitespace_state_machine, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_whitespace}, [this](size_t index_) { return _grammar_data->lookup_terminal_name_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_name(name_); }));
   StateNrType const state_nr_end = _whitespace_state_machine.create_new_state();
   _whitespace_state_machine.get_state(state_nr_end)->get_accepts().insert(Interval<AcceptsIndexType>(0));
   fsm_part_whitespace.connect_outgoing_transitions_to(state_nr_end, _whitespace_state_machine);
@@ -69,13 +70,13 @@ void LexerTableBuilder::setup_whitespace_state_machine() {
 
 void LexerTableBuilder::setup_terminal_state_machines() {
   for (size_t i = 0; i < _grammar_data->_terminal_accepts.size(); ++i) {
-    if (!_grammar_data->_terminal_accepts[i]._accepted || _grammar_data->_terminal_accepts[i]._label == GrammarData::LABEL_EOI || _grammar_data->_terminal_accepts[i]._label == GrammarData::TERMINAL_LABEL_START || _grammar_data->_terminal_accepts[i]._label == GrammarData::TERMINAL_LABEL_LINECOUNT) {
+    if (!_grammar_data->_terminal_accepts[i]._used || _grammar_data->_terminal_accepts[i]._name == Ast::NAME_EOI || _grammar_data->_terminal_accepts[i]._name == Ast::TERMINAL_NAME_START || _grammar_data->_terminal_accepts[i]._name == Ast::TERMINAL_NAME_LINECOUNT) {
       continue;
     }
 
     StateMachine state_machine_terminal;
     StateMachinePart state_machine_part_terminal = StateMachinePartBuilder::build(StateMachinePartBuilder::TerminalBuildingArgs(
-     StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = state_machine_terminal, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = i}, [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }));
+     StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = state_machine_terminal, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = i}, [this](size_t index_) { return _grammar_data->lookup_terminal_name_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_name(name_); }));
     StateNrType const state_nr_end = state_machine_terminal.create_new_state();
     State& state_end = *state_machine_terminal.get_state(state_nr_end);
     state_end.get_accepts().insert(Interval<AcceptsIndexType>(i));
@@ -91,7 +92,7 @@ void LexerTableBuilder::setup_comment_state_machines() {
 
     StateMachine state_machine_comment_open;
     StateMachinePart state_machine_part_comment_open = StateMachinePartBuilder::build(StateMachinePartBuilder::TerminalBuildingArgs(
-     StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = state_machine_comment_open, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_comment_open}, [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }));
+     StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = state_machine_comment_open, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_comment_open}, [this](size_t index_) { return _grammar_data->lookup_terminal_name_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_name(name_); }));
     StateNrType const state_nr_end = state_machine_comment_open.create_new_state();
     state_machine_comment_open.get_state(state_nr_end)->get_accepts().insert(Interval<AcceptsIndexType>(0));
     state_machine_part_comment_open.connect_outgoing_transitions_to(state_nr_end, state_machine_comment_open);
@@ -104,7 +105,7 @@ void LexerTableBuilder::setup_comment_state_machines() {
 
     StateMachine state_machine_comment_close;
     StateMachinePart state_machine_part_comment_close = StateMachinePartBuilder::build(StateMachinePartBuilder::TerminalBuildingArgs(
-     StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = state_machine_comment_close, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_comment_close}, [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }));
+     StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = state_machine_comment_close, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_comment_close}, [this](size_t index_) { return _grammar_data->lookup_terminal_name_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_name(name_); }));
     StateNrType const state_nr_end = state_machine_comment_close.create_new_state();
     state_machine_comment_close.get_state(state_nr_end)->get_accepts().insert(Interval<AcceptsIndexType>(0));
     state_machine_part_comment_close.connect_outgoing_transitions_to(state_nr_end, state_machine_comment_close);
@@ -121,11 +122,11 @@ void LexerTableBuilder::setup_linecount_state_machine() {
 
   size_t const index_linecount = _grammar_data->_terminal_accepts.size() + _grammar_data->_comment_open_definitions.size() + _grammar_data->_comment_close_definitions.size() + 1;
   StateMachinePart fsm_part_linecount = StateMachinePartBuilder::build(StateMachinePartBuilder::TerminalBuildingArgs(
-   StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = _linecount_state_machine, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_linecount}, [this](size_t index_) { return _grammar_data->lookup_terminal_label_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_label(name_); }));
+   StateMachinePartBuilder::ArgsBase{._ast_root = *_ast, ._dest_state_machine = _linecount_state_machine, ._fn_lookup_definition = [this](size_t index_) { return _grammar_data->lookup_terminal_definition_by_index(index_); }, ._starting_index = index_linecount}, [this](size_t index_) { return _grammar_data->lookup_terminal_name_by_index(index_); }, [this](std::string_view name_) { return _grammar_data->lookup_terminal_index_by_name(name_); }));
   StateNrType const state_nr_end = _linecount_state_machine.create_new_state();
   State& state_end = *_linecount_state_machine.get_state(state_nr_end);
   fsm_part_linecount.connect_outgoing_transitions_to(state_nr_end, _linecount_state_machine);
-  size_t const index_linecount_terminal = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), GrammarData::TERMINAL_LABEL_LINECOUNT, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
+  size_t const index_linecount_terminal = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), Ast::TERMINAL_NAME_LINECOUNT, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
   state_end.get_accepts().insert(Interval<AcceptsIndexType>(index_linecount_terminal));
   StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _linecount_state_machine});
 }
@@ -134,7 +135,7 @@ void LexerTableBuilder::setup_default_linecount_state_machine() {
   State& state_start = _linecount_state_machine.get_or_create_state(StateNrStart);
   StateNrType const state_nr_end = _linecount_state_machine.create_new_state();
   State& state_end = *_linecount_state_machine.get_state(state_nr_end);
-  size_t const index_linecount_terminal = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), GrammarData::TERMINAL_LABEL_LINECOUNT, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
+  size_t const index_linecount_terminal = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), Ast::TERMINAL_NAME_LINECOUNT, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
   state_end.get_accepts().insert(Interval<AcceptsIndexType>(index_linecount_terminal));
   state_start.add_symbol_transition(Symbol(SymbolKindCharacter, '\n'), state_nr_end);
 }
@@ -231,12 +232,12 @@ void LexerTableBuilder::merge_whitespace_state_machine_into_result() {
 
 void LexerTableBuilder::setup_start_and_eoi_states() {
   State& state_start = _lexer_state_machine.get_or_create_state(StateNrStart);
-  size_t const index_start = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), GrammarData::TERMINAL_LABEL_START, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
+  size_t const index_start = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), Ast::TERMINAL_NAME_START, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
   state_start.get_accepts().insert(Interval<AcceptsIndexType>(index_start));
 
   StateNrType const state_nr_eoi = _lexer_state_machine.create_new_state();
   State& state_eoi = *_lexer_state_machine.get_state(state_nr_eoi);
-  size_t const index_eoi = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), GrammarData::LABEL_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
+  size_t const index_eoi = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), Ast::NAME_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
   state_eoi.get_accepts().insert(Interval<AcceptsIndexType>(index_eoi));
 
   state_start.add_symbol_transition(Symbol(SymbolKindCharacter, SymbolValueEoi), state_nr_eoi);
@@ -290,14 +291,14 @@ void LexerTableBuilder::loop_back_linecount_state_machine() {
 
 void LexerTableBuilder::fill_terminal_data() {
   for (GrammarData::TerminalAcceptData const& accept_data : _grammar_data->_terminal_accepts) {
-    _result_tables.add_terminal_data(accept_data._label, accept_data._id_name);
+    _result_tables.add_terminal_data(accept_data._name, _grammar_data->get_non_generic_ids().find(accept_data._id_string)->second);
   }
 }
 
 void LexerTableBuilder::validate_result() {
   IntervalSet<AcceptsIndexType> accepts_start = _lexer_state_machine.get_state(StateNrStart)->get_accepts();
 
-  size_t const index_start = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), GrammarData::TERMINAL_LABEL_START, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
+  size_t const index_start = binary_find_index(_grammar_data->_terminal_accepts.begin(), _grammar_data->_terminal_accepts.end(), Ast::TERMINAL_NAME_START, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); });
   accepts_start.erase(Interval<AcceptsIndexType>(index_start));
 
   if (!accepts_start.empty()) {
@@ -314,7 +315,7 @@ void LexerTableBuilder::validate_result() {
 
       msg += std::exchange(delim, ", ");
       if (i <= MAX_REPORTED) {
-        msg += _grammar_data->_terminal_accepts[accept_nr_]._label;
+        msg += _grammar_data->_terminal_accepts[accept_nr_]._name;
         ++i;
       } else {
         skip = true;

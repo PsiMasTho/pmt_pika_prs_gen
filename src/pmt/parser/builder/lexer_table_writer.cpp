@@ -46,9 +46,6 @@ void LexerTableWriter::replace_in_source() {
   replace_accept_count(_source);
   replace_accept_labels(_source);
   replace_accept_ids(_source);
-  replace_id_names(_source);
-  replace_min_id(_source);
-  replace_id_count(_source);
   replace_linecount_accepts(_source);
   replace_terminal_count(_source);
   replace_start_terminal_index(_source);
@@ -128,27 +125,6 @@ void LexerTableWriter::replace_accept_ids(std::string& str_) {
   }
 
   TableWriterCommon::replace_array<GenericId::IdType>(*this, str_, "LEXER_ACCEPT_IDS", accept_ids);
-}
-
-void LexerTableWriter::replace_id_names(std::string& str_) {
-  std::vector<std::string> id_names;
-  id_names.reserve(_writer_args->_tables.get_id_count());
-
-  for (GenericId::IdType i = _writer_args->_tables.get_min_id(); i < _writer_args->_tables.get_min_id() + _writer_args->_tables.get_id_count(); ++i) {
-    id_names.push_back(_writer_args->_tables.id_to_string(i));
-  }
-
-  TableWriterCommon::replace_array(*this, str_, "ID_NAMES", id_names);
-}
-
-void LexerTableWriter::replace_min_id(std::string& str_) {
-  std::string const min_id_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_min_id(), true);
-  replace_skeleton_label(str_, "MIN_ID", min_id_replacement);
-}
-
-void LexerTableWriter::replace_id_count(std::string& str_) {
-  std::string const id_count_replacement = TableWriterCommon::as_hex(_writer_args->_tables.get_id_count(), true);
-  replace_skeleton_label(str_, "ID_COUNT", id_count_replacement);
 }
 
 void LexerTableWriter::replace_linecount_accepts(std::string& str_) {

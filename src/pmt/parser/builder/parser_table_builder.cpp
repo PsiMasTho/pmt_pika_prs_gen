@@ -4,6 +4,7 @@
 #include "pmt/parser/builder/parser_lookahead_builder.hpp"
 #include "pmt/parser/builder/parser_reachability_checker.hpp"
 #include "pmt/parser/builder/state_machine_part_builder.hpp"
+#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/graph_writer.hpp"
@@ -34,21 +35,21 @@ class Locals {
 void setup_parser_state_machine(ParserTableBuilder::Args const& args_, Locals& locals_) {
   StateNrType const state_nr_start = locals_._parser_state_machine.create_new_state();
   StateMachinePart state_machine_part_nonterminal = StateMachinePartBuilder::build(StateMachinePartBuilder::NonterminalBuildingArgs(
-   StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._dest_state_machine = locals_._parser_state_machine, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_definition_by_index(index_); }, ._starting_index = args_._grammar_data._nonterminal_accepts.size()}, [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_label_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_nonterminal_index_by_label(name_); },
+   StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._dest_state_machine = locals_._parser_state_machine, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_definition_by_index(index_); }, ._starting_index = args_._grammar_data._nonterminal_accepts.size()}, [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_name_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_nonterminal_index_by_name(name_); },
    [&](std::string_view label_) { return *args_._lexer_tables.terminal_label_to_index(label_); }));
   StateNrType const state_nr_pre_end = locals_._parser_state_machine.create_new_state();
   State& state_pre_end = *locals_._parser_state_machine.get_state(state_nr_pre_end);
   StateNrType const state_nr_end = locals_._parser_state_machine.create_new_state();
   State& state_end = *locals_._parser_state_machine.get_state(state_nr_end);
   state_pre_end.add_symbol_transition(Symbol(SymbolKindHiddenTerminal, args_._lexer_tables.get_eoi_accept_index()), state_nr_end);
-  state_end.get_accepts().insert(Interval<AcceptsIndexType>(binary_find_index(args_._grammar_data._nonterminal_accepts.begin(), args_._grammar_data._nonterminal_accepts.end(), GrammarData::LABEL_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); })));
+  state_end.get_accepts().insert(Interval<AcceptsIndexType>(binary_find_index(args_._grammar_data._nonterminal_accepts.begin(), args_._grammar_data._nonterminal_accepts.end(), Ast::NAME_EOI, [](auto const& lhs_, auto const& rhs_) { return GrammarData::FetchLabelString{}(lhs_) < GrammarData::FetchLabelString{}(rhs_); })));
   state_machine_part_nonterminal.connect_outgoing_transitions_to(state_nr_pre_end, locals_._parser_state_machine);
   locals_._parser_state_machine.get_state(state_nr_start)->add_epsilon_transition(*state_machine_part_nonterminal.get_incoming_state_nr());
 }
 
 void fill_nonterminal_data(ParserTableBuilder::Args const& args_, Locals& locals_) {
   for (GrammarData::NonterminalAcceptData const& accept_data : args_._grammar_data._nonterminal_accepts) {
-    locals_._result_tables.add_nonterminal_data(accept_data._label, accept_data._id_name, accept_data._merge, accept_data._unpack, accept_data._hide);
+    locals_._result_tables.add_nonterminal_data(accept_data._name, args_._grammar_data.get_non_generic_ids().find(accept_data._id_string)->second, accept_data._merge, accept_data._unpack, accept_data._hide);
   }
 }
 
@@ -71,7 +72,7 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
 
   GraphWriter::StyleArgs style_args;
   style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-    return args_._grammar_data.lookup_nonterminal_label_by_index(accepts_);
+    return args_._grammar_data.lookup_nonterminal_name_by_index(accepts_);
   };
 
   style_args._title = std::move(title_);
@@ -88,7 +89,7 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
         symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + "+"; });
         break;
       case SymbolKindClose:
-        symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._grammar_data.lookup_nonterminal_label_by_index(symbol_); });
+        symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._grammar_data.lookup_nonterminal_name_by_index(symbol_); });
         break;
       case SymbolKindConflict:
         symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + std::to_string(symbol_); });
@@ -152,13 +153,11 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
 }  // namespace
 
 auto ParserTableBuilder::build(Args args_) -> ParserTables {
-  Locals locals{
-   ._result_tables = ParserTables(args_._lexer_tables.get_min_id() + args_._lexer_tables.get_id_count()),
-  };
+  Locals locals;
 
   setup_parser_state_machine(args_, locals);
   write_nonterminal_state_machine_dot(args_, locals, "Initial tables", locals._parser_state_machine);
-  ParserReachabilityChecker::check_reachability(ParserReachabilityChecker::Args{._fn_lookup_accept_index_by_label = [&](std::string_view label_) { return args_._grammar_data.lookup_nonterminal_index_by_label(label_); }, ._parser_state_machine = locals._parser_state_machine});
+  ParserReachabilityChecker::check_reachability(ParserReachabilityChecker::Args{._fn_lookup_accept_index_by_label = [&](std::string_view label_) { return args_._grammar_data.lookup_nonterminal_index_by_name(label_); }, ._parser_state_machine = locals._parser_state_machine});
   StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = locals._parser_state_machine});
   write_nonterminal_state_machine_dot(args_, locals, "Determinized tables", locals._parser_state_machine);
   StateMachineMinimizer::minimize(locals._parser_state_machine);

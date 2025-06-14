@@ -1,7 +1,7 @@
 #include "pmt/parser/builder/parser_tables.hpp"
 
 #include "pmt/asserts.hpp"
-#include "pmt/parser/grammar/grammar_data.hpp"
+#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/symbol.hpp"
 
@@ -47,10 +47,6 @@ void fill_transition_masks(StateMachine const& state_machine_, std::unordered_ma
   }
 }
 }  // namespace
-
-ParserTables::ParserTables(GenericId::IdType min_id_)
- : _min_id(min_id_) {
-}
 
 auto ParserTables::get_state_nr_next(StateNrType state_nr_, SymbolKindType kind_, SymbolValueType symbol_) const -> StateNrType {
   State const* state = _parser_state_machine.get_state(state_nr_);
@@ -105,7 +101,7 @@ auto ParserTables::get_state_accept_index(StateNrType state_nr_) const -> size_t
 }
 
 auto ParserTables::get_eoi_accept_index() const -> size_t {
-  return *nonterminal_label_to_index(GrammarData::LABEL_EOI);
+  return *nonterminal_label_to_index(Ast::NAME_EOI);
 }
 
 auto ParserTables::get_accept_count() const -> size_t {
@@ -141,18 +137,6 @@ auto ParserTables::get_accept_index_merge(size_t index_) const -> bool {
 
 auto ParserTables::get_accept_index_id(size_t index_) const -> GenericId::IdType {
   return _nonterminal_data[index_]._id;
-}
-
-auto ParserTables::id_to_string(GenericId::IdType id_) const -> std::string {
-  return _id_to_name.find(id_)->second;
-}
-
-auto ParserTables::get_min_id() const -> GenericId::IdType {
-  return _id_to_name.empty() ? 0 : _id_to_name.begin()->first;
-}
-
-auto ParserTables::get_id_count() const -> size_t {
-  return _id_to_name.size();
 }
 
 auto ParserTables::get_lookahead_state_nr_next(StateNrType state_nr_, StateNrType symbol_) const -> StateNrType {
@@ -200,20 +184,8 @@ auto ParserTables::get_lookahead_state_machine() const -> pmt::util::sm::ct::Sta
   return _lookahead_state_machine;
 }
 
-void ParserTables::add_nonterminal_data(std::string label_, std::string const& id_name_, bool merge_, bool unpack_, bool hide_) {
-  auto const itr = _name_to_id.find(id_name_);
-  if (itr != _name_to_id.end()) {
-    // If the ID already exists, we can just use it
-    _nonterminal_data.push_back(NonterminalData{._label = std::move(label_), ._id = itr->second, ._merge = merge_, ._unpack = unpack_, ._hide = hide_});
-    return;
-  }
-  if (GenericId::is_generic_id(id_name_)) {
-    _nonterminal_data.push_back(NonterminalData{._label = std::move(label_), ._id = GenericId::string_to_id(id_name_), ._merge = merge_, ._unpack = unpack_, ._hide = hide_});
-    return;
-  }
-  _nonterminal_data.push_back(NonterminalData{._label = std::move(label_), ._id = _id_to_name.size() + _min_id, ._merge = merge_, ._unpack = unpack_, ._hide = hide_});
-  _name_to_id[id_name_] = _nonterminal_data.back()._id;
-  _id_to_name[_nonterminal_data.back()._id] = id_name_;
+void ParserTables::add_nonterminal_data(std::string label_, GenericId::IdType id_value_, bool merge_, bool unpack_, bool hide_) {
+  _nonterminal_data.push_back(NonterminalData{._label = std::move(label_), ._id = id_value_, ._merge = merge_, ._unpack = unpack_, ._hide = hide_});
 }
 
 auto ParserTables::nonterminal_label_to_index(std::string_view label_) const -> std::optional<size_t> {

@@ -162,18 +162,6 @@ auto ParserTables::get_accept_index_id(size_t index_) const -> pmt::parser::Gene
   return PARSER_ACCEPT_IDS[index_];
 }
 
-auto ParserTables::id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string {
-  return ID_NAMES[id_ - 0x13];
-}
-
-auto ParserTables::get_min_id() const -> pmt::parser::GenericId::IdType {
-  return 0x13;
-}
-
-auto ParserTables::get_id_count() const -> size_t {
-  return 0x13;
-}
-
 auto ParserTables::get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
   return pmt::parser::rt::get_state_nr_next_generic(LOOKAHEAD_TRANSITIONS, LOOKAHEAD_TRANSITIONS_STATE_OFFSETS, LOOKAHEAD_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindTerminal, symbol_);
 }

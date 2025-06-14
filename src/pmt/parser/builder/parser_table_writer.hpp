@@ -54,9 +54,6 @@ class ParserTableWriter : public pmt::util::SkeletonReplacerBase {
   void replace_parser_accepts_labels(std::string& str_);
   void replace_parser_accepts_ids(std::string& str_);
   void replace_parser_eoi_accept_index(std::string& str_);
-  void replace_id_names(std::string& str_);
-  void replace_min_id(std::string& str_);
-  void replace_id_count(std::string& str_);
   void replace_parser_unpack(std::string& str_);
   void replace_parser_hide(std::string& str_);
   void replace_parser_merge(std::string& str_);

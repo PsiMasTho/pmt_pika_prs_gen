@@ -17,9 +17,6 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   auto get_eoi_accept_index() const -> size_t override;
   auto get_accept_index_label(size_t index_) const -> std::string override;
   auto get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType override;
-  auto id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string override;
-  auto get_min_id() const -> pmt::parser::GenericId::IdType override;
-  auto get_id_count() const -> size_t override;
   auto get_linecount_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
   auto is_linecount_state_nr_accepting(pmt::util::sm::SymbolValueType state_nr_) const -> bool override;
 };

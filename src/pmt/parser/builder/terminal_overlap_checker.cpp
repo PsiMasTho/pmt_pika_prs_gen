@@ -45,7 +45,7 @@ void write_dot(TerminalOverlapChecker::Args const& args_, Locals& locals_, std::
 
   GraphWriter::StyleArgs style_args;
   style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-    return args_._grammar_data.lookup_terminal_label_by_index(accepts_);
+    return args_._grammar_data.lookup_terminal_name_by_index(accepts_);
   };
 
   style_args._title = std::move(title_);
@@ -92,7 +92,7 @@ void follow_and_copy_terminal_transitions(TerminalOverlapChecker::Args& args_, L
   interval_.for_each_key([&](SymbolValueType symbol_) {
     StateMachine state_machine_terminal;
     StateMachinePart state_machine_part_terminal = StateMachinePartBuilder::build(StateMachinePartBuilder::TerminalBuildingArgs(
-     StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._dest_state_machine = state_machine_terminal, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_terminal_definition_by_index(index_); }, ._starting_index = symbol_}, [&](size_t index_) { return args_._grammar_data.lookup_terminal_label_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_terminal_index_by_label(name_); }));
+     StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._dest_state_machine = state_machine_terminal, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_terminal_definition_by_index(index_); }, ._starting_index = symbol_}, [&](size_t index_) { return args_._grammar_data.lookup_terminal_name_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_terminal_index_by_name(name_); }));
 
     StateNrType const state_nr_end = state_machine_terminal.create_new_state();
     State* state_end = state_machine_terminal.get_state(state_nr_end);

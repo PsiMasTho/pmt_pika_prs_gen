@@ -3,7 +3,6 @@
 #include "pmt/parser/rt/parser_tables_base.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
 
-#include <map>
 #include <unordered_map>
 
 namespace pmt::parser::builder {
@@ -24,8 +23,6 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   pmt::util::sm::ct::StateMachine _parser_state_machine;
   pmt::util::sm::ct::StateMachine _lookahead_state_machine;
 
-  std::map<GenericId::IdType, std::string> _id_to_name;
-  std::unordered_map<std::string, GenericId::IdType> _name_to_id;
   std::vector<NonterminalData> _nonterminal_data;
 
   std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _parser_terminal_transition_masks;
@@ -33,13 +30,8 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _parser_conflict_transition_masks;
   std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _lookahead_terminal_transition_masks;
 
-  GenericId::IdType _min_id;
-
  public:
   // -$ Functions $-
-  // --$ Lifetime $--
-  explicit ParserTables(GenericId::IdType min_id_);
-
   // --$ Inherited: pmt::parser::rt::ParserTablesBase $--
   auto get_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolKindType kind_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
   auto get_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
@@ -56,9 +48,6 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_accept_index_hide(size_t index_) const -> bool override;
   auto get_accept_index_merge(size_t index_) const -> bool override;
   auto get_accept_index_id(size_t index_) const -> GenericId::IdType override;
-  auto id_to_string(GenericId::IdType id_) const -> std::string override;
-  auto get_min_id() const -> GenericId::IdType override;
-  auto get_id_count() const -> size_t override;
 
   auto get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
   auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
@@ -71,7 +60,7 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_parser_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
   auto get_lookahead_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
 
-  void add_nonterminal_data(std::string label_, std::string const& id_name_, bool merge_, bool unpack_, bool hide_);
+  void add_nonterminal_data(std::string label_, GenericId::IdType id_value_, bool merge_, bool unpack_, bool hide_);
 
   auto nonterminal_label_to_index(std::string_view label_) const -> std::optional<size_t>;
 

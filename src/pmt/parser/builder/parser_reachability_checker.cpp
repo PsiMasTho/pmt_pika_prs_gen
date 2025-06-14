@@ -1,6 +1,6 @@
 #include "pmt/parser/builder/parser_reachability_checker.hpp"
 
-#include "pmt/parser/grammar/grammar_data.hpp"
+#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
 
@@ -124,7 +124,7 @@ void report_reachability_error(IntervalSet<StateNrType> const& unreachable_state
 
 void ParserReachabilityChecker::check_reachability(Args args_) {
   Locals locals;
-  locals._eoi_accept_index = args_._fn_lookup_accept_index_by_label(GrammarData::LABEL_EOI);
+  locals._eoi_accept_index = args_._fn_lookup_accept_index_by_label(Ast::NAME_EOI);
   find_eoi_states(args_, locals);
   fill_reverse_transitions(args_, locals);
   IntervalSet<StateNrType> const reachable_state_nrs = follow_reverse_transitions(locals);

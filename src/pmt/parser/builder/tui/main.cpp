@@ -1,6 +1,7 @@
 #include "pmt/parser/grammar/grammar_data.hpp"
 
 #include "pmt/parser/builder/id_constants_writer.hpp"
+#include "pmt/parser/builder/id_strings_writer.hpp"
 #include "pmt/parser/builder/lexer_table_builder.hpp"
 #include "pmt/parser/builder/lexer_table_writer.hpp"
 #include "pmt/parser/builder/parser_table_builder.hpp"
@@ -41,7 +42,7 @@ auto report_terminal_overlaps(GrammarData const& grammar_data_, std::unordered_s
     std::string delim_2;
     msg += std::exchange(delim_1, ", ") + "{";
 
-    accepts.for_each_key([&](AcceptsIndexType i_) { msg += std::exchange(delim_2, ", ") + grammar_data_.lookup_terminal_label_by_index(i_); });
+    accepts.for_each_key([&](AcceptsIndexType i_) { msg += std::exchange(delim_2, ", ") + grammar_data_.lookup_terminal_name_by_index(i_); });
 
     msg += "}";
   }
@@ -60,7 +61,7 @@ auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHan
   return ast;
 }
 
-void test_tables(Args& args_, pmt::parser::builder::LexerTables const& lexer_tables_, pmt::parser::builder::ParserTables const& parser_tables_) {
+void test_tables(Args& args_, pmt::parser::builder::LexerTables const& lexer_tables_, pmt::parser::builder::ParserTables const& parser_tables_, GrammarData const& grammar_data_) {
   if (!args_._input_test_file) {
     return;
   }
@@ -70,13 +71,13 @@ void test_tables(Args& args_, pmt::parser::builder::LexerTables const& lexer_tab
   GenericParser test_parser;
   GenericAst::UniqueHandle test_ast = test_parser.parse(test_lexer, parser_tables_);
 
+  std::vector<std::string> id_strings;
+  std::transform(grammar_data_.get_non_generic_ids().begin(), grammar_data_.get_non_generic_ids().end(), std::back_inserter(id_strings), [](auto const& pair_) { return pair_.first; });
+
   GenericAstPrinter::Args ast_printer_args{._id_to_string_fn =
                                             [&](GenericId::IdType id_) {
-                                              if (id_ < lexer_tables_.get_min_id() + lexer_tables_.get_id_count()) {
-                                                return lexer_tables_.id_to_string(id_);
-                                              }
-                                              if (id_ < parser_tables_.get_min_id() + parser_tables_.get_id_count()) {
-                                                return parser_tables_.id_to_string(id_);
+                                              if (id_ < id_strings.size()) {
+                                                return id_strings[id_];
                                               }
                                               return "unknown(" + std::to_string(id_) + ")";
                                             },
@@ -112,17 +113,20 @@ auto main(int argc, char const* const* argv) -> int try {
   ParserTableWriter parser_table_writer;
   parser_table_writer.write(parser_writer_args);
 
-  IdConstantsWriter::WriterArgs id_constants_writer_args{._os_id_constants = args._output_id_constants_file, ._is_id_constants_skel = args._id_constants_skel_file, ._lexer_tables = lexer_tables, ._parser_tables = parser_tables};
-
+  IdConstantsWriter::WriterArgs id_constants_writer_args{._os_id_constants = args._output_id_constants_file, ._is_id_constants_skel = args._id_constants_skel_file, ._grammar_data = grammar_data};
   IdConstantsWriter id_constants_writer;
   id_constants_writer.write(id_constants_writer_args);
+
+  IdStringsWriter::WriterArgs id_strings_writer_args{._os_id_strings = args._output_id_strings_file, ._is_id_strings_skel = args._id_strings_skel_file, ._grammar_data = grammar_data};
+  IdStringsWriter id_strings_writer;
+  id_strings_writer.write(id_strings_writer_args);
 
   report_terminal_overlaps(grammar_data, TerminalOverlapChecker::find_overlaps(TerminalOverlapChecker::Args{
    ._state_machine = parser_tables.get_parser_state_machine(),
    ._grammar_data = grammar_data,
    ._ast = *ast,
   }));
-  test_tables(args, lexer_tables, parser_tables);
+  test_tables(args, lexer_tables, parser_tables, grammar_data);
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';
   return 1;

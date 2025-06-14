@@ -39,7 +39,7 @@ auto check_inlineable(NonterminalInliner::Args const& args_, AcceptsIndexType ac
     GenericAst const& node = take();
     switch (node.get_id()) {
       case Ast::TkNonterminalIdentifier: {
-        AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_label(node.get_string());
+        AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_name(node.get_string());
         if (index == accepts_index_) {
           return false;
         }
@@ -96,7 +96,7 @@ void perform_inline(NonterminalInliner::Args& args_, AcceptsIndexType accepts_in
 
     switch (node.get_id()) {
       case Ast::TkNonterminalIdentifier: {
-        AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_label(node.get_string());
+        AcceptsIndexType const index = args_._grammar_data.lookup_nonterminal_index_by_name(node.get_string());
         if (index != accepts_index_) {
           break;
         }

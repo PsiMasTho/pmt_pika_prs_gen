@@ -106,18 +106,6 @@ auto LexerTables::get_accept_index_id(size_t index_) const -> pmt::parser::Gener
   return LEXER_ACCEPT_IDS[index_];
 }
 
-auto LexerTables::id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string {
-  return ID_NAMES[id_ - 0x0];
-}
-
-auto LexerTables::get_min_id() const -> pmt::parser::GenericId::IdType {
-  return 0x0;
-}
-
-auto LexerTables::get_id_count() const -> size_t {
-  return 0x13;
-}
-
 auto LexerTables::get_linecount_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
   return pmt::parser::rt::get_state_nr_next_generic(LINECOUNT_TRANSITIONS, LINECOUNT_TRANSITIONS_STATE_OFFSETS, LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
 }
