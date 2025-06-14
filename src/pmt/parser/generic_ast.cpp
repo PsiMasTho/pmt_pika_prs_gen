@@ -173,7 +173,7 @@ void GenericAst::give_child_at_back(UniqueHandle child_) {
 }
 
 void GenericAst::merge() {
-  UniqueHandle result = construct(Tag::String);
+  UniqueHandle result = construct(Tag::String, get_id());
 
   std::queue<GenericAst*> queue;
   queue.push(this);

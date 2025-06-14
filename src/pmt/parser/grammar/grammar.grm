@@ -26,10 +26,12 @@ $tilde<id                       = "TkTilde">                     = "~";
 $question<id                    = "TkQuestion">                  = "?";
 $kw_epsilon<id                  = "TkEpsilon">                   = "epsilon";
 $kw_permute<id                  = "TkPermute">                   = "@permute";
+$kw_permute_delimited<id        = "TkPermuteDelimited">          = "@permute_delimited";
 $kw_parameter_unpack<id         = "TkKwParameterUnpack">         = "unpack";
 $kw_parameter_hide<id           = "TkKwParameterHide">           = "hide";
 $kw_parameter_merge<id          = "TkKwParameterMerge">          = "merge";
 $kw_parameter_id<id             = "TkKwParameterId">             = "id";
+$kw_parameter_display_name<id   = "TkKwParameterDisplayName">    = "display_name";
 $grammar_property_start<id      = "TkGrammarPropertyStart">      = "@start";
 $grammar_property_whitespace<id = "TkGrammarPropertyWhitespace"> = "@whitespace";
 $grammar_property_newline<id    = "TkGrammarPropertyNewline">    = "@newline";
@@ -54,7 +56,23 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
 %terminal_parameter_list<unpack = true> = %terminal_parameter (","~ %terminal_parameter)*;
 
 // - TERMINAL_PARAMETER -
-%terminal_parameter<id = "NtTerminalParameter"> = $kw_parameter_id "="~ $string_literal;
+%terminal_parameter<unpack = true> = %parameter_id |
+                                     %parameter_displayname;
+
+// - PARAMETER_ID -
+%parameter_id<id = "NtParameterId", merge = true> = $kw_parameter_id~ "="~ $string_literal;
+
+// - PARAMETER_DISPLAY_NAME -
+%parameter_displayname<id = "NtParameterDisplayName", merge = true> = $kw_parameter_display_name~ "="~ $string_literal;
+
+// - PARAMETER_UNPACK =
+%parameter_unpack<id = "NtParameterUnpack", merge = true> = $kw_parameter_unpack~ "="~ $boolean_literal;
+
+// - PARAMETER_HIDE -
+%parameter_hide<id = "NtParameterHide", merge = true> = $kw_parameter_hide~ "="~ $boolean_literal;
+
+// - PARAMETER_MERGE -
+%parameter_merge<id = "NtParameterMerge", merge = true> = $kw_parameter_merge~ "="~ $boolean_literal;
 
 // - TERMINAL_DEFINITION -
 %terminal_definition<id = "NtTerminalDefinition"> = %terminal_choices;
@@ -72,7 +90,7 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
                                                     $kw_epsilon                                         |
                                                     %charset_expression  %repetition_expression?        |
                                                     "("~ %terminal_choices ")"~ %repetition_expression? |
-                                                    "("~ %terminal_choices ")"~ %sequence_modifier?;
+                                                    "("~ %terminal_choices ")"~ %terminal_sequence_modifier?;
 
 // - CHARSET_EXPRESSION -
 %charset_expression<id = "NtTerminalCharset"> = "["~ %charset_item (","~ %charset_item)* "]"~;
@@ -98,39 +116,46 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
                                                         $plus     |
                                                         %repetition_range;
 
-// - SEQUENCE_MODIFIER -
-%sequence_modifier<id = "NtSequenceModifier"> = "["~ $kw_permute %repetition_range? "]"~;
+// - TERMINAL_SEQUENCE_MODIFIER -
+%terminal_sequence_modifier<id = "NtSequenceModifier"> = "["~ $kw_permute %repetition_range? "]"~ |
+                                                         "["~ $kw_permute_delimited "("~ %terminal_choices ")"~ %repetition_range? "]"~;
 
-// - RULE_PRODUCTION -
+// - NONTERMINAL_PRODUCTION -
 %nonterminal_production<id = "NtNonterminalProduction"> = $nonterminal_identifier "="~ %nonterminal_definition ";"~ |
                                                           $nonterminal_identifier "<"~ %nonterminal_parameter_list ">"~ "="~ %nonterminal_definition ";"~;
 
-// - RULE_PARAMETER_LIST -
+// - NONTERMINAL_PARAMETER_LIST -
 %nonterminal_parameter_list<unpack = true> = %nonterminal_parameter (","~ %nonterminal_parameter)*;
 
-// - RULE_PARAMETER -
-%nonterminal_parameter<id = "NtNonterminalParameter"> = $kw_parameter_id "="~ $string_literal      |
-                                                        $kw_parameter_unpack "="~ $boolean_literal |
-                                                        $kw_parameter_hide "="~ $boolean_literal   |
-                                                        $kw_parameter_merge "="~ $boolean_literal;
+// - NONTERMINAL_PARAMETER -
+%nonterminal_parameter<unpack = true> = %parameter_id          |
+                                        %parameter_displayname |
+                                        %parameter_unpack      |
+                                        %parameter_hide        |
+                                        %parameter_merge;
 
-// - RULE_DEFINITION -
+// - NONTERMINAL_DEFINITION -
 %nonterminal_definition<id = "NtNonterminalDefinition"> = %nonterminal_choices;
 
-// - RULE_CHOICES -
+// - NONTERMINAL_CHOICES -
 %nonterminal_choices<id = "NtNonterminalChoices"> = %nonterminal_sequence ("|"~ %nonterminal_sequence)*;
 
-// - RULE_SEQUENCE -
+// - NONTERMINAL_SEQUENCE -
 %nonterminal_sequence<id = "NtNonterminalSequence"> = %nonterminal_expression+;
 
-// - RULE_EXPRESSION -
+// - NONTERMINAL_EXPRESSION -
 %nonterminal_expression<id = "NtNonterminalExpression"> = $nonterminal_identifier %repetition_expression?         |
                                                           $terminal_identifier (%repetition_expression | $tilde)? |
                                                           $string_literal (%repetition_expression | $tilde)?      |
                                                           $integer_literal (%repetition_expression | $tilde)?     |
                                                           $kw_epsilon                                             |
                                                           "("~ %nonterminal_choices ")"~ %repetition_expression?  |
-                                                          "("~ %nonterminal_choices ")"~ %sequence_modifier?;
+                                                          "("~ %nonterminal_choices ")"~ %nonterminal_sequence_modifier?;
+
+// - NONTERMINAL_SEQUENCE_MODIFIER -
+%nonterminal_sequence_modifier<id = "NtSequenceModifier"> = "["~ $kw_permute %repetition_range? "]"~ |
+                                                            "["~ $kw_permute_delimited "("~ %nonterminal_choices ")"~ %repetition_range? "]"~;
+
 // - GRAMMAR_PROPERTY -
 %grammar_property<id = "NtGrammarProperty"> = $grammar_property_start      "="~ $nonterminal_identifier ";"~        |
                                               $grammar_property_start      "="~ %terminal_definition_pair_list ";"~ |

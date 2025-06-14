@@ -9,10 +9,10 @@ PMT_FW_DECL_NS_CLASS(pmt::parser::rt, ParserTablesBase);
 namespace pmt::parser::rt {
 
 class GenericParser {
-  public:
+ public:
   // -$ Types / Constants $-
   class Args {
-    public:
+   public:
     GenericLexer& _lexer;
     ParserTablesBase const& _parser_tables;
   };

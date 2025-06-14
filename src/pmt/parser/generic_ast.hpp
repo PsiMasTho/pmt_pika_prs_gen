@@ -74,7 +74,7 @@ class GenericAst {
   auto take_child_at_back() -> UniqueHandle;
   void give_child_at_back(UniqueHandle child_);
 
-  // Merge the children into a string
+  // Merge the children into a string, keeps the id of *this
   void merge();
   // Unpack the child's children into this node
   void unpack(size_t index_);

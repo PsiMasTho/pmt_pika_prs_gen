@@ -3,9 +3,9 @@
 #include "pmt/asserts.hpp"
 #include "pmt/base/bitset.hpp"
 #include "pmt/parser/primitives.hpp"
-#include "pmt/util/sm/primitives.hpp"
 #include "pmt/parser/rt/parser_tables_base.hpp"
 #include "pmt/parser/rt/util.hpp"
+#include "pmt/util/sm/primitives.hpp"
 
 #include <cassert>
 #include <deque>
@@ -19,12 +19,12 @@ namespace {
 
 class StackItem {
  public:
- StateNrType _state_nr;
+  StateNrType _state_nr;
   GenericAst* _ast;
 };
 
 class Locals {
-  public:
+ public:
   std::vector<pmt::base::Bitset::ChunkType> _conflict_accepts_valid;
   std::vector<StackItem> _parse_stack;
   std::deque<GenericLexer::LexReturn> _lex_queue;
@@ -36,10 +36,10 @@ class Locals {
 };
 
 auto add_child(GenericAst& parent_, GenericAst::UniqueHandle child_) -> GenericAst* {
- assert(parent_.get_tag() == GenericAst::Tag::Children);
+  assert(parent_.get_tag() == GenericAst::Tag::Children);
 
- parent_.give_child_at_back(std::move(child_));
- return parent_.get_child_at_back();
+  parent_.give_child_at_back(std::move(child_));
+  return parent_.get_child_at_back();
 }
 
 auto parse_stack_take(Locals& locals_) -> StackItem {
@@ -139,7 +139,11 @@ auto GenericParser::parse(Args args_) -> GenericAst::UniqueHandle {
             if (consumed_from_queue < consume_from_queue) {
               return locals._lex_queue[consumed_from_queue++]._accepted;
             } else {
-              locals._lex_queue.push_back(args_._lexer.lex(args_._parser_tables.get_lookahead_state_terminal_transitions(state_nr_conflict_cur)));
+              try {
+                locals._lex_queue.push_back(args_._lexer.lex(args_._parser_tables.get_lookahead_state_terminal_transitions(state_nr_conflict_cur)));
+              } catch (...) {
+                throw std::runtime_error("No valid lexed token found for conflict resolution.");  // TODO: we should report what token(s) we expected
+              }
               return locals._lex_queue.back()._accepted;
             }
           }();
