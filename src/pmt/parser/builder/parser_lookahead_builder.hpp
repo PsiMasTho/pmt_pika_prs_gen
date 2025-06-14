@@ -16,6 +16,7 @@ class ParserLookaheadBuilder {
     pmt::util::sm::ct::StateMachine& _parser_state_machine;
     pmt::base::IntervalSet<pmt::util::sm::StateNrType> _conflicting_state_nrs;  // returned by extract_conflicts
     LabelLookupFn _fn_lookup_terminal_label;
+    bool _write_dotfiles : 1 = true;
   };
 
   // -$ Functions $-

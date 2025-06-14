@@ -38,6 +38,8 @@ class Args {
   std::string _lexer_class_name;
   std::string _parser_class_name;
   std::string _namespace_name;
+
+  bool _write_dotfiles = true;
 };
 
 }  // namespace pmt::parser::builder::tui

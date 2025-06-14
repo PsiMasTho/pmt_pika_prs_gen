@@ -23,11 +23,12 @@ class LexerTableBuilder {
   pmt::util::sm::ct::StateMachine _whitespace_state_machine;
   GenericAst const* _ast = nullptr;
   pmt::parser::grammar::GrammarData const* _grammar_data = nullptr;
+  bool _write_dotfiles : 1 = true;
 
  public:
   // -$ Functions $-
   // --$ Other $--
-  auto build(GenericAst const& ast_, pmt::parser::grammar::GrammarData const& grammar_data_) -> LexerTables;
+  auto build(GenericAst const& ast_, pmt::parser::grammar::GrammarData const& grammar_data_, bool write_dotfiles_) -> LexerTables;
 
  private:
   void setup_whitespace_state_machine();

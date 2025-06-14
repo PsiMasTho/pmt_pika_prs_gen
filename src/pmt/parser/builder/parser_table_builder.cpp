@@ -54,6 +54,10 @@ void fill_nonterminal_data(ParserTableBuilder::Args const& args_, Locals& locals
 }
 
 void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, Locals& locals_, std::string title_, pmt::util::sm::ct::StateMachine const& state_machine_) {
+  if (!args_._write_dotfiles) {
+    return;
+  }
+
   std::string filename = "nonterminal_state_machine_" + std::to_string(locals_._nonterminal_dotfile_counter++) + ".dot";
   if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
     std::cerr << "Skipping dot file write of " << filename << " because it has " << state_machine_.get_state_count() << " states, which is more than the limit of " << DOT_FILE_MAX_STATES << '\n';
@@ -164,9 +168,7 @@ auto ParserTableBuilder::build(Args args_) -> ParserTables {
   write_nonterminal_state_machine_dot(args_, locals, "Minimized tables", locals._parser_state_machine);
   IntervalSet<StateNrType> const conflicting_state_nrs = ParserLookaheadBuilder::extract_conflicts(locals._parser_state_machine);
   write_nonterminal_state_machine_dot(args_, locals, "Final tables", locals._parser_state_machine);
-  StateMachine state_machine_lookahead = ParserLookaheadBuilder::build(ParserLookaheadBuilder::Args{._parser_state_machine = locals._parser_state_machine, ._conflicting_state_nrs = conflicting_state_nrs, ._fn_lookup_terminal_label = [&](size_t index_) {
-                                                                                                      return args_._lexer_tables.get_accept_index_label(index_);
-                                                                                                    }});
+  StateMachine state_machine_lookahead = ParserLookaheadBuilder::build(ParserLookaheadBuilder::Args{._parser_state_machine = locals._parser_state_machine, ._conflicting_state_nrs = conflicting_state_nrs, ._fn_lookup_terminal_label = [&](size_t index_) { return args_._lexer_tables.get_accept_index_label(index_); }, ._write_dotfiles = args_._write_dotfiles});
 
   fill_nonterminal_data(args_, locals);
 

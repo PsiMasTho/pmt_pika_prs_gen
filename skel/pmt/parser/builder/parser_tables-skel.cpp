@@ -42,10 +42,6 @@ std::array</* $replace PARSER_ACCEPT_LABELS_TYPE */, /* $replace PARSER_ACCEPT_L
 /* $replace PARSER_ACCEPT_LABELS */
 };
 
-std::array</* $replace ID_NAMES_TYPE */, /* $replace ID_NAMES_SIZE */> const ID_NAMES = {
-/* $replace ID_NAMES */
-};
-
 std::array<pmt::parser::GenericId::IdType const, /* $replace PARSER_ACCEPT_IDS_SIZE */> const PARSER_ACCEPT_IDS = {
 /* $replace PARSER_ACCEPT_IDS */
 };
@@ -142,18 +138,6 @@ auto /* $replace CLASS_NAME */::get_accept_index_merge(size_t index_) const -> b
 
 auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType {
  return PARSER_ACCEPT_IDS[index_];
-}
-
-auto /* $replace CLASS_NAME */::id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string {
- return ID_NAMES[id_ - /* $replace MIN_ID */];
-}
-
-auto /* $replace CLASS_NAME */::get_min_id() const -> pmt::parser::GenericId::IdType {
- return /* $replace MIN_ID */;
-}
-
-auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
- return /* $replace ID_COUNT */;
 }
 
 auto /* $replace CLASS_NAME */::get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {

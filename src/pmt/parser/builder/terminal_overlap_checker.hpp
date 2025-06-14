@@ -17,6 +17,7 @@ class TerminalOverlapChecker {
     pmt::parser::grammar::GrammarData const& _grammar_data;
     GenericAst const& _ast;
     pmt::util::sm::StateNrType _state_nr_from = pmt::util::sm::StateNrStart;
+    bool _write_dotfiles : 1 = true;
   };
 
   // --$ Other $--

@@ -348,7 +348,7 @@ void GrammarData::final_traversal(GrammarData& grammar_data_, GenericAst& ast_) 
         size_t const index = grammar_data_.try_find_nonterminal_accept_index_by_name(label);
         grammar_data_._nonterminal_accepts[index]._used = true;
         push_and_visit(grammar_data_._nonterminal_accepts[grammar_data_.try_find_nonterminal_accept_index_by_name(path_cur.resolve(ast_)->get_string())]._definition_path);
-       } break;
+      } break;
       case Ast::NtNonterminalDefinition:
       case Ast::NtNonterminalExpression:
       case Ast::NtNonterminalChoices:
@@ -371,24 +371,24 @@ void GrammarData::final_traversal(GrammarData& grammar_data_, GenericAst& ast_) 
 }
 
 void GrammarData::fill_non_generic_ids(GrammarData& grammar_data_) {
- for (auto const& terminal_accept : grammar_data_._terminal_accepts) {
+  for (auto const& terminal_accept : grammar_data_._terminal_accepts) {
     if (GenericId::is_generic_id(terminal_accept._id_string)) {
       continue;
     }
     grammar_data_._non_generic_ids[terminal_accept._id_string];
- }
+  }
 
- for (auto const& nonterminal_accept : grammar_data_._nonterminal_accepts) {
+  for (auto const& nonterminal_accept : grammar_data_._nonterminal_accepts) {
     if (GenericId::is_generic_id(nonterminal_accept._id_string)) {
       continue;
     }
     grammar_data_._non_generic_ids[nonterminal_accept._id_string];
   }
 
- // Set the id numerical value
- for (GenericId::IdType i = 0; std::pair<std::string const, GenericId::IdType>& entry : grammar_data_._non_generic_ids) {
-  entry.second = i++;
- }
+  // Set the id numerical value
+  for (GenericId::IdType i = 0; std::pair<std::string const, GenericId::IdType> & entry : grammar_data_._non_generic_ids) {
+    entry.second = i++;
+  }
 }
 
 auto GrammarData::try_find_terminal_accept_index_by_name(std::string const& label_) -> size_t {

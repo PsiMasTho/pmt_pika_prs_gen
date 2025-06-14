@@ -1,4 +1,5 @@
-/* Generated on: 2025-06-07 23:45:55 */
+/* Generated on: 2025-06-14 17:31:10 */
+// clang-format off
 #pragma once
 
 #include <pmt/base/bitset.hpp>
@@ -29,4 +30,6 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
 };
 
-}  // namespace pmt::parser::grammar
+} // namespace pmt::parser::grammar
+
+// clang-format on

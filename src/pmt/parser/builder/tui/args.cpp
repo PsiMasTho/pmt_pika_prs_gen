@@ -80,6 +80,8 @@ Args::Args(int argc_, char const* const* argv_) {
   try_fetch_required_arg(cmdl, "lexer-class-name", _lexer_class_name);
   try_fetch_required_arg(cmdl, "parser-class-name", _parser_class_name);
   try_fetch_required_arg(cmdl, "namespace-name", _namespace_name);
+
+  _write_dotfiles = !cmdl["no-dotfiles"];
 }
 
 }  // namespace pmt::parser::builder::tui

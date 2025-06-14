@@ -1,7 +1,7 @@
 #include "pmt/parser/builder/id_constants_writer.hpp"
 
-#include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/builder/table_writer_common.hpp"
+#include "pmt/parser/grammar/grammar_data.hpp"
 
 namespace pmt::parser::builder {
 using namespace pmt::util::sm;

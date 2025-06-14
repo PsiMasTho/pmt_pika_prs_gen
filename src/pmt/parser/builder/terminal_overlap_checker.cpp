@@ -28,6 +28,10 @@ class Locals {
 };
 
 void write_dot(TerminalOverlapChecker::Args const& args_, Locals& locals_, std::string title_, StateMachine const& state_machine_) {
+  if (!args_._write_dotfiles) {
+    return;
+  }
+
   std::string filename = "conflict_checker_state_machine_" + std::to_string(locals_._dotfile_counter++) + ".dot";
   if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
     std::cerr << "Skipping dot file write of " << filename << " because it has " << state_machine_.get_state_count() << " states, which is more than the limit of " << DOT_FILE_MAX_STATES << '\n';

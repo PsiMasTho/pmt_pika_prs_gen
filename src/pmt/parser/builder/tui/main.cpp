@@ -100,14 +100,14 @@ auto main(int argc, char const* const* argv) -> int try {
   GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
   NonterminalInliner::do_inline(NonterminalInliner::Args{._grammar_data = grammar_data, ._ast = *ast});
 
-  pmt::parser::builder::LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data);
+  pmt::parser::builder::LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data, args._write_dotfiles);
 
   LexerTableWriter::WriterArgs table_writer_args{._os_header = args._output_lexer_header_file, ._os_source = args._output_lexer_source_file, ._is_header_skel = args._lexer_header_skel_file, ._is_source_skel = args._lexer_source_skel_file, ._tables = lexer_tables, ._namespace_name = args._namespace_name, ._class_name = args._lexer_class_name, ._header_include_path = std::filesystem::path(args._lexer_header_include_filename).filename().string()};
 
   LexerTableWriter lexer_table_writer;
   lexer_table_writer.write(table_writer_args);
 
-  pmt::parser::builder::ParserTables parser_tables = ParserTableBuilder::build(ParserTableBuilder::Args(*ast, grammar_data, lexer_tables));
+  pmt::parser::builder::ParserTables parser_tables = ParserTableBuilder::build(ParserTableBuilder::Args(*ast, grammar_data, lexer_tables, args._write_dotfiles));
 
   ParserTableWriter::WriterArgs parser_writer_args{._os_header = args._output_parser_header_file, ._os_source = args._output_parser_source_file, ._is_header_skel = args._parser_header_skel_file, ._is_source_skel = args._parser_source_skel_file, ._tables = parser_tables, ._namespace_name = args._namespace_name, ._class_name = args._parser_class_name, ._header_include_path = std::filesystem::path(args._parser_header_include_filename).filename().string()};
   ParserTableWriter parser_table_writer;
@@ -122,10 +122,11 @@ auto main(int argc, char const* const* argv) -> int try {
   id_strings_writer.write(id_strings_writer_args);
 
   report_terminal_overlaps(grammar_data, TerminalOverlapChecker::find_overlaps(TerminalOverlapChecker::Args{
-   ._state_machine = parser_tables.get_parser_state_machine(),
-   ._grammar_data = grammar_data,
-   ._ast = *ast,
-  }));
+                                          ._state_machine = parser_tables.get_parser_state_machine(),
+                                          ._grammar_data = grammar_data,
+                                          ._ast = *ast,
+                                          ._write_dotfiles = args._write_dotfiles,
+                                         }));
   test_tables(args, lexer_tables, parser_tables, grammar_data);
 } catch (std::exception const& e) {
   std::cerr << std::string(e.what()) << '\n';

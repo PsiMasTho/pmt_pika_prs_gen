@@ -17,6 +17,7 @@ class ParserTableBuilder {
     GenericAst const& _ast;
     pmt::parser::grammar::GrammarData const& _grammar_data;
     LexerTables const& _lexer_tables;
+    bool _write_dotfiles : 1 = true;
   };
 
   // -$ Functions $-

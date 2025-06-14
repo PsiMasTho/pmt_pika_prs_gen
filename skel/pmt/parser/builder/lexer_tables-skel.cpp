@@ -44,10 +44,6 @@ std::array<pmt::parser::GenericId::IdType, /* $replace LEXER_ACCEPT_IDS_SIZE */>
 /* $replace LEXER_ACCEPT_IDS */
 };
 
-std::array<char const* const, /* $replace ID_NAMES_SIZE */> const ID_NAMES = {
-/* $replace ID_NAMES */
-};
-
 std::array</* $replace LINECOUNT_ACCEPTS_TYPE */, /* $replace LINECOUNT_ACCEPTS_SIZE */> const LINECOUNT_ACCEPTS = {
 /* $replace LINECOUNT_ACCEPTS */
 };
@@ -80,18 +76,6 @@ auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> s
 
 auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType {
  return LEXER_ACCEPT_IDS[index_];
-}
-
-auto /* $replace CLASS_NAME */::id_to_string(pmt::parser::GenericId::IdType id_) const -> std::string {
- return ID_NAMES[id_ - /* $replace MIN_ID */];
-}
-
-auto /* $replace CLASS_NAME */::get_min_id() const -> pmt::parser::GenericId::IdType {
- return /* $replace MIN_ID */;
-}
-
-auto /* $replace CLASS_NAME */::get_id_count() const -> size_t {
- return /* $replace ID_COUNT */;
 }
 
 auto /* $replace CLASS_NAME */::get_linecount_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {

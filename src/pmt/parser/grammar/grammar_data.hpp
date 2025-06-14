@@ -5,9 +5,9 @@
 #include "pmt/parser/generic_id.hpp"
 
 #include <limits>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace pmt::parser::grammar {
 

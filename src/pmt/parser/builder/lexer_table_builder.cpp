@@ -25,9 +25,10 @@ using namespace pmt::parser::grammar;
 
 namespace {}
 
-auto LexerTableBuilder::build(GenericAst const& ast_, GrammarData const& grammar_data_) -> LexerTables {
+auto LexerTableBuilder::build(GenericAst const& ast_, GrammarData const& grammar_data_, bool write_dotfiles_) -> LexerTables {
   _ast = &ast_;
   _grammar_data = &grammar_data_;
+  _write_dotfiles = write_dotfiles_;
   setup_whitespace_state_machine();
   setup_terminal_state_machines();
   setup_comment_state_machines();
@@ -346,6 +347,9 @@ void LexerTableBuilder::validate_result() {
 }
 
 void LexerTableBuilder::write_dot(std::string_view filename_, std::string_view title_, pmt::util::sm::ct::StateMachine const& state_machine_) const {
+  if (!_write_dotfiles) {
+    return;
+  }
   static size_t const DOT_FILE_MAX_STATES = 750;
   if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
     std::cerr << "Skipping dot file write of " << filename_ << " because it has " << state_machine_.get_state_count() << " states, which is more than the limit of " << DOT_FILE_MAX_STATES << '\n';

@@ -1,4 +1,5 @@
-/* Generated on: 2025-06-07 23:45:54 */
+/* Generated on: 2025-06-14 17:31:09 */
+// clang-format off
 #pragma once
 
 #include <pmt/base/bitset.hpp>
@@ -21,4 +22,6 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   auto is_linecount_state_nr_accepting(pmt::util::sm::SymbolValueType state_nr_) const -> bool override;
 };
 
-}  // namespace pmt::parser::grammar
+} // namespace pmt::parser::grammar
+
+// clang-format on
