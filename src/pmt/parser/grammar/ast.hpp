@@ -21,6 +21,8 @@ class Ast {
   enum : GenericId::IdType {
 #include "pmt/parser/grammar/id_constants-inl.hpp"
     NtTerminalHidden,
+    NtPermute,
+    NtPermuteDelimited
   };
 
   static auto id_to_string(GenericId::IdType id_) -> std::string;

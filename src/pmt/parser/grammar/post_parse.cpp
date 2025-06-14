@@ -91,6 +91,21 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
           if (Match::is_none_of(locals_._ast_cur->get_child_at(0)->get_id(), Ast::NtTerminalChoices, Ast::NtNonterminalChoices) || locals_._ast_cur->get_child_at(0)->get_children_size() != 1 || Match::is_none_of(locals_._ast_cur->get_child_at(0)->get_child_at(0)->get_id(), Ast::NtTerminalSequence, Ast::NtNonterminalSequence)) {
             throw std::runtime_error(ERROR_MSG);
           }
+
+          switch (locals_._ast_cur->get_child_at_back()->get_child_at_front()->get_id()) {
+           case Ast::TkPermute: {
+            locals_._ast_cur->get_child_at_back()->get_child_at_front()->set_id(Ast::NtPermute);
+           } break;
+           case Ast::TkPermuteDelimited: {
+            locals_._ast_cur->get_child_at_back()->get_child_at_front()->set_id(Ast::NtPermuteDelimited);
+           } break;
+           default: {
+            pmt::unreachable();
+           }
+          };
+          
+          locals_._ast_cur->get_child_at_back()->take_child_at_front();
+
           locals_._ast_cur->unpack(0);
         };
         case Ast::NtRepetitionExpression: {
@@ -119,10 +134,8 @@ void add_terminal_definition(GenericAst& ast_root_, std::string const& terminal_
   terminal_production->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::TkTerminalIdentifier));
   terminal_production->get_child_at_back()->set_string(terminal_name_);
   // Id
-  terminal_production->give_child_at_back(GenericAst::construct(GenericAst::Tag::Children, Ast::NtTerminalParameter));
-  terminal_production->get_child_at_back()->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::TkKwParameterId));
-  terminal_production->get_child_at_back()->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::TkStringLiteral));
-  terminal_production->get_child_at_back()->get_child_at_back()->set_string("\"" + terminal_id_ + "\"");
+  terminal_production->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::NtParameterId));
+  terminal_production->get_child_at_back()->set_string("\"" + terminal_id_ + "\"");
   // Definition
   GenericAst::UniqueHandle terminal_definition = GenericAst::construct(GenericAst::Tag::Children, Ast::NtTerminalDefinition);
   terminal_definition->give_child_at_back(GenericAst::clone(terminal_definition_));

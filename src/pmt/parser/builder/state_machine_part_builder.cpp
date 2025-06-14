@@ -473,7 +473,7 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           pmt::unreachable();
       }
       break;
-    case Ast::NtSequenceModifier:
+    case Ast::NtPermute:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:
           process_permute_stage_0(args_, locals_, frame_idx_);
@@ -488,6 +488,10 @@ void dispatch_common(auto const& args_, Locals& locals_, size_t frame_idx_) {
           pmt::unreachable();
       }
       break;
+     case Ast::NtPermuteDelimited: {
+      printf("NtPermuteDelimited is not implemented yet\n");
+      pmt::unreachable();
+     }
     case Ast::TkEpsilon:
       switch (locals_._callstack[frame_idx_]._stage) {
         case 0:

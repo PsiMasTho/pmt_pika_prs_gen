@@ -7,6 +7,8 @@ namespace {
 char const* const ID_STRINGS[] = {
 #include "pmt/parser/grammar/id_strings-inl.hpp"
  "NtTerminalHidden",
+ "NtPermute",
+ "NtPermuteDelimited",
 };
 }  // namespace
 

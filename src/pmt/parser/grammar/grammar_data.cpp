@@ -180,6 +180,7 @@ void GrammarData::initial_traversal_handle_grammar_property_newline(GrammarData&
 void GrammarData::initial_traversal_handle_terminal_production(GrammarData& grammar_data_, GenericAst const& ast_, GenericAstPath const& path_) {
   GenericAst const& terminal_production = *path_.resolve(ast_);
   std::string terminal_name = terminal_production.get_child_at(0)->get_string();
+  std::string terminal_display_name = terminal_name;
 
   std::string terminal_id_string = GenericId::id_to_string(GenericId::IdDefault);
   GenericAstPath terminal_definition_position = path_.clone_push(0);
@@ -187,12 +188,11 @@ void GrammarData::initial_traversal_handle_terminal_production(GrammarData& gram
   for (size_t i = 1; i < terminal_production.get_children_size(); ++i) {
     GenericAst const& child = *terminal_production.get_child_at(i);
     switch (child.get_id()) {
-      case Ast::NtTerminalParameter: {
-        switch (child.get_child_at(0)->get_id()) {
-          case Ast::TkKwParameterId:
-            terminal_id_string = StringLiteral(*child.get_child_at(1)).get_value();
-            break;
-        }
+      case Ast::NtParameterId: {
+       terminal_id_string = StringLiteral(child).get_value();
+      } break;
+      case Ast::NtParameterDisplayName: {
+        terminal_display_name = StringLiteral(child).get_value();
       } break;
       case Ast::NtTerminalDefinition:
         terminal_definition_position.inplace_pop();
@@ -203,6 +203,7 @@ void GrammarData::initial_traversal_handle_terminal_production(GrammarData& gram
 
   grammar_data_._terminal_accepts.emplace_back();
   grammar_data_._terminal_accepts.back()._name = std::move(terminal_name);
+  grammar_data_._terminal_accepts.back()._display_name = std::move(terminal_display_name);
   grammar_data_._terminal_accepts.back()._id_string = std::move(terminal_id_string);
   grammar_data_._terminal_accepts.back()._used = false;
 
@@ -212,6 +213,7 @@ void GrammarData::initial_traversal_handle_terminal_production(GrammarData& gram
 void GrammarData::initial_traversal_handle_nonterminal_production(GrammarData& grammar_data_, GenericAst const& ast_, GenericAstPath const& path_) {
   GenericAst const& nonterminal_production = *path_.resolve(ast_);
   std::string nonterminal_name = nonterminal_production.get_child_at(0)->get_string();
+  std::string nonterminal_display_name = nonterminal_name;
 
   std::string nonterminal_id_string = GenericId::id_to_string(GenericId::IdDefault);
   bool nonterminal_merge = MERGE_DEFAULT;
@@ -222,31 +224,31 @@ void GrammarData::initial_traversal_handle_nonterminal_production(GrammarData& g
   for (size_t i = 1; i < nonterminal_production.get_children_size(); ++i) {
     GenericAst const& child = *nonterminal_production.get_child_at(i);
     switch (child.get_id()) {
-      case Ast::NtNonterminalParameter: {
-        switch (child.get_child_at(0)->get_id()) {
-          case Ast::TkKwParameterId:
-            nonterminal_id_string = StringLiteral(*child.get_child_at(1)).get_value();
-            break;
-          case Ast::TkKwParameterMerge:
-            nonterminal_merge = child.get_child_at(1)->get_string() == "true";
-            break;
-          case Ast::TkKwParameterUnpack:
-            nonterminal_unpack = child.get_child_at(1)->get_string() == "true";
-            break;
-          case Ast::TkKwParameterHide:
-            nonterminal_hide = child.get_child_at(1)->get_string() == "true";
-            break;
-        }
-      } break;
-      case Ast::NtNonterminalDefinition:
+     case Ast::NtParameterId: {
+       nonterminal_id_string = StringLiteral(child).get_value();
+     } break;
+     case Ast::NtParameterDisplayName: {
+       nonterminal_display_name = StringLiteral(child).get_value();
+     } break;
+     case Ast::NtParameterMerge: {
+      nonterminal_merge = child.get_string() == "true";
+     } break;
+     case Ast::NtParameterUnpack: {
+       nonterminal_unpack = child.get_string() == "true";
+     } break;
+     case Ast::NtParameterHide: {
+       nonterminal_hide = child.get_string() == "true";
+     } break;
+      case Ast::NtNonterminalDefinition: {
         nonterminal_definition_position.inplace_pop();
         nonterminal_definition_position.inplace_push(i);
-        break;
+     } break;
     }
   }
 
   grammar_data_._nonterminal_accepts.emplace_back();
   grammar_data_._nonterminal_accepts.back()._name = std::move(nonterminal_name);
+  grammar_data_._nonterminal_accepts.back()._display_name = std::move(nonterminal_display_name);
   grammar_data_._nonterminal_accepts.back()._id_string = std::move(nonterminal_id_string);
   grammar_data_._nonterminal_accepts.back()._merge = nonterminal_merge;
   grammar_data_._nonterminal_accepts.back()._unpack = nonterminal_unpack;
@@ -357,9 +359,9 @@ void GrammarData::final_traversal(GrammarData& grammar_data_, GenericAst& ast_) 
           push_and_visit(path_cur.clone_push(i));
         }
         break;
+      case Ast::NtPermute:
+      case Ast::NtPermuteDelimited:
       case Ast::NtRepetitionExpression:
-        push_and_visit(path_cur.clone_push(0));
-        break;
       case Ast::NtTerminalHidden:
         push_and_visit(path_cur.clone_push(0));
         break;

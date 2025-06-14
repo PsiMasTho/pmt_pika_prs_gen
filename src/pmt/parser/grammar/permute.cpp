@@ -15,7 +15,7 @@ Permute::Permute(GenericAst const &ast_)
  : _sequence_length(ast_.get_child_at_front()->get_children_size())
  , _min_items(0)
  , _max_items(0) {
-  assert(ast_.get_id() == Ast::NtSequenceModifier);
+  assert(Match::is_any_of(ast_.get_id(), Ast::NtPermute, Ast::NtPermuteDelimited));
   assert(Match::is_any_of(ast_.get_child_at_front()->get_id(), Ast::NtTerminalSequence, Ast::NtNonterminalSequence));
 
   if (ast_.get_child_at_back()->get_id() == Ast::NtRepetitionRange) {

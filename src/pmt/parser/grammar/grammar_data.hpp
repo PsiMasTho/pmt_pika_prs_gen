@@ -24,7 +24,7 @@ class GrammarData {
 
   struct TerminalAcceptData {
     std::string _name;
-    std::string _displayname;
+    std::string _display_name;
     std::string _id_string;
     GenericAstPath _definition_path;
     bool _used : 1 = false;
