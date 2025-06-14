@@ -49,7 +49,9 @@ void setup_parser_state_machine(ParserTableBuilder::Args const& args_, Locals& l
 
 void fill_nonterminal_data(ParserTableBuilder::Args const& args_, Locals& locals_) {
   for (GrammarData::NonterminalAcceptData const& accept_data : args_._grammar_data._nonterminal_accepts) {
-    locals_._result_tables.add_nonterminal_data(accept_data._name, args_._grammar_data.get_non_generic_ids().find(accept_data._id_string)->second, accept_data._merge, accept_data._unpack, accept_data._hide);
+    auto const itr = args_._grammar_data.get_non_generic_ids().find(accept_data._id_string); 
+    GenericId::IdType const id_value = (itr != args_._grammar_data.get_non_generic_ids().end()) ? itr->second : GenericId::string_to_id(accept_data._id_string);
+    locals_._result_tables.add_nonterminal_data(accept_data._name, id_value, accept_data._merge, accept_data._unpack, accept_data._hide);
   }
 }
 

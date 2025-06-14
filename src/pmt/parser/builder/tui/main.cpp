@@ -54,8 +54,7 @@ auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHan
   pmt::parser::grammar::LexerTables const lexer_tables;
   GenericLexer lexer(input_grammar_, lexer_tables);
   pmt::parser::grammar::ParserTables const parser_tables;
-  GenericParser parser;
-  GenericAst::UniqueHandle ast = parser.parse(lexer, parser_tables);
+  GenericAst::UniqueHandle ast = GenericParser::parse(GenericParser::Args(lexer, parser_tables));
   PostParse::transform(PostParse::Args{._ast_root = *ast});
 
   return ast;
@@ -68,8 +67,7 @@ void test_tables(Args& args_, pmt::parser::builder::LexerTables const& lexer_tab
 
   std::string const test_input((std::istreambuf_iterator<char>(*args_._input_test_file)), std::istreambuf_iterator<char>());
   GenericLexer test_lexer(test_input, lexer_tables_);
-  GenericParser test_parser;
-  GenericAst::UniqueHandle test_ast = test_parser.parse(test_lexer, parser_tables_);
+  GenericAst::UniqueHandle test_ast = GenericParser::parse(GenericParser::Args(test_lexer, parser_tables_));
 
   std::vector<std::string> id_strings;
   std::transform(grammar_data_.get_non_generic_ids().begin(), grammar_data_.get_non_generic_ids().end(), std::back_inserter(id_strings), [](auto const& pair_) { return pair_.first; });

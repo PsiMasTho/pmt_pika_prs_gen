@@ -292,7 +292,9 @@ void LexerTableBuilder::loop_back_linecount_state_machine() {
 
 void LexerTableBuilder::fill_terminal_data() {
   for (GrammarData::TerminalAcceptData const& accept_data : _grammar_data->_terminal_accepts) {
-    _result_tables.add_terminal_data(accept_data._name, _grammar_data->get_non_generic_ids().find(accept_data._id_string)->second);
+   auto const itr = _grammar_data->get_non_generic_ids().find(accept_data._id_string); 
+   GenericId::IdType const id_value = (itr != _grammar_data->get_non_generic_ids().end()) ? itr->second : GenericId::string_to_id(accept_data._id_string);
+   _result_tables.add_terminal_data(accept_data._name, id_value);
   }
 }
 
