@@ -3,19 +3,17 @@
 @comment = {"/*", "*/"},
            {"//", 16#A};
 
-@whitespace = " " | 16#A;
+@whitespace = [" ", 16#A];
 
 @newline = 16#A;
 
-$string_char = ["A".."Z"] | // Uppercase letters
-               ["a".."z"] | // Lowercase letters
-               ["0".."9"] | // Digits
-               10#33 | [10#35..10#47] | [10#58..10#64] | [10#91..10#96] | [10#123..10#126] | // Punctuation, except double quote
-               10#32; // Space
+$string_char = ["A".."Z", "a".."z", "0".."9",
+                10#33, 10#35..10#47, 10#58..10#64, 10#91..10#96, 10#123..10#126, // Punctuation, except double quote
+                10#32];                                                          // Space
 
-$identifier_body = (10#95 | ["A".."Z"] | ["a".."z"]) (["A".."Z"] | ["a".."z"] | ["0".."9"] | 10#95)*;
+$identifier_body = ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*;
 
-$integer_literal<id             = "TkIntegerLiteral">            = ["0".."9"]+ "#" (["A".."Z"] | ["a".."z"] | ["0".."9"])+;
+$integer_literal<id             = "TkIntegerLiteral">            = ["0".."9"]+ "#" ["A".."Z", "a".."z", "0".."9"]+;
 $string_literal<id              = "TkStringLiteral">             = 10#34 $string_char* 10#34;
 $boolean_literal<id             = "TkBooleanLiteral">            = "true" | "false";
 $terminal_identifier<id         = "TkTerminalIdentifier">        = "$" $identifier_body;
