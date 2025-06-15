@@ -205,7 +205,19 @@ void PostParse::transform(Args args_) {
     locals._id_cur = locals._ast_cur->get_id();
 
     switch (locals._id_cur) {
-      case GenericId::IdRoot: {
+      case GenericId::IdRoot:
+      case Ast::NtTerminalDefinitionPair:
+      case Ast::NtTerminalDefinition:
+      case Ast::NtNonterminalDefinition:
+      case Ast::NtTerminalSequence:
+      case Ast::NtNonterminalSequence:
+      case Ast::NtTerminalChoices:
+      case Ast::NtRepetitionExpression:
+      case Ast::NtSequenceModifier:
+      case Ast::NtTerminalHidden:
+      case Ast::NtNonterminalChoices:
+      case Ast::NtPermute:
+      case Ast::NtPermuteDelimited: {
         push_all_children(args_, locals);
       } break;
       case Ast::NtTerminalProduction:
@@ -215,25 +227,9 @@ void PostParse::transform(Args args_) {
       case Ast::NtGrammarProperty: {
         push_children_with_ids(args_, locals, {Ast::NtTerminalDefinition, Ast::NtTerminalDefinitionPair});
       } break;
-      case Ast::NtTerminalDefinitionPair:
-      case Ast::NtTerminalDefinition:
-      case Ast::NtNonterminalDefinition:
-      case Ast::NtTerminalSequence:
-      case Ast::NtNonterminalSequence:
-      case Ast::NtTerminalChoices:
-      case Ast::NtNonterminalChoices: {
-        push_all_children(args_, locals);
-      } break;
       case Ast::NtTerminalExpression:
       case Ast::NtNonterminalExpression: {
         handle_expression(args_, locals);
-      } break;
-      case Ast::NtRepetitionExpression:
-      case Ast::NtSequenceModifier: {
-        push_nth_child(args_, locals, 0);
-      } break;
-      case Ast::NtTerminalHidden: {
-        push_all_children(args_, locals);
       } break;
       case Ast::TkStringLiteral:
       case Ast::TkIntegerLiteral: {

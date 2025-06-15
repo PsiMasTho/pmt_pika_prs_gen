@@ -53,11 +53,7 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
                                                     $terminal_identifier "<"~ %terminal_parameter_list ">"~ "="~ %terminal_definition ";"~;
 
 // - TERMINAL_PARAMETER_LIST -
-%terminal_parameter_list<unpack = true> = %terminal_parameter (","~ %terminal_parameter)*;
-
-// - TERMINAL_PARAMETER -
-%terminal_parameter<unpack = true> = %parameter_id |
-                                     %parameter_displayname;
+%terminal_parameter_list<unpack = true> = (%parameter_id %parameter_displayname)[@permute_delimited(","~){,}];
 
 // - PARAMETER_ID -
 %parameter_id<id = "NtParameterId", merge = true> = $kw_parameter_id~ "="~ $string_literal;
@@ -125,14 +121,7 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
                                                           $nonterminal_identifier "<"~ %nonterminal_parameter_list ">"~ "="~ %nonterminal_definition ";"~;
 
 // - NONTERMINAL_PARAMETER_LIST -
-%nonterminal_parameter_list<unpack = true> = %nonterminal_parameter (","~ %nonterminal_parameter)*;
-
-// - NONTERMINAL_PARAMETER -
-%nonterminal_parameter<unpack = true> = %parameter_id          |
-                                        %parameter_displayname |
-                                        %parameter_unpack      |
-                                        %parameter_hide        |
-                                        %parameter_merge;
+%nonterminal_parameter_list<unpack = true> = (%parameter_id %parameter_displayname %parameter_unpack %parameter_hide %parameter_merge)[@permute_delimited(","~){,}];
 
 // - NONTERMINAL_DEFINITION -
 %nonterminal_definition<id = "NtNonterminalDefinition"> = %nonterminal_choices;
