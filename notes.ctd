@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749938645">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1749939232">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -237,7 +237,7 @@ Generated files:
  --
  permute needs some way to also allow delimiters... @permute_delimited =&gt; ("a" "b" "c")[@permute_delimited(","~){10#3}];
  + the thing between the parenthesis is any nonterminal choices
- + maybe also a @permute_delimited_trailing.. though there should be a way to specify one of: non_trailing, trailing, opt_trailing
+ + !!!There is no need to specify if a trailing delimiter is allowed because the user can just make another rule that wraps it or just put the delimiter at the end themselves, so, by default trailing delimiter is not allowed!!!
  --
  </rich_text>
   </node>

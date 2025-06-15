@@ -189,7 +189,7 @@ void GrammarData::initial_traversal_handle_terminal_production(GrammarData& gram
     GenericAst const& child = *terminal_production.get_child_at(i);
     switch (child.get_id()) {
       case Ast::NtParameterId: {
-       terminal_id_string = StringLiteral(child).get_value();
+        terminal_id_string = StringLiteral(child).get_value();
       } break;
       case Ast::NtParameterDisplayName: {
         terminal_display_name = StringLiteral(child).get_value();
@@ -224,25 +224,25 @@ void GrammarData::initial_traversal_handle_nonterminal_production(GrammarData& g
   for (size_t i = 1; i < nonterminal_production.get_children_size(); ++i) {
     GenericAst const& child = *nonterminal_production.get_child_at(i);
     switch (child.get_id()) {
-     case Ast::NtParameterId: {
-       nonterminal_id_string = StringLiteral(child).get_value();
-     } break;
-     case Ast::NtParameterDisplayName: {
-       nonterminal_display_name = StringLiteral(child).get_value();
-     } break;
-     case Ast::NtParameterMerge: {
-      nonterminal_merge = child.get_string() == "true";
-     } break;
-     case Ast::NtParameterUnpack: {
-       nonterminal_unpack = child.get_string() == "true";
-     } break;
-     case Ast::NtParameterHide: {
-       nonterminal_hide = child.get_string() == "true";
-     } break;
+      case Ast::NtParameterId: {
+        nonterminal_id_string = StringLiteral(child).get_value();
+      } break;
+      case Ast::NtParameterDisplayName: {
+        nonterminal_display_name = StringLiteral(child).get_value();
+      } break;
+      case Ast::NtParameterMerge: {
+        nonterminal_merge = child.get_string() == "true";
+      } break;
+      case Ast::NtParameterUnpack: {
+        nonterminal_unpack = child.get_string() == "true";
+      } break;
+      case Ast::NtParameterHide: {
+        nonterminal_hide = child.get_string() == "true";
+      } break;
       case Ast::NtNonterminalDefinition: {
         nonterminal_definition_position.inplace_pop();
         nonterminal_definition_position.inplace_push(i);
-     } break;
+      } break;
     }
   }
 

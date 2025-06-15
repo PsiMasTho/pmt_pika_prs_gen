@@ -1,7 +1,6 @@
 #include "pmt/parser/grammar/string_literal.hpp"
 
 #include "pmt/parser/generic_ast.hpp"
-#include "pmt/parser/grammar/ast.hpp"
 
 #include <cassert>
 
@@ -18,7 +17,6 @@ auto unquoted(std::string const &str_) -> std::string {
 
 StringLiteral::StringLiteral(pmt::parser::GenericAst const &ast_)
  : _value(unquoted(ast_.get_string())) {
-  assert(ast_.get_id() == Ast::TkStringLiteral);
 }
 
 auto StringLiteral::get_value() const -> StringType {

@@ -93,17 +93,17 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
           }
 
           switch (locals_._ast_cur->get_child_at_back()->get_child_at_front()->get_id()) {
-           case Ast::TkPermute: {
-            locals_._ast_cur->get_child_at_back()->get_child_at_front()->set_id(Ast::NtPermute);
-           } break;
-           case Ast::TkPermuteDelimited: {
-            locals_._ast_cur->get_child_at_back()->get_child_at_front()->set_id(Ast::NtPermuteDelimited);
-           } break;
-           default: {
-            pmt::unreachable();
-           }
+            case Ast::TkPermute: {
+              locals_._ast_cur->get_child_at_back()->set_id(Ast::NtPermute);
+            } break;
+            case Ast::TkPermuteDelimited: {
+              locals_._ast_cur->get_child_at_back()->set_id(Ast::NtPermuteDelimited);
+            } break;
+            default: {
+              pmt::unreachable();
+            }
           };
-          
+
           locals_._ast_cur->get_child_at_back()->take_child_at_front();
 
           locals_._ast_cur->unpack(0);
