@@ -260,22 +260,26 @@ void GrammarData::add_reserved_terminal_accepts(GrammarData& grammar_data_) {
   size_t const index_start = grammar_data_._terminal_accepts.size();
   grammar_data_._terminal_accepts.emplace_back();
   grammar_data_._terminal_accepts.back()._name = Ast::TERMINAL_NAME_START;
+  grammar_data_._terminal_accepts.back()._display_name = Ast::TERMINAL_NAME_START;
   grammar_data_._terminal_accepts.back()._id_string = GenericId::id_to_string(GenericId::IdStart);
 
   size_t const index_eoi = grammar_data_._terminal_accepts.size();
   grammar_data_._terminal_accepts.emplace_back();
   grammar_data_._terminal_accepts.back()._name = Ast::NAME_EOI;
+  grammar_data_._terminal_accepts.back()._display_name = Ast::NAME_EOI;
   grammar_data_._terminal_accepts.back()._id_string = GenericId::id_to_string(GenericId::IdEoi);
 
   size_t const index_newline = grammar_data_._terminal_accepts.size();
   grammar_data_._terminal_accepts.emplace_back();
   grammar_data_._terminal_accepts.back()._name = Ast::TERMINAL_NAME_LINECOUNT;
+  grammar_data_._terminal_accepts.back()._display_name = Ast::TERMINAL_NAME_LINECOUNT;
   grammar_data_._terminal_accepts.back()._id_string = GenericId::id_to_string(GenericId::IdNewline);
 }
 
 void GrammarData::add_reserved_nonterminal_accepts(GrammarData& grammar_data_) {
   grammar_data_._nonterminal_accepts.emplace_back();
   grammar_data_._nonterminal_accepts.back()._name = Ast::NAME_EOI;
+  grammar_data_._nonterminal_accepts.back()._display_name = Ast::NAME_EOI;
   grammar_data_._nonterminal_accepts.back()._id_string = GenericId::id_to_string(GenericId::IdEoi);
   grammar_data_._nonterminal_accepts.back()._hide = true;
 }

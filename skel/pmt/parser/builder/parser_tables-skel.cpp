@@ -63,15 +63,15 @@ std::array<pmt::base::Bitset::ChunkType const, /* $replace PARSER_MERGE_SIZE */>
 /* $replace PARSER_MERGE */
 };
 
-std::array<pmt::base::Bitset::ChunkType const,  /* $replace PARSER_TERMINAL_TRANSITION_MASKS_SIZE */> const PARSER_TERMINAL_TRANSITION_MASKS = {
+std::array<pmt::base::Bitset::ChunkType const, /* $replace PARSER_TERMINAL_TRANSITION_MASKS_SIZE */> const PARSER_TERMINAL_TRANSITION_MASKS = {
 /* $replace PARSER_TERMINAL_TRANSITION_MASKS */
 };
 
-std::array<pmt::base::Bitset::ChunkType const,  /* $replace PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS_SIZE */> const PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS = {
+std::array<pmt::base::Bitset::ChunkType const, /* $replace PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS_SIZE */> const PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS = {
 /* $replace PARSER_HIDDEN_TERMINAL_TRANSITION_MASKS */
 };
 
-std::array<pmt::base::Bitset::ChunkType const,  /* $replace PARSER_CONFLICT_TRANSITION_MASKS_SIZE */> const PARSER_CONFLICT_TRANSITION_MASKS = {
+std::array<pmt::base::Bitset::ChunkType const, /* $replace PARSER_CONFLICT_TRANSITION_MASKS_SIZE */> const PARSER_CONFLICT_TRANSITION_MASKS = {
 /* $replace PARSER_CONFLICT_TRANSITION_MASKS */
 };
 
@@ -125,7 +125,7 @@ auto /* $replace CLASS_NAME */::get_conflict_count() const -> size_t {
  return /* $replace PARSER_CONFLICT_COUNT */;
 }
 
-auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> std::string {
+auto /* $replace CLASS_NAME */::get_accept_index_display_name(size_t index_) const -> std::string {
  return PARSER_ACCEPT_LABELS[index_];
 }
 

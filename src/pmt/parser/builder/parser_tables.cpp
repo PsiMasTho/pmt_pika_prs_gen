@@ -102,7 +102,7 @@ auto ParserTables::get_state_accept_index(StateNrType state_nr_) const -> size_t
 }
 
 auto ParserTables::get_eoi_accept_index() const -> size_t {
-  return *nonterminal_label_to_index(Ast::NAME_EOI);
+  return *nonterminal_name_to_index(Ast::NAME_EOI);
 }
 
 auto ParserTables::get_accept_count() const -> size_t {
@@ -120,8 +120,8 @@ auto ParserTables::get_conflict_count() const -> size_t {
   return max;
 }
 
-auto ParserTables::get_accept_index_label(size_t index_) const -> std::string {
-  return _nonterminal_data[index_]._label;
+auto ParserTables::get_accept_index_display_name(size_t index_) const -> std::string {
+  return _nonterminal_data[index_]._display_name;
 }
 
 auto ParserTables::get_accept_index_unpack(size_t index_) const -> bool {
@@ -190,12 +190,16 @@ auto ParserTables::get_lookahead_state_machine() const -> pmt::util::sm::ct::Sta
   return _lookahead_state_machine;
 }
 
-void ParserTables::add_nonterminal_data(std::string label_, GenericId::IdType id_value_, bool merge_, bool unpack_, bool hide_) {
-  _nonterminal_data.push_back(NonterminalData{._label = std::move(label_), ._id = id_value_, ._merge = merge_, ._unpack = unpack_, ._hide = hide_});
+auto ParserTables::get_accept_index_name(size_t index_) const -> std::string {
+  return _nonterminal_data[index_]._name;
 }
 
-auto ParserTables::nonterminal_label_to_index(std::string_view label_) const -> std::optional<size_t> {
-  auto const itr = std::find_if(_nonterminal_data.begin(), _nonterminal_data.end(), [&](NonterminalData const& terminal_data_) { return terminal_data_._label == label_; });
+void ParserTables::add_nonterminal_data(std::string name_, std::string display_name_, GenericId::IdType id_value_, bool merge_, bool unpack_, bool hide_) {
+  _nonterminal_data.push_back(NonterminalData{._name = std::move(name_), ._display_name = std::move(display_name_), ._id = id_value_, ._merge = merge_, ._unpack = unpack_, ._hide = hide_});
+}
+
+auto ParserTables::nonterminal_name_to_index(std::string_view name_) const -> std::optional<size_t> {
+  auto const itr = std::find_if(_nonterminal_data.begin(), _nonterminal_data.end(), [&](NonterminalData const& terminal_data_) { return terminal_data_._name == name_; });
 
   return (itr != _nonterminal_data.end()) ? std::make_optional(std::distance(_nonterminal_data.begin(), itr)) : std::nullopt;
 }

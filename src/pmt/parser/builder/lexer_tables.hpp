@@ -5,7 +5,6 @@
 #include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
-#include <map>
 #include <string>
 
 namespace pmt::parser::builder {
@@ -13,7 +12,8 @@ namespace pmt::parser::builder {
 class LexerTables : public pmt::parser::rt::LexerTablesBase {
   // -$ Types / Constants $-
   struct TerminalData {
-    std::string _label;
+    std::string _name;
+    std::string _display_name;
     GenericId::IdType _id;
   };
 
@@ -31,7 +31,7 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   auto get_accept_count() const -> size_t override;
   auto get_start_accept_index() const -> size_t override;
   auto get_eoi_accept_index() const -> size_t override;
-  auto get_accept_index_label(size_t index_) const -> std::string override;
+  auto get_accept_index_display_name(size_t index_) const -> std::string override;
   auto get_accept_index_id(size_t index_) const -> GenericId::IdType override;
   auto get_linecount_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
   auto is_linecount_state_nr_accepting(pmt::util::sm::StateNrType state_nr_) const -> bool override;
@@ -43,9 +43,11 @@ class LexerTables : public pmt::parser::rt::LexerTablesBase {
   auto get_lexer_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
   auto get_linecount_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
 
-  void add_terminal_data(std::string label_, GenericId::IdType id_value_);
+  auto get_accept_index_name(size_t index_) const -> std::string;
 
-  auto terminal_label_to_index(std::string_view label_) const -> std::optional<size_t>;
+  void add_terminal_data(std::string name_, std::string display_name_, GenericId::IdType id_value_);
+
+  auto terminal_name_to_index(std::string_view name_) const -> std::optional<size_t>;
 };
 
 }  // namespace pmt::parser::builder

@@ -1,4 +1,4 @@
-/* Generated on: 2025-06-22 16:21:05 */
+/* Generated on: 2025-06-22 18:10:34 */
 // clang-format off
 #pragma once
 
@@ -20,7 +20,7 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_eoi_accept_index() const -> size_t override;
   auto get_accept_count() const -> size_t override;
   auto get_conflict_count() const -> size_t override;
-  auto get_accept_index_label(size_t index_) const -> std::string override;
+  auto get_accept_index_display_name(size_t index_) const -> std::string override;
   auto get_accept_index_unpack(size_t index_) const -> bool override;
   auto get_accept_index_hide(size_t index_) const -> bool override;
   auto get_accept_index_merge(size_t index_) const -> bool override;

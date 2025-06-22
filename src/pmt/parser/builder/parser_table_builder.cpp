@@ -36,7 +36,7 @@ void setup_parser_state_machine(ParserTableBuilder::Args const& args_, Locals& l
   StateNrType const state_nr_start = locals_._parser_state_machine.create_new_state();
   StateMachinePart state_machine_part_nonterminal = StateMachinePartBuilder::build(StateMachinePartBuilder::NonterminalBuildingArgs(
    StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._dest_state_machine = locals_._parser_state_machine, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_definition_by_index(index_); }, ._starting_index = args_._grammar_data._nonterminal_accepts.size()}, [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_name_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_nonterminal_index_by_name(name_); },
-   [&](std::string_view label_) { return *args_._lexer_tables.terminal_label_to_index(label_); }));
+   [&](std::string_view label_) { return *args_._lexer_tables.terminal_name_to_index(label_); }));
   StateNrType const state_nr_pre_end = locals_._parser_state_machine.create_new_state();
   State& state_pre_end = *locals_._parser_state_machine.get_state(state_nr_pre_end);
   StateNrType const state_nr_end = locals_._parser_state_machine.create_new_state();
@@ -51,7 +51,7 @@ void fill_nonterminal_data(ParserTableBuilder::Args const& args_, Locals& locals
   for (GrammarData::NonterminalAcceptData const& accept_data : args_._grammar_data._nonterminal_accepts) {
     auto const itr = args_._grammar_data.get_non_generic_ids().find(accept_data._id_string);
     GenericId::IdType const id_value = (itr != args_._grammar_data.get_non_generic_ids().end()) ? itr->second : GenericId::string_to_id(accept_data._id_string);
-    locals_._result_tables.add_nonterminal_data(accept_data._name, id_value, accept_data._merge, accept_data._unpack, accept_data._hide);
+    locals_._result_tables.add_nonterminal_data(accept_data._name, accept_data._display_name, id_value, accept_data._merge, accept_data._unpack, accept_data._hide);
   }
 }
 
@@ -89,7 +89,7 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
     switch (kind_) {
       case SymbolKindTerminal:
       case SymbolKindHiddenTerminal:
-        symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._lexer_tables.get_accept_index_label(symbol_); });
+        symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._lexer_tables.get_accept_index_name(symbol_); });
         break;
       case SymbolKindOpen:
         symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + "+"; });
@@ -170,7 +170,7 @@ auto ParserTableBuilder::build(Args args_) -> ParserTables {
   write_nonterminal_state_machine_dot(args_, locals, "Minimized tables", locals._parser_state_machine);
   IntervalSet<StateNrType> const conflicting_state_nrs = ParserLookaheadBuilder::extract_conflicts(locals._parser_state_machine);
   write_nonterminal_state_machine_dot(args_, locals, "Final tables", locals._parser_state_machine);
-  StateMachine state_machine_lookahead = ParserLookaheadBuilder::build(ParserLookaheadBuilder::Args{._parser_state_machine = locals._parser_state_machine, ._conflicting_state_nrs = conflicting_state_nrs, ._fn_lookup_terminal_label = [&](size_t index_) { return args_._lexer_tables.get_accept_index_label(index_); }, ._write_dotfiles = args_._write_dotfiles});
+  StateMachine state_machine_lookahead = ParserLookaheadBuilder::build(ParserLookaheadBuilder::Args{._parser_state_machine = locals._parser_state_machine, ._conflicting_state_nrs = conflicting_state_nrs, ._fn_lookup_terminal_label = [&](size_t index_) { return args_._lexer_tables.get_accept_index_display_name(index_); }, ._write_dotfiles = args_._write_dotfiles});
 
   fill_nonterminal_data(args_, locals);
 

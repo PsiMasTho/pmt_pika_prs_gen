@@ -19,7 +19,7 @@ class LexerTablesBase {
   virtual auto get_start_accept_index() const -> size_t = 0;
   virtual auto get_eoi_accept_index() const -> size_t = 0;
 
-  virtual auto get_accept_index_label(size_t index_) const -> std::string;
+  virtual auto get_accept_index_display_name(size_t index_) const -> std::string;
   virtual auto get_accept_index_id(size_t index_) const -> GenericId::IdType;  // Note: multiple accepts can have the same id, they should still be distinguished by index
 
   // Linecount tables

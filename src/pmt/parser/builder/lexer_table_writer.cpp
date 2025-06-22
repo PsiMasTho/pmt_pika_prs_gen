@@ -44,7 +44,7 @@ void LexerTableWriter::replace_in_source() {
   replace_transitions(_source);
   replace_accepts(_source);
   replace_accept_count(_source);
-  replace_accept_labels(_source);
+  replace_accept_display_names(_source);
   replace_accept_ids(_source);
   replace_linecount_accepts(_source);
   replace_terminal_count(_source);
@@ -107,14 +107,14 @@ void LexerTableWriter::replace_accept_count(std::string& str_) {
   replace_skeleton_label(str_, "LEXER_ACCEPT_COUNT", TableWriterCommon::as_hex(_writer_args->_tables.get_accept_count(), true));
 }
 
-void LexerTableWriter::replace_accept_labels(std::string& str_) {
+void LexerTableWriter::replace_accept_display_names(std::string& str_) {
   std::vector<std::string> accept_labels;
   accept_labels.reserve(_writer_args->_tables.get_accept_count());
   for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
-    accept_labels.push_back(_writer_args->_tables.get_accept_index_label(i));
+    accept_labels.push_back(_writer_args->_tables.get_accept_index_display_name(i));
   }
 
-  TableWriterCommon::replace_array(*this, str_, "LEXER_ACCEPT_LABELS", accept_labels);
+  TableWriterCommon::replace_array(*this, str_, "LEXER_ACCEPT_DISPLAY_NAMES", accept_labels);
 }
 
 void LexerTableWriter::replace_accept_ids(std::string& str_) {

@@ -2,7 +2,7 @@
 
 namespace pmt::parser::rt {
 
-auto ParserTablesBase::get_accept_index_label(size_t index_) const -> std::string {
+auto ParserTablesBase::get_accept_index_display_name(size_t index_) const -> std::string {
   return std::to_string(index_);
 }
 

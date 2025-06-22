@@ -76,7 +76,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
 
     for (size_t i = 0; i < _accept_count; ++i) {
       if (get_bit(accepts_, i)) {
-        message += std::exchange(delim, ", ") + "'" + _lexer_tables.get_accept_index_label(i) + "'";
+        message += std::exchange(delim, " or ") + _lexer_tables.get_accept_index_display_name(i);
       }
     }
 

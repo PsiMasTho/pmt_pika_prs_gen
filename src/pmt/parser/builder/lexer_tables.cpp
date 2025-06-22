@@ -49,15 +49,15 @@ auto LexerTables::get_accept_count() const -> size_t {
 }
 
 auto LexerTables::get_start_accept_index() const -> size_t {
-  return *terminal_label_to_index(Ast::TERMINAL_NAME_START);
+  return *terminal_name_to_index(Ast::TERMINAL_NAME_START);
 }
 
 auto LexerTables::get_eoi_accept_index() const -> size_t {
-  return *terminal_label_to_index(Ast::NAME_EOI);
+  return *terminal_name_to_index(Ast::NAME_EOI);
 }
 
-auto LexerTables::get_accept_index_label(size_t index_) const -> std::string {
-  return _terminal_data[index_]._label;
+auto LexerTables::get_accept_index_display_name(size_t index_) const -> std::string {
+  return _terminal_data[index_]._display_name;
 }
 
 auto LexerTables::get_accept_index_id(size_t index_) const -> GenericId::IdType {
@@ -91,12 +91,16 @@ auto LexerTables::get_linecount_state_machine() const -> pmt::util::sm::ct::Stat
   return _linecount_state_machine;
 }
 
-void LexerTables::add_terminal_data(std::string label_, GenericId::IdType id_value_) {
-  _terminal_data.push_back(TerminalData{._label = std::move(label_), ._id = id_value_});
+auto LexerTables::get_accept_index_name(size_t index_) const -> std::string {
+  return _terminal_data[index_]._name;
 }
 
-auto LexerTables::terminal_label_to_index(std::string_view label_) const -> std::optional<size_t> {
-  auto const itr = std::find_if(_terminal_data.begin(), _terminal_data.end(), [&](TerminalData const& terminal_data_) { return terminal_data_._label == label_; });
+void LexerTables::add_terminal_data(std::string name_, std::string display_name_, GenericId::IdType id_value_) {
+  _terminal_data.push_back(TerminalData{._name = std::move(name_), ._display_name = std::move(display_name_), ._id = id_value_});
+}
+
+auto LexerTables::terminal_name_to_index(std::string_view name_) const -> std::optional<size_t> {
+  auto const itr = std::find_if(_terminal_data.begin(), _terminal_data.end(), [&](TerminalData const& terminal_data_) { return terminal_data_._name == name_; });
 
   return (itr != _terminal_data.end()) ? std::make_optional(std::distance(_terminal_data.begin(), itr)) : std::nullopt;
 }

@@ -31,7 +31,7 @@ class ParserTablesBase {
   virtual auto get_accept_count() const -> size_t = 0;
   virtual auto get_conflict_count() const -> size_t = 0;
 
-  virtual auto get_accept_index_label(size_t index_) const -> std::string;
+  virtual auto get_accept_index_display_name(size_t index_) const -> std::string;
   virtual auto get_accept_index_unpack(size_t index_) const -> bool;
   virtual auto get_accept_index_hide(size_t index_) const -> bool;
   virtual auto get_accept_index_merge(size_t index_) const -> bool;

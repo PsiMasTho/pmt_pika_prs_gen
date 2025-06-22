@@ -294,7 +294,7 @@ void LexerTableBuilder::fill_terminal_data() {
   for (GrammarData::TerminalAcceptData const& accept_data : _grammar_data->_terminal_accepts) {
     auto const itr = _grammar_data->get_non_generic_ids().find(accept_data._id_string);
     GenericId::IdType const id_value = (itr != _grammar_data->get_non_generic_ids().end()) ? itr->second : GenericId::string_to_id(accept_data._id_string);
-    _result_tables.add_terminal_data(accept_data._name, id_value);
+    _result_tables.add_terminal_data(accept_data._name, accept_data._display_name, id_value);
   }
 }
 
@@ -366,7 +366,7 @@ void LexerTableBuilder::write_dot(std::string_view filename_, std::string_view t
   GraphWriter::StyleArgs style_args;
   style_args._title = title_;
   style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-    return _result_tables.get_accept_index_label(accepts_);
+    return _result_tables.get_accept_index_name(accepts_);
   };
 
   GraphWriter().write_dot(writer_args, style_args);

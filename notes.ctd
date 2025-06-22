@@ -111,7 +111,7 @@ graphviz nodes should be first defined in the proper order
 --
 rename @start to @skip ?
 ----
-LexerTables::terminal_label_to_index is slow
+LexerTables::terminal_name_to_index is slow
 --
 set up the start and end in setup_parser_state_machine
 --

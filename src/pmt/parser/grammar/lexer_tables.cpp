@@ -1,9 +1,12 @@
-/* Generated on: 2025-06-22 16:20:59 */
+/* Generated on: 2025-06-22 18:10:28 */
 // clang-format off
 #include "lexer_tables.hpp"
 
 #include <pmt/parser/rt/util.hpp>
 #include <pmt/parser/primitives.hpp>
+
+#include <algorithm>
+#include <array>
 
 namespace pmt::parser::grammar {
 
@@ -77,7 +80,7 @@ std::array<pmt::base::Bitset::ChunkType const, 0x7e> const LEXER_ACCEPTS = {
  0x0000400000, 0x0000000000, 0x0000200000, 0x0000000000, 0x0000200020
 };
 
-std::array<char const* const, 0x28> const LEXER_ACCEPT_LABELS = {
+std::array<char const* const, 0x28> const LEXER_ACCEPT_DISPLAY_NAMES = {
  "$boolean_literal",
  "$grammar_property_comment",
  "$grammar_property_newline",
@@ -102,19 +105,19 @@ std::array<char const* const, 0x28> const LEXER_ACCEPT_LABELS = {
  "$string_literal",
  "$terminal_identifier",
  "$tilde",
- "@direct_0",
- "@direct_1",
- "@direct_10",
- "@direct_11",
- "@direct_12",
- "@direct_2",
- "@direct_3",
- "@direct_4",
- "@direct_5",
- "@direct_6",
- "@direct_7",
- "@direct_8",
- "@direct_9",
+ "'}'",
+ "','",
+ "'>'",
+ "'<'",
+ "'..'",
+ "'{'",
+ "';'",
+ "'='",
+ "']'",
+ "')'",
+ "'('",
+ "'['",
+ "'|'",
  "@eoi",
  "@linecount",
  "@start"
@@ -154,8 +157,8 @@ auto LexerTables::get_eoi_accept_index() const -> size_t {
  return 0x25;
 }
 
-auto LexerTables::get_accept_index_label(size_t index_) const -> std::string {
- return LEXER_ACCEPT_LABELS[index_];
+auto LexerTables::get_accept_index_display_name(size_t index_) const -> std::string {
+ return LEXER_ACCEPT_DISPLAY_NAMES[index_];
 }
 
 auto LexerTables::get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType {

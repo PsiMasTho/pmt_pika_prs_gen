@@ -10,7 +10,8 @@ namespace pmt::parser::builder {
 class ParserTables : public pmt::parser::rt::ParserTablesBase {
   // -$ Types / Constants $-
   struct NonterminalData {
-    std::string _label;
+    std::string _name;
+    std::string _display_name;
     GenericId::IdType _id;
     bool _merge : 1;
     bool _unpack : 1;
@@ -43,7 +44,7 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_accept_count() const -> size_t override;
   auto get_conflict_count() const -> size_t override;
 
-  auto get_accept_index_label(size_t index_) const -> std::string override;
+  auto get_accept_index_display_name(size_t index_) const -> std::string override;
   auto get_accept_index_unpack(size_t index_) const -> bool override;
   auto get_accept_index_hide(size_t index_) const -> bool override;
   auto get_accept_index_merge(size_t index_) const -> bool override;
@@ -60,9 +61,11 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_parser_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
   auto get_lookahead_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
 
-  void add_nonterminal_data(std::string label_, GenericId::IdType id_value_, bool merge_, bool unpack_, bool hide_);
+  auto get_accept_index_name(size_t index_) const -> std::string;
 
-  auto nonterminal_label_to_index(std::string_view label_) const -> std::optional<size_t>;
+  void add_nonterminal_data(std::string name_, std::string display_name_, GenericId::IdType id_value_, bool merge_, bool unpack_, bool hide_);
+
+  auto nonterminal_name_to_index(std::string_view name_) const -> std::optional<size_t>;
 
  private:
   void fill_terminal_transition_masks();

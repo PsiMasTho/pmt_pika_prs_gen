@@ -5,6 +5,9 @@
 #include <pmt/parser/rt/util.hpp>
 #include <pmt/parser/primitives.hpp>
 
+#include <algorithm>
+#include <array>
+
 /* $replace NAMESPACE_OPEN */
 
 namespace {
@@ -36,8 +39,8 @@ std::array<pmt::base::Bitset::ChunkType const, /* $replace LEXER_ACCEPTS_SIZE */
 /* $replace LEXER_ACCEPTS */
 };
 
-std::array<char const* const, /* $replace LEXER_ACCEPT_LABELS_SIZE */> const LEXER_ACCEPT_LABELS = {
-/* $replace LEXER_ACCEPT_LABELS */
+std::array<char const* const, /* $replace LEXER_ACCEPT_DISPLAY_NAMES_SIZE */> const LEXER_ACCEPT_DISPLAY_NAMES = {
+/* $replace LEXER_ACCEPT_DISPLAY_NAMES */
 };
 
 std::array<pmt::parser::GenericId::IdType, /* $replace LEXER_ACCEPT_IDS_SIZE */> const LEXER_ACCEPT_IDS = {
@@ -70,8 +73,8 @@ auto /* $replace CLASS_NAME */::get_eoi_accept_index() const -> size_t {
  return /* $replace EOI_ACCEPT_INDEX */;
 }
 
-auto /* $replace CLASS_NAME */::get_accept_index_label(size_t index_) const -> std::string {
- return LEXER_ACCEPT_LABELS[index_];
+auto /* $replace CLASS_NAME */::get_accept_index_display_name(size_t index_) const -> std::string {
+ return LEXER_ACCEPT_DISPLAY_NAMES[index_];
 }
 
 auto /* $replace CLASS_NAME */::get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType {

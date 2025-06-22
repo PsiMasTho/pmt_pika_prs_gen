@@ -125,7 +125,7 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
   }
 }
 
-void add_terminal_definition(GenericAst& ast_root_, std::string const& terminal_name_, std::string const& terminal_id_, GenericAst const& terminal_definition_) {
+void add_terminal_definition(GenericAst& ast_root_, std::string const& terminal_name_, std::string const& terminal_display_name_, std::string const& terminal_id_, GenericAst const& terminal_definition_) {
   assert(ast_root_.get_id() == GenericId::IdRoot);
 
   // Production
@@ -133,6 +133,9 @@ void add_terminal_definition(GenericAst& ast_root_, std::string const& terminal_
   // Name
   terminal_production->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::TkTerminalIdentifier));
   terminal_production->get_child_at_back()->set_string(terminal_name_);
+  // Display name
+  terminal_production->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::NtParameterDisplayName));
+  terminal_production->get_child_at_back()->set_string("\"" + terminal_display_name_ + "\"");
   // Id
   terminal_production->give_child_at_back(GenericAst::construct(GenericAst::Tag::String, Ast::NtParameterId));
   terminal_production->get_child_at_back()->set_string("\"" + terminal_id_ + "\"");
@@ -148,12 +151,12 @@ void add_terminal_definition(GenericAst& ast_root_, std::string const& terminal_
 auto direct_terminal_definition_to_display_name(GenericAst const& terminal_definition_) -> std::string {
   switch (terminal_definition_.get_id()) {
     case Ast::TkStringLiteral: {
-      return StringLiteral(terminal_definition_).get_value();
+      return "'" + StringLiteral(terminal_definition_).get_value() + "'";
     } break;
     case Ast::TkIntegerLiteral: {
       Number const number(terminal_definition_);
       if (is_displayable(number.get_value())) {
-        return std::string(1, static_cast<char>(number.get_value()));
+        return "'" + std::string(1, static_cast<char>(number.get_value())) + "'";
       } else {
         std::stringstream ss;
         ss << std::hex << number.get_value();
@@ -177,7 +180,7 @@ void handle_direct_terminal(PostParse::Args& args_, Locals& locals_) {
   auto itr = locals_._terminal_direct_display_names_to_names.find(terminal_direct_display_name);
   if (itr == locals_._terminal_direct_display_names_to_names.end()) {
     std::string const terminal_direct_name = Ast::TERMINAL_DIRECT_PREFIX + std::to_string(locals_._terminal_direct_display_names_to_names.size());
-    add_terminal_definition(args_._ast_root, terminal_direct_name, GenericId::id_to_string(GenericId::IdDefault), *locals_._ast_cur);
+    add_terminal_definition(args_._ast_root, terminal_direct_name, terminal_direct_display_name, GenericId::id_to_string(GenericId::IdDefault), *locals_._ast_cur);
     itr = locals_._terminal_direct_display_names_to_names.emplace(terminal_direct_display_name, terminal_direct_name).first;
   }
 

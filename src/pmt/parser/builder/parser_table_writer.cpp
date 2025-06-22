@@ -129,14 +129,14 @@ void ParserTableWriter::replace_lookahead_transition_masks(std::string& str_) {
     for (StateNrType state_nr_lookahead = 0; state_nr_lookahead < state_nr_lookahead_max; ++state_nr_lookahead) {
       Bitset::ChunkSpanConst const chunks = _writer_args->_tables.get_lookahead_state_terminal_transitions(state_nr_lookahead, state_nr_parser);
       for (size_t i = 0; i < chunk_count; ++i) {
-       Bitset::ChunkType const chunk = (i < chunks.size()) ? chunks[i] : Bitset::ALL_SET_MASKS[false];
-       transition_masks_tmp.push_back(chunk);
-       empty = (chunk != Bitset::ALL_SET_MASKS[false]) ? false : empty;
+        Bitset::ChunkType const chunk = (i < chunks.size()) ? chunks[i] : Bitset::ALL_SET_MASKS[false];
+        transition_masks_tmp.push_back(chunk);
+        empty = (chunk != Bitset::ALL_SET_MASKS[false]) ? false : empty;
       }
     }
 
     if (empty) {
-     continue;
+      continue;
     }
 
     state_nrs.push_back(state_nr_parser);
@@ -206,7 +206,7 @@ void ParserTableWriter::replace_parser_accepts_labels(std::string& str_) {
   std::vector<std::string> accept_labels;
   accept_labels.reserve(_writer_args->_tables.get_accept_count());
   for (AcceptsIndexType i = 0; i < _writer_args->_tables.get_accept_count(); ++i) {
-    accept_labels.push_back(_writer_args->_tables.get_accept_index_label(i));
+    accept_labels.push_back(_writer_args->_tables.get_accept_index_display_name(i));
   }
 
   TableWriterCommon::replace_array(*this, str_, "PARSER_ACCEPT_LABELS", accept_labels);
