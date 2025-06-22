@@ -47,6 +47,7 @@ class ParserTableWriter : public pmt::util::SkeletonReplacerBase {
   void replace_transitions(std::string& str_);
   void replace_state_kinds(std::string& str_);
   void replace_transition_masks(std::string& str_);
+  void replace_lookahead_transition_masks(std::string& str_);
   void replace_parser_accepts(std::string& str_);
   void replace_parser_accept_count(std::string& str_);
   void replace_parser_conflict_count(std::string& str_);

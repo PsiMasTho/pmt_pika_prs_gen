@@ -17,7 +17,8 @@ namespace pmt::parser::builder {
 class TableWriterCommon {
  public:
   // -$ Types / Constants $-
-  using TransitionMaskQueryFn = std::function<pmt::base::Bitset::ChunkSpanConst(pmt::util::sm::StateNrType)>;
+  using TransitionMaskQueryFn1 = std::function<pmt::base::Bitset::ChunkSpanConst(pmt::util::sm::StateNrType)>;
+  using TransitionMaskQueryFn2 = std::function<pmt::base::Bitset::ChunkSpanConst(pmt::util::sm::StateNrType, pmt::util::sm::StateNrType)>;
 
   // -$ Functions $-
   // --$ Other $--
@@ -34,7 +35,7 @@ class TableWriterCommon {
 
   static auto as_hex(std::integral auto value_, bool hex_prefix_ = true) -> std::string;
 
-  static void replace_transition_masks(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, pmt::util::sm::StateNrType state_nr_max_, TransitionMaskQueryFn const& fn_query_mask_);
+  static void replace_transition_masks(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, pmt::util::sm::StateNrType state_nr_max_, TransitionMaskQueryFn1 const& fn_query_mask_);
 
   static void replace_timestamp(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_);
 

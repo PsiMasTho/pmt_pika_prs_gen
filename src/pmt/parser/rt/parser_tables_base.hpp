@@ -39,7 +39,7 @@ class ParserTablesBase {
 
   // Lookahead tables
   virtual auto get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType = 0;
-  virtual auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst = 0;
+  virtual auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::StateNrType state_nr_parser_) const -> pmt::base::Bitset::ChunkSpanConst = 0;
   virtual auto get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst = 0;
 };
 

@@ -86,8 +86,8 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
           hidden->give_child_at_back(std::move(item));
           locals_._ast_cur->give_child_at_back(std::move(hidden));
         } break;
-        case Ast::NtSequenceModifier: {
-          static std::string const ERROR_MSG = "Error: Invalid sequence modifier";
+        case Ast::NtAdvancedExpression: {
+          static std::string const ERROR_MSG = "Error: Invalid advanced expression";
           if (Match::is_none_of(locals_._ast_cur->get_child_at(0)->get_id(), Ast::NtTerminalChoices, Ast::NtNonterminalChoices) || locals_._ast_cur->get_child_at(0)->get_children_size() != 1 || Match::is_none_of(locals_._ast_cur->get_child_at(0)->get_child_at(0)->get_id(), Ast::NtTerminalSequence, Ast::NtNonterminalSequence)) {
             throw std::runtime_error(ERROR_MSG);
           }
@@ -213,7 +213,7 @@ void PostParse::transform(Args args_) {
       case Ast::NtNonterminalSequence:
       case Ast::NtTerminalChoices:
       case Ast::NtRepetitionExpression:
-      case Ast::NtSequenceModifier:
+      case Ast::NtAdvancedExpression:
       case Ast::NtTerminalHidden:
       case Ast::NtNonterminalChoices:
       case Ast::NtPermute:

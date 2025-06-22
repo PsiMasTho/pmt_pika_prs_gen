@@ -108,7 +108,7 @@ void TableWriterCommon::replace_transitions(pmt::util::SkeletonReplacerBase& ske
   TableWriterCommon::replace_array<size_t>(skeleton_replacer_, str_, prefix_ + "TRANSITIONS_STATE_OFFSETS", states_offsets);
 }
 
-void TableWriterCommon::replace_transition_masks(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, StateNrType state_nr_max_, TransitionMaskQueryFn const& fn_query_mask_) {
+void TableWriterCommon::replace_transition_masks(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_, std::string const& label_, StateNrType state_nr_max_, TransitionMaskQueryFn1 const& fn_query_mask_) {
   std::vector<Bitset::ChunkType> terminal_transition_masks_flattened;
 
   size_t largest_mask = [&] {
@@ -132,6 +132,7 @@ void TableWriterCommon::replace_transition_masks(pmt::util::SkeletonReplacerBase
   skeleton_replacer_.replace_skeleton_label(str_, label_ + "TRANSITION_MASKS_CHUNK_COUNT", TableWriterCommon::as_hex(chunk_count, true));
   skeleton_replacer_.replace_skeleton_label(str_, label_ + "TRANSITION_MASKS_SIZE", TableWriterCommon::as_hex(terminal_transition_masks_flattened.size(), true));
 }
+
 
 void TableWriterCommon::replace_timestamp(pmt::util::SkeletonReplacerBase& skeleton_replacer_, std::string& str_) {
   skeleton_replacer_.replace_skeleton_label(str_, "TIMESTAMP", pmt::util::get_timestamp());

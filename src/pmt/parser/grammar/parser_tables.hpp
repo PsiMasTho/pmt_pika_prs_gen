@@ -1,4 +1,4 @@
-/* Generated on: 2025-06-15 16:53:17 */
+/* Generated on: 2025-06-22 16:21:05 */
 // clang-format off
 #pragma once
 
@@ -26,7 +26,7 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_accept_index_merge(size_t index_) const -> bool override;
   auto get_accept_index_id(size_t index_) const -> pmt::parser::GenericId::IdType override;
   auto get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
-  auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
+  auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::StateNrType state_nr_parser_) const -> pmt::base::Bitset::ChunkSpanConst override;
   auto get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
 };
 

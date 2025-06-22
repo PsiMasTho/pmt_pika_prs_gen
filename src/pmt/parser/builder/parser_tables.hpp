@@ -28,7 +28,7 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _parser_terminal_transition_masks;
   std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _parser_hidden_terminal_transition_masks;
   std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _parser_conflict_transition_masks;
-  std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset> _lookahead_terminal_transition_masks;
+  std::unordered_map<pmt::util::sm::StateNrType, std::unordered_map<pmt::util::sm::StateNrType, pmt::base::Bitset>> _lookahead_terminal_transition_masks;
 
  public:
   // -$ Functions $-
@@ -50,7 +50,7 @@ class ParserTables : public pmt::parser::rt::ParserTablesBase {
   auto get_accept_index_id(size_t index_) const -> GenericId::IdType override;
 
   auto get_lookahead_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType override;
-  auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
+  auto get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::StateNrType state_nr_parser_) const -> pmt::base::Bitset::ChunkSpanConst override;
   auto get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
 
   // --$ Other $--

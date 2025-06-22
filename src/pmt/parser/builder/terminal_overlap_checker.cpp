@@ -43,7 +43,7 @@ void write_dot(TerminalOverlapChecker::Args const& args_, Locals& locals_, std::
   }
 
   std::ofstream graph_file(filename);
-  std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/smct/state_machine-skel.dot");
+  std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/sm/ct/state_machine-skel.dot");
 
   GraphWriter::WriterArgs writer_args{._os_graph = graph_file, ._is_graph_skel = skel_file, ._state_machine = state_machine_};
 

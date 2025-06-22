@@ -139,11 +139,7 @@ auto GenericParser::parse(Args args_) -> GenericAst::UniqueHandle {
             if (consumed_from_queue < consume_from_queue) {
               return locals._lex_queue[consumed_from_queue++]._accepted;
             } else {
-              try {
-                locals._lex_queue.push_back(args_._lexer.lex(args_._parser_tables.get_lookahead_state_terminal_transitions(state_nr_conflict_cur)));
-              } catch (...) {
-                throw std::runtime_error("No valid lexed token found for conflict resolution.");  // TODO: we should report what token(s) we expected
-              }
+              locals._lex_queue.push_back(args_._lexer.lex(args_._parser_tables.get_lookahead_state_terminal_transitions(state_nr_conflict_cur, locals._state_nr_cur)));
               return locals._lex_queue.back()._accepted;
             }
           }();

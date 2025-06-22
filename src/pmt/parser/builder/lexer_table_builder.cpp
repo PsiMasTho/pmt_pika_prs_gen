@@ -359,7 +359,7 @@ void LexerTableBuilder::write_dot(std::string_view filename_, std::string_view t
   }
 
   std::ofstream graph_file(filename_.data());
-  std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/smct/state_machine-skel.dot");
+  std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/sm/ct/state_machine-skel.dot");
 
   GraphWriter::WriterArgs writer_args{._os_graph = graph_file, ._is_graph_skel = skel_file, ._state_machine = state_machine_};
 

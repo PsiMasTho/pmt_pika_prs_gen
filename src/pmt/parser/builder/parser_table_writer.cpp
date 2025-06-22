@@ -45,6 +45,7 @@ void ParserTableWriter::replace_in_source() {
   replace_transitions(_source);
   replace_state_kinds(_source);
   replace_transition_masks(_source);
+  replace_lookahead_transition_masks(_source);
   replace_parser_accepts(_source);
   replace_parser_accept_count(_source);
   replace_parser_conflict_count(_source);
@@ -100,8 +101,62 @@ void ParserTableWriter::replace_transition_masks(std::string& str_) {
   TableWriterCommon::replace_transition_masks(*this, str_, "PARSER_TERMINAL_", _writer_args->_tables.get_parser_state_machine().get_state_count(), [&](StateNrType state_nr_) { return _writer_args->_tables.get_state_terminal_transitions(state_nr_); });
   TableWriterCommon::replace_transition_masks(*this, str_, "PARSER_HIDDEN_TERMINAL_", _writer_args->_tables.get_parser_state_machine().get_state_count(), [&](StateNrType state_nr_) { return _writer_args->_tables.get_state_hidden_terminal_transitions(state_nr_); });
   TableWriterCommon::replace_transition_masks(*this, str_, "PARSER_CONFLICT_", _writer_args->_tables.get_parser_state_machine().get_state_count(), [&](StateNrType state_nr_) { return _writer_args->_tables.get_state_conflict_transitions(state_nr_); });
+}
 
-  TableWriterCommon::replace_transition_masks(*this, str_, "LOOKAHEAD_TERMINAL_", _writer_args->_tables.get_lookahead_state_machine().get_state_count(), [&](StateNrType state_nr_) { return _writer_args->_tables.get_lookahead_state_terminal_transitions(state_nr_); });
+void ParserTableWriter::replace_lookahead_transition_masks(std::string& str_) {
+  size_t const state_nr_lookahead_max = _writer_args->_tables.get_lookahead_state_machine().get_state_count();
+  size_t const state_nr_parser_max = _writer_args->_tables.get_parser_state_machine().get_state_count();
+
+  std::vector<Bitset::ChunkType> transition_masks_flattened;
+  std::vector<size_t> state_nrs;
+
+  size_t largest_mask = [&] {
+    size_t max_size = 0;
+    for (StateNrType state_nr_lookahead = 0; state_nr_lookahead < state_nr_lookahead_max; ++state_nr_lookahead) {
+      for (StateNrType state_nr_parser = 0; state_nr_parser < state_nr_parser_max; ++state_nr_parser) {
+        max_size = std::max(max_size, _writer_args->_tables.get_lookahead_state_terminal_transitions(state_nr_lookahead, state_nr_parser).size());
+      }
+    }
+    return max_size;
+  }();
+
+  size_t const chunk_count = Bitset::get_required_chunk_count(largest_mask);
+
+  for (StateNrType state_nr_parser = 0; state_nr_parser < state_nr_parser_max; ++state_nr_parser) {
+    std::vector<Bitset::ChunkType> transition_masks_tmp;
+
+    bool empty = true;
+    for (StateNrType state_nr_lookahead = 0; state_nr_lookahead < state_nr_lookahead_max; ++state_nr_lookahead) {
+      Bitset::ChunkSpanConst const chunks = _writer_args->_tables.get_lookahead_state_terminal_transitions(state_nr_lookahead, state_nr_parser);
+      for (size_t i = 0; i < chunk_count; ++i) {
+       Bitset::ChunkType const chunk = (i < chunks.size()) ? chunks[i] : Bitset::ALL_SET_MASKS[false];
+       transition_masks_tmp.push_back(chunk);
+       empty = (chunk != Bitset::ALL_SET_MASKS[false]) ? false : empty;
+      }
+    }
+
+    if (empty) {
+     continue;
+    }
+
+    state_nrs.push_back(state_nr_parser);
+
+    // append the masks
+    std::copy(transition_masks_tmp.begin(), transition_masks_tmp.end(), std::back_inserter(transition_masks_flattened));
+  }
+
+  // masks
+  TableWriterCommon::replace_array<Bitset::ChunkType>(*this, str_, "LOOKAHEAD_TERMINAL_TRANSITION_MASKS", transition_masks_flattened);
+  replace_skeleton_label(str_, "LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT", TableWriterCommon::as_hex(chunk_count, true));
+  replace_skeleton_label(str_, "LOOKAHEAD_TERMINAL_TRANSITION_MASKS_SIZE", TableWriterCommon::as_hex(transition_masks_flattened.size(), true));
+
+  // state nrs
+  TableWriterCommon::replace_array<size_t>(*this, str_, "PARSER_CONFLICT_STATE_NRS", state_nrs);
+  replace_skeleton_label(str_, "PARSER_CONFLICT_STATE_NRS_SIZE", TableWriterCommon::as_hex(state_nrs.size(), true));
+  replace_skeleton_label(str_, "PARSER_CONFLICT_STATE_NRS_TYPE", TableWriterCommon::get_smallest_unsigned_type(state_nrs.begin(), state_nrs.end()));
+
+  // offset
+  replace_skeleton_label(str_, "LOOKAHEAD_TERMINAL_TRANSITION_MASKS_OFFSET", TableWriterCommon::as_hex(chunk_count * state_nr_lookahead_max, true));
 }
 
 void ParserTableWriter::replace_parser_accepts(std::string& str_) {

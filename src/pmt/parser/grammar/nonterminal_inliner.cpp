@@ -54,7 +54,7 @@ auto check_inlineable(NonterminalInliner::Args const& args_, AcceptsIndexType ac
         }
         break;
       case Ast::NtRepetitionExpression:
-      case Ast::NtSequenceModifier:
+      case Ast::NtAdvancedExpression:
         push_and_visit(*node.get_child_at(0));
         break;
       default:
@@ -117,7 +117,7 @@ void perform_inline(NonterminalInliner::Args& args_, AcceptsIndexType accepts_in
         }
         break;
       case Ast::NtRepetitionExpression:
-      case Ast::NtSequenceModifier:
+      case Ast::NtAdvancedExpression:
         push_and_visit(path.clone_push(0));
         break;
       default:

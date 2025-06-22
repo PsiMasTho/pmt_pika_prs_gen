@@ -71,8 +71,9 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
     _cursor = te;
     return ret;
   } else {
-    std::string message = "Lexing error, expected to match: ";
-    std::string delim;
+    std::string message = "Lexing error,";
+    std::string delim = " expected to match: ";
+
     for (size_t i = 0; i < _accept_count; ++i) {
       if (get_bit(accepts_, i)) {
         message += std::exchange(delim, ", ") + "'" + _lexer_tables.get_accept_index_label(i) + "'";

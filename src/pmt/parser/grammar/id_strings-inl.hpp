@@ -1,5 +1,6 @@
-/* Generated on: 2025-06-15 16:53:17 */
+/* Generated on: 2025-06-22 16:21:05 */
 // clang-format off
+"NtAdvancedExpression",
 "NtCharsetRange",
 "NtGrammarProperty",
 "NtNonterminalChoices",
@@ -14,7 +15,6 @@
 "NtParameterUnpack",
 "NtRepetitionExpression",
 "NtRepetitionRange",
-"NtSequenceModifier",
 "NtTerminalCharset",
 "NtTerminalChoices",
 "NtTerminalDefinition",
@@ -28,6 +28,7 @@
 "TkGrammarPropertyNewline",
 "TkGrammarPropertyStart",
 "TkGrammarPropertyWhitespace",
+"TkIdStringLiteral",
 "TkIntegerLiteral",
 "TkKwParameterDisplayName",
 "TkKwParameterHide",

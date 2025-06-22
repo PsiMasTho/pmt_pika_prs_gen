@@ -1,6 +1,7 @@
 #include "pmt/parser/builder/parser_tables.hpp"
 
 #include "pmt/asserts.hpp"
+#include "pmt/parser/builder/lookahead_terminal_transition_mask_builder.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/symbol.hpp"
@@ -144,9 +145,14 @@ auto ParserTables::get_lookahead_state_nr_next(StateNrType state_nr_, StateNrTyp
   return state ? state->get_symbol_transition(Symbol(SymbolKindTerminal, symbol_)) : StateNrSink;
 }
 
-auto ParserTables::get_lookahead_state_terminal_transitions(StateNrType state_nr_) const -> Bitset::ChunkSpanConst {
-  auto const itr = _lookahead_terminal_transition_masks.find(state_nr_);
-  return (itr != _lookahead_terminal_transition_masks.end()) ? itr->second.get_chunks() : Bitset::ChunkSpanConst{};
+auto ParserTables::get_lookahead_state_terminal_transitions(StateNrType state_nr_, pmt::util::sm::StateNrType state_nr_parser_) const -> Bitset::ChunkSpanConst {
+  auto const itr1 = _lookahead_terminal_transition_masks.find(state_nr_parser_);
+  if (itr1 == _lookahead_terminal_transition_masks.end()) {
+    return Bitset::ChunkSpanConst{};
+  }
+
+  auto const itr2 = itr1->second.find(state_nr_);
+  return (itr2 != itr1->second.end()) ? itr2->second.get_chunks() : Bitset::ChunkSpanConst{};
 }
 
 auto ParserTables::get_lookahead_state_accepts(StateNrType state_nr_) const -> Bitset::ChunkSpanConst {
@@ -207,7 +213,7 @@ void ParserTables::fill_conflict_transition_masks() {
 }
 
 void ParserTables::fill_lookahead_terminal_transition_masks() {
-  fill_transition_masks(_lookahead_state_machine, _lookahead_terminal_transition_masks, {SymbolKindTerminal});
+  _lookahead_terminal_transition_masks = LookaheadTerminalTransitionMaskBuilder::build(LookaheadTerminalTransitionMaskBuilder::Args{._parser_state_machine = _parser_state_machine, ._lookahead_state_machine = _lookahead_state_machine});
 }
 
 }  // namespace pmt::parser::builder

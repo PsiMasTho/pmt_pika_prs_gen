@@ -6,6 +6,7 @@
 #include <pmt/parser/primitives.hpp>
 
 #include <array>
+#include <algorithm>
 
 /* $replace NAMESPACE_OPEN */
 
@@ -78,6 +79,10 @@ std::array<pmt::base::Bitset::ChunkType const, /* $replace LOOKAHEAD_TERMINAL_TR
 /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS */
 };
 
+std::array</* $replace PARSER_CONFLICT_STATE_NRS_TYPE */, /* $replace PARSER_CONFLICT_STATE_NRS_SIZE */> const PARSER_CONFLICT_STATE_NRS = {
+/* $replace PARSER_CONFLICT_STATE_NRS */
+};
+
 std::array</* $replace PARSER_STATE_KINDS_TYPE */, /* $replace PARSER_STATE_KINDS_SIZE */> const PARSER_STATE_KINDS = {
 /* $replace PARSER_STATE_KINDS */
 };
@@ -144,8 +149,15 @@ auto /* $replace CLASS_NAME */::get_lookahead_state_nr_next(pmt::util::sm::State
  return pmt::parser::rt::get_state_nr_next_generic(LOOKAHEAD_TRANSITIONS, LOOKAHEAD_TRANSITIONS_STATE_OFFSETS, LOOKAHEAD_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindTerminal, symbol_);
 }
 
-auto /* $replace CLASS_NAME */::get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
- return pmt::base::Bitset::ChunkSpanConst(LOOKAHEAD_TERMINAL_TRANSITION_MASKS.begin() + state_nr_ * /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
+auto /* $replace CLASS_NAME */::get_lookahead_state_terminal_transitions(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::StateNrType state_nr_parser_) const -> pmt::base::Bitset::ChunkSpanConst {
+ auto const itr = std::lower_bound(PARSER_CONFLICT_STATE_NRS.begin(), PARSER_CONFLICT_STATE_NRS.end(), state_nr_parser_);
+ if (itr == PARSER_CONFLICT_STATE_NRS.end() || *itr != state_nr_parser_) {
+  return pmt::base::Bitset::ChunkSpanConst{};
+ }
+
+ size_t const offset = std::distance(PARSER_CONFLICT_STATE_NRS.begin(), itr) * /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_OFFSET */;
+
+ return pmt::base::Bitset::ChunkSpanConst(LOOKAHEAD_TERMINAL_TRANSITION_MASKS.begin() + offset + state_nr_ * /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */, /* $replace LOOKAHEAD_TERMINAL_TRANSITION_MASKS_CHUNK_COUNT */);
 }
 
 auto /* $replace CLASS_NAME */::get_lookahead_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
