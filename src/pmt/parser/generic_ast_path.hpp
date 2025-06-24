@@ -10,44 +10,44 @@ PMT_FW_DECL_NS_CLASS(pmt::parser, GenericAst)
 namespace pmt::parser {
 
 class GenericAstPath : public pmt::base::Hashable<GenericAstPath> {
- public:
-  // - Lifetime -
-  GenericAstPath() = default;
-  explicit GenericAstPath(size_t index_);
-  explicit GenericAstPath(std::vector<size_t> path_);
+public:
+ // - Lifetime -
+ GenericAstPath() = default;
+ explicit GenericAstPath(size_t index_);
+ explicit GenericAstPath(std::vector<size_t> path_);
 
-  // - Access -
-  auto inplace_push(size_t index_) -> GenericAstPath&;
-  auto inplace_push(std::vector<size_t> const& path_) -> GenericAstPath&;
-  auto inplace_push(GenericAstPath const& path_) -> GenericAstPath&;
+ // - Access -
+ auto inplace_push(size_t index_) -> GenericAstPath&;
+ auto inplace_push(std::vector<size_t> const& path_) -> GenericAstPath&;
+ auto inplace_push(GenericAstPath const& path_) -> GenericAstPath&;
 
-  auto clone_push(size_t index_) const -> GenericAstPath;
-  auto clone_push(std::vector<size_t> const& path_) const -> GenericAstPath;
-  auto clone_push(GenericAstPath const& path_) const -> GenericAstPath;
+ auto clone_push(size_t index_) const -> GenericAstPath;
+ auto clone_push(std::vector<size_t> const& path_) const -> GenericAstPath;
+ auto clone_push(GenericAstPath const& path_) const -> GenericAstPath;
 
-  auto inplace_pop() -> GenericAstPath&;
-  auto clone_pop() const -> GenericAstPath;
+ auto inplace_pop() -> GenericAstPath&;
+ auto clone_pop() const -> GenericAstPath;
 
-  auto inplace_clear() -> GenericAstPath&;
-  auto clone_clear() const -> GenericAstPath;
+ auto inplace_clear() -> GenericAstPath&;
+ auto clone_clear() const -> GenericAstPath;
 
-  auto size() const -> size_t;
-  auto empty() const -> bool;
-  auto front() const -> size_t;
-  auto back() const -> size_t;
+ auto size() const -> size_t;
+ auto empty() const -> bool;
+ auto front() const -> size_t;
+ auto back() const -> size_t;
 
-  // - Resolution -
-  auto resolve(GenericAst const& root_) const -> GenericAst const*;
-  auto resolve(GenericAst& root_) const -> GenericAst*;
+ // - Resolution -
+ auto resolve(GenericAst const& root_) const -> GenericAst const*;
+ auto resolve(GenericAst& root_) const -> GenericAst*;
 
-  // - pmt::base::Hashable -
-  auto hash() const -> size_t;
+ // - pmt::base::Hashable -
+ auto hash() const -> size_t;
 
-  // - Comparison -
-  auto operator==(GenericAstPath const& other_) const -> bool = default;
+ // - Comparison -
+ auto operator==(GenericAstPath const& other_) const -> bool = default;
 
- private:
-  std::vector<size_t> _path;
+private:
+ std::vector<size_t> _path;
 };
 
 }  // namespace pmt::parser

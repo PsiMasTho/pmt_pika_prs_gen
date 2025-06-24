@@ -5,16 +5,16 @@
 namespace pmt::base {
 
 auto AmortizedGrowth::idx_to_size(size_t idx_) -> uint64_t {
-  return LUT[idx_];
+ return LUT[idx_];
 }
 
 auto AmortizedGrowth::size_to_idx(size_t size_, size_t lskip_idx_) -> size_t {
-  auto const itr = std::lower_bound(LUT.begin() + lskip_idx_, LUT.end(), size_);
-  if (itr == LUT.end()) {
-    throw AmortizedGrowthError{};
-  }
+ auto const itr = std::lower_bound(LUT.begin() + lskip_idx_, LUT.end(), size_);
+ if (itr == LUT.end()) {
+  throw AmortizedGrowthError{};
+ }
 
-  return std::distance(LUT.begin(), itr);
+ return std::distance(LUT.begin(), itr);
 }
 
 // clang-format off

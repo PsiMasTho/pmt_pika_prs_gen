@@ -9,8 +9,8 @@ namespace pmt::parser::grammar {
 namespace {
 
 auto unquoted(std::string const &str_) -> std::string {
-  assert(!str_.empty() && str_.front() == '"' && str_.back() == '"');
-  return str_.substr(1, str_.size() - 2);
+ assert(!str_.empty() && str_.front() == '"' && str_.back() == '"');
+ return str_.substr(1, str_.size() - 2);
 }
 
 }  // namespace
@@ -20,7 +20,7 @@ StringLiteral::StringLiteral(pmt::parser::GenericAst const &ast_)
 }
 
 auto StringLiteral::get_value() const -> StringType {
-  return _value;
+ return _value;
 }
 
 }  // namespace pmt::parser::grammar

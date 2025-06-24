@@ -10,26 +10,26 @@ PMT_FW_DECL_NS_CLASS(pmt::parser::grammar, GrammarData)
 namespace pmt::parser::builder {
 
 class IdStringsWriter : public pmt::util::SkeletonReplacerBase {
- public:
-  // -$ Types / Constants $-
-  struct WriterArgs {
-    std::ostream& _os_id_strings;
-    std::istream& _is_id_strings_skel;
-    pmt::parser::grammar::GrammarData const& _grammar_data;
-  };
+public:
+ // -$ Types / Constants $-
+ struct WriterArgs {
+  std::ostream& _os_id_strings;
+  std::istream& _is_id_strings_skel;
+  pmt::parser::grammar::GrammarData const& _grammar_data;
+ };
 
- private:
-  // -$ Data $-
-  WriterArgs* _writer_args = nullptr;
-  std::string _id_strings;
+private:
+ // -$ Data $-
+ WriterArgs* _writer_args = nullptr;
+ std::string _id_strings;
 
- public:
-  // -$ Functions $-
-  // --$ Other $--
-  void write(WriterArgs& writer_args_);
+public:
+ // -$ Functions $-
+ // --$ Other $--
+ void write(WriterArgs& writer_args_);
 
- private:
-  void replace_id_strings(std::string& str_);
+private:
+ void replace_id_strings(std::string& str_);
 };
 
 }  // namespace pmt::parser::builder

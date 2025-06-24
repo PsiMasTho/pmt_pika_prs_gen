@@ -13,10 +13,10 @@ char const* const ID_STRINGS[] = {
 }  // namespace
 
 auto Ast::id_to_string(GenericId::IdType id_) -> std::string {
-  if (id_ < std::size(ID_STRINGS)) {
-    return ID_STRINGS[id_];
-  }
+ if (id_ < std::size(ID_STRINGS)) {
+  return ID_STRINGS[id_];
+ }
 
-  throw std::runtime_error("Invalid id");
+ throw std::runtime_error("Invalid id");
 }
 }  // namespace pmt::parser::grammar

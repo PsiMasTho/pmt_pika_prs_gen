@@ -10,19 +10,19 @@
 namespace pmt::base {
 
 template <typename T_, typename U_>
-  requires(std::is_integral_v<typename U_::value_type>)
+ requires(std::is_integral_v<typename U_::value_type>)
 void apply_permutation(T_ data_begin_, T_ data_end_, U_ indices_begin_);
 
 template <typename T_>
-  requires(std::is_integral_v<typename T_::value_type>)
+ requires(std::is_integral_v<typename T_::value_type>)
 void apply_permutation(Bitset& data_, T_ indices_begin_);
 
 template <typename T_, typename U_>
-  requires(std::is_integral_v<typename T_::value_type> && std::is_integral_v<typename U_::value_type>)
+ requires(std::is_integral_v<typename T_::value_type> && std::is_integral_v<typename U_::value_type>)
 void inverse_permutation(T_ indices_begin_, T_ indices_end_, U_ result_begin_);
 
 template <typename T_>
-  requires(std::is_integral_v<typename T_::value_type>)
+ requires(std::is_integral_v<typename T_::value_type>)
 auto inverse_permutation(T_ indices_begin_, T_ indices_end_) -> std::vector<typename T_::value_type>;
 
 template <typename T_, typename U_, typename CMP_ = std::less<>>

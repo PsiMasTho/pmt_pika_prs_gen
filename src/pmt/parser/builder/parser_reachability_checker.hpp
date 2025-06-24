@@ -10,18 +10,18 @@ PMT_FW_DECL_NS_CLASS(pmt::util::sm::ct, StateMachine)
 namespace pmt::parser::builder {
 
 class ParserReachabilityChecker {
+public:
+ // -$ Types / Constants $-
+ using AcceptLookupFn = std::function<size_t(std::string_view)>;
+
+ class Args {
  public:
-  // -$ Types / Constants $-
-  using AcceptLookupFn = std::function<size_t(std::string_view)>;
+  AcceptLookupFn _fn_lookup_accept_index_by_label;
+  pmt::util::sm::ct::StateMachine const& _parser_state_machine;
+ };
 
-  class Args {
-   public:
-    AcceptLookupFn _fn_lookup_accept_index_by_label;
-    pmt::util::sm::ct::StateMachine const& _parser_state_machine;
-  };
-
-  // -$ Functions $-
-  // --$ Other $--
-  static void check_reachability(Args args_);
+ // -$ Functions $-
+ // --$ Other $--
+ static void check_reachability(Args args_);
 };
 }  // namespace pmt::parser::builder

@@ -9,21 +9,21 @@ PMT_FW_DECL_NS_CLASS(pmt::parser, GenericAst)
 namespace pmt::parser::grammar {
 
 class StringLiteral {
- public:
-  // -$ Types / Constants $-
-  using StringType = std::string;
+public:
+ // -$ Types / Constants $-
+ using StringType = std::string;
 
- private:
-  // -$ Data $-
-  StringType _value;
+private:
+ // -$ Data $-
+ StringType _value;
 
- public:
-  // -$ Functions $-
-  // --$ Lifetime $--
-  explicit StringLiteral(pmt::parser::GenericAst const &ast_);
+public:
+ // -$ Functions $-
+ // --$ Lifetime $--
+ explicit StringLiteral(pmt::parser::GenericAst const &ast_);
 
-  // --$ Other $--
-  [[nodiscard]] auto get_value() const -> StringType;
+ // --$ Other $--
+ [[nodiscard]] auto get_value() const -> StringType;
 };
 
 }  // namespace pmt::parser::grammar

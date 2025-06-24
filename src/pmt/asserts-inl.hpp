@@ -10,13 +10,13 @@ namespace pmt {
 
 static inline void unreachable() {
 #if !defined NDEBUG || defined _DEBUG
-  assert(false && "UNREACHABLE");
+ assert(false && "UNREACHABLE");
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)  // MSVC
-  __assume(false);
+ __assume(false);
 #else  // GCC, Clang
-  __builtin_unreachable();
+ __builtin_unreachable();
 #endif
 }
 

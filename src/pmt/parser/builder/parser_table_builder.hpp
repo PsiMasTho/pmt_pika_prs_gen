@@ -10,19 +10,19 @@ PMT_FW_DECL_NS_CLASS(pmt::parser::builder, LexerTables);
 namespace pmt::parser::builder {
 
 class ParserTableBuilder {
+public:
+ // -$ Types / Constants $-
+ class Args {
  public:
-  // -$ Types / Constants $-
-  class Args {
-   public:
-    GenericAst const& _ast;
-    pmt::parser::grammar::GrammarData const& _grammar_data;
-    LexerTables const& _lexer_tables;
-    bool _write_dotfiles : 1 = true;
-  };
+  GenericAst const& _ast;
+  pmt::parser::grammar::GrammarData const& _grammar_data;
+  LexerTables const& _lexer_tables;
+  bool _write_dotfiles : 1 = true;
+ };
 
-  // -$ Functions $-
-  // --$ Other $--
-  static auto build(Args args_) -> ParserTables;
+ // -$ Functions $-
+ // --$ Other $--
+ static auto build(Args args_) -> ParserTables;
 };
 
 }  // namespace pmt::parser::builder

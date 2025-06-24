@@ -10,7 +10,7 @@ namespace pmt::base {
 
 template <typename CHAR_TYPE_, size_t N_>
 constexpr StringLiteral<CHAR_TYPE_, N_>::StringLiteral(CHAR_TYPE_ const (&str_)[N_]) {
-  std::copy_n(str_, N_, _value);
+ std::copy_n(str_, N_, _value);
 }
 
 }  // namespace pmt::base

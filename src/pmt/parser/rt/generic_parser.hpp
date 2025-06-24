@@ -9,15 +9,15 @@ PMT_FW_DECL_NS_CLASS(pmt::parser::rt, ParserTablesBase);
 namespace pmt::parser::rt {
 
 class GenericParser {
+public:
+ // -$ Types / Constants $-
+ class Args {
  public:
-  // -$ Types / Constants $-
-  class Args {
-   public:
-    GenericLexer& _lexer;
-    ParserTablesBase const& _parser_tables;
-  };
+  GenericLexer& _lexer;
+  ParserTablesBase const& _parser_tables;
+ };
 
-  static auto parse(Args args_) -> GenericAst::UniqueHandle;
+ static auto parse(Args args_) -> GenericAst::UniqueHandle;
 };
 
 }  // namespace pmt::parser::rt

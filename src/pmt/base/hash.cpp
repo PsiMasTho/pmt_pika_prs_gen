@@ -4,8 +4,8 @@ namespace pmt::base {
 
 namespace {
 enum : size_t {
-  FnvOffset = 14695981039346656037ull,
-  FnvPrime = 1099511628211ull,
+ FnvOffset = 14695981039346656037ull,
+ FnvPrime = 1099511628211ull,
 };
 
 // clang-format off
@@ -33,27 +33,27 @@ uint8_t const PEARSON_HASH_LUT[256] = {
 }  // namespace
 
 auto Hash::hash_64(unsigned char const* data_, size_t size_) -> uint64_t {
-  size_t hash = FnvOffset;
+ size_t hash = FnvOffset;
 
-  unsigned char const* const end = data_ + size_;
-  while (data_ != end) {
-    hash = (hash ^ *data_++) * FnvPrime;
-  }
-  return hash;
+ unsigned char const* const end = data_ + size_;
+ while (data_ != end) {
+  hash = (hash ^ *data_++) * FnvPrime;
+ }
+ return hash;
 }
 
 auto Hash::hash_8(unsigned char const* data_, size_t size_) -> uint8_t {
-  uint8_t hash = Phi8;
+ uint8_t hash = Phi8;
 
-  unsigned char const* const end = data_ + size_;
-  while (data_ != end) {
-    hash = PEARSON_HASH_LUT[hash ^ *data_++];
-  }
-  return hash;
+ unsigned char const* const end = data_ + size_;
+ while (data_ != end) {
+  hash = PEARSON_HASH_LUT[hash ^ *data_++];
+ }
+ return hash;
 }
 
 void Hash::combine(size_t hash_, size_t& seed_) {
-  seed_ ^= (hash_ + Phi64 + (seed_ << 6) + (seed_ >> 2));
+ seed_ ^= (hash_ + Phi64 + (seed_ << 6) + (seed_ >> 2));
 }
 
 }  // namespace pmt::base

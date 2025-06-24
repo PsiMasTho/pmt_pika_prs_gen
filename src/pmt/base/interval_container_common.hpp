@@ -11,8 +11,8 @@
 namespace pmt::base {
 
 struct IntervalIndex {
-  size_t _idx : 63;
-  bool _inside : 1;
+ size_t _idx : 63;
+ bool _inside : 1;
 };
 
 using IntervalIndexPair = std::pair<IntervalIndex, IntervalIndex>;
@@ -25,33 +25,33 @@ using IntegralSpanConst = std::span<T_ const>;
 
 template <std::integral T_>
 class Interval : public Hashable<Interval<T_>> {
-  // -$ Data $-
-  T_ _lower;
-  T_ _upper;
+ // -$ Data $-
+ T_ _lower;
+ T_ _upper;
 
- public:
-  // -$ Functions $-
-  // --$ Lifetime $--
-  explicit Interval(T_ value_);
-  Interval(T_ lower_, T_ upper_);
+public:
+ // -$ Functions $-
+ // --$ Lifetime $--
+ explicit Interval(T_ value_);
+ Interval(T_ lower_, T_ upper_);
 
-  // --$ Other $--
-  auto get_lower() const -> T_;
-  auto get_upper() const -> T_;
+ // --$ Other $--
+ auto get_lower() const -> T_;
+ auto get_upper() const -> T_;
 
-  // --$ Operators $--
-  auto operator==(Interval const& _) const -> bool = default;
+ // --$ Operators $--
+ auto operator==(Interval const& _) const -> bool = default;
 
-  // --$ Inherited: pmt::base::Hashable $--
-  auto hash() const -> size_t;
+ // --$ Inherited: pmt::base::Hashable $--
+ auto hash() const -> size_t;
 
-  // bitwise operations
-  void inplace_or(Interval const& other_);
-  auto clone_and(Interval const& other_) const -> std::optional<Interval>;
+ // bitwise operations
+ void inplace_or(Interval const& other_);
+ auto clone_and(Interval const& other_) const -> std::optional<Interval>;
 
-  // iteration
-  template <std::invocable<T_> F_>
-  void for_each_key(F_&& f_) const;
+ // iteration
+ template <std::invocable<T_> F_>
+ void for_each_key(F_&& f_) const;
 };
 
 template <std::integral T_>

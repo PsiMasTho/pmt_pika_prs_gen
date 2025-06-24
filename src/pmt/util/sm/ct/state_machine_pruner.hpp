@@ -10,18 +10,18 @@ PMT_FW_DECL_NS_CLASS(pmt::util::sm::ct, StateMachine)
 namespace pmt::util::sm::ct {
 
 class StateMachinePruner {
-  // -$ Types / Constants $-
+ // -$ Types / Constants $-
+public:
+ class Args {
  public:
-  class Args {
-   public:
-    StateMachine& _state_machine;
-    StateNrType _state_nr_from = StateNrStart;
-    std::optional<StateNrType> _state_nr_from_new = std::nullopt;
-  };
+  StateMachine& _state_machine;
+  StateNrType _state_nr_from = StateNrStart;
+  std::optional<StateNrType> _state_nr_from_new = std::nullopt;
+ };
 
-  // -$ Functions $-
-  // --$ Other $--
-  static void prune(Args args_);
+ // -$ Functions $-
+ // --$ Other $--
+ static void prune(Args args_);
 };
 
 }  // namespace pmt::util::sm::ct

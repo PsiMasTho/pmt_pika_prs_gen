@@ -13,6 +13,8 @@ inline void set_bit(pmt::base::Bitset::ChunkSpan bitset_, size_t index_);
 
 inline auto get_bit(pmt::base::Bitset::ChunkSpanConst bitset_, size_t index_) -> bool;
 
+inline auto get_popcount(pmt::base::Bitset::ChunkSpanConst bitset_) -> size_t;
+
 inline void bitwise_and(pmt::base::Bitset::ChunkSpan bitset_, pmt::base::Bitset::ChunkSpanConst lhs_, pmt::base::Bitset::ChunkSpanConst rhs_);
 
 inline auto encode_symbol(pmt::util::sm::SymbolValueType symbol_) -> pmt::util::sm::SymbolValueType;

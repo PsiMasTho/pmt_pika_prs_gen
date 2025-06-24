@@ -12,35 +12,35 @@
 namespace pmt::base {
 
 class BitsetConverter {
- public:
-  // -$ Functions $-
-  // --$ Other $--
-  // --- String Conversion ---
-  static auto to_string(Bitset const& bitset_) -> std::string;
-  static auto from_string(std::string const& str_) -> Bitset;
+public:
+ // -$ Functions $-
+ // --$ Other $--
+ // --- String Conversion ---
+ static auto to_string(Bitset const& bitset_) -> std::string;
+ static auto from_string(std::string const& str_) -> Bitset;
 
-  // --- Set Conversion ---
-  template <std::integral T_ = size_t>
-  static auto to_set(Bitset const& bitset_) -> std::set<T_>;
-  template <std::integral T_ = size_t>
-  static auto from_set(std::set<T_> const& set_) -> Bitset;
+ // --- Set Conversion ---
+ template <std::integral T_ = size_t>
+ static auto to_set(Bitset const& bitset_) -> std::set<T_>;
+ template <std::integral T_ = size_t>
+ static auto from_set(std::set<T_> const& set_) -> Bitset;
 
-  // --- Unordered Set Conversion ---
-  template <std::integral T_ = size_t>
-  static auto to_unordered_set(Bitset const& bitset_) -> std::unordered_set<T_>;
-  template <std::integral T_ = size_t>
-  static auto from_unordered_set(std::unordered_set<T_> const& set_) -> Bitset;
+ // --- Unordered Set Conversion ---
+ template <std::integral T_ = size_t>
+ static auto to_unordered_set(Bitset const& bitset_) -> std::unordered_set<T_>;
+ template <std::integral T_ = size_t>
+ static auto from_unordered_set(std::unordered_set<T_> const& set_) -> Bitset;
 
-  // --- Interval Set Conversion ---
-  template <std::integral T_ = size_t>
-  static auto to_interval_set(Bitset const& bitset_) -> IntervalSet<T_>;
-  template <std::integral T_ = size_t>
-  static auto from_interval_set(IntervalSet<T_> const& interval_set_) -> Bitset;
+ // --- Interval Set Conversion ---
+ template <std::integral T_ = size_t>
+ static auto to_interval_set(Bitset const& bitset_) -> IntervalSet<T_>;
+ template <std::integral T_ = size_t>
+ static auto from_interval_set(IntervalSet<T_> const& interval_set_) -> Bitset;
 };
 
 class BitsetConverterError : public std::logic_error {
- public:
-  BitsetConverterError();
+public:
+ BitsetConverterError();
 };
 
 }  // namespace pmt::base
