@@ -3,12 +3,14 @@
 #include "pmt/asserts.hpp"
 #include "pmt/base/bitset.hpp"
 #include "pmt/parser/primitives.hpp"
+#include "pmt/parser/rt/lexer_tables_base.hpp"
 #include "pmt/parser/rt/parser_tables_base.hpp"
 #include "pmt/parser/rt/util.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
 #include <cassert>
 #include <deque>
+#include <utility>
 #include <vector>
 
 namespace pmt::parser::rt {
@@ -99,12 +101,34 @@ auto GenericParser::parse(Args args_) -> GenericAst::UniqueHandle {
         locals._state_nr_cur = args_._parser_tables.get_state_nr_next(stack_item._state_nr, SymbolKindClose, accept_idx);
       } break;
       case ParserTablesBase::StateTypeTerminal: {
+        Bitset::ChunkSpanConst const state_terminal_transitions = args_._parser_tables.get_state_terminal_transitions(locals._state_nr_cur);
+
         GenericLexer::LexReturn lexed;
         if (!locals._lex_queue.empty()) {
           lexed = locals._lex_queue.front();
           locals._lex_queue.pop_front();
+
+          // Check if this token is valid for the current state
+          if (!get_bit(state_terminal_transitions, lexed._accepted)) {
+            std::string message = "Lexing error,";
+            std::string delim = " expected to match: ";
+            bool at_least_one = false;
+
+            for (size_t i = 0; i < state_terminal_transitions.size() * Bitset::ChunkBit; ++i) {
+              if (get_bit(state_terminal_transitions, i)) {
+                message += std::exchange(delim, " or ") + args_._lexer.get_tables().get_accept_index_display_name(i);
+                at_least_one = true;
+              }
+            }
+
+            message += (at_least_one) ? " but" : "";
+            message += " got: " + args_._lexer.get_tables().get_accept_index_display_name(lexed._accepted);
+
+            message += " at line: " + std::to_string(lexed._token._source_position._lineno) + ", column: " + std::to_string(lexed._token._source_position._colno);
+            throw std::runtime_error(message);
+          }
         } else {
-          lexed = args_._lexer.lex(args_._parser_tables.get_state_terminal_transitions(locals._state_nr_cur));
+          lexed = args_._lexer.lex(state_terminal_transitions);
         }
 
         if (get_bit(args_._parser_tables.get_state_hidden_terminal_transitions(locals._state_nr_cur), lexed._accepted)) {

@@ -43,7 +43,7 @@ class GenericLexer {
   auto lex() -> LexReturn;
   auto lex(pmt::base::Bitset::ChunkSpanConst accepts_) -> LexReturn;
 
-  auto get_eoi_accept_index() const -> size_t;
+  auto get_tables() const -> LexerTablesBase const&;
 
  private:
   auto get_source_position_at(size_t p_) -> SourcePosition;

@@ -56,7 +56,6 @@ auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHan
   pmt::parser::grammar::ParserTables const parser_tables;
   GenericAst::UniqueHandle ast = GenericParser::parse(GenericParser::Args(lexer, parser_tables));
   PostParse::transform(PostParse::Args{._ast_root = *ast});
-
   return ast;
 }
 

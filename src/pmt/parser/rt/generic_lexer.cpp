@@ -43,15 +43,16 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
 
     Bitset::ChunkSpanConst const state_accepts = _lexer_tables.get_state_accepts(state_nr_cur);
     bitwise_and(_accepts_valid, state_accepts, accepts_);
-    countl = find_first_set_bit(_accepts_valid);
+    size_t const first_set_bit = find_first_set_bit(_accepts_valid);
 
     if (get_bit(state_accepts, _lexer_tables.get_start_accept_index())) {
       _cursor = p;
     }
 
-    if (countl < _accept_count) {
+    if (first_set_bit < _accept_count) {
       te = p;
-      id = _lexer_tables.get_accept_index_id(countl);
+      id = _lexer_tables.get_accept_index_id(first_set_bit);
+      countl = first_set_bit;
     }
 
     if (p == _input.size() + 1) {
@@ -69,6 +70,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
     ret._token._id = id;
     ret._token._source_position = get_source_position_at(_cursor);
     _cursor = te;
+
     return ret;
   } else {
     std::string message = "Lexing error,";
@@ -86,8 +88,8 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
   }
 }
 
-auto GenericLexer::get_eoi_accept_index() const -> size_t {
-  return _lexer_tables.get_eoi_accept_index();
+auto GenericLexer::get_tables() const -> LexerTablesBase const& {
+  return _lexer_tables;
 }
 
 auto GenericLexer::get_source_position_at(size_t p_) -> SourcePosition {

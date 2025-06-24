@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1750539270">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1750771225">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -243,7 +243,9 @@ Generated files:
  	($t01, $t02, $t03, ...)[@intersect] // String that is matched by all the regexes
   ($t01, $t02)[@subtract] // String that is matched by $t01 but not $t02
 ---
-ParserTables::get_lookahead_state_terminal_transitions needs to take the current conflict state in the parser</rich_text>
+ParserTables::get_lookahead_state_terminal_transitions needs to take the current conflict state in the parser
+--
+logera newline should come lhs?</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;
