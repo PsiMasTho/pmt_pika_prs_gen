@@ -20,9 +20,10 @@ public:
 
  enum : GenericId::IdType {
 #include "pmt/parser/grammar/id_constants-inl.hpp"
-  NtTerminalHidden,
+  NtHidden,
   NtPermute,
-  NtPermuteDelimited
+  NtPermuteDelimited,
+  NtIntersect
  };
 
  static auto id_to_string(GenericId::IdType id_) -> std::string;

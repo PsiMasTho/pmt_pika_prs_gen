@@ -82,7 +82,7 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
     case Ast::TkTilde: {
      GenericAst::UniqueHandle item = locals_._ast_cur->take_child_at_front();
      locals_._ast_cur->take_child_at_front();
-     GenericAst::UniqueHandle hidden = GenericAst::construct(GenericAst::Tag::Children, Ast::NtTerminalHidden);
+     GenericAst::UniqueHandle hidden = GenericAst::construct(GenericAst::Tag::Children, Ast::NtHidden);
      hidden->give_child_at_back(std::move(item));
      locals_._ast_cur->give_child_at_back(std::move(hidden));
     } break;
@@ -98,6 +98,9 @@ void handle_expression(PostParse::Args& args_, Locals& locals_) {
       } break;
       case Ast::TkPermuteDelimited: {
        locals_._ast_cur->get_child_at_back()->set_id(Ast::NtPermuteDelimited);
+      } break;
+      case Ast::TkIntersect: {
+       locals_._ast_cur->get_child_at_back()->set_id(Ast::NtIntersect);
       } break;
       default: {
        pmt::unreachable();
@@ -217,7 +220,7 @@ void PostParse::transform(Args args_) {
    case Ast::NtTerminalChoices:
    case Ast::NtRepetitionExpression:
    case Ast::NtAdvancedExpression:
-   case Ast::NtTerminalHidden:
+   case Ast::NtHidden:
    case Ast::NtNonterminalChoices:
    case Ast::NtPermute:
    case Ast::NtPermuteDelimited: {

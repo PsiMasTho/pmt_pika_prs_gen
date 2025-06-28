@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pmt/base/interval_map.hpp"
 #include "pmt/base/interval_set.hpp"
 #include "pmt/fw_decl.hpp"
 #include "pmt/util/sm/ct/symbol.hpp"
@@ -34,6 +33,9 @@ public:
  void add_outgoing_symbol_transition(StateNrType state_nr_from_, Symbol symbol_);
  void add_outgoing_symbol_transition(StateNrType state_nr_from_, SymbolKindType kind_, pmt::base::Interval<SymbolValueType> interval_);
  void add_outgoing_epsilon_transition(StateNrType state_nr_from_);
+
+ auto get_outgoing_symbol_transitions() const -> std::unordered_map<StateNrType, std::unordered_map<SymbolKindType, pmt::base::IntervalSet<SymbolValueType>>> const&;
+ auto get_outgoing_epsilon_transitions() const -> std::unordered_set<StateNrType> const&;
 
  void clear_outgoing_transitions();
  void merge_outgoing_transitions(StateMachinePart& other_);

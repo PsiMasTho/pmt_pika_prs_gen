@@ -26,6 +26,7 @@ $question<id                    = "TkQuestion">                  = "?";
 $kw_epsilon<id                  = "TkEpsilon">                   = "epsilon";
 $kw_permute<id                  = "TkPermute">                   = "@permute";
 $kw_permute_delimited<id        = "TkPermuteDelimited">          = "@permute_delimited";
+$kw_intersect<id                = "TkIntersect">                 = "@intersect";
 $kw_parameter_unpack<id         = "TkKwParameterUnpack">         = "unpack";
 $kw_parameter_hide<id           = "TkKwParameterHide">           = "hide";
 $kw_parameter_merge<id          = "TkKwParameterMerge">          = "merge";
@@ -79,12 +80,12 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
 %terminal_sequence<id = "NtTerminalSequence"> = %terminal_expression+;
 
 // - TERMINAL_EXPRESSION -
-%terminal_expression<id = "NtTerminalExpression"> = $terminal_identifier %repetition_expression?        |
-                                                    $string_literal %repetition_expression?             |
-                                                    $integer_literal %repetition_expression?            |
-                                                    $kw_epsilon                                         |
-                                                    %charset_expression  %repetition_expression?        |
-                                                    "("~ %terminal_choices ")"~ %repetition_expression? |
+%terminal_expression<id = "NtTerminalExpression"> = $terminal_identifier %repetition_expression?            |
+                                                    $string_literal (%repetition_expression | $tilde)?      |
+                                                    $integer_literal (%repetition_expression | $tilde)?     |
+                                                    $kw_epsilon                                             |
+                                                    %charset_expression  (%repetition_expression | $tilde)? |
+                                                    "("~ %terminal_choices ")"~ %repetition_expression?     |
                                                     "("~ %terminal_choices ")"~ %terminal_advanced_expression?;
 
 // - CHARSET_EXPRESSION -
@@ -112,8 +113,9 @@ $grammar_property_comment<id    = "TkGrammarPropertyComment">    = "@comment";
                                                         %repetition_range;
 
 // - TERMINAL_ADVANCED_EXPRESSION -
-%terminal_advanced_expression<id = "NtAdvancedExpression"> = "["~ $kw_permute %repetition_range? "]"~ |
-                                                             "["~ $kw_permute_delimited "("~ %terminal_choices ")"~ %repetition_range? "]"~;
+%terminal_advanced_expression<id = "NtAdvancedExpression"> = "["~ $kw_permute %repetition_range? "]"~                                       |
+                                                             "["~ $kw_permute_delimited "("~ %terminal_choices ")"~ %repetition_range? "]"~ |
+                                                             "["~ $kw_intersect "]"~;
 
 // - NONTERMINAL_PRODUCTION -
 %nonterminal_production<id = "NtNonterminalProduction"> = $nonterminal_identifier "="~ %nonterminal_definition ";"~ |

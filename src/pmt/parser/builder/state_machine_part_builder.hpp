@@ -23,7 +23,7 @@ public:
  class ArgsBase {
  public:
   GenericAst const& _ast_root;
-  pmt::util::sm::ct::StateMachine& _dest_state_machine;
+  pmt::util::sm::ct::StateMachine& _state_machine_dest;
   DefinitionLookupFn _fn_lookup_definition;
   size_t _starting_index;
  };

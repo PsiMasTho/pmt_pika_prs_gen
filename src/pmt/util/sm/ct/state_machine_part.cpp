@@ -33,6 +33,14 @@ void StateMachinePart::add_outgoing_epsilon_transition(StateNrType state_nr_from
  _outgoing_epsilon_transitions.insert(state_nr_from_);
 }
 
+auto StateMachinePart::get_outgoing_symbol_transitions() const -> std::unordered_map<StateNrType, std::unordered_map<SymbolKindType, pmt::base::IntervalSet<SymbolValueType>>> const& {
+ return _outgoing_symbol_transitions;
+}
+
+auto StateMachinePart::get_outgoing_epsilon_transitions() const -> std::unordered_set<StateNrType> const& {
+ return _outgoing_epsilon_transitions;
+}
+
 void StateMachinePart::clear_outgoing_transitions() {
  _outgoing_symbol_transitions.clear();
  _outgoing_epsilon_transitions.clear();

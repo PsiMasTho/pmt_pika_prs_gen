@@ -10,6 +10,7 @@
 #include "pmt/parser/builder/tui/args.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/generic_ast_printer.hpp"
+#include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/lexer_tables.hpp"
 #include "pmt/parser/grammar/nonterminal_inliner.hpp"
 #include "pmt/parser/grammar/parser_tables.hpp"
@@ -56,6 +57,13 @@ auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHan
  pmt::parser::grammar::ParserTables const parser_tables;
  GenericAst::UniqueHandle ast = GenericParser::parse(GenericParser::Args(lexer, parser_tables));
  PostParse::transform(PostParse::Args{._ast_root = *ast});
+
+ /*  GenericAstPrinter::Args ast_printer_args{._id_to_string_fn = [](GenericId::IdType id_) { return Ast::id_to_string(id_); },
+                                           ._out = std::cout,
+                                           ._ast = *ast,
+                                           ._indent_width = 2};
+  GenericAstPrinter::print(ast_printer_args); */
+
  return ast;
 }
 

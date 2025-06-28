@@ -6,6 +6,7 @@ namespace pmt::parser {
 
 enum : pmt::util::sm::SymbolKindType {
  SymbolKindCharacter = 0ull,
+ SymbolKindHiddenCharacter = 6ull,
  SymbolKindTerminal = 1ull,
  SymbolKindHiddenTerminal = 2ull,
  SymbolKindOpen = 3ull,

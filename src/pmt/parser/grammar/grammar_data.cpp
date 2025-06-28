@@ -367,7 +367,8 @@ void GrammarData::final_traversal(GrammarData& grammar_data_, GenericAst& ast_) 
     push_and_visit(path_cur.clone_push(1));  // The delimiter expression
    case Ast::NtPermute:
    case Ast::NtRepetitionExpression:
-   case Ast::NtTerminalHidden:
+   case Ast::NtIntersect:
+   case Ast::NtHidden:
     push_and_visit(path_cur.clone_push(0));
     break;
    case Ast::TkStringLiteral:

@@ -35,7 +35,7 @@ public:
 void setup_parser_state_machine(ParserTableBuilder::Args const& args_, Locals& locals_) {
  StateNrType const state_nr_start = locals_._parser_state_machine.create_new_state();
  StateMachinePart state_machine_part_nonterminal = StateMachinePartBuilder::build(StateMachinePartBuilder::NonterminalBuildingArgs(
-  StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._dest_state_machine = locals_._parser_state_machine, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_definition_by_index(index_); }, ._starting_index = args_._grammar_data._nonterminal_accepts.size()}, [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_name_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_nonterminal_index_by_name(name_); },
+  StateMachinePartBuilder::ArgsBase{._ast_root = args_._ast, ._state_machine_dest = locals_._parser_state_machine, ._fn_lookup_definition = [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_definition_by_index(index_); }, ._starting_index = args_._grammar_data._nonterminal_accepts.size()}, [&](size_t index_) { return args_._grammar_data.lookup_nonterminal_name_by_index(index_); }, [&](std::string_view name_) { return args_._grammar_data.lookup_nonterminal_index_by_name(name_); },
   [&](std::string_view label_) { return *args_._lexer_tables.terminal_name_to_index(label_); }));
  StateNrType const state_nr_pre_end = locals_._parser_state_machine.create_new_state();
  State& state_pre_end = *locals_._parser_state_machine.get_state(state_nr_pre_end);
