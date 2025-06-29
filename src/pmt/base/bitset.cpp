@@ -84,7 +84,7 @@ auto Bitset::operator!=(Bitset const& other_) const -> bool {
 
 auto Bitset::hash() const -> size_t {
  size_t seed = Hash::Phi64;
- for (size_t i = 0; i < get_required_chunk_count(size()); ++i) {
+ for (size_t i = 0; i < get_required_chunk_count(_size); ++i) {
   pmt::base::Hash::combine(_data.get()[i], seed);
  }
  return seed;

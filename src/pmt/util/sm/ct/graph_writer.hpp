@@ -5,8 +5,6 @@
 #include "pmt/util/skeleton_replacer_base.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
-#include <functional>
-#include <iosfwd>
 #include <limits>
 
 PMT_FW_DECL_NS_CLASS(pmt::util::sm::ct, StateMachine)
@@ -49,57 +47,37 @@ public:
   uint8_t _b = std::numeric_limits<uint8_t>::max();
  };
 
- using AcceptsToLabelFn = std::function<std::string(size_t)>;
- using SymbolsToLabelFn = std::function<std::string(SymbolKindType, pmt::base::IntervalSet<SymbolValueType> const&)>;
- using SymbolKindToEdgeColorFn = std::function<Color(SymbolKindType)>;
- using SymbolKindToEdgeStyleFn = std::function<EdgeStyle(SymbolKindType)>;
- using SymbolKindToFontFlagsFn = std::function<FontFlags(SymbolKindType)>;
- using SymbolKindToFontColorFn = std::function<Color(SymbolKindType)>;
-
- struct WriterArgs {
-  std::ostream& _os_graph;
-  std::istream& _is_graph_skel;
-  StateMachine const& _state_machine;
- };
-
- struct StyleArgs {
-  StyleArgs();
-  AcceptsToLabelFn _accepts_to_label_fn;
-  SymbolsToLabelFn _symbols_to_label_fn;
-  SymbolKindToEdgeColorFn _symbol_kind_to_edge_color_fn;
-  SymbolKindToEdgeStyleFn _symbol_kind_to_edge_style_fn;
-  SymbolKindToFontFlagsFn _symbol_kind_to_font_flags_fn;
-  SymbolKindToFontColorFn _symbol_kind_to_font_color_fn;
-  std::string _title = "State Machine";
-  std::string _accepts_label = "Accepts";
-  Color _accepting_node_color = Color{._r = 0, ._g = 0, ._b = 255};
-  NodeShape _accepting_node_shape = NodeShape::DoubleCircle;
-  Color _nonaccepting_node_color = Color{._r = 0, ._g = 0, ._b = 0};
-  NodeShape _nonaccepting_node_shape = NodeShape::Circle;
-  Color _epsilon_edge_color = Color{._r = 0, ._g = 255, ._b = 0};
-  EdgeStyle _epsilon_edge_style = EdgeStyle::Solid;
-  LayoutDirection _layout_direction = LayoutDirection::LeftToRight;
- };
-
 private:
  // -$ Data $-
- std::ostream* _os = nullptr;
- WriterArgs* _writer_args = nullptr;
- StyleArgs _style_args;
+ std::string _graph;
+ StateMachine const& _state_machine;
+ std::ostream& _os_graph;
 
 public:
  // -$ Functions $-
- // --$ Other $--
- static auto accepts_to_label_default(size_t accepts_) -> std::string;
- static auto symbols_to_label_default(SymbolKindType kind_, pmt::base::IntervalSet<SymbolValueType> const& symbols_) -> std::string;
- static auto symbol_kind_to_edge_color_default(SymbolKindType kind_) -> Color;
- static auto symbol_kind_to_edge_style_default(SymbolKindType kind_) -> EdgeStyle;
- static auto symbol_kind_to_font_flags_default(SymbolKindType kind_) -> FontFlags;
- static auto symbol_kind_to_font_color_default(SymbolKindType kind_) -> Color;
+ // --$ Lifetime $--
+ GraphWriter(StateMachine const& state_machine_, std::ostream& os_graph_);
 
- void write_dot(WriterArgs& writer_args_, StyleArgs style_args_);
+ // --$ Other $--
+ void write_dot();
 
 private:
+ virtual auto accepts_to_label(size_t accepts_) -> std::string;
+ virtual auto symbols_to_label(SymbolKindType kind_, pmt::base::IntervalSet<SymbolValueType> const& symbols_) -> std::string = 0;
+ virtual auto symbol_kind_to_edge_color(SymbolKindType kind_) -> Color;
+ virtual auto symbol_kind_to_edge_style(SymbolKindType kind_) -> EdgeStyle;
+ virtual auto symbol_kind_to_font_flags(SymbolKindType kind_) -> FontFlags;
+ virtual auto symbol_kind_to_font_color(SymbolKindType kind_) -> Color;
+ virtual auto get_accepting_node_color() const -> Color;
+ virtual auto get_accepting_node_shape() const -> NodeShape;
+ virtual auto get_nonaccepting_node_color() const -> Color;
+ virtual auto get_nonaccepting_node_shape() const -> NodeShape;
+ virtual auto get_epsilon_edge_color() const -> Color;
+ virtual auto get_epsilon_edge_style() const -> EdgeStyle;
+ virtual auto get_layout_direction() const -> LayoutDirection;
+ virtual auto get_graph_title() const -> std::string;
+ virtual auto get_accepts_title() const -> std::string;
+
  void replace_layout_direction(std::string& str_);
  void replace_accepting_node_shape(std::string& str_);
  void replace_accepting_node_color(std::string& str_);
@@ -114,9 +92,6 @@ private:
  void replace_graph_title(std::string& str_);
 
  void replace_timestamp(std::string& str_);
-
- static auto is_displayable(SymbolValueType symbol_) -> bool;
- static auto to_displayable(SymbolValueType symbol_) -> std::string;
 
  static auto to_string(EdgeStyle edge_style_) -> std::string;
  static auto to_string(NodeShape node_shape_) -> std::string;

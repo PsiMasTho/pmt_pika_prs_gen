@@ -1,19 +1,19 @@
 #include "pmt/parser/builder/parser_table_builder.hpp"
 
 #include "pmt/parser/builder/lexer_tables.hpp"
+#include "pmt/parser/builder/parser_graph_writer.hpp"
 #include "pmt/parser/builder/parser_lookahead_builder.hpp"
 #include "pmt/parser/builder/parser_reachability_checker.hpp"
 #include "pmt/parser/builder/state_machine_part_builder.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/primitives.hpp"
-#include "pmt/util/sm/ct/graph_writer.hpp"
 #include "pmt/util/sm/ct/state.hpp"
 #include "pmt/util/sm/ct/state_machine_determinizer.hpp"
 #include "pmt/util/sm/ct/state_machine_minimizer.hpp"
 #include "pmt/util/sm/ct/state_machine_part.hpp"
 
-#include <fstream>
+#include <chrono>
 #include <iostream>
 
 namespace pmt::parser::builder {
@@ -71,88 +71,10 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
   return;
  }
 
- std::ofstream graph_file(filename);
- std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/sm/ct/state_machine-skel.dot");
+ ParserGraphWriter graph_writer(
+  state_machine_, title_, filename, [&](AcceptsIndexType index_) { return args_._grammar_data.lookup_terminal_name_by_index(index_); }, [&](AcceptsIndexType index_) { return args_._grammar_data.lookup_nonterminal_name_by_index(index_); });
+ graph_writer.write_dot();
 
- GraphWriter::WriterArgs writer_args{._os_graph = graph_file, ._is_graph_skel = skel_file, ._state_machine = state_machine_};
-
- GraphWriter::StyleArgs style_args;
- style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-  return args_._grammar_data.lookup_nonterminal_name_by_index(accepts_);
- };
-
- style_args._title = std::move(title_);
- style_args._symbols_to_label_fn = [&](SymbolKindType kind_, IntervalSet<SymbolValueType> const& symbols_) -> std::string {
-  std::string delim;
-  std::string ret;
-
-  switch (kind_) {
-   case SymbolKindTerminal:
-   case SymbolKindHiddenTerminal:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._lexer_tables.get_accept_index_name(symbol_); });
-    break;
-   case SymbolKindOpen:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + "+"; });
-    break;
-   case SymbolKindClose:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._grammar_data.lookup_nonterminal_name_by_index(symbol_); });
-    break;
-   case SymbolKindConflict:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + std::to_string(symbol_); });
-    break;
-   default:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + "unknown"; });
-    break;
-  }
-
-  return ret;
- };
- style_args._symbol_kind_to_edge_style_fn = [&](SymbolValueType kind_) -> GraphWriter::EdgeStyle {
-  switch (kind_) {
-   case SymbolKindClose:
-    return GraphWriter::EdgeStyle::Dashed;
-   default:
-    return GraphWriter::EdgeStyle::Solid;
-  }
- };
-
- style_args._symbol_kind_to_font_flags_fn = [&](SymbolValueType kind_) -> GraphWriter::FontFlags {
-  switch (kind_) {
-   case SymbolKindTerminal:
-   case SymbolKindHiddenTerminal:
-    return GraphWriter::FontFlags::Italic;
-   case SymbolKindClose:
-    return GraphWriter::FontFlags::Bold;
-   default:
-    return GraphWriter::FontFlags::None;
-  }
- };
-
- style_args._symbol_kind_to_edge_color_fn = [&](SymbolValueType kind_) -> GraphWriter::Color {
-  switch (kind_) {
-   case SymbolKindConflict:
-    return GraphWriter::Color{._r = 255, ._g = 165, ._b = 0};
-   case SymbolKindHiddenTerminal:
-    return GraphWriter::Color{._r = 191, ._g = 191, ._b = 191};
-   default:
-    return GraphWriter::Color{._r = 0, ._g = 0, ._b = 0};
-  }
- };
-
- style_args._symbol_kind_to_font_color_fn = [&](SymbolValueType kind_) -> GraphWriter::Color {
-  switch (kind_) {
-   case SymbolKindConflict:
-    return GraphWriter::Color{._r = 255, ._g = 165, ._b = 0};
-   case SymbolKindHiddenTerminal:
-    return GraphWriter::Color{._r = 191, ._g = 191, ._b = 191};
-   default:
-    return GraphWriter::Color{._r = 0, ._g = 0, ._b = 0};
-  }
- };
-
- style_args._layout_direction = GraphWriter::LayoutDirection::TopToBottom;
-
- GraphWriter().write_dot(writer_args, style_args);
  std::cout << "Wrote dot file: " << filename << '\n';
 }
 
@@ -166,7 +88,10 @@ auto ParserTableBuilder::build(Args args_) -> ParserTables {
  ParserReachabilityChecker::check_reachability(ParserReachabilityChecker::Args{._fn_lookup_accept_index_by_label = [&](std::string_view label_) { return args_._grammar_data.lookup_nonterminal_index_by_name(label_); }, ._parser_state_machine = locals._parser_state_machine});
  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = locals._parser_state_machine});
  write_nonterminal_state_machine_dot(args_, locals, "Determinized tables", locals._parser_state_machine);
+ auto const start_time = std::chrono::steady_clock::now();
  StateMachineMinimizer::minimize(locals._parser_state_machine);
+ auto const end_time = std::chrono::steady_clock::now();
+ std::cout << "Parser table minimization took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time) << ".\n";
  write_nonterminal_state_machine_dot(args_, locals, "Minimized tables", locals._parser_state_machine);
  IntervalSet<StateNrType> const conflicting_state_nrs = ParserLookaheadBuilder::extract_conflicts(locals._parser_state_machine);
  write_nonterminal_state_machine_dot(args_, locals, "Final tables", locals._parser_state_machine);

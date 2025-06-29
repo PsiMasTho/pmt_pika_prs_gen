@@ -2,19 +2,18 @@
 
 #include "pmt/base/algo.hpp"
 #include "pmt/base/interval_set.hpp"
+#include "pmt/parser/builder/lexer_graph_writer.hpp"
 #include "pmt/parser/builder/state_machine_part_builder.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
 #include "pmt/parser/primitives.hpp"
-#include "pmt/util/sm/ct/graph_writer.hpp"
 #include "pmt/util/sm/ct/state_machine_determinizer.hpp"
 #include "pmt/util/sm/ct/state_machine_minimizer.hpp"
 #include "pmt/util/sm/ct/state_machine_part.hpp"
 #include "pmt/util/sm/ct/state_machine_pruner.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
-#include <fstream>
 #include <iostream>
 
 namespace pmt::parser::builder {
@@ -348,7 +347,7 @@ void LexerTableBuilder::validate_result() {
  }
 }
 
-void LexerTableBuilder::write_dot(std::string_view filename_, std::string_view title_, pmt::util::sm::ct::StateMachine const& state_machine_) const {
+void LexerTableBuilder::write_dot(std::string const& filename_, std::string const& title_, pmt::util::sm::ct::StateMachine const& state_machine_) const {
  if (!_write_dotfiles) {
   return;
  }
@@ -358,26 +357,8 @@ void LexerTableBuilder::write_dot(std::string_view filename_, std::string_view t
   return;
  }
 
- std::ofstream graph_file(filename_.data());
- std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/sm/ct/state_machine-skel.dot");
-
- GraphWriter::WriterArgs writer_args{._os_graph = graph_file, ._is_graph_skel = skel_file, ._state_machine = state_machine_};
-
- GraphWriter::StyleArgs style_args;
- style_args._title = title_;
- style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-  return _result_tables.get_accept_index_name(accepts_);
- };
- style_args._symbol_kind_to_edge_color_fn = [](SymbolKindType symbol_kind_) -> GraphWriter::Color {
-  switch (symbol_kind_) {
-   case SymbolKindHiddenCharacter:
-    return GraphWriter::Color{._r = 191, ._g = 191, ._b = 191};
-   default:
-    return GraphWriter::Color{._r = 0, ._g = 0, ._b = 0};
-  }
- };
-
- GraphWriter().write_dot(writer_args, style_args);
+ LexerGraphWriter graph_writer(state_machine_, title_, filename_, [this](size_t accepts_) { return _grammar_data->lookup_terminal_name_by_index(accepts_); });
+ graph_writer.write_dot();
  std::cout << "Wrote dot file: " << filename_ << '\n';
 }
 

@@ -2,12 +2,9 @@
 
 #include "pmt/parser/builder/state_machine_part_builder.hpp"
 #include "pmt/parser/primitives.hpp"
-#include "pmt/util/sm/ct/graph_writer.hpp"
 #include "pmt/util/sm/ct/state_machine_determinizer.hpp"
 #include "pmt/util/sm/ct/state_machine_pruner.hpp"
 
-#include <fstream>
-#include <iostream>
 #include <unordered_map>
 
 namespace pmt::parser::builder {
@@ -26,48 +23,6 @@ public:
  std::vector<StateNrType> _pending;
  size_t _dotfile_counter = 0;
 };
-
-void write_dot(TerminalOverlapChecker::Args const& args_, Locals& locals_, std::string title_, StateMachine const& state_machine_) {
- if (!args_._write_dotfiles) {
-  return;
- }
-
- std::string filename = "conflict_checker_state_machine_" + std::to_string(locals_._dotfile_counter++) + ".dot";
- if (state_machine_.get_state_count() > DOT_FILE_MAX_STATES) {
-  std::cerr << "Skipping dot file write of " << filename << " because it has " << state_machine_.get_state_count() << " states, which is more than the limit of " << DOT_FILE_MAX_STATES << '\n';
-  return;
- }
- if (state_machine_.get_state_count() == 0) {
-  std::cerr << "Skipping dot file write of " << filename << " because it has no states\n";
-  return;
- }
-
- std::ofstream graph_file(filename);
- std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/sm/ct/state_machine-skel.dot");
-
- GraphWriter::WriterArgs writer_args{._os_graph = graph_file, ._is_graph_skel = skel_file, ._state_machine = state_machine_};
-
- GraphWriter::StyleArgs style_args;
- style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-  return args_._grammar_data.lookup_terminal_name_by_index(accepts_);
- };
-
- style_args._title = std::move(title_);
-
- style_args._symbol_kind_to_font_flags_fn = [&](SymbolValueType kind_) -> GraphWriter::FontFlags {
-  switch (kind_) {
-   case SymbolKindTerminal:
-    return GraphWriter::FontFlags::Italic;
-   default:
-    return GraphWriter::FontFlags::None;
-  }
- };
-
- style_args._layout_direction = GraphWriter::LayoutDirection::LeftToRight;
-
- GraphWriter().write_dot(writer_args, style_args);
- std::cout << "Wrote dot file: " << filename << '\n';
-}
 
 auto push_and_visit(TerminalOverlapChecker::Args& args_, Locals& locals_, StateNrType state_nr_) -> StateNrType {
  if (auto const itr = locals_._old_to_new.find(state_nr_); itr != locals_._old_to_new.end()) {

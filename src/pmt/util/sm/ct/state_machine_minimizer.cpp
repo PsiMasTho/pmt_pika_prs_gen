@@ -1,5 +1,6 @@
 #include "pmt/util/sm/ct/state_machine_minimizer.hpp"
 
+#include "pmt/base/bitset.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
@@ -9,10 +10,10 @@ namespace pmt::util::sm::ct {
 using namespace pmt::base;
 
 namespace {
-auto get_alphabet(StateMachine const& state_machine_) -> std::unordered_set<Symbol> {
+auto get_alphabet(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_) -> std::unordered_set<Symbol> {
  std::unordered_set<Symbol> ret;
 
- state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+ state_nrs_.for_each_key([&](StateNrType state_nr_) {
   State const& state = *state_machine_.get_state(state_nr_);
   state.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) { state.get_symbol_values(kind_).for_each_key([&](SymbolValueType value_) { ret.insert(Symbol(kind_, value_)); }); });
  });
@@ -20,27 +21,55 @@ auto get_alphabet(StateMachine const& state_machine_) -> std::unordered_set<Symb
  return ret;
 }
 
-auto get_initial_partitions(StateMachine const& state_machine_) -> std::unordered_set<IntervalSet<StateNrType>> {
+// Map state numbers to contiguous numbers starting from 0 so that we can represent them in a bitset,
+// where set operations are faster
+class StateNrBitsetMapping {
+public:
+ std::unordered_map<StateNrType, StateNrType> _forward;
+ std::vector<StateNrType> _backward;
+};
+
+auto get_mapping(IntervalSet<StateNrType> const& state_nrs_) {
+ StateNrBitsetMapping mapping;
+ mapping._forward.reserve(state_nrs_.size() + 1);  // +1 for the sink state
+ mapping._backward.reserve(state_nrs_.size() + 1);
+
+ state_nrs_.for_each_key([&](StateNrType state_nr_) {
+  mapping._forward[state_nr_] = mapping._backward.size();
+  mapping._backward.push_back(state_nr_);
+ });
+
+ // Add the sink state
+ mapping._forward[StateNrSink] = mapping._backward.size();
+ mapping._backward.push_back(StateNrSink);
+
+ return mapping;
+}
+
+auto get_initial_partitions(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_, StateNrBitsetMapping const& mapping_) -> std::unordered_set<Bitset> {
  // Initialize partitions where a partition is a set of states that have the same combination of accepts
 
  // <accepts, state_nrs>
- std::unordered_map<IntervalSet<AcceptsIndexType>, IntervalSet<StateNrType>> by_accepts;
+ std::unordered_map<IntervalSet<AcceptsIndexType>, Bitset> by_accepts;
 
- state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+ auto insert = [&](StateNrType state_nr_, IntervalSet<AcceptsIndexType> const& accepts_) {
+  auto itr = by_accepts.find(accepts_);
+  if (itr == by_accepts.end()) {
+   itr = by_accepts.insert_or_assign(accepts_, Bitset(mapping_._backward.size())).first;
+  }
+  itr->second.set(mapping_._forward.find(state_nr_)->second, true);
+ };
+
+ state_nrs_.for_each_key([&](StateNrType state_nr_) {
   State const& state = *state_machine_.get_state(state_nr_);
   IntervalSet<AcceptsIndexType> const& accepts = state.get_accepts();
-  auto itr = by_accepts.find(accepts);
-  if (itr == by_accepts.end()) {
-   itr = by_accepts.insert_or_assign(accepts, IntervalSet<StateNrType>()).first;
-  }
-  itr->second.insert(Interval<StateNrType>(state_nr_));
+  insert(state_nr_, accepts);
  });
 
  // Insert the sink state, it has no accepts
- by_accepts[IntervalSet<AcceptsIndexType>{}].insert(Interval<StateNrType>(StateNrSink));
+ insert(StateNrSink, IntervalSet<AcceptsIndexType>{});
 
- std::unordered_set<IntervalSet<StateNrType>> ret;
-
+ std::unordered_set<Bitset> ret;
  for (auto& [accepts, state_nrs] : by_accepts) {
   ret.insert(std::move(state_nrs));
  }
@@ -48,34 +77,60 @@ auto get_initial_partitions(StateMachine const& state_machine_) -> std::unordere
  return ret;
 }
 
-auto get_equivalence_partitions(StateMachine const& state_machine_, std::unordered_set<Symbol> const& alphabet_, std::unordered_set<IntervalSet<StateNrType>> initial_partitions_) -> std::unordered_set<IntervalSet<StateNrType>> {
- std::unordered_set<IntervalSet<StateNrType>> w = initial_partitions_;
+class Precomp {
+public:
+ std::unordered_map<StateNrType, std::unordered_map<Symbol, Bitset>> _rev;
+ std::unordered_map<Symbol, Bitset> _next;
+};
 
- IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
+auto get_precomp(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_, StateNrBitsetMapping const& mapping_, std::unordered_set<Symbol> const& alphabet_) -> Precomp {
+ Precomp ret;
+
+ for (Symbol const& c : alphabet_) {
+  Bitset x(mapping_._backward.size());
+  state_nrs_.for_each_key([&](StateNrType state_nr_from_) {
+   StateNrType const state_nr_to = mapping_._forward.find(state_machine_.get_state(state_nr_from_)->get_symbol_transition(c))->second;
+   x.set(state_nr_to, true);
+   auto itr = ret._rev[state_nr_to].find(c);
+   if (itr == ret._rev[state_nr_to].end()) {
+    itr = ret._rev[state_nr_to].insert_or_assign(c, Bitset(mapping_._backward.size())).first;
+   }
+   itr->second.set(mapping_._forward.find(state_nr_from_)->second, true);
+  });
+  ret._next[c] = std::move(x);
+ }
+
+ return ret;
+}
+
+auto lookup_x_in_precomp(Precomp const& precomp_, Bitset const& a_, Symbol const& c_, StateNrBitsetMapping const& mapping_) -> Bitset {
+ Bitset x(mapping_._backward.size());
+ Bitset const& next_in_a_on_c = precomp_._next.find(c_)->second.clone_and(a_);
+ for (StateNrType i = 0; i < next_in_a_on_c.size(); ++i) {
+  if (!next_in_a_on_c.get(i)) {
+   continue;
+  }
+  x.inplace_or(precomp_._rev.find(i)->second.find(c_)->second);
+ }
+ return x;
+}
+
+auto get_equivalence_partitions(StateMachine const& state_machine_, IntervalSet<StateNrType> const& state_nrs_, StateNrBitsetMapping const& mapping_, std::unordered_set<Symbol> const& alphabet_, std::unordered_set<Bitset> initial_partitions_) -> std::unordered_set<Bitset> {
+ Precomp const precomp = get_precomp(state_machine_, state_nrs_, mapping_, alphabet_);
+
+ std::unordered_set<Bitset> w = initial_partitions_;
 
  while (!w.empty()) {
-  IntervalSet<StateNrType> a = *w.begin();
+  Bitset const a = *w.begin();
   w.erase(w.begin());
 
   for (Symbol const& c : alphabet_) {
-   IntervalSet<StateNrType> x;
+   Bitset const x = lookup_x_in_precomp(precomp, a, c, mapping_);
 
-   // Add the sink state
-   x.insert(Interval<StateNrType>(StateNrSink));
-
-   state_nrs.for_each_key([&](StateNrType state_nr_from_) {
-    // Note: state_nr_to will be the sink if there is no transition, so
-    // that is handled here
-    StateNrType const state_nr_to = state_machine_.get_state(state_nr_from_)->get_symbol_transition(c);
-    if (a.contains(state_nr_to)) {
-     x.insert(Interval<StateNrType>(state_nr_from_));
-    }
-   });
-
-   std::unordered_set<IntervalSet<StateNrType>> p_new;
-   for (IntervalSet<StateNrType> const& y : initial_partitions_) {
-    IntervalSet<StateNrType> const x_intersect_y = x.clone_and(y);
-    IntervalSet<StateNrType> const x_diff_y = y.clone_asymmetric_difference(x);
+   std::unordered_set<Bitset> p_new;
+   for (Bitset const& y : initial_partitions_) {
+    Bitset const x_intersect_y = x.clone_and(y);
+    Bitset const x_diff_y = y.clone_asymmetric_difference(x);
 
     size_t const popcnt_x_intersect_y = x_intersect_y.popcnt();
     size_t const popcnt_x_diff_y = x_diff_y.popcnt();
@@ -105,21 +160,18 @@ auto get_equivalence_partitions(StateMachine const& state_machine_, std::unorder
  return initial_partitions_;
 }
 
-auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_machine_, std::unordered_set<IntervalSet<StateNrType>> const& equivalence_partitions_) -> std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> {
- std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> ret;
- ret.reserve(state_machine_.get_state_count());
+auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_machine_, StateNrBitsetMapping const& mapping_, std::unordered_set<Bitset> const& equivalence_partitions_) -> std::unordered_map<StateNrType, Bitset const*> {
+ std::unordered_map<StateNrType, Bitset const*> ret;
 
- IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
-
- for (IntervalSet<StateNrType> const& equivalence_partition : equivalence_partitions_) {
-  equivalence_partition.for_each_key([&](StateNrType state_nr_) {
-   if (equivalence_partition.contains(state_nr_)) {
-    ret.insert_or_assign(state_nr_, &equivalence_partition);
+ for (Bitset const& equivalence_partition : equivalence_partitions_) {
+  for (StateNrType state_nr_ = 0; state_nr_ < equivalence_partition.size(); ++state_nr_) {
+   if (equivalence_partition.get(state_nr_)) {
+    ret.insert_or_assign(mapping_._backward[state_nr_], &equivalence_partition);
    }
-  });
+  }
 
   // Insert the sink state
-  if (equivalence_partition.contains(StateNrSink)) {
+  if (equivalence_partition.get(mapping_._forward.find(StateNrSink)->second)) {
    ret.insert_or_assign(StateNrSink, &equivalence_partition);
   }
  }
@@ -127,18 +179,18 @@ auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_ma
  return ret;
 }
 
-auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> const& equivalence_partition_mapping_) -> StateMachine {
- std::vector<IntervalSet<StateNrType> const*> pending;
- std::unordered_map<IntervalSet<StateNrType> const*, StateNrType> visited;
+auto rebuild_minimized_state_machine(StateMachine& state_machine_, StateNrBitsetMapping const& mapping_, std::unordered_map<StateNrType, Bitset const*> const& equivalence_partition_mapping_) -> StateMachine {
+ std::vector<Bitset const*> pending;
+ std::unordered_map<Bitset const*, StateNrType> visited;
  StateMachine result;
 
  auto const take = [&pending]() {
-  IntervalSet<StateNrType> const* ret = pending.back();
+  Bitset const* ret = pending.back();
   pending.pop_back();
   return ret;
  };
 
- auto const push_and_visit = [&](IntervalSet<StateNrType> const* item_) -> StateNrType {
+ auto const push_and_visit = [&](Bitset const* item_) -> StateNrType {
   auto itr = visited.find(item_);
   if (itr != visited.end()) {
    return itr->second;
@@ -147,7 +199,6 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
   }
 
   pending.push_back(item_);
-  visited.insert_or_assign(item_, itr->second);
   result.get_or_create_state(itr->second);
   return itr->second;
  };
@@ -157,24 +208,22 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
  }
 
  while (!pending.empty()) {
-  IntervalSet<StateNrType> const* equivalence_partition_cur = take();
+  Bitset const* equivalence_partition_cur = take();
   StateNrType const state_nr_cur = visited.find(equivalence_partition_cur)->second;
   State& state_cur = *result.get_state(state_nr_cur);
 
-  equivalence_partition_cur->for_each_key([&](StateNrType state_nr_old_) {
-   State const& state_old = *state_machine_.get_state(state_nr_old_);
-   state_cur.get_accepts().inplace_or(state_old.get_accepts());
+  State const& state_old = *state_machine_.get_state(mapping_._backward[equivalence_partition_cur->countl(false)]);
+  state_cur.get_accepts().inplace_or(state_old.get_accepts());
 
-   // Set up the transitions
-   state_old.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
-    state_old.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
-     if (state_nr_next_old_ == StateNrSink) {
-      return;
-     }
-     IntervalSet<StateNrType> const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old_)->second;
-     StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
-     state_cur.add_symbol_transition(kind_, interval_, state_nr_next_new);
-    });
+  // Set up the transitions
+  state_old.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+   state_old.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
+    if (state_nr_next_old_ == StateNrSink) {
+     return;
+    }
+    Bitset const& equivalence_partition_next_old = *equivalence_partition_mapping_.find(state_nr_next_old_)->second;
+    StateNrType const state_nr_next_new = push_and_visit(&equivalence_partition_next_old);
+    state_cur.add_symbol_transition(kind_, interval_, state_nr_next_new);
    });
   });
  }
@@ -185,9 +234,11 @@ auto rebuild_minimized_state_machine(StateMachine& state_machine_, std::unordere
 }  // namespace
 
 void StateMachineMinimizer::minimize(StateMachine& state_machine_) {
- std::unordered_set<IntervalSet<StateNrType>> const p = get_equivalence_partitions(state_machine_, get_alphabet(state_machine_), get_initial_partitions(state_machine_));
- std::unordered_map<StateNrType, IntervalSet<StateNrType> const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(state_machine_, p);
- state_machine_ = rebuild_minimized_state_machine(state_machine_, state_nr_to_equiv_partition);
+ IntervalSet<StateNrType> const state_nrs = state_machine_.get_state_nrs();
+ StateNrBitsetMapping const mapping = get_mapping(state_nrs);
+ std::unordered_set<Bitset> const p = get_equivalence_partitions(state_machine_, state_nrs, mapping, get_alphabet(state_machine_, state_nrs), get_initial_partitions(state_machine_, state_nrs, mapping));
+ std::unordered_map<StateNrType, Bitset const*> const state_nr_to_equiv_partition = get_state_nr_to_equivalence_partitions_mapping(state_machine_, mapping, p);
+ state_machine_ = rebuild_minimized_state_machine(state_machine_, mapping, state_nr_to_equiv_partition);
 }
 
 }  // namespace pmt::util::sm::ct

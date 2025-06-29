@@ -4,7 +4,7 @@
 #include "pmt/parser/builder/lexer_tables.hpp"
 #include "pmt/parser/generic_ast_path.hpp"
 
-#include <string_view>
+#include <string>
 #include <vector>
 
 PMT_FW_DECL_NS_CLASS(pmt::parser, GenericAst);
@@ -45,7 +45,7 @@ private:
  void fill_terminal_data();
  void validate_result();
 
- void write_dot(std::string_view filename_, std::string_view title_, pmt::util::sm::ct::StateMachine const& state_machine_) const;
+ void write_dot(std::string const& filename_, std::string const& title_, pmt::util::sm::ct::StateMachine const& state_machine_) const;
 };
 
 }  // namespace pmt::parser::builder

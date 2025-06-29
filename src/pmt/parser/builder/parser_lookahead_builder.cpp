@@ -1,12 +1,12 @@
 #include "pmt/parser/builder/parser_lookahead_builder.hpp"
 
+#include "pmt/parser/builder/parser_lookahead_graph_writer.hpp"
 #include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/graph_writer.hpp"
 #include "pmt/util/sm/ct/state_machine_determinizer.hpp"
 #include "pmt/util/sm/ct/state_machine_minimizer.hpp"
 #include "pmt/util/sm/ct/state_machine_pruner.hpp"
 
-#include <fstream>
 #include <iostream>
 #include <unordered_set>
 
@@ -25,7 +25,7 @@ public:
  size_t _lookahead_dotfile_counter = 0;
 };
 
-auto write_lookahead_state_machine_dot(ParserLookaheadBuilder::Args const& args_, Locals& locals_, std::string title_, StateMachine const& state_machine_) -> std::optional<std::string> {
+auto write_lookahead_state_machine_dot(ParserLookaheadBuilder::Args const& args_, Locals& locals_, std::string const& title_, StateMachine const& state_machine_) -> std::optional<std::string> {
  if (!args_._write_dotfiles) {
   return std::nullopt;
  }
@@ -40,45 +40,10 @@ auto write_lookahead_state_machine_dot(ParserLookaheadBuilder::Args const& args_
   return std::nullopt;
  }
 
- std::ofstream graph_file(filename);
- std::ifstream skel_file("/home/pmt/repos/pmt/skel/pmt/util/sm/ct/state_machine-skel.dot");
+ ParserLookaheadGraphWriter graph_writer(state_machine_, title_, filename, [&](AcceptsIndexType accepts_) { return args_._fn_lookup_terminal_label(accepts_); });
 
- GraphWriter::WriterArgs writer_args{._os_graph = graph_file, ._is_graph_skel = skel_file, ._state_machine = state_machine_};
+ graph_writer.write_dot();
 
- GraphWriter::StyleArgs style_args;
- style_args._accepts_to_label_fn = [&](size_t accepts_) -> std::string {
-  return "conflict_" + std::to_string(accepts_);
- };
-
- style_args._title = std::move(title_);
- style_args._symbols_to_label_fn = [&](SymbolKindType kind_, IntervalSet<SymbolValueType> const& symbols_) -> std::string {
-  std::string delim;
-  std::string ret;
-
-  switch (kind_) {
-   case SymbolKindTerminal:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + args_._fn_lookup_terminal_label(symbol_); });
-    break;
-   default:
-    symbols_.for_each_key([&](SymbolValueType symbol_) { ret += std::exchange(delim, ", ") + "unknown"; });
-    break;
-  }
-
-  return ret;
- };
-
- style_args._symbol_kind_to_font_flags_fn = [&](SymbolValueType kind_) -> GraphWriter::FontFlags {
-  switch (kind_) {
-   case SymbolKindTerminal:
-    return GraphWriter::FontFlags::Italic;
-   default:
-    return GraphWriter::FontFlags::None;
-  }
- };
-
- style_args._layout_direction = GraphWriter::LayoutDirection::LeftToRight;
-
- GraphWriter().write_dot(writer_args, style_args);
  std::cout << "Wrote dot file: " << filename << '\n';
  return filename;
 }
