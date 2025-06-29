@@ -13,7 +13,6 @@
 #include "pmt/util/sm/ct/state_machine_minimizer.hpp"
 #include "pmt/util/sm/ct/state_machine_part.hpp"
 
-#include <chrono>
 #include <iostream>
 
 namespace pmt::parser::builder {
@@ -88,10 +87,7 @@ auto ParserTableBuilder::build(Args args_) -> ParserTables {
  ParserReachabilityChecker::check_reachability(ParserReachabilityChecker::Args{._fn_lookup_accept_index_by_label = [&](std::string_view label_) { return args_._grammar_data.lookup_nonterminal_index_by_name(label_); }, ._parser_state_machine = locals._parser_state_machine});
  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = locals._parser_state_machine});
  write_nonterminal_state_machine_dot(args_, locals, "Determinized tables", locals._parser_state_machine);
- auto const start_time = std::chrono::steady_clock::now();
  StateMachineMinimizer::minimize(locals._parser_state_machine);
- auto const end_time = std::chrono::steady_clock::now();
- std::cout << "Parser table minimization took " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time) << ".\n";
  write_nonterminal_state_machine_dot(args_, locals, "Minimized tables", locals._parser_state_machine);
  IntervalSet<StateNrType> const conflicting_state_nrs = ParserLookaheadBuilder::extract_conflicts(locals._parser_state_machine);
  write_nonterminal_state_machine_dot(args_, locals, "Final tables", locals._parser_state_machine);

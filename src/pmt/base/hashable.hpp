@@ -7,11 +7,11 @@ namespace pmt::base {
 
 template <typename CRTP_>
 class Hashable {
+public:
  Hashable() = default;
  ~Hashable() = default;
  friend CRTP_;
 
-public:
  auto operator<=>(const Hashable& other_) const -> bool = default;
 
  auto hash() const -> size_t;

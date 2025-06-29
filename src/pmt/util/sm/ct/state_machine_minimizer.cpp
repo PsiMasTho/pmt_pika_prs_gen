@@ -105,13 +105,8 @@ auto get_precomp(StateMachine const& state_machine_, IntervalSet<StateNrType> co
 
 auto lookup_x_in_precomp(Precomp const& precomp_, Bitset const& a_, Symbol const& c_, StateNrBitsetMapping const& mapping_) -> Bitset {
  Bitset x(mapping_._backward.size());
- Bitset const& next_in_a_on_c = precomp_._next.find(c_)->second.clone_and(a_);
- for (StateNrType i = 0; i < next_in_a_on_c.size(); ++i) {
-  if (!next_in_a_on_c.get(i)) {
-   continue;
-  }
-  x.inplace_or(precomp_._rev.find(i)->second.find(c_)->second);
- }
+ precomp_._next.find(c_)->second.clone_and(a_).for_each_bit([&](size_t i_) { x.inplace_or(precomp_._rev.find(i_)->second.find(c_)->second); });
+
  return x;
 }
 
@@ -164,16 +159,7 @@ auto get_state_nr_to_equivalence_partitions_mapping(StateMachine const& state_ma
  std::unordered_map<StateNrType, Bitset const*> ret;
 
  for (Bitset const& equivalence_partition : equivalence_partitions_) {
-  for (StateNrType state_nr_ = 0; state_nr_ < equivalence_partition.size(); ++state_nr_) {
-   if (equivalence_partition.get(state_nr_)) {
-    ret.insert_or_assign(mapping_._backward[state_nr_], &equivalence_partition);
-   }
-  }
-
-  // Insert the sink state
-  if (equivalence_partition.get(mapping_._forward.find(StateNrSink)->second)) {
-   ret.insert_or_assign(StateNrSink, &equivalence_partition);
-  }
+  equivalence_partition.for_each_bit([&](size_t state_nr_) { ret.insert_or_assign(mapping_._backward[state_nr_], &equivalence_partition); });
  }
 
  return ret;

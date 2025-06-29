@@ -39,9 +39,10 @@ auto LexerTableBuilder::build(GenericAst const& ast_, GrammarData const& grammar
  connect_terminal_state_machines();
  loop_back_linecount_state_machine();
  fill_terminal_data();
+ write_dot("lexer_state_machine_0.dot", "First tables", _lexer_state_machine);
  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = _lexer_state_machine});
  StateMachineMinimizer::minimize(_lexer_state_machine);
- write_dot("lexer_state_machine.dot", "Final tables", _lexer_state_machine);
+ write_dot("lexer_state_machine_1.dot", "Final tables", _lexer_state_machine);
 
  StateMachineMinimizer::minimize(_linecount_state_machine);
  write_dot("linecount_state_machine.dot", "Linecount tables", _linecount_state_machine);

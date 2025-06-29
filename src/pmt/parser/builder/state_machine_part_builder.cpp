@@ -9,6 +9,7 @@
 #include "pmt/parser/grammar/repetition_range.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
 #include "pmt/parser/primitives.hpp"
+#include "pmt/util/sm/ct/fsm_intersector.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
 #include <deque>
@@ -65,6 +66,14 @@ public:
  size_t _idx = 0;
 };
 
+class IntersectFrame : public FrameBase {
+public:
+ StateMachinePart _sub_part;
+ StateMachine _sm_lhs;
+ StateMachine _sm_rhs;
+ size_t _idx = 0;
+};
+
 class ChoicesFrame : public FrameBase {
 public:
  StateMachinePart _sub_part;
@@ -114,7 +123,7 @@ class HiddenFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<DefinitionFrame, ExpressionFrame, SequenceFrame, PermuteFrame, PermuteDelimitedFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, EpsilonFrame, NonterminalIdentifierFrame, TerminalIdentifierFrame, HiddenFrame>;
+using Frame = std::variant<DefinitionFrame, ExpressionFrame, SequenceFrame, PermuteFrame, PermuteDelimitedFrame, IntersectFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, EpsilonFrame, NonterminalIdentifierFrame, TerminalIdentifierFrame, HiddenFrame>;
 
 class Locals {
 public:
@@ -128,7 +137,7 @@ public:
 };
 
 // any outgoing transitions go to an accepting state
-void state_machine_part_to_state_machine(StateMachinePart const& part_, pmt::util::sm::ct::StateMachine& sm_) {
+void state_machine_part_to_state_machine(StateMachinePart const& part_, StateMachine& sm_) {
  StateNrType const state_nr_accept = sm_.create_new_state();
  sm_.get_state(state_nr_accept)->get_accepts().insert(Interval<AcceptsIndexType>(0));
 
@@ -144,9 +153,56 @@ void state_machine_part_to_state_machine(StateMachinePart const& part_, pmt::uti
  }
 }
 
-// all accepting states get one outgoing epsilon transition
-auto state_machine_to_state_machine_part(pmt::util::sm::ct::StateMachine& sm_) -> StateMachinePart {
+// merges the source state machine into the destination state machine with all
+// accepting states of sm_src_ becoming outgoing transitions of the returned part
+auto state_machine_merge(StateMachine& sm_dest_, StateMachine const& sm_src_) -> StateMachinePart {
  StateMachinePart ret;
+
+ std::unordered_map<StateNrType, StateNrType> visited;
+ std::vector<StateNrType> pending;
+
+ auto const take = [&]() {
+  StateNrType const ret = pending.back();
+  pending.pop_back();
+  return ret;
+ };
+
+ auto const push_and_visit = [&](StateNrType const state_nr_) -> StateNrType {
+  auto itr = visited.find(state_nr_);
+  if (itr != visited.end()) {
+   return itr->second;
+  }
+  itr = visited.emplace(state_nr_, sm_dest_.create_new_state()).first;
+  pending.push_back(state_nr_);
+  return itr->second;
+ };
+
+ ret.set_incoming_state_nr(push_and_visit(StateNrStart));
+
+ while (!pending.empty()) {
+  StateNrType const state_nr_old_cur = take();
+  StateNrType const state_nr_new_cur = visited.find(state_nr_old_cur)->second;
+
+  State const& state_old_cur = *sm_src_.get_state(state_nr_old_cur);
+
+  State& state_new_cur = *sm_dest_.get_state(state_nr_new_cur);
+
+  // Accepting states become outgoing transitions
+  if (state_old_cur.get_accepts().popcnt() != 0) {
+   ret.add_outgoing_epsilon_transition(state_nr_new_cur);
+  }
+
+  // Follow epsilon transitions
+  state_old_cur.get_epsilon_transitions().for_each_key([&](StateNrType const state_nr_old_next_) { state_new_cur.add_epsilon_transition(push_and_visit(state_nr_old_next_)); });
+
+  // Follow SymbolKindCharacter transitions
+  state_old_cur.get_symbol_transitions(SymbolKindCharacter).for_each_interval([&](StateNrType const state_nr_old_next_, Interval<SymbolValueType> const& interval_) { state_new_cur.add_symbol_transition(SymbolKindCharacter, interval_, push_and_visit(state_nr_old_next_)); });
+
+  // Follow SymbolKindHiddenCharacter transitions
+  state_old_cur.get_symbol_transitions(SymbolKindHiddenCharacter).for_each_interval([&](StateNrType const state_nr_old_next_, Interval<SymbolValueType> const& interval_) { state_new_cur.add_symbol_transition(SymbolKindHiddenCharacter, interval_, push_and_visit(state_nr_old_next_)); });
+ }
+
+ return ret;
 }
 
 auto is_last(size_t idx_, size_t idx_max_) -> bool {
@@ -163,8 +219,8 @@ auto is_chunk_last(size_t idx_, size_t idx_chunk_, RepetitionRange const& range_
  return idx_ == idx_chunk_end - 1;
 }
 
-auto build_epsilon(StateMachinePartBuilder::ArgsBase const& args_) -> StateMachinePart {
- StateNrType const state_nr_incoming = args_._state_machine_dest.create_new_state();
+auto build_epsilon(StateMachinePartBuilder::ArgsBase const& args_, StateMachine& state_machine_target_) -> StateMachinePart {
+ StateNrType const state_nr_incoming = state_machine_target_.create_new_state();
  StateMachinePart ret(state_nr_incoming);
  ret.add_outgoing_epsilon_transition(state_nr_incoming);
  return ret;
@@ -187,6 +243,8 @@ auto construct_frame(StateMachinePartBuilder::ArgsBase const& args_, GenericAstP
    return PermuteFrame{std::move(frame_base)};
   case Ast::NtPermuteDelimited:
    return PermuteDelimitedFrame{std::move(frame_base)};
+  case Ast::NtIntersect:
+   return IntersectFrame{std::move(frame_base)};
   case Ast::NtNonterminalChoices:
   case Ast::NtTerminalChoices:
    return ChoicesFrame{std::move(frame_base)};
@@ -228,7 +286,7 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
  }
 
  if (frame_._index_permutation.empty()) {
-  locals_._ret_part = build_epsilon(args_);
+  locals_._ret_part = build_epsilon(args_, *frame_._state_machine_target);
   return;
  }
 
@@ -251,7 +309,7 @@ void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
 
  if (frame_._is_delimiting) {
   frame_._is_delimiting = false;
-  frame_._sub_part.connect_outgoing_transitions_to(*locals_._ret_part.get_incoming_state_nr(), args_._state_machine_dest);
+  frame_._sub_part.connect_outgoing_transitions_to(*locals_._ret_part.get_incoming_state_nr(), *frame_._state_machine_target);
   frame_._sub_part.merge_outgoing_transitions(locals_._ret_part);
   locals_._keep_current_frame = true;
   return;
@@ -265,7 +323,7 @@ void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
   locals_._ret_part.clear_incoming_state_nr();
   locals_._ret_part.clear_outgoing_transitions();
  } else {
-  frame_._sub_part.connect_outgoing_transitions_to(*locals_._ret_part.get_incoming_state_nr(), args_._state_machine_dest);
+  frame_._sub_part.connect_outgoing_transitions_to(*locals_._ret_part.get_incoming_state_nr(), *frame_._state_machine_target);
   frame_._sub_part.merge_outgoing_transitions(locals_._ret_part);
  }
 
@@ -286,8 +344,8 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
  frame_._expr_cur_path = frame_._expr_cur_path.clone_push(0);  // 0th index has the sequence
  frame_._index_permutation_generator = IndexPermutationGenerator(permute.get_min_items(), permute.get_max_items(), permute.get_sequence_length());
 
- StateNrType state_nr_incoming = args_._state_machine_dest.create_new_state();
- frame_._state_cur = args_._state_machine_dest.get_state(state_nr_incoming);
+ StateNrType state_nr_incoming = frame_._state_machine_target->create_new_state();
+ frame_._state_cur = frame_._state_machine_target->get_state(state_nr_incoming);
  frame_._sub_part.set_incoming_state_nr(state_nr_incoming);
 }
 
@@ -327,8 +385,8 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
  Permute const permute(*frame_._expr_cur_path.resolve(args_._ast_root));
  frame_._index_permutation_generator = IndexPermutationGenerator(permute.get_min_items(), permute.get_max_items(), permute.get_sequence_length());
 
- StateNrType state_nr_incoming = args_._state_machine_dest.create_new_state();
- frame_._state_cur = args_._state_machine_dest.get_state(state_nr_incoming);
+ StateNrType state_nr_incoming = frame_._state_machine_target->create_new_state();
+ frame_._state_cur = frame_._state_machine_target->get_state(state_nr_incoming);
  frame_._sub_part.set_incoming_state_nr(state_nr_incoming);
 }
 
@@ -364,9 +422,47 @@ void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
  locals_._ret_part = frame_._sub_part;
 }
 
+void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, IntersectFrame& frame_) {
+ ++frame_._stage;
+ locals_._keep_current_frame = true;
+
+ // set up LHS
+ locals_._callstack.emplace_back(construct_frame(args_, frame_._expr_cur_path.clone_push(0).clone_push(frame_._idx++), frame_._sm_lhs, frame_._is_hiding));
+}
+
+void process_frame_01(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, IntersectFrame& frame_) {
+ // set up LHS for the first time
+ if (frame_._idx == 1) {
+  state_machine_part_to_state_machine(locals_._ret_part, frame_._sm_lhs);
+  locals_._ret_part.clear_incoming_state_nr();
+  locals_._ret_part.clear_outgoing_transitions();
+ }
+
+ // set up RHS
+ if (frame_._idx < frame_._expr_cur_path.clone_push(0).resolve(args_._ast_root)->get_children_size()) {
+  ++frame_._stage;
+  locals_._keep_current_frame = true;
+  locals_._callstack.emplace_back(construct_frame(args_, frame_._expr_cur_path.clone_push(0).clone_push(frame_._idx++), frame_._sm_rhs, frame_._is_hiding));
+ } else {
+  locals_._ret_part = state_machine_merge(*frame_._state_machine_target, frame_._sm_lhs);
+ }
+}
+
+void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, IntersectFrame& frame_) {
+ // Finish setting up RHS
+ state_machine_part_to_state_machine(locals_._ret_part, frame_._sm_rhs);
+ locals_._ret_part.clear_incoming_state_nr();
+ locals_._ret_part.clear_outgoing_transitions();
+
+ // intersect LHS and RHS
+ frame_._sm_lhs = FsmIntersector::intersect(FsmIntersector::Args{._state_machine_lhs = frame_._sm_lhs, ._state_machine_rhs = std::move(frame_._sm_rhs), ._symbol_kinds_to_follow{SymbolKindCharacter, SymbolKindHiddenCharacter}});
+ --frame_._stage;
+ locals_._keep_current_frame = true;
+}
+
 void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, ChoicesFrame& frame_) {
- StateNrType state_nr_incoming = args_._state_machine_dest.create_new_state();
- frame_._state_cur = args_._state_machine_dest.get_state(state_nr_incoming);
+ StateNrType state_nr_incoming = frame_._state_machine_target->create_new_state();
+ frame_._state_cur = frame_._state_machine_target->get_state(state_nr_incoming);
  frame_._sub_part.set_incoming_state_nr(state_nr_incoming);
 
  locals_._keep_current_frame = true;
@@ -399,16 +495,16 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
  frame_._range = RepetitionRange(*frame_._expr_cur_path.clone_push(1).resolve(args_._ast_root));
 
  if (frame_._range.get_upper() == 0) {
-  locals_._ret_part = build_epsilon(args_);
+  locals_._ret_part = build_epsilon(args_, *frame_._state_machine_target);
   return;
  }
 
- StateNrType const state_nr_choices = args_._state_machine_dest.create_new_state();
- frame_._state_choices = args_._state_machine_dest.get_state(state_nr_choices);
+ StateNrType const state_nr_choices = frame_._state_machine_target->create_new_state();
+ frame_._state_choices = frame_._state_machine_target->get_state(state_nr_choices);
  frame_._choices.set_incoming_state_nr(state_nr_choices);
 
  if (frame_._range.get_lower() == 0) {
-  StateMachinePart tmp = build_epsilon(args_);
+  StateMachinePart tmp = build_epsilon(args_, *frame_._state_machine_target);
   frame_._state_choices->add_epsilon_transition(*tmp.get_incoming_state_nr());
   frame_._choices.merge_outgoing_transitions(tmp);
   frame_._range.set_lower(1);
@@ -435,7 +531,7 @@ void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
   locals_._ret_part.clear_incoming_state_nr();
   locals_._ret_part.clear_outgoing_transitions();
  } else {
-  frame_._chunk.connect_outgoing_transitions_to(*locals_._ret_part.get_incoming_state_nr(), args_._state_machine_dest);
+  frame_._chunk.connect_outgoing_transitions_to(*locals_._ret_part.get_incoming_state_nr(), *frame_._state_machine_target);
   frame_._chunk.merge_outgoing_transitions(locals_._ret_part);
  }
 
@@ -450,10 +546,10 @@ void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
 
  } else {
   if (!frame_._range.get_upper().has_value()) {
-   StateNrType state_nr_loop_back = args_._state_machine_dest.create_new_state();
-   State& state_loop_back = *args_._state_machine_dest.get_state(state_nr_loop_back);
+   StateNrType state_nr_loop_back = frame_._state_machine_target->create_new_state();
+   State& state_loop_back = *frame_._state_machine_target->get_state(state_nr_loop_back);
    state_loop_back.add_epsilon_transition(*frame_._choices.get_incoming_state_nr());
-   frame_._choices.connect_outgoing_transitions_to(state_nr_loop_back, args_._state_machine_dest);
+   frame_._choices.connect_outgoing_transitions_to(state_nr_loop_back, *frame_._state_machine_target);
    frame_._choices.add_outgoing_epsilon_transition(state_nr_loop_back);
   }
 
@@ -464,8 +560,8 @@ void process_frame_02(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
 }
 
 void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, StringLiteralFrame& frame_) {
- StateNrType state_nr_prev = args_._state_machine_dest.create_new_state();
- State* state_prev = args_._state_machine_dest.get_state(state_nr_prev);
+ StateNrType state_nr_prev = frame_._state_machine_target->create_new_state();
+ State* state_prev = frame_._state_machine_target->get_state(state_nr_prev);
  locals_._ret_part.set_incoming_state_nr(state_nr_prev);
 
  GenericAst const& expr_cur = *frame_._expr_cur_path.resolve(args_._ast_root);
@@ -475,8 +571,8 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
  SymbolKindType const kind = (frame_._is_hiding) ? SymbolKindHiddenCharacter : SymbolKindCharacter;
 
  for (size_t i = 1; i < str_literal.size(); ++i) {
-  StateNrType state_nr_cur = args_._state_machine_dest.create_new_state();
-  State* state_cur = args_._state_machine_dest.get_state(state_nr_cur);
+  StateNrType state_nr_cur = frame_._state_machine_target->create_new_state();
+  State* state_cur = frame_._state_machine_target->get_state(state_nr_cur);
 
   state_prev->add_symbol_transition(Symbol(kind, str_literal[i - 1]), state_nr_cur);
   state_prev = state_cur;
@@ -487,14 +583,14 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
 }
 
 void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, IntegerLiteralFrame& frame_) {
- StateNrType const state_nr_incoming = args_._state_machine_dest.create_new_state();
+ StateNrType const state_nr_incoming = frame_._state_machine_target->create_new_state();
  locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
  SymbolKindType const kind = (frame_._is_hiding) ? SymbolKindHiddenCharacter : SymbolKindCharacter;
  locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(kind, Number(*frame_._expr_cur_path.resolve(args_._ast_root)).get_value()));
 }
 
 void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, CharsetFrame& frame_) {
- StateNrType state_nr_incoming = args_._state_machine_dest.create_new_state();
+ StateNrType state_nr_incoming = frame_._state_machine_target->create_new_state();
  locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
 
  GenericAst const& expr_cur = *frame_._expr_cur_path.resolve(args_._ast_root);
@@ -504,7 +600,7 @@ void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& lo
 }
 
 void process_frame_00(StateMachinePartBuilder::ArgsBase const& args_, Locals& locals_, EpsilonFrame& frame_) {
- locals_._ret_part = build_epsilon(args_);
+ locals_._ret_part = build_epsilon(args_, *frame_._state_machine_target);
 }
 
 void process_frame_00(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, NonterminalIdentifierFrame& frame_) {
@@ -515,38 +611,38 @@ void process_frame_00(StateMachinePartBuilder::NonterminalBuildingArgs const& ar
 
  auto itr_close = locals_._nonterminal_idx_to_state_nr_close.find(frame_._nonterminal_idx_cur);
  if (itr_close == locals_._nonterminal_idx_to_state_nr_close.end()) {
-  itr_close = locals_._nonterminal_idx_to_state_nr_close.emplace(frame_._nonterminal_idx_cur, args_._state_machine_dest.create_new_state()).first;
-  State& state_close = *args_._state_machine_dest.get_state(itr_close->second);
+  itr_close = locals_._nonterminal_idx_to_state_nr_close.emplace(frame_._nonterminal_idx_cur, frame_._state_machine_target->create_new_state()).first;
+  State& state_close = *frame_._state_machine_target->get_state(itr_close->second);
   state_close.get_accepts().insert(Interval(frame_._nonterminal_idx_cur));
  }
 
- frame_._state_nr_open_cur = args_._state_machine_dest.create_new_state();
+ frame_._state_nr_open_cur = frame_._state_machine_target->create_new_state();
 
  auto itr_post_open = locals_._nonterminal_idx_to_state_nr_post_open.find(frame_._nonterminal_idx_cur);
  if (itr_post_open == locals_._nonterminal_idx_to_state_nr_post_open.end()) {
-  StateNrType const state_nr_post_open = args_._state_machine_dest.create_new_state();
+  StateNrType const state_nr_post_open = frame_._state_machine_target->create_new_state();
   locals_._nonterminal_idx_to_state_nr_post_open.emplace(frame_._nonterminal_idx_cur, state_nr_post_open);
   ++frame_._stage;
   locals_._keep_current_frame = true;
-  locals_._callstack.emplace_back(construct_frame(args_, args_._fn_lookup_definition(frame_._nonterminal_idx_cur), args_._state_machine_dest, false));
+  locals_._callstack.emplace_back(construct_frame(args_, args_._fn_lookup_definition(frame_._nonterminal_idx_cur), *frame_._state_machine_target, false));
  } else {
-  locals_._ret_part.connect_outgoing_transitions_to(itr_post_open->second, args_._state_machine_dest);
+  locals_._ret_part.connect_outgoing_transitions_to(itr_post_open->second, *frame_._state_machine_target);
   locals_._ret_part.set_incoming_state_nr(frame_._state_nr_open_cur);
   locals_._ret_part.add_outgoing_symbol_transition(frame_._state_nr_open_cur, Symbol(SymbolKindClose, frame_._nonterminal_idx_cur));
-  State& state_open = *args_._state_machine_dest.get_state(frame_._state_nr_open_cur);
+  State& state_open = *frame_._state_machine_target->get_state(frame_._state_nr_open_cur);
   state_open.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), itr_post_open->second);
  }
 }
 
 void process_frame_01(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, NonterminalIdentifierFrame& frame_) {
- State& state_incoming = *args_._state_machine_dest.get_state(frame_._state_nr_open_cur);
+ State& state_incoming = *frame_._state_machine_target->get_state(frame_._state_nr_open_cur);
  StateNrType const state_nr_close = locals_._nonterminal_idx_to_state_nr_close.find(frame_._nonterminal_idx_cur)->second;
  StateNrType const state_nr_post_open = locals_._nonterminal_idx_to_state_nr_post_open.find(frame_._nonterminal_idx_cur)->second;
- State& state_post_open = *args_._state_machine_dest.get_state(state_nr_post_open);
+ State& state_post_open = *frame_._state_machine_target->get_state(state_nr_post_open);
  state_incoming.add_symbol_transition(Symbol(SymbolKindOpen, SymbolValueOpen), state_nr_post_open);
  state_post_open.add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
  locals_._ret_part.set_incoming_state_nr(frame_._state_nr_open_cur);
- locals_._ret_part.connect_outgoing_transitions_to(state_nr_close, args_._state_machine_dest);
+ locals_._ret_part.connect_outgoing_transitions_to(state_nr_close, *frame_._state_machine_target);
  locals_._ret_part.add_outgoing_symbol_transition(frame_._state_nr_open_cur, Symbol(SymbolKindClose, frame_._nonterminal_idx_cur));
 
  locals_._nonterminal_idx_to_state_nr_post_open.erase(frame_._nonterminal_idx_cur);
@@ -572,7 +668,7 @@ void process_frame_00(StateMachinePartBuilder::TerminalBuildingArgs const& args_
 
  ++frame_._stage;
  locals_._keep_current_frame = true;
- locals_._callstack.emplace_back(construct_frame(args_, args_._fn_lookup_definition(frame_._terminal_idx_cur), args_._state_machine_dest, false));
+ locals_._callstack.emplace_back(construct_frame(args_, args_._fn_lookup_definition(frame_._terminal_idx_cur), *frame_._state_machine_target, false));
 }
 
 void process_frame_01(StateMachinePartBuilder::TerminalBuildingArgs const& args_, Locals& locals_, TerminalIdentifierFrame& frame_) {
@@ -582,7 +678,7 @@ void process_frame_01(StateMachinePartBuilder::TerminalBuildingArgs const& args_
 
 void process_frame_00(StateMachinePartBuilder::NonterminalBuildingArgs const& args_, Locals& locals_, TerminalIdentifierFrame& frame_) {
  GenericAst const& expr_cur = *frame_._expr_cur_path.resolve(args_._ast_root);
- StateNrType const state_nr_incoming = args_._state_machine_dest.create_new_state();
+ StateNrType const state_nr_incoming = frame_._state_machine_target->create_new_state();
  locals_._ret_part.set_incoming_state_nr(state_nr_incoming);
  locals_._ret_part.add_outgoing_symbol_transition(state_nr_incoming, Symbol(frame_._is_hiding ? SymbolKindHiddenTerminal : SymbolKindTerminal, args_._fn_rev_lookup_terminal_label(expr_cur.get_string())));
 }

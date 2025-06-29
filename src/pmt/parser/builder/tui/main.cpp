@@ -6,7 +6,6 @@
 #include "pmt/parser/builder/lexer_table_writer.hpp"
 #include "pmt/parser/builder/parser_table_builder.hpp"
 #include "pmt/parser/builder/parser_table_writer.hpp"
-#include "pmt/parser/builder/terminal_overlap_checker.hpp"
 #include "pmt/parser/builder/tui/args.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/generic_ast_printer.hpp"
@@ -32,25 +31,6 @@ using namespace pmt::base;
 
 namespace {
 
-auto report_terminal_overlaps(GrammarData const& grammar_data_, std::unordered_set<IntervalSet<AcceptsIndexType>> const& overlapping_terminals_) {
- if (overlapping_terminals_.empty()) {
-  return;
- }
-
- std::string msg = "Warning: Terminal overlaps found for: ";
- std::string delim_1;
- for (auto const& accepts : overlapping_terminals_) {
-  std::string delim_2;
-  msg += std::exchange(delim_1, ", ") + "{";
-
-  accepts.for_each_key([&](AcceptsIndexType i_) { msg += std::exchange(delim_2, ", ") + grammar_data_.lookup_terminal_name_by_index(i_); });
-
-  msg += "}";
- }
-
- std::cerr << msg << '\n';
-}
-
 auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHandle {
  pmt::parser::grammar::LexerTables const lexer_tables;
  GenericLexer lexer(input_grammar_, lexer_tables);
@@ -58,11 +38,8 @@ auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHan
  GenericAst::UniqueHandle ast = GenericParser::parse(GenericParser::Args(lexer, parser_tables));
  PostParse::transform(PostParse::Args{._ast_root = *ast});
 
- /*  GenericAstPrinter::Args ast_printer_args{._id_to_string_fn = [](GenericId::IdType id_) { return Ast::id_to_string(id_); },
-                                           ._out = std::cout,
-                                           ._ast = *ast,
-                                           ._indent_width = 2};
-  GenericAstPrinter::print(ast_printer_args); */
+ GenericAstPrinter::Args ast_printer_args{._id_to_string_fn = [](GenericId::IdType id_) { return Ast::id_to_string(id_); }, ._out = std::cout, ._ast = *ast, ._indent_width = 2};
+ GenericAstPrinter::print(ast_printer_args);
 
  return ast;
 }
@@ -126,12 +103,6 @@ auto main(int argc, char const* const* argv) -> int try {
  IdStringsWriter id_strings_writer;
  id_strings_writer.write(id_strings_writer_args);
 
- report_terminal_overlaps(grammar_data, TerminalOverlapChecker::find_overlaps(TerminalOverlapChecker::Args{
-                                         ._state_machine = parser_tables.get_parser_state_machine(),
-                                         ._grammar_data = grammar_data,
-                                         ._ast = *ast,
-                                         ._write_dotfiles = args._write_dotfiles,
-                                        }));
  test_tables(args, lexer_tables, parser_tables, grammar_data);
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';
