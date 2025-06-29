@@ -68,8 +68,7 @@ auto FsmIntersector::intersect(Args args_) -> StateMachine {
   State const& state_lhs_cur = *args_._state_machine_lhs.get_state(item_cur._lhs);
   State const& state_rhs_cur = *args_._state_machine_rhs.get_state(item_cur._rhs);
 
-  state_new_cur.get_accepts().inplace_or(state_lhs_cur.get_accepts());
-  state_new_cur.get_accepts().inplace_or(state_rhs_cur.get_accepts());
+  state_new_cur.get_accepts().inplace_or(state_lhs_cur.get_accepts().clone_and(state_rhs_cur.get_accepts()));
 
   for (SymbolKindType const symbol_kind : args_._symbol_kinds_to_follow) {
    state_lhs_cur.get_symbol_transitions(symbol_kind).for_each_key([&](StateNrType const state_nr_lhs_next_, SymbolValueType const symbol_value_) {
