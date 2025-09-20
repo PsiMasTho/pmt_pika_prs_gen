@@ -239,7 +239,7 @@ void PostParse::transform(Args args_) {
    } break;
    case Ast::TkStringLiteral:
    case Ast::TkIntegerLiteral: {
-    handle_direct_terminal(args_, locals);
+    // handle_direct_terminal(args_, locals);
    } break;
    default:
     continue;

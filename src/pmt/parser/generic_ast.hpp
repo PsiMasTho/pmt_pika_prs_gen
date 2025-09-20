@@ -43,7 +43,7 @@ public:
 
  static auto clone(GenericAst const& other_) -> UniqueHandle;
 
- // --$ Other $--s
+ // --$ Other $--
  static void swap(GenericAst& lhs_, GenericAst& rhs_);
 
  auto get_id() const -> GenericId::IdType;

@@ -31,6 +31,42 @@ public:
  size_t _nonterminal_dotfile_counter = 0;
 };
 
+class SymbolInterval {
+public:
+ SymbolKindType _symbol_kind;
+ Interval<SymbolValueType> _symbol_value_interval;
+
+ // -$ Functions $-
+ // --$ Lifetime $--
+ SymbolInterval(SymbolKindType symbol_kind_, Interval<SymbolValueType> symbol_values_);
+};
+
+SymbolInterval::SymbolInterval(SymbolKindType symbol_kind_, Interval<SymbolValueType> symbol_value_interval_)
+ : _symbol_kind(symbol_kind_)
+ , _symbol_value_interval(symbol_value_interval_) {
+}
+
+using ReverseTransitionsMapType = std::unordered_map<StateNrType, std::unordered_map<StateNrType, std::vector<SymbolInterval>>>;
+using AcceptingStateNrMapType = std::unordered_map<AcceptsIndexType, std::unordered_set<StateNrType>>;
+
+auto get_reverse_transitions_map(pmt::util::sm::ct::StateMachine const& state_machine_) -> ReverseTransitionsMapType {
+ ReverseTransitionsMapType reverse_transitions_map;
+ state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_from_) {
+  State const* state = state_machine_.get_state(state_nr_from_);
+  state->get_symbol_kinds().for_each_key([&](SymbolKindType symbol_kind_) { state->get_symbol_transitions(symbol_kind_).for_each_interval([&](StateNrType state_nr_to_, Interval<SymbolValueType> const& symbol_value_interval_) { reverse_transitions_map[state_nr_to_][state_nr_from_].emplace_back(symbol_kind_, symbol_value_interval_); }); });
+ });
+ return reverse_transitions_map;
+}
+
+auto get_accepting_state_nr_map(pmt::util::sm::ct::StateMachine const& state_machine_) -> AcceptingStateNrMapType {
+ AcceptingStateNrMapType accepting_state_nr_map;
+ state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+  State const* state = state_machine_.get_state(state_nr_);
+  state->get_accepts().for_each_key([&](AcceptsIndexType accept_index_) { accepting_state_nr_map[accept_index_].insert(state_nr_); });
+ });
+ return accepting_state_nr_map;
+}
+
 void setup_parser_state_machine(ParserTableBuilder::Args const& args_, Locals& locals_) {
  StateNrType const state_nr_start = locals_._parser_state_machine.create_new_state();
  StateMachinePart state_machine_part_nonterminal = StateMachinePartBuilder::build(StateMachinePartBuilder::NonterminalBuildingArgs(
@@ -77,6 +113,42 @@ void write_nonterminal_state_machine_dot(ParserTableBuilder::Args const& args_, 
  std::cout << "Wrote dot file: " << filename << '\n';
 }
 
+//
+void isolate_accepts(ParserTableBuilder::Args const& args_, Locals& locals_) {
+ ReverseTransitionsMapType const reverse_transitions_map = get_reverse_transitions_map(locals_._parser_state_machine);
+ AcceptingStateNrMapType accepting_state_nr_map = get_accepting_state_nr_map(locals_._parser_state_machine);
+
+ // For each accept index, there should only be one state that accepts it.
+ // Pick one to keep in the set and remove all the other states, point any transitions to the kept state.
+ for (auto& [accept_index, state_nrs] : accepting_state_nr_map) {
+  auto const take = [&state_nrs]() -> StateNrType {
+   StateNrType const ret = *state_nrs.begin();
+   state_nrs.erase(state_nrs.begin());
+   return ret;
+  };
+
+  StateNrType const state_nr_keep = take();
+
+  while (!state_nrs.empty()) {
+   StateNrType const state_nr_remove = take();
+
+   // Repoint any transitions that point to the state we are removing to the state we are keeping.
+   auto const itr = reverse_transitions_map.find(state_nr_remove);
+   if (itr != reverse_transitions_map.end()) {
+    for (auto const& [state_nr_from_, symbol_intervals_] : itr->second) {
+     State& state_from = *locals_._parser_state_machine.get_state(state_nr_from_);
+     for (SymbolInterval const& symbol_interval : symbol_intervals_) {
+      state_from.add_symbol_transition(symbol_interval._symbol_kind, symbol_interval._symbol_value_interval, state_nr_keep);
+     }
+    }
+   }
+
+   // Remove the state
+   locals_._parser_state_machine.remove_state(state_nr_remove);
+  }
+ }
+}
+
 }  // namespace
 
 auto ParserTableBuilder::build(Args args_) -> ParserTables {
@@ -89,8 +161,11 @@ auto ParserTableBuilder::build(Args args_) -> ParserTables {
  write_nonterminal_state_machine_dot(args_, locals, "Determinized tables", locals._parser_state_machine);
  StateMachineMinimizer::minimize(locals._parser_state_machine);
  write_nonterminal_state_machine_dot(args_, locals, "Minimized tables", locals._parser_state_machine);
+
  IntervalSet<StateNrType> const conflicting_state_nrs = ParserLookaheadBuilder::extract_conflicts(locals._parser_state_machine);
+ isolate_accepts(args_, locals);
  write_nonterminal_state_machine_dot(args_, locals, "Final tables", locals._parser_state_machine);
+
  StateMachine state_machine_lookahead = ParserLookaheadBuilder::build(ParserLookaheadBuilder::Args{._parser_state_machine = locals._parser_state_machine, ._conflicting_state_nrs = conflicting_state_nrs, ._fn_lookup_terminal_label = [&](size_t index_) { return args_._lexer_tables.get_accept_index_name(index_); }, ._write_dotfiles = args_._write_dotfiles});
 
  fill_nonterminal_data(args_, locals);

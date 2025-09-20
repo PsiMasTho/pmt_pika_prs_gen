@@ -1,15 +1,10 @@
-#include "pmt/parser/grammar/grammar_data.hpp"
-
-#include "pmt/parser/builder/id_constants_writer.hpp"
-#include "pmt/parser/builder/id_strings_writer.hpp"
-#include "pmt/parser/builder/lexer_table_builder.hpp"
-#include "pmt/parser/builder/lexer_table_writer.hpp"
-#include "pmt/parser/builder/parser_table_builder.hpp"
-#include "pmt/parser/builder/parser_table_writer.hpp"
 #include "pmt/parser/builder/tui/args.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/generic_ast_printer.hpp"
 #include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/grammar_from_ast.hpp"
+#include "pmt/parser/grammar/grammar_printer.hpp"
+#include "pmt/parser/grammar/grammar_simplifier.hpp"
 #include "pmt/parser/grammar/lexer_tables.hpp"
 #include "pmt/parser/grammar/nonterminal_inliner.hpp"
 #include "pmt/parser/grammar/parser_tables.hpp"
@@ -17,7 +12,6 @@
 #include "pmt/parser/rt/generic_lexer.hpp"
 #include "pmt/parser/rt/generic_parser.hpp"
 
-#include <filesystem>
 #include <iostream>
 
 using namespace pmt::parser::builder;
@@ -26,7 +20,6 @@ using namespace pmt::parser::rt;
 using namespace pmt::parser;
 using namespace pmt::parser::builder::tui;
 using namespace pmt::util::sm;
-using namespace pmt::util::sm::ct;
 using namespace pmt::base;
 
 namespace {
@@ -44,30 +37,9 @@ auto get_grammar_ast(std::string const& input_grammar_) -> GenericAst::UniqueHan
  return ast;
 }
 
-void test_tables(Args& args_, pmt::parser::builder::LexerTables const& lexer_tables_, pmt::parser::builder::ParserTables const& parser_tables_, GrammarData const& grammar_data_) {
- if (!args_._input_test_file) {
-  return;
- }
-
- std::string const test_input((std::istreambuf_iterator<char>(*args_._input_test_file)), std::istreambuf_iterator<char>());
- GenericLexer test_lexer(test_input, lexer_tables_);
- GenericAst::UniqueHandle test_ast = GenericParser::parse(GenericParser::Args(test_lexer, parser_tables_));
-
- std::vector<std::string> id_strings;
- std::transform(grammar_data_.get_non_generic_ids().begin(), grammar_data_.get_non_generic_ids().end(), std::back_inserter(id_strings), [](auto const& pair_) { return pair_.first; });
-
- GenericAstPrinter::Args ast_printer_args{._id_to_string_fn =
-                                           [&](GenericId::IdType id_) {
-                                            if (id_ < id_strings.size()) {
-                                             return id_strings[id_];
-                                            }
-                                            return "unknown(" + std::to_string(id_) + ")";
-                                           },
-                                          ._out = std::cout,
-                                          ._ast = *test_ast,
-                                          ._indent_width = 2};
-
- GenericAstPrinter::print(ast_printer_args);
+void write_typed_grammar(Grammar const& grammar_) {
+ std::ofstream of("output.grm");
+ GrammarPrinter::print(GrammarPrinter::Args{._out = of, ._grammar = grammar_});
 }
 
 }  // namespace
@@ -79,31 +51,9 @@ auto main(int argc, char const* const* argv) -> int try {
 
  GenericAst::UniqueHandle ast = get_grammar_ast(input_grammar);
 
- GrammarData grammar_data = GrammarData::construct_from_ast(*ast);
- NonterminalInliner::do_inline(NonterminalInliner::Args{._grammar_data = grammar_data, ._ast = *ast});
-
- pmt::parser::builder::LexerTables const lexer_tables = LexerTableBuilder{}.build(*ast, grammar_data, args._write_dotfiles);
-
- LexerTableWriter::WriterArgs table_writer_args{._os_header = args._output_lexer_header_file, ._os_source = args._output_lexer_source_file, ._is_header_skel = args._lexer_header_skel_file, ._is_source_skel = args._lexer_source_skel_file, ._tables = lexer_tables, ._namespace_name = args._namespace_name, ._class_name = args._lexer_class_name, ._header_include_path = std::filesystem::path(args._lexer_header_include_filename).filename().string()};
-
- LexerTableWriter lexer_table_writer;
- lexer_table_writer.write(table_writer_args);
-
- pmt::parser::builder::ParserTables parser_tables = ParserTableBuilder::build(ParserTableBuilder::Args(*ast, grammar_data, lexer_tables, args._write_dotfiles));
-
- ParserTableWriter::WriterArgs parser_writer_args{._os_header = args._output_parser_header_file, ._os_source = args._output_parser_source_file, ._is_header_skel = args._parser_header_skel_file, ._is_source_skel = args._parser_source_skel_file, ._tables = parser_tables, ._namespace_name = args._namespace_name, ._class_name = args._parser_class_name, ._header_include_path = std::filesystem::path(args._parser_header_include_filename).filename().string()};
- ParserTableWriter parser_table_writer;
- parser_table_writer.write(parser_writer_args);
-
- IdConstantsWriter::WriterArgs id_constants_writer_args{._os_id_constants = args._output_id_constants_file, ._is_id_constants_skel = args._id_constants_skel_file, ._grammar_data = grammar_data};
- IdConstantsWriter id_constants_writer;
- id_constants_writer.write(id_constants_writer_args);
-
- IdStringsWriter::WriterArgs id_strings_writer_args{._os_id_strings = args._output_id_strings_file, ._is_id_strings_skel = args._id_strings_skel_file, ._grammar_data = grammar_data};
- IdStringsWriter id_strings_writer;
- id_strings_writer.write(id_strings_writer_args);
-
- test_tables(args, lexer_tables, parser_tables, grammar_data);
+ Grammar grammar = GrammarFromAst::make(GrammarFromAst::Args{._ast = *ast});
+ GrammarSimplifier::simplify(GrammarSimplifier::Args{._grammar = grammar});
+ write_typed_grammar(grammar);
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';
  return 1;

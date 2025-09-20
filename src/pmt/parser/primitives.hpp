@@ -19,4 +19,6 @@ enum : pmt::util::sm::SymbolValueType {
  SymbolValueOpen = 0ull,
 };
 
+using SymbolType = uint64_t;
+
 }  // namespace pmt::parser
