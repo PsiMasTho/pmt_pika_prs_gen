@@ -15,14 +15,14 @@ class ProgramBase {
 public:
  // -$ Functions $-
  // --$ Other $--
- [[nodiscard]] virtual auto fetch_instruction(ProgramCounterType pc_) -> Instruction;
- [[nodiscard]] virtual auto fetch_rule_info(ArgType rule_id_) -> RuleInfo;
+ [[nodiscard]] virtual auto fetch_instruction(ProgramCounterType pc_) const -> Instruction;
+ [[nodiscard]] virtual auto fetch_rule_info(ArgType rule_info_id_) const -> RuleInfo;
 
- [[nodiscard]] virtual auto lit_seq_match_at(ArgType lit_seq_id_, size_t pos_, SymbolType sym_) -> bool;
- [[nodiscard]] virtual auto get_lit_seq_length(ArgType lit_seq_id_) -> size_t;
+ [[nodiscard]] virtual auto lit_seq_match_at(ArgType lit_seq_id_, size_t pos_, SymbolType sym_) const -> bool;
+ [[nodiscard]] virtual auto get_lit_seq_length(ArgType lit_seq_id_) const -> size_t;
 
- [[nodiscard]] virtual auto get_entry_pc(ArgType label_id_) -> ProgramCounterType;
- [[nodiscard]] virtual auto get_max_pc(ArgType label_id_) -> ProgramCounterType;
+ [[nodiscard]] virtual auto get_entry_pc() const -> ProgramCounterType;
+ [[nodiscard]] virtual auto get_max_pc() const -> ProgramCounterType;
 };
 
 }  // namespace pmt::parser::rt

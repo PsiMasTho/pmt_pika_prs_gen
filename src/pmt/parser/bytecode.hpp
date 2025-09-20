@@ -14,6 +14,8 @@ enum : uint64_t {
 
  HasArg = 1u << (BitWidthOp - 1),
 
+ ArgNone = 0,
+
  OpCall = 0 | HasArg,
  OpJmp = 1 | HasArg,
  OpDrop = 2,
