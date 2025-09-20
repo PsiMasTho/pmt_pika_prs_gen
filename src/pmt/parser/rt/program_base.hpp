@@ -9,6 +9,8 @@ namespace pmt::parser::rt {
 class RuleInfo {
 public:
  GenericId::IdType _rule_id;
+
+ auto operator==(RuleInfo const& other_) const -> bool = default;
 };
 
 class ProgramBase {

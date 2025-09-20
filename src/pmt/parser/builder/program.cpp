@@ -1,42 +1,9 @@
 #include "pmt/parser/builder/program.hpp"
 
-#include "pmt/base/hash.hpp"
-
 #include <cassert>
 
 namespace pmt::parser::builder {
 using namespace pmt::base;
-
-Program::LitSeqTypeIndirectHasher::LitSeqTypeIndirectHasher(std::vector<LitSeqType> const& table_)
- : _table(table_) {
-}
-
-auto Program::LitSeqTypeIndirectHasher::operator()(ArgType lit_seq_id_) const -> size_t {
- assert(lit_seq_id_ < _table.size());
- return this->operator()(_table[lit_seq_id_]);
-}
-
-auto Program::LitSeqTypeIndirectHasher::operator()(LitSeqType const& lit_seq_) const -> size_t {
- size_t seed = pmt::base::Hash::Phi64;
-
- for (auto const& element : lit_seq_) {
-  pmt::base::Hash::combine(element, seed);
- }
-
- return seed;
-}
-
-Program::LitSeqTypeIndirectEq::LitSeqTypeIndirectEq(std::vector<LitSeqType> const& table_)
- : _table(table_) {
-}
-
-Program::Program()
- : _lit_seq_table{}
- , _lit_seq_table_indirect(0, LitSeqTypeIndirectHasher(_lit_seq_table), LitSeqTypeIndirectEq(_lit_seq_table))
- , _instructions{}
- , _rule_info_table{}
- , _entry_pc(0) {
-}
 
 auto Program::fetch_instruction(ProgramCounterType pc_) const -> Instruction {
  return _instructions[pc_];
@@ -74,9 +41,25 @@ auto Program::push_instruction(Instruction instruction_) -> ProgramCounterType {
 }
 
 auto Program::add_rule_info(pmt::parser::rt::RuleInfo rule_info_) -> ArgType {
+ auto const itr = std::ranges::find_if(_rule_info_table, [&](pmt::parser::rt::RuleInfo const& item_){return rule_info_ == item_;});
+
+ if (itr != _rule_info_table.end()) {
+  return std::distance(_rule_info_table.begin(), itr);
+ }
+
+ _rule_info_table.push_back(rule_info_);
+ return _rule_info_table.size() - 1;
 }
 
 auto Program::add_lit_seq(LitSeqType lit_seq_) -> ArgType {
+ auto const itr = std::ranges::find_if(_lit_seq_table, [&](LitSeqType const& item_){return lit_seq_ == item_;});
+
+ if (itr != _lit_seq_table.end()) {
+  return std::distance(_lit_seq_table.begin(), itr);
+ }
+
+ _lit_seq_table.push_back(std::move(lit_seq_));
+ return _lit_seq_table.size() - 1;
 }
 
 }  // namespace pmt::parser::builder

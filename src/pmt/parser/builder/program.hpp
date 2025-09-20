@@ -1,11 +1,9 @@
 #pragma once
 
-#include "parser/bytecode.hpp"
-#include "parser/primitives.hpp"
+#include "pmt/parser/bytecode.hpp"
+#include "pmt/parser/primitives.hpp"
 #include "pmt/base/interval_set.hpp"
 #include "pmt/parser/rt/program_base.hpp"
-
-#include <unordered_map>
 
 namespace pmt::parser::builder {
 
@@ -15,37 +13,15 @@ public:
  using LitSeqType = std::vector<pmt::base::IntervalSet<SymbolType>>;
 
 private:
- class LitSeqTypeIndirectHasher {
-  std::vector<LitSeqType> const& _table;
-
- public:
-  explicit LitSeqTypeIndirectHasher(std::vector<LitSeqType> const& table_);
-  [[nodiscard]] auto operator()(ArgType lit_seq_id_) const -> size_t;
-  [[nodiscard]] auto operator()(LitSeqType const& lit_seq_) const -> size_t;
- };
-
- class LitSeqTypeIndirectEq {
-  std::vector<LitSeqType> const& _table;
-
- public:
-  explicit LitSeqTypeIndirectEq(std::vector<LitSeqType> const& table_);
-  [[nodiscard]] auto operator()(auto const& lhs_, auto const& rhs_) const -> bool;
- };
-
  // -$ Data $-
  std::vector<LitSeqType> _lit_seq_table;
- std::unordered_map<LitSeqType, ArgType, LitSeqTypeIndirectHasher, LitSeqTypeIndirectEq> _lit_seq_table_indirect;
-
  std::vector<pmt::parser::rt::RuleInfo> _rule_info_table;
-
  std::vector<Instruction> _instructions;
-
  ProgramCounterType _entry_pc = 0;
 
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- Program();
  // --$ Inherited: pmt::parser::rt::ProgramBase $--
  [[nodiscard]] auto fetch_instruction(ProgramCounterType pc_) const -> Instruction override;
  [[nodiscard]] auto fetch_rule_info(ArgType rule_info_id_) const -> pmt::parser::rt::RuleInfo override;
@@ -63,5 +39,3 @@ public:
  auto add_lit_seq(LitSeqType lit_seq_) -> ArgType;
 };
 }  // namespace pmt::parser::builder
-
-#include "pmt/parser/builder/program-inl.hpp"
