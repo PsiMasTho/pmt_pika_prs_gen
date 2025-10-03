@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pmt/base/interval_set.hpp"
-#include "pmt/parser/grammar/repetition_range.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
 #include <deque>
@@ -38,10 +37,13 @@ private:
  using SequenceType = std::deque<RuleExpression*>;
  using ChoiceType = std::deque<RuleExpression*>;
  using HiddenType = RuleExpression*;
- using RepetitionType = std::pair<RuleExpression*, RepetitionRange>;
+ using OneOrMoreType = RuleExpression*;
+ using NotFollowedByType = RuleExpression*;
+
+ // non recursive types
+ using EpsilonType = std::monostate;
 
 public:
- // non recursive types
  using IdentifierType = std::string;
  using LiteralType = std::vector<pmt::base::IntervalSet<pmt::util::sm::SymbolValueType>>;
 
@@ -51,12 +53,14 @@ public:
   Hidden,
   Identifier,
   Literal,
-  Repetition,
+  OneOrMore,
+  NotFollowedBy,
+  Epsilon,
  };
 
 private:
  // Note: keep the values of the Tag constants the same as the indices of their types in the variant
- using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, IdentifierType, LiteralType, RepetitionType>;
+ using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, IdentifierType, LiteralType, OneOrMoreType, NotFollowedByType, EpsilonType>;
 
  // -$ Data $-
  VariantType _data;
@@ -102,11 +106,6 @@ public:
  auto get_literal() -> LiteralType&;
  auto get_literal() const -> LiteralType const&;
  void set_literal(LiteralType literal_);
-
- // repetition specific
- auto get_repetition_range() -> RepetitionRange&;
- auto get_repetition_range() const -> RepetitionRange const&;
- void set_repetition_range(RepetitionRange repetition_range_);
 
  // misc
  void unpack(size_t idx_);

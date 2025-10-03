@@ -17,13 +17,17 @@ RuleExpression::RuleExpression(Tag tag_)
    case Tag::Choice:
     return VariantType(std::in_place_index<static_cast<size_t>(Tag::Choice)>);
    case Tag::Hidden:
-    return HiddenType{nullptr};
+    return VariantType(std::in_place_index<static_cast<size_t>(Tag::Hidden)>, nullptr);
    case Tag::Identifier:
     return IdentifierType{};
    case Tag::Literal:
     return LiteralType{};
-   case Tag::Repetition:
-    return RepetitionType{nullptr, {}};
+   case Tag::OneOrMore:
+    return VariantType(std::in_place_index<static_cast<size_t>(Tag::OneOrMore)>, nullptr);
+   case Tag::NotFollowedBy:
+    return VariantType(std::in_place_index<static_cast<size_t>(Tag::NotFollowedBy)>, nullptr);
+   case Tag::Epsilon:
+    return VariantType(std::in_place_index<static_cast<size_t>(Tag::Epsilon)>);
    default:
     pmt::unreachable();
   }
@@ -59,9 +63,8 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
   pending.pop_back();
 
   switch (src->get_tag()) {
-   case Tag::Repetition: {
-    dst->set_repetition_range(src->get_repetition_range());
-   }
+   case Tag::OneOrMore:
+   case Tag::NotFollowedBy:
    case Tag::Sequence:
    case Tag::Choice:
    case Tag::Hidden: {
@@ -76,6 +79,8 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
    } break;
    case Tag::Literal: {
     dst->set_literal(src->get_literal());
+   } break;
+   case Tag::Epsilon: {
    } break;
   }
  }
@@ -95,8 +100,10 @@ auto RuleExpression::get_children_size() const -> size_t {
    return std::get<static_cast<size_t>(Tag::Choice)>(_data).size();
   case Tag::Hidden:
    return std::get<static_cast<size_t>(Tag::Hidden)>(_data) == nullptr ? 0 : 1;
-  case Tag::Repetition:
-   return std::get<static_cast<size_t>(Tag::Repetition)>(_data).first == nullptr ? 0 : 1;
+  case Tag::OneOrMore:
+   return std::get<static_cast<size_t>(Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
+  case Tag::NotFollowedBy:
+   return std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data) == nullptr ? 0 : 1;
   default:
    return 0;  // Cannot have children
  }
@@ -114,8 +121,10 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
    return std::get<static_cast<size_t>(Tag::Choice)>(_data)[index_];
   case Tag::Hidden:
    return std::get<static_cast<size_t>(Tag::Hidden)>(_data);
-  case Tag::Repetition:
-   return std::get<static_cast<size_t>(Tag::Repetition)>(_data).first;
+  case Tag::OneOrMore:
+   return std::get<static_cast<size_t>(Tag::OneOrMore)>(_data);
+  case Tag::NotFollowedBy:
+   return std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data);
   default:
    pmt::unreachable();
  }
@@ -133,8 +142,10 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
    return std::get<static_cast<size_t>(Tag::Choice)>(_data)[index_];
   case Tag::Hidden:
    return std::get<static_cast<size_t>(Tag::Hidden)>(_data);
-  case Tag::Repetition:
-   return std::get<static_cast<size_t>(Tag::Repetition)>(_data).first;
+  case Tag::OneOrMore:
+   return std::get<static_cast<size_t>(Tag::OneOrMore)>(_data);
+  case Tag::NotFollowedBy:
+   return std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data);
   default:
    pmt::unreachable();
  }
@@ -171,8 +182,11 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
   case Tag::Hidden:
    std::get<static_cast<size_t>(Tag::Hidden)>(_data) = nullptr;
    break;
-  case Tag::Repetition:
-   std::get<static_cast<size_t>(Tag::Repetition)>(_data).first = nullptr;
+  case Tag::OneOrMore:
+   std::get<static_cast<size_t>(Tag::OneOrMore)>(_data) = nullptr;
+   break;
+  case Tag::NotFollowedBy:
+   std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data) = nullptr;
    break;
   default:
    pmt::unreachable();
@@ -195,8 +209,11 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
   case Tag::Hidden:
    std::get<static_cast<size_t>(Tag::Hidden)>(_data) = child_.release();
    break;
-  case Tag::Repetition:
-   std::get<static_cast<size_t>(Tag::Repetition)>(_data).first = child_.release();
+  case Tag::OneOrMore:
+   std::get<static_cast<size_t>(Tag::OneOrMore)>(_data) = child_.release();
+   break;
+  case Tag::NotFollowedBy:
+   std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data) = child_.release();
    break;
   default:
    pmt::unreachable();
@@ -245,21 +262,6 @@ auto RuleExpression::get_literal() const -> LiteralType const& {
 
 void RuleExpression::set_literal(LiteralType literal_) {
  _data = std::move(literal_);
-}
-
-auto RuleExpression::get_repetition_range() -> RepetitionRange& {
- assert(get_tag() == Tag::Repetition);
- return std::get_if<static_cast<size_t>(Tag::Repetition)>(&_data)->second;
-}
-
-auto RuleExpression::get_repetition_range() const -> RepetitionRange const& {
- assert(get_tag() == Tag::Repetition);
- return std::get_if<static_cast<size_t>(Tag::Repetition)>(&_data)->second;
-}
-
-void RuleExpression::set_repetition_range(RepetitionRange repetition_range_) {
- assert(get_tag() == Tag::Repetition);
- std::get_if<static_cast<size_t>(Tag::Repetition)>(&_data)->second = repetition_range_;
 }
 
 void RuleExpression::unpack(size_t idx_) {

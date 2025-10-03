@@ -140,6 +140,17 @@ void flatten_expression(RuleExpression* rule_expression_) {
       repeat = true;
       j = 0;
      }
+     // Remove any epsilons which are not the only child
+     for (size_t i = 1; i < child->get_children_size();) {
+      if (child->get_child_at(i)->get_tag() == RuleExpression::Tag::Epsilon) {
+       child->take_child_at(i);
+      } else {
+       ++i;
+      }
+     }
+     if (child->get_children_size() > 1 && child->get_child_at_front()->get_tag() == RuleExpression::Tag::Epsilon) {
+      child->take_child_at_front();
+     }
      if (child->get_children_size() == 1) {
       RuleExpression::UniqueHandle grandchild = child->take_child_at(0);
       parent->take_child_at(idx);
@@ -176,7 +187,8 @@ void flatten_expression(RuleExpression* rule_expression_) {
       }
      }
      break;
-    case RuleExpression::Tag::Repetition:
+    case RuleExpression::Tag::OneOrMore:
+    case RuleExpression::Tag::NotFollowedBy:
      pending.emplace_back(child, 0);
      break;
     default:

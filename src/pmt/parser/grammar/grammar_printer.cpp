@@ -1,10 +1,9 @@
 #include "pmt/parser/grammar/grammar_printer.hpp"
 
-#include "parser/grammar/repetition_range.hpp"
+#include "pmt/base/match.hpp"
 #include "pmt/base/overloaded.hpp"
 #include "pmt/parser/grammar/grammar.hpp"
 #include "pmt/parser/grammar/rule.hpp"
-#include "primitives.hpp"
 
 #include <cassert>
 #include <set>
@@ -15,7 +14,15 @@ using namespace pmt::base;
 using namespace pmt::util::sm;
 
 namespace {
-using StackItem = std::variant<std::string, RuleExpression const*>;
+using ExpressionWithoutParent = RuleExpression const*;
+
+class ExpressionWithParent {
+public:
+ RuleExpression const* _parent;
+ size_t _index = 0;
+};
+
+using StackItem = std::variant<std::string, ExpressionWithParent, ExpressionWithoutParent>;
 
 std::string const BOOLALPHA[2]{"false", "true"};  // NOLINT
 
@@ -61,67 +68,109 @@ void write_rule_lhs(GrammarPrinter::Args& args_, Locals& locals_, std::string co
  args_._out << rule_name_ << parameter_str << " = ";
 }
 
+auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -> bool {
+ if (!parent_)
+  return false;
+
+ auto const P = parent_->get_tag();
+ auto const C = child_->get_tag();
+ auto const child_arity = child_->get_children_size();
+ auto const is_unary = [&](RuleExpression::Tag t_) {
+  return t_ == RuleExpression::Tag::Hidden || t_ == RuleExpression::Tag::NotFollowedBy || t_ == RuleExpression::Tag::OneOrMore;
+ };
+
+ switch (C) {
+  case RuleExpression::Tag::Sequence:
+   // Sequence never needs parens inside Choice or Sequence.
+   // It DOES need parens under unary operators if it has multiple items.
+   return child_arity > 1 && is_unary(P);
+
+  case RuleExpression::Tag::Choice:
+   // Choice needs parens when it's NEXT to other items in a Sequence.
+   if (P == RuleExpression::Tag::Sequence)
+    return parent_->get_children_size() > 1;
+   // Also needs parens under unary operators if it has multiple alts.
+   if (is_unary(P))
+    return child_arity > 1;
+   // Otherwise (Choice inside Choice, etc.) no parens.
+   return false;
+
+  default:
+   return false;
+ }
+}
+
+void expand_once(GrammarPrinter::Args& args_, Locals& locals_, RuleExpression const* node_, RuleExpression const* parent_) {
+ using Tag = RuleExpression::Tag;
+
+ switch (node_->get_tag()) {
+  case Tag::Sequence:
+  case Tag::Choice: {
+   char const* sep = (node_->get_tag() == Tag::Sequence) ? " " : " | ";
+   bool const paren = needs_parens(parent_, node_);
+
+   if (paren)
+    push(locals_, ")");  // push close first (stack is LIFO)
+   std::string delim;
+   for (size_t i = node_->get_children_size(); i--;) {
+    push(locals_, std::exchange(delim, sep));
+    push(locals_, ExpressionWithParent{._parent = node_, ._index = i});
+   }
+   if (paren)
+    push(locals_, "(");
+  } break;
+  case Tag::Hidden:
+   push(locals_, "~");
+   push(locals_, ExpressionWithParent{._parent = node_});
+   break;
+  case Tag::OneOrMore:
+   push(locals_, "+");
+   push(locals_, ExpressionWithParent{._parent = node_});
+   break;
+  case Tag::NotFollowedBy:
+   push(locals_, "!");
+   push(locals_, ExpressionWithParent{._parent = node_});
+   break;
+  case Tag::Identifier:
+   args_._out << node_->get_identifier();
+   break;
+  case Tag::Literal: {
+   std::string delim;
+   for (IntervalSet<SymbolValueType> const& sym : node_->get_literal()) {
+    args_._out << std::exchange(delim, " ") << "[";
+    sym.for_each_interval([&](Interval<SymbolValueType> interval_) { args_._out << "10#" << interval_.get_lower() << "..10#" << interval_.get_upper(); });
+    args_._out << "]";
+   }
+  } break;
+  case Tag::Epsilon:
+   push(locals_, "epsilon");
+   break;
+ }
+}
+
 void write_rule_rhs(GrammarPrinter::Args& args_, Locals& locals_, Rule const& rule_) {
  push(locals_, ";");
  push(locals_, rule_._definition.get());
 
  while (!locals_._pending.empty()) {
   StackItem const cur = take(locals_);
-  std::visit(pmt::base::Overloaded{[&](std::string const& str_) { args_._out << str_; },
-                                   [&](RuleExpression const* expr_) {
+  std::visit(pmt::base::Overloaded{[&](std::string const& s_) { args_._out << s_; },
+
+                                   [&](ExpressionWithParent expr_) {
+                                    if (expr_._parent == nullptr || expr_._parent->get_children_size() <= expr_._index) {
+                                     push(locals_, "/* missing expression */");
+                                     return;
+                                    }
+                                    RuleExpression const* child = expr_._parent->get_child_at(expr_._index);
+                                    expand_once(args_, locals_, child, expr_._parent);
+                                   },
+
+                                   [&](ExpressionWithoutParent expr_) {
                                     if (expr_ == nullptr) {
                                      push(locals_, "/* missing expression */");
                                      return;
                                     }
-                                    switch (expr_->get_tag()) {
-                                     case RuleExpression::Tag::Sequence: {
-                                      push(locals_, ")");
-                                      std::string delim;
-                                      for (size_t i = expr_->get_children_size(); i--;) {
-                                       push(locals_, std::exchange(delim, " "));
-                                       push(locals_, expr_->get_child_at(i));
-                                      }
-                                      push(locals_, "(");
-                                     } break;
-                                     case RuleExpression::Tag::Choice: {
-                                      push(locals_, ")");
-                                      std::string delim;
-                                      for (size_t i = expr_->get_children_size(); i--;) {
-                                       push(locals_, std::exchange(delim, " | "));
-                                       push(locals_, expr_->get_child_at(i));
-                                      }
-                                      push(locals_, "(");
-                                     } break;
-                                     case RuleExpression::Tag::Hidden: {
-                                      push(locals_, ")~");
-                                      push(locals_, expr_->get_child_at(0));
-                                      push(locals_, "(");
-                                     } break;
-                                     case RuleExpression::Tag::Identifier: {
-                                      args_._out << expr_->get_identifier();
-                                     } break;
-                                     case RuleExpression::Tag::Literal: {
-                                      std::string delim;
-                                      for (IntervalSet<SymbolValueType> const& sym : expr_->get_literal()) {
-                                       args_._out << std::exchange(delim, " ") << "[";
-                                       sym.for_each_interval([&](Interval<SymbolValueType> interval_) { args_._out << "10#" << interval_.get_lower() << "..10#" << interval_.get_upper(); });
-                                       args_._out << "]";
-                                      }
-                                     } break;
-                                     case RuleExpression::Tag::Repetition: {
-                                      std::string rep_string = "){";
-                                      RepetitionRange const& rep_range = expr_->get_repetition_range();
-                                      rep_string += "10#" + std::to_string(rep_range.get_lower());
-                                      rep_string += ",";
-                                      if (rep_range.get_upper().has_value()) {
-                                       rep_string += "10#" + std::to_string(*rep_range.get_upper());
-                                      }
-                                      rep_string += "}";
-                                      push(locals_, rep_string);
-                                      push(locals_, expr_->get_child_at(0));
-                                      push(locals_, "(");
-                                     } break;
-                                    }
+                                    expand_once(args_, locals_, expr_, nullptr);
                                    }},
              cur);
  }

@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1758385964">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1759062204">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -252,16 +252,11 @@ when conflicts are pulled out, only a single accepting state should be created f
 --
 for intersection we need to prune unreachable
 
-$r = $a{3,}
-$r = $tmp1 $tmp1 $tmp1 $tmp2
-$tmp1 =  $a
-$tmp2 = $tmp1 $tmp2 | epsilon
+x{,}     = x+ | epsilon
+x{2,}   = x x+
+x{3,5} = x x x (x x | x | epsilon)
+x{,2}   = x x | x | epsilon
 
-$r = $a{,3}
-$r = $a $a $a | $a $a | $a | epsilon
-
-$r = $a{2,3}
-$r = $a $a $a | $a $a
 ------
 Operations
 CALL &lt;LABEL_ID&gt; = Jumps to a label, sets up a new local return value, after instruction the result is added to the return value of the current frame
@@ -271,12 +266,17 @@ PUSH_CNT &lt;N&gt; = Adds a counter to the counter stack
 DEC_CNT_JNZ &lt;LABEL_ID&gt; = Decrements the counter at the top of the stack by 1. If not zero: jumps to label, if zero: pop the counter stack and fallthrough to next instruction
 MERGE &lt;&gt; = Converts the current return value type to a string
 RET &lt;RULE_ID&gt; = Returns control to the previous CALL site, appending this return value to the return value at the call site
-CHOICE &lt;LABEL_ID&gt; = push backtrack frame
-COMMIT &lt;LABEL_ID&gt; = pop one backtrack frame, jump to label
+BACKTRACK &lt;LABEL_ID&gt; = push backtrack frame
+COMMIT &lt;LABEL_ID&gt; = pop one backtrack frame
 LITSEQ &lt;LITERAL_ID&gt; = try to consume the literal sequence from input. If success: append to the current return value, otherwise FAIL:
+REGULAR &lt;REGEX_ID&gt; = try to match a regular expression rule
 
 
-No need for an actual label ID in the emitted bytecode, just jump to the PC</rich_text>
+No need for an actual label ID in the emitted bytecode, just jump to the PC
+
+regular rules are defined as:
+%R1&lt;regular = true&gt; = "abc" | "def";
+implies &lt;merge = true&gt;</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;
@@ -386,6 +386,21 @@ void process_frame_01(Locals&amp; locals_, RepetitionFrame&amp; frame_) {
   locals_._ret_part-&gt;give_child_at_back(RuleExpression::clone(*identifier_tail));
   return;
  }</rich_text>
+    </node>
+    <node name="IntervalSet::cmp" unique_id="10" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1759531075" ts_lastsave="1759533049">
+      <rich_text>template &lt;std::integral KEY_&gt;
+auto IntervalSet&lt;KEY_&gt;::cmp(IntervalSet const&amp; lhs_, IntervalSet const&amp; rhs_) -&gt; int {
+ for (size_t i = 0; i &lt; std::min(lhs_.size(), rhs_.size()); ++i) {
+  if (int const r = (lhs_.get_by_index(i).get_lower() &lt;=&gt; rhs_.get_by_index(i).get_lower()); r != 0) {
+    return r;
+   }
+   if (int const r = (lhs_.get_by_index(i).get_upper() &lt;=&gt; rhs_.get_by_index(i).get_upper()); r != 0) {
+    return r;
+   }
+ }
+
+ return lhs_.size() &lt;=&gt; rhs_.size();
+}</rich_text>
     </node>
   </node>
 </cherrytree>
