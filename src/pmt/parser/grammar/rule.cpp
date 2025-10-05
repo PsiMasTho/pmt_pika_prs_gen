@@ -9,25 +9,25 @@ void RuleExpression::UniqueHandleDeleter::operator()(RuleExpression* self_) cons
  destruct(self_);
 }
 
-RuleExpression::RuleExpression(Tag tag_)
+RuleExpression::RuleExpression(ClauseBase::Tag tag_)
  : _data{[tag_]() -> VariantType {
   switch (tag_) {
-   case Tag::Sequence:
-    return VariantType(std::in_place_index<static_cast<size_t>(Tag::Sequence)>);
-   case Tag::Choice:
-    return VariantType(std::in_place_index<static_cast<size_t>(Tag::Choice)>);
-   case Tag::Hidden:
-    return VariantType(std::in_place_index<static_cast<size_t>(Tag::Hidden)>, nullptr);
-   case Tag::Identifier:
+   case ClauseBase::Tag::Sequence:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Sequence)>);
+   case ClauseBase::Tag::Choice:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Choice)>);
+   case ClauseBase::Tag::Hidden:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Hidden)>, nullptr);
+   case ClauseBase::Tag::Identifier:
     return IdentifierType{};
-   case Tag::Literal:
+   case ClauseBase::Tag::Literal:
     return LiteralType{};
-   case Tag::OneOrMore:
-    return VariantType(std::in_place_index<static_cast<size_t>(Tag::OneOrMore)>, nullptr);
-   case Tag::NotFollowedBy:
-    return VariantType(std::in_place_index<static_cast<size_t>(Tag::NotFollowedBy)>, nullptr);
-   case Tag::Epsilon:
-    return VariantType(std::in_place_index<static_cast<size_t>(Tag::Epsilon)>);
+   case ClauseBase::Tag::OneOrMore:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>, nullptr);
+   case ClauseBase::Tag::NotFollowedBy:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>, nullptr);
+   case ClauseBase::Tag::Epsilon:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Epsilon)>);
    default:
     pmt::unreachable();
   }
@@ -48,7 +48,7 @@ void RuleExpression::destruct(RuleExpression* self_) {
  }
 }
 
-auto RuleExpression::construct(Tag tag_) -> UniqueHandle {
+auto RuleExpression::construct(ClauseBase::Tag tag_) -> UniqueHandle {
  return UniqueHandle{new RuleExpression{tag_}};
 }
 
@@ -63,24 +63,24 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
   pending.pop_back();
 
   switch (src->get_tag()) {
-   case Tag::OneOrMore:
-   case Tag::NotFollowedBy:
-   case Tag::Sequence:
-   case Tag::Choice:
-   case Tag::Hidden: {
+   case ClauseBase::Tag::OneOrMore:
+   case ClauseBase::Tag::NotFollowedBy:
+   case ClauseBase::Tag::Sequence:
+   case ClauseBase::Tag::Choice:
+   case ClauseBase::Tag::Hidden: {
     for (size_t i = 0; i < src->get_children_size(); ++i) {
      UniqueHandle child = construct(src->get_child_at(i)->get_tag());
      dst->give_child_at(i, std::move(child));
      pending.push_back({src->get_child_at(i), dst->get_child_at(i)});
     }
    } break;
-   case Tag::Identifier: {
+   case ClauseBase::Tag::Identifier: {
     dst->set_identifier(src->get_identifier());
    } break;
-   case Tag::Literal: {
+   case ClauseBase::Tag::Literal: {
     dst->set_literal(src->get_literal());
    } break;
-   case Tag::Epsilon: {
+   case ClauseBase::Tag::Epsilon: {
    } break;
   }
  }
@@ -88,22 +88,22 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
  return result;
 }
 
-auto RuleExpression::get_tag() const -> Tag {
- return static_cast<Tag>(_data.index());
+auto RuleExpression::get_tag() const -> ClauseBase::Tag {
+ return static_cast<ClauseBase::Tag>(_data.index());
 }
 
 auto RuleExpression::get_children_size() const -> size_t {
  switch (get_tag()) {
-  case Tag::Sequence:
-   return std::get<static_cast<size_t>(Tag::Sequence)>(_data).size();
-  case Tag::Choice:
-   return std::get<static_cast<size_t>(Tag::Choice)>(_data).size();
-  case Tag::Hidden:
-   return std::get<static_cast<size_t>(Tag::Hidden)>(_data) == nullptr ? 0 : 1;
-  case Tag::OneOrMore:
-   return std::get<static_cast<size_t>(Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
-  case Tag::NotFollowedBy:
-   return std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::Sequence:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data).size();
+  case ClauseBase::Tag::Choice:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data).size();
+  case ClauseBase::Tag::Hidden:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::OneOrMore:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::NotFollowedBy:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data) == nullptr ? 0 : 1;
   default:
    return 0;  // Cannot have children
  }
@@ -115,16 +115,16 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
  }
 
  switch (get_tag()) {
-  case Tag::Sequence:
-   return std::get<static_cast<size_t>(Tag::Sequence)>(_data)[index_];
-  case Tag::Choice:
-   return std::get<static_cast<size_t>(Tag::Choice)>(_data)[index_];
-  case Tag::Hidden:
-   return std::get<static_cast<size_t>(Tag::Hidden)>(_data);
-  case Tag::OneOrMore:
-   return std::get<static_cast<size_t>(Tag::OneOrMore)>(_data);
-  case Tag::NotFollowedBy:
-   return std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data);
+  case ClauseBase::Tag::Sequence:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data)[index_];
+  case ClauseBase::Tag::Choice:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
+  case ClauseBase::Tag::Hidden:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
+  case ClauseBase::Tag::OneOrMore:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
+  case ClauseBase::Tag::NotFollowedBy:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data);
   default:
    pmt::unreachable();
  }
@@ -136,16 +136,16 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
  }
 
  switch (get_tag()) {
-  case Tag::Sequence:
-   return std::get<static_cast<size_t>(Tag::Sequence)>(_data)[index_];
-  case Tag::Choice:
-   return std::get<static_cast<size_t>(Tag::Choice)>(_data)[index_];
-  case Tag::Hidden:
-   return std::get<static_cast<size_t>(Tag::Hidden)>(_data);
-  case Tag::OneOrMore:
-   return std::get<static_cast<size_t>(Tag::OneOrMore)>(_data);
-  case Tag::NotFollowedBy:
-   return std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data);
+  case ClauseBase::Tag::Sequence:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data)[index_];
+  case ClauseBase::Tag::Choice:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
+  case ClauseBase::Tag::Hidden:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
+  case ClauseBase::Tag::OneOrMore:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
+  case ClauseBase::Tag::NotFollowedBy:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data);
   default:
    pmt::unreachable();
  }
@@ -171,22 +171,22 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
  UniqueHandle ret{get_child_at(index_)};
 
  switch (get_tag()) {
-  case Tag::Sequence: {
-   SequenceType& container = std::get<static_cast<size_t>(Tag::Sequence)>(_data);
+  case ClauseBase::Tag::Sequence: {
+   SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data);
    container.erase(std::next(container.begin(), index_));
   } break;
-  case Tag::Choice: {
-   SequenceType& container = std::get<static_cast<size_t>(Tag::Choice)>(_data);
+  case ClauseBase::Tag::Choice: {
+   SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data);
    container.erase(std::next(container.begin(), index_));
   } break;
-  case Tag::Hidden:
-   std::get<static_cast<size_t>(Tag::Hidden)>(_data) = nullptr;
+  case ClauseBase::Tag::Hidden:
+   std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = nullptr;
    break;
-  case Tag::OneOrMore:
-   std::get<static_cast<size_t>(Tag::OneOrMore)>(_data) = nullptr;
+  case ClauseBase::Tag::OneOrMore:
+   std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = nullptr;
    break;
-  case Tag::NotFollowedBy:
-   std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data) = nullptr;
+  case ClauseBase::Tag::NotFollowedBy:
+   std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data) = nullptr;
    break;
   default:
    pmt::unreachable();
@@ -198,22 +198,22 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
  assert(index_ <= get_children_size());
 
  switch (get_tag()) {
-  case Tag::Sequence: {
-   SequenceType& container = std::get<static_cast<size_t>(Tag::Sequence)>(_data);
+  case ClauseBase::Tag::Sequence: {
+   SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data);
    container.insert(std::next(container.begin(), index_), child_.release());
   } break;
-  case Tag::Choice: {
-   SequenceType& container = std::get<static_cast<size_t>(Tag::Choice)>(_data);
+  case ClauseBase::Tag::Choice: {
+   SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data);
    container.insert(std::next(container.begin(), index_), child_.release());
   } break;
-  case Tag::Hidden:
-   std::get<static_cast<size_t>(Tag::Hidden)>(_data) = child_.release();
+  case ClauseBase::Tag::Hidden:
+   std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = child_.release();
    break;
-  case Tag::OneOrMore:
-   std::get<static_cast<size_t>(Tag::OneOrMore)>(_data) = child_.release();
+  case ClauseBase::Tag::OneOrMore:
+   std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = child_.release();
    break;
-  case Tag::NotFollowedBy:
-   std::get<static_cast<size_t>(Tag::NotFollowedBy)>(_data) = child_.release();
+  case ClauseBase::Tag::NotFollowedBy:
+   std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data) = child_.release();
    break;
   default:
    pmt::unreachable();
@@ -237,13 +237,13 @@ void RuleExpression::give_child_at_back(UniqueHandle child_) {
 }
 
 auto RuleExpression::get_identifier() -> IdentifierType& {
- assert(get_tag() == Tag::Identifier);
- return *std::get_if<static_cast<size_t>(Tag::Identifier)>(&_data);
+ assert(get_tag() == ClauseBase::Tag::Identifier);
+ return *std::get_if<static_cast<size_t>(ClauseBase::Tag::Identifier)>(&_data);
 }
 
 auto RuleExpression::get_identifier() const -> IdentifierType const& {
- assert(get_tag() == Tag::Identifier);
- return *std::get_if<static_cast<size_t>(Tag::Identifier)>(&_data);
+ assert(get_tag() == ClauseBase::Tag::Identifier);
+ return *std::get_if<static_cast<size_t>(ClauseBase::Tag::Identifier)>(&_data);
 }
 
 void RuleExpression::set_identifier(IdentifierType identifier_) {
@@ -251,13 +251,13 @@ void RuleExpression::set_identifier(IdentifierType identifier_) {
 }
 
 auto RuleExpression::get_literal() -> LiteralType& {
- assert(get_tag() == Tag::Literal);
- return *std::get_if<static_cast<size_t>(Tag::Literal)>(&_data);
+ assert(get_tag() == ClauseBase::Tag::Literal);
+ return *std::get_if<static_cast<size_t>(ClauseBase::Tag::Literal)>(&_data);
 }
 
 auto RuleExpression::get_literal() const -> LiteralType const& {
- assert(get_tag() == Tag::Literal);
- return *std::get_if<static_cast<size_t>(Tag::Literal)>(&_data);
+ assert(get_tag() == ClauseBase::Tag::Literal);
+ return *std::get_if<static_cast<size_t>(ClauseBase::Tag::Literal)>(&_data);
 }
 
 void RuleExpression::set_literal(LiteralType literal_) {

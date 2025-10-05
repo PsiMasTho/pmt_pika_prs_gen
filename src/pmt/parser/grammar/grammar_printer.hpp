@@ -17,7 +17,8 @@ public:
   Grammar const& _grammar;
  };
 
- static void print(Args args_);
+ static void print_as_grammar(Args args_);
+ static void print_as_tree(Args args_);
 };
 
 }  // namespace pmt::parser::grammar

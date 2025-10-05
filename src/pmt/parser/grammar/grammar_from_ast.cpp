@@ -177,7 +177,7 @@ void initial_traversal(Locals& locals_, GenericAst const& ast_) {
 }
 
 auto build_epsilon() -> RuleExpression::UniqueHandle {
- return RuleExpression::construct(RuleExpression::Tag::Sequence);
+ return RuleExpression::construct(ClauseBase::Tag::Sequence);
 }
 
 auto construct_frame(GenericAst const* ast_cur_path_) -> Frame {
@@ -242,7 +242,7 @@ void process_frame_00(Locals& locals_, SequenceFrame& frame_) {
   return;
  }
 
- frame_._sub_part = RuleExpression::construct(RuleExpression::Tag::Sequence);
+ frame_._sub_part = RuleExpression::construct(ClauseBase::Tag::Sequence);
 
  locals_._keep_current_frame = true;
 }
@@ -293,7 +293,7 @@ void process_frame_01(Locals& locals_, ChoicesFrame& frame_) {
  ++frame_._idx;
 
  if (frame_._idx == 1) {
-  frame_._sub_part = RuleExpression::construct(RuleExpression::Tag::Choice);
+  frame_._sub_part = RuleExpression::construct(ClauseBase::Tag::Choice);
  }
 
  frame_._sub_part->give_child_at_back(std::move(locals_._ret_part));
@@ -318,45 +318,45 @@ void process_frame_01(Locals& locals_, RepetitionFrame& frame_) {
  RuleExpression::UniqueHandle body = std::move(locals_._ret_part);
 
  if /* x{,} */ (frame_._range.get_lower() == 0 && !frame_._range.get_upper().has_value()) {
-  locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Choice);
-  locals_._ret_part->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::OneOrMore));
+  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Choice);
+  locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::OneOrMore));
   locals_._ret_part->get_child_at_back()->give_child_at_back(std::move(body));
-  locals_._ret_part->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::Epsilon));
+  locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Epsilon));
  } else if /* x{a,} */ (frame_._range.get_lower() != 0 && !frame_._range.get_upper().has_value()) {
-  locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Sequence);
+  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Sequence);
   for (size_t i = 1; i < frame_._range.get_lower(); ++i) {
    locals_._ret_part->give_child_at_back(RuleExpression::clone(*body));
   }
-  locals_._ret_part->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::OneOrMore));
+  locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::OneOrMore));
   locals_._ret_part->get_child_at_back()->give_child_at_back(std::move(body));
  } else if /* x{a,b} */ (frame_._range.get_lower() != 0 && frame_._range.get_upper().has_value()) {
-  locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Sequence);
+  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Sequence);
   for (size_t i = 0; i < frame_._range.get_lower(); ++i) {
    locals_._ret_part->give_child_at_back(RuleExpression::clone(*body));
   }
   if (frame_._range.get_lower() != *frame_._range.get_upper()) {
-   locals_._ret_part->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::Choice));
+   locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Choice));
    RuleExpression* const choice = locals_._ret_part->get_child_at_back();
    for (size_t i = *frame_._range.get_upper() - frame_._range.get_lower(); i != 0; --i) {
-    choice->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::Sequence));
+    choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Sequence));
     RuleExpression* const sequence = choice->get_child_at_back();
     for (size_t j = 0; j < i; ++j) {
      sequence->give_child_at_back(RuleExpression::clone(*body));
     }
    }
-   choice->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::Epsilon));
+   choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Epsilon));
   }
  } else /* x{,b} */ {
-  locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Choice);
+  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Choice);
   RuleExpression* const choice = locals_._ret_part.get();
   for (size_t i = *frame_._range.get_upper() - frame_._range.get_lower(); i != 0; --i) {
-   choice->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::Sequence));
+   choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Sequence));
    RuleExpression* const sequence = choice->get_child_at_back();
    for (size_t j = 0; j < i; ++j) {
     sequence->give_child_at_back(RuleExpression::clone(*body));
    }
   }
-  choice->give_child_at_back(RuleExpression::construct(RuleExpression::Tag::Epsilon));
+  choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Epsilon));
  }
 }
 
@@ -366,25 +366,25 @@ void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
  for (auto const ch : str_literal) {
   literal.emplace_back(Interval<SymbolValueType>(ch));
  }
- locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Literal);
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Literal);
  locals_._ret_part->set_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, IntegerLiteralFrame& frame_) {
  RuleExpression::LiteralType literal;
  literal.emplace_back(Interval<SymbolValueType>(Number(*frame_._ast_cur_path).get_value()));
- locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Literal);
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Literal);
  locals_._ret_part->set_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, CharsetFrame& frame_) {
  RuleExpression::LiteralType literal{Charset(*frame_._ast_cur_path).get_values()};
- locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Literal);
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Literal);
  locals_._ret_part->set_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {
- locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Identifier);
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Identifier);
  locals_._ret_part->set_identifier(frame_._ast_cur_path->get_string());
 }
 
@@ -396,13 +396,13 @@ void process_frame_00(Locals& locals_, HiddenFrame& frame_) {
 }
 
 void process_frame_01(Locals& locals_, HiddenFrame& frame_) {
- RuleExpression::UniqueHandle hidden = RuleExpression::construct(RuleExpression::Tag::Hidden);
+ RuleExpression::UniqueHandle hidden = RuleExpression::construct(ClauseBase::Tag::Hidden);
  hidden->give_child_at_back(std::move(locals_._ret_part));
  locals_._ret_part = std::move(hidden);
 }
 
 void process_frame_00(Locals& locals_, EpsilonFrame& frame_) {
- locals_._ret_part = RuleExpression::construct(RuleExpression::Tag::Epsilon);
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Epsilon);
 }
 
 void dispatch(Locals& locals_, Frame& frame_) {

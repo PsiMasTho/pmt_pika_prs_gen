@@ -13,24 +13,24 @@
 namespace pmt::base {
 
 template <std::integral T_>
-Interval<T_>::Interval(T_ value_)
+constexpr Interval<T_>::Interval(T_ value_)
  : Interval(value_, value_) {
 }
 
 template <std::integral T_>
-Interval<T_>::Interval(T_ lower_, T_ upper_)
+constexpr Interval<T_>::Interval(T_ lower_, T_ upper_)
  : _lower(lower_)
  , _upper(upper_) {
  assert(lower_ <= upper_);
 }
 
 template <std::integral T_>
-auto Interval<T_>::get_lower() const -> T_ {
+constexpr auto Interval<T_>::get_lower() const -> T_ {
  return _lower;
 }
 
 template <std::integral T_>
-auto Interval<T_>::get_upper() const -> T_ {
+constexpr auto Interval<T_>::get_upper() const -> T_ {
  return _upper;
 }
 

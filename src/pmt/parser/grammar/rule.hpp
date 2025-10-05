@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pmt/base/interval_set.hpp"
+#include "pmt/parser/clause_base.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
 #include <deque>
@@ -47,19 +48,8 @@ public:
  using IdentifierType = std::string;
  using LiteralType = std::vector<pmt::base::IntervalSet<pmt::util::sm::SymbolValueType>>;
 
- enum class Tag {
-  Sequence,
-  Choice,
-  Hidden,
-  Identifier,
-  Literal,
-  OneOrMore,
-  NotFollowedBy,
-  Epsilon,
- };
-
 private:
- // Note: keep the values of the Tag constants the same as the indices of their types in the variant
+ // Note: keep the values of the ClauseBase::Tag constants the same as the indices of their types in the variant
  using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, IdentifierType, LiteralType, OneOrMoreType, NotFollowedByType, EpsilonType>;
 
  // -$ Data $-
@@ -67,16 +57,16 @@ private:
 
  // -$ Functions $-
  // --$ Lifetime $--
- explicit RuleExpression(Tag tag_);
+ explicit RuleExpression(ClauseBase::Tag tag_);
 
 public:
  static void destruct(RuleExpression* self_);
- static auto construct(Tag tag_) -> UniqueHandle;
+ static auto construct(ClauseBase::Tag tag_) -> UniqueHandle;
 
  static auto clone(RuleExpression const& other_) -> UniqueHandle;
 
  // --$ Other $--
- auto get_tag() const -> Tag;
+ auto get_tag() const -> ClauseBase::Tag;
 
  // recursive types getters / setters
  auto get_children_size() const -> size_t;

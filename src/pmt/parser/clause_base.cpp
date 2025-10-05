@@ -1,17 +1,29 @@
 #include "pmt/parser/clause_base.hpp"
+#include "pmt/asserts.hpp"
 
 namespace pmt::parser {
 
-auto ClauseBase::get_child_id_count() const -> size_t {
- return 0;
-}
-
-auto ClauseBase::get_seed_parent_count() const -> size_t {
- return 0;
-}
-
-auto ClauseBase::can_match_zero() const -> bool {
- return false;
+auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
+ switch (tag_) {
+  case Tag::Sequence:
+   return "Sequence";
+  case Tag::Choice:
+   return "Choice";
+  case Tag::Hidden:
+   return "Hidden";
+  case Tag::Identifier:
+   return "Identifier";
+  case Tag::Literal:
+   return "Literal";
+  case Tag::OneOrMore:
+   return "OneOrMore";
+  case Tag::NotFollowedBy:
+   return "NotFollowedBy";
+  case Tag::Epsilon:
+   return "Epsilon";
+  default:
+   pmt::unreachable();
+ }
 }
 
 }  // namespace pmt::parser

@@ -1,6 +1,7 @@
 #include "pmt/parser/grammar/grammar_simplifier.hpp"
 #include <unordered_set>
 
+#include "parser/clause_base.hpp"
 #include "parser/grammar/grammar.hpp"
 #include "parser/grammar/rule.hpp"
 
@@ -24,7 +25,7 @@ auto get_referenced_rules(RuleExpression const* rule_expression_) -> std::unorde
    continue;
   }
 
-  if (cur->get_tag() == RuleExpression::Tag::Identifier) {
+  if (cur->get_tag() == ClauseBase::Tag::Identifier) {
    ret.insert(cur->get_identifier());
    continue;
   }
@@ -76,13 +77,16 @@ void prune(Grammar& grammar_) {
  }
 }
 
-void flatten_expression(RuleExpression* rule_expression_) {
+void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
  bool repeat = false;
 
  do {
   repeat = false;
   std::vector<std::pair<RuleExpression*, size_t>> pending;
-  pending.emplace_back(rule_expression_, 0);
+
+  for (size_t j = 0; j < rule_expression_->get_children_size(); ++j) {
+   pending.emplace_back(rule_expression_.get(), j);
+  }
 
   while (!pending.empty()) {
    auto [parent, idx] = pending.back();
@@ -90,9 +94,9 @@ void flatten_expression(RuleExpression* rule_expression_) {
    RuleExpression* const child = parent->get_child_at(idx);
 
    switch (child->get_tag()) {
-    case RuleExpression::Tag::Choice:
+    case ClauseBase::Tag::Choice:
      if (child->get_children_size() == 1) {
-      RuleExpression::UniqueHandle grandchild = child->take_child_at(0);
+      RuleExpression::UniqueHandle grandchild = child->take_child_at_front();
       parent->take_child_at(idx);
       parent->give_child_at(idx, std::move(grandchild));
       pending.emplace_back(parent, idx);
@@ -100,7 +104,7 @@ void flatten_expression(RuleExpression* rule_expression_) {
      } else {
       // Any choices in choices can be immediately flattened
       for (size_t j = 0; j < child->get_children_size(); ++j) {
-       if (child->get_child_at(j)->get_tag() != RuleExpression::Tag::Choice) {
+       if (child->get_child_at(j)->get_tag() != ClauseBase::Tag::Choice) {
         continue;
        }
 
@@ -117,11 +121,11 @@ void flatten_expression(RuleExpression* rule_expression_) {
       }
      }
      break;
-    case RuleExpression::Tag::Sequence:
+    case ClauseBase::Tag::Sequence:
      // Unpack any nested sequences
      for (size_t j = 0; j < child->get_children_size(); ++j) {
       RuleExpression* const grandchild = child->get_child_at(j);
-      if (grandchild->get_tag() != RuleExpression::Tag::Sequence) {
+      if (grandchild->get_tag() != ClauseBase::Tag::Sequence) {
        continue;
       }
       child->unpack(j);
@@ -132,7 +136,7 @@ void flatten_expression(RuleExpression* rule_expression_) {
      for (size_t j = 0; j < child->get_children_size() - 1; ++j) {
       RuleExpression* const lhs = child->get_child_at(j);
       RuleExpression* const rhs = child->get_child_at(j + 1);
-      if (lhs->get_tag() != RuleExpression::Tag::Literal || rhs->get_tag() != RuleExpression::Tag::Literal) {
+      if (lhs->get_tag() != ClauseBase::Tag::Literal || rhs->get_tag() != ClauseBase::Tag::Literal) {
        continue;
       }
       lhs->get_literal().insert(lhs->get_literal().end(), rhs->get_literal().begin(), rhs->get_literal().end());
@@ -142,17 +146,17 @@ void flatten_expression(RuleExpression* rule_expression_) {
      }
      // Remove any epsilons which are not the only child
      for (size_t i = 1; i < child->get_children_size();) {
-      if (child->get_child_at(i)->get_tag() == RuleExpression::Tag::Epsilon) {
+      if (child->get_child_at(i)->get_tag() == ClauseBase::Tag::Epsilon) {
        child->take_child_at(i);
       } else {
        ++i;
       }
      }
-     if (child->get_children_size() > 1 && child->get_child_at_front()->get_tag() == RuleExpression::Tag::Epsilon) {
+     if (child->get_children_size() > 1 && child->get_child_at_front()->get_tag() == ClauseBase::Tag::Epsilon) {
       child->take_child_at_front();
      }
      if (child->get_children_size() == 1) {
-      RuleExpression::UniqueHandle grandchild = child->take_child_at(0);
+      RuleExpression::UniqueHandle grandchild = child->take_child_at_back();
       parent->take_child_at(idx);
       parent->give_child_at(idx, std::move(grandchild));
       pending.emplace_back(parent, idx);
@@ -160,13 +164,13 @@ void flatten_expression(RuleExpression* rule_expression_) {
      } else {
       bool hasChoices = false;
       for (size_t j = 0; j < child->get_children_size(); ++j) {
-       if (child->get_child_at(j)->get_tag() != RuleExpression::Tag::Choice) {
+       if (child->get_child_at(j)->get_tag() != ClauseBase::Tag::Choice) {
         continue;
        }
        hasChoices = true;
 
        RuleExpression::UniqueHandle grandchild = child->take_child_at(j);
-       RuleExpression::UniqueHandle new_choice = RuleExpression::construct(RuleExpression::Tag::Choice);
+       RuleExpression::UniqueHandle new_choice = RuleExpression::construct(ClauseBase::Tag::Choice);
 
        for (size_t k = 0; k < grandchild->get_children_size(); ++k) {
         RuleExpression::UniqueHandle cloned = RuleExpression::clone(*child);
@@ -187,8 +191,8 @@ void flatten_expression(RuleExpression* rule_expression_) {
       }
      }
      break;
-    case RuleExpression::Tag::OneOrMore:
-    case RuleExpression::Tag::NotFollowedBy:
+    case ClauseBase::Tag::OneOrMore:
+    case ClauseBase::Tag::NotFollowedBy:
      pending.emplace_back(child, 0);
      break;
     default:
@@ -196,17 +200,21 @@ void flatten_expression(RuleExpression* rule_expression_) {
    }
   }
  } while (repeat);
+
+ // A definition comes in as a ClauseBase::Tag::Choice, if it has one child we can just unpack it
+ if (rule_expression_->get_tag() == ClauseBase::Tag::Choice && rule_expression_->get_children_size() == 1) {
+  rule_expression_ = rule_expression_->take_child_at_back();
+ }
 }
 
 void flatten(Grammar& grammar_) {
- std::unordered_set<std::string> all_rule_names = grammar_.get_rule_names();
- for (std::string const& rule_name : all_rule_names) {
+ for (std::string const& rule_name : grammar_.get_rule_names()) {
   Rule* rule = grammar_.get_rule(rule_name);
   if (rule == nullptr || rule->_definition == nullptr) {
    continue;
   }
 
-  flatten_expression(rule->_definition.get());
+  flatten_expression(rule->_definition);
  }
 }
 }  // namespace

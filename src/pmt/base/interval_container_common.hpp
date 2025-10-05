@@ -32,15 +32,15 @@ class Interval : public Hashable<Interval<T_>> {
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- explicit Interval(T_ value_);
- Interval(T_ lower_, T_ upper_);
+ constexpr explicit Interval(T_ value_);
+ constexpr Interval(T_ lower_, T_ upper_);
 
  // --$ Other $--
- auto get_lower() const -> T_;
- auto get_upper() const -> T_;
+ constexpr auto get_lower() const -> T_;
+ constexpr auto get_upper() const -> T_;
 
  // --$ Operators $--
- auto operator==(Interval const& _) const -> bool = default;
+ constexpr auto operator==(Interval const& _) const -> bool = default;
 
  // --$ Inherited: pmt::base::Hashable $--
  auto hash() const -> size_t;

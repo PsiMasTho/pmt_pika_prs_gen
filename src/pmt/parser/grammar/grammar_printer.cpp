@@ -1,6 +1,8 @@
 #include "pmt/parser/grammar/grammar_printer.hpp"
 
-#include "pmt/base/match.hpp"
+#include "parser/clause_base.hpp"
+#include "parser/grammar/util.hpp"
+#include "pmt/asserts.hpp"
 #include "pmt/base/overloaded.hpp"
 #include "pmt/parser/grammar/grammar.hpp"
 #include "pmt/parser/grammar/rule.hpp"
@@ -41,7 +43,7 @@ auto push(Locals& locals_, StackItem item_) {
  locals_._pending.push_back(std::move(item_));
 }
 
-void write_rule_lhs(GrammarPrinter::Args& args_, Locals& locals_, std::string const& rule_name_, Rule const& rule_) {
+void write_rule_lhs_as_grammar(GrammarPrinter::Args& args_, Locals& locals_, std::string const& rule_name_, Rule const& rule_) {
  std::string delim;
  std::string parameter_str;
 
@@ -75,19 +77,19 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
  auto const P = parent_->get_tag();
  auto const C = child_->get_tag();
  auto const child_arity = child_->get_children_size();
- auto const is_unary = [&](RuleExpression::Tag t_) {
-  return t_ == RuleExpression::Tag::Hidden || t_ == RuleExpression::Tag::NotFollowedBy || t_ == RuleExpression::Tag::OneOrMore;
+ auto const is_unary = [&](ClauseBase::Tag t_) {
+  return t_ == ClauseBase::Tag::Hidden || t_ == ClauseBase::Tag::NotFollowedBy || t_ == ClauseBase::Tag::OneOrMore;
  };
 
  switch (C) {
-  case RuleExpression::Tag::Sequence:
+  case ClauseBase::Tag::Sequence:
    // Sequence never needs parens inside Choice or Sequence.
    // It DOES need parens under unary operators if it has multiple items.
    return child_arity > 1 && is_unary(P);
 
-  case RuleExpression::Tag::Choice:
+  case ClauseBase::Tag::Choice:
    // Choice needs parens when it's NEXT to other items in a Sequence.
-   if (P == RuleExpression::Tag::Sequence)
+   if (P == ClauseBase::Tag::Sequence)
     return parent_->get_children_size() > 1;
    // Also needs parens under unary operators if it has multiple alts.
    if (is_unary(P))
@@ -101,7 +103,7 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
 }
 
 void expand_once(GrammarPrinter::Args& args_, Locals& locals_, RuleExpression const* node_, RuleExpression const* parent_) {
- using Tag = RuleExpression::Tag;
+ using Tag = ClauseBase::Tag;
 
  switch (node_->get_tag()) {
   case Tag::Sequence:
@@ -148,7 +150,7 @@ void expand_once(GrammarPrinter::Args& args_, Locals& locals_, RuleExpression co
  }
 }
 
-void write_rule_rhs(GrammarPrinter::Args& args_, Locals& locals_, Rule const& rule_) {
+void write_rule_rhs_as_grammar(GrammarPrinter::Args& args_, Locals& locals_, Rule const& rule_) {
  push(locals_, ";");
  push(locals_, rule_._definition.get());
 
@@ -180,19 +182,70 @@ void write_start_rule(GrammarPrinter::Args& args_, Locals& locals_, std::string 
  args_._out << "@start = " << (rule_name_.empty() ? "/* missing identifier */" : rule_name_) << ";\n";
 }
 
-void write_rule(GrammarPrinter::Args& args_, Locals& locals_, std::string const& rule_name_) {
+void write_rule_as_grammar(GrammarPrinter::Args& args_, Locals& locals_, std::string const& rule_name_) {
  Rule const* rule = args_._grammar.get_rule(rule_name_);
  assert(rule != nullptr);
- write_rule_lhs(args_, locals_, rule_name_, *rule);
- write_rule_rhs(args_, locals_, *rule);
+ write_rule_lhs_as_grammar(args_, locals_, rule_name_, *rule);
+ write_rule_rhs_as_grammar(args_, locals_, *rule);
+}
+
+void write_rule_as_tree(GrammarPrinter::Args& args_, std::string const& rule_name_) {
+ args_._out << "Definition: " << rule_name_ << std::endl;
+
+ std::vector<std::pair<RuleExpression const*, size_t>> pending;
+
+ auto const push = [&](RuleExpression const* node_, size_t depth_) {
+  pending.emplace_back(node_, depth_);
+ };
+
+ auto const take = [&]() {
+  auto const ret = pending.back();
+  pending.pop_back();
+  return ret;
+ };
+
+ auto const get_indent = [&](size_t depth_) {
+  return std::string(depth_ * 2, ' ');
+ };
+
+ push(args_._grammar.get_rule(rule_name_)->_definition.get(), 2);
+
+ while (!pending.empty()) {
+  auto const [expr_cur, depth_cur] = take();
+  args_._out << get_indent(depth_cur) << ClauseBase::tag_to_string(expr_cur->get_tag());
+
+  switch (expr_cur->get_tag()) {
+   case ClauseBase::Tag::Literal:
+    args_._out << ": " << literal_sequence_to_printable_string(expr_cur->get_literal());
+    break;
+   case ClauseBase::Tag::Identifier:
+    args_._out << ": " << expr_cur->get_identifier();
+    break;
+   case ClauseBase::Tag::Epsilon:
+    break;
+   case ClauseBase::Tag::Choice:
+   case ClauseBase::Tag::Sequence:
+   case ClauseBase::Tag::OneOrMore:
+   case ClauseBase::Tag::Hidden:
+   case ClauseBase::Tag::NotFollowedBy:
+    args_._out << ": ";
+    for (size_t i = expr_cur->get_children_size(); i--;) {
+     push(expr_cur->get_child_at(i), depth_cur + 1);
+    }
+    break;
+   default:
+    pmt::unreachable();
+  }
+  args_._out << std::endl;
+ }
 }
 
 }  // namespace
 
-void GrammarPrinter::print(Args args_) {
+void GrammarPrinter::print_as_grammar(Args args_) {
  Locals locals;
 
- std::set<std::string> const _rule_names = [&] {
+ std::set<std::string> const rule_names = [&] {
   auto unsorted = args_._grammar.get_rule_names();
   return std::set<std::string>(unsorted.begin(), unsorted.end());
  }();
@@ -200,9 +253,18 @@ void GrammarPrinter::print(Args args_) {
  write_start_rule(args_, locals, args_._grammar.get_start_rule_name());
 
  std::string delim;
- for (auto const& rule_name : _rule_names) {
+ for (auto const& rule_name : rule_names) {
   args_._out << std::exchange(delim, "\n");
-  write_rule(args_, locals, rule_name);
+  write_rule_as_grammar(args_, locals, rule_name);
  }
 }
+
+void GrammarPrinter::print_as_tree(Args args_) {
+ std::string delim;
+ for (std::string const& rule_name : args_._grammar.get_rule_names()) {
+  args_._out << std::exchange(delim, "\n");
+  write_rule_as_tree(args_, rule_name);
+ }
+}
+
 }  // namespace pmt::parser::grammar
