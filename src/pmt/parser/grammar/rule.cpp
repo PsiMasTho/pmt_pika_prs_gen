@@ -21,7 +21,7 @@ RuleExpression::RuleExpression(ClauseBase::Tag tag_)
    case ClauseBase::Tag::Identifier:
     return IdentifierType{};
    case ClauseBase::Tag::Literal:
-    return LiteralType{};
+    return CharsetLiteral{};
    case ClauseBase::Tag::OneOrMore:
     return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>, nullptr);
    case ClauseBase::Tag::NotFollowedBy:
@@ -78,7 +78,7 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
     dst->set_identifier(src->get_identifier());
    } break;
    case ClauseBase::Tag::Literal: {
-    dst->set_literal(src->get_literal());
+    dst->set_charset_literal(src->get_charset_literal());
    } break;
    case ClauseBase::Tag::Epsilon: {
    } break;
@@ -250,17 +250,17 @@ void RuleExpression::set_identifier(IdentifierType identifier_) {
  _data = std::move(identifier_);
 }
 
-auto RuleExpression::get_literal() -> LiteralType& {
+auto RuleExpression::get_charset_literal() -> CharsetLiteral& {
  assert(get_tag() == ClauseBase::Tag::Literal);
  return *std::get_if<static_cast<size_t>(ClauseBase::Tag::Literal)>(&_data);
 }
 
-auto RuleExpression::get_literal() const -> LiteralType const& {
+auto RuleExpression::get_charset_literal() const -> CharsetLiteral const& {
  assert(get_tag() == ClauseBase::Tag::Literal);
  return *std::get_if<static_cast<size_t>(ClauseBase::Tag::Literal)>(&_data);
 }
 
-void RuleExpression::set_literal(LiteralType literal_) {
+void RuleExpression::set_charset_literal(CharsetLiteral literal_) {
  _data = std::move(literal_);
 }
 

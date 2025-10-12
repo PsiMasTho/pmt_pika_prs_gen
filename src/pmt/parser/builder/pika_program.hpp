@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pmt/parser/builder/state_machine_tables.hpp"
 #include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/grammar/grammar.hpp"
 #include "pmt/parser/grammar/rule.hpp"
@@ -36,10 +37,11 @@ public:
 class PikaProgram : public pmt::parser::rt::PikaProgramBase {
  // -$ Types / Constants $-
  // -$ Data $-
- std::vector<ExtendedClause> _clauses;
- std::vector<pmt::parser::grammar::RuleParameters> _rule_parameter_table;
- std::vector<pmt::parser::grammar::RuleExpression::LiteralType> _lit_seq_table;
- std::vector<std::string> _rule_id_table;
+ std::vector<ExtendedClause> _nonterminal_clauses;
+ std::vector<StateMachineTables> _terminal_state_machine_tables;
+ std::vector<StateMachineTables> _terminal_lookahead_state_machine_tables;
+ std::vector<pmt::parser::grammar::RuleParameters> _rule_parameters;
+ std::vector<std::string> _rule_ids;
 
 public:
  // -$ Functions $-
@@ -47,19 +49,17 @@ public:
  explicit PikaProgram(pmt::parser::grammar::Grammar const& grammar_);
 
  // --$ Inherited: pmt::parser::rt::PikaProgramBase $--
- [[nodiscard]] auto fetch_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& override;
- [[nodiscard]] auto get_clause_count() const -> size_t override;
+ [[nodiscard]] auto fetch_nonterminal_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& override;
+ [[nodiscard]] auto get_nonterminal_clause_count() const -> size_t override;
 
  [[nodiscard]] auto fetch_rule_info(ClauseBase::IdType rule_info_id_) const -> pmt::parser::rt::PikaRuleInfo override;
  [[nodiscard]] auto get_rule_info_count() const -> size_t override;
 
- [[nodiscard]] auto lit_seq_match_at(ClauseBase::IdType lit_seq_id_, size_t idx_, SymbolType sym_) const -> bool override;
- [[nodiscard]] auto get_lit_seq_length(ClauseBase::IdType lit_seq_id_) const -> size_t override;
+ [[nodiscard]] auto get_terminal_state_machine_tables(size_t idx_) const -> pmt::parser::rt::StateMachineTablesBase const& override;
+ [[nodiscard]] auto get_terminal_state_machine_lookahead_tables(size_t idx_) const -> pmt::parser::rt::StateMachineTablesBase const& override;
+ [[nodiscard]] auto get_terminal_state_machine_count() const -> size_t override;
 
  // --$ Other $--
- auto fetch_lit_seq(ClauseBase::IdType lit_seq_id_) const -> pmt::parser::grammar::RuleExpression::LiteralType const&;
- auto get_lit_seq_count() const -> size_t;
-
  auto fetch_rule_parameters(ClauseBase::IdType rule_info_id_) const -> pmt::parser::grammar::RuleParameters const&;
 
 private:

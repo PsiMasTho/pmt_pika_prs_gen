@@ -2,12 +2,21 @@
 #include <unordered_set>
 
 #include "parser/clause_base.hpp"
+#include "parser/grammar/charset_literal.hpp"
 #include "parser/grammar/grammar.hpp"
 #include "parser/grammar/rule.hpp"
 
 namespace pmt::parser::grammar {
 
 namespace {
+
+void concat_charset_literals(CharsetLiteral& lhs_, CharsetLiteral const& rhs_) {
+ for (size_t i = 0; i < rhs_.size(); ++i) {
+  lhs_.push_back<CharsetLiteral::IsHidden::No>(rhs_.get_symbol_set_at<CharsetLiteral::IsHidden::No>(i));
+  lhs_.get_symbol_set_at<CharsetLiteral::IsHidden::Yes>(lhs_.size() - 1) = rhs_.get_symbol_set_at<CharsetLiteral::IsHidden::Yes>(i);
+ }
+}
+
 auto get_referenced_rules(RuleExpression const* rule_expression_) -> std::unordered_set<std::string> {
  std::unordered_set<std::string> ret;
 
@@ -139,7 +148,7 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
       if (lhs->get_tag() != ClauseBase::Tag::Literal || rhs->get_tag() != ClauseBase::Tag::Literal) {
        continue;
       }
-      lhs->get_literal().insert(lhs->get_literal().end(), rhs->get_literal().begin(), rhs->get_literal().end());
+      concat_charset_literals(lhs->get_charset_literal(), rhs->get_charset_literal());
       child->take_child_at(j + 1);
       repeat = true;
       j = 0;

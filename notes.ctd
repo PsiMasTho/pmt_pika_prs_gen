@@ -34,7 +34,7 @@ declare and define getters before setters if possible
 boolean functions start with "is_"</rich_text>
     </node>
   </node>
-  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1759062204">
+  <node name="ScratchPad" unique_id="4" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="#e5a50a" ts_creation="1745161415" ts_lastsave="1760201506">
     <rich_text>Rename:
 parsert: smrt
 parsect: smct
@@ -276,7 +276,14 @@ No need for an actual label ID in the emitted bytecode, just jump to the PC
 
 regular rules are defined as:
 %R1&lt;regular = true&gt; = "abc" | "def";
-implies &lt;merge = true&gt;</rich_text>
+implies &lt;merge = true&gt;
+
+-----
+Printing CharsetLiteral examples...
+
+----
+All terminals get converted to state machines, then compatibility matrices are computed.
+Terminal state machines get combined based on their compatibility matrices so that the least number of state machines needed are created</rich_text>
   </node>
   <node name="Code dump" unique_id="8" prog_lang="plain-text" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1746822397" ts_lastsave="1746979052">
     <rich_text> size_t max = 0;

@@ -137,12 +137,7 @@ void expand_once(GrammarPrinter::Args& args_, Locals& locals_, RuleExpression co
    args_._out << node_->get_identifier();
    break;
   case Tag::Literal: {
-   std::string delim;
-   for (IntervalSet<SymbolValueType> const& sym : node_->get_literal()) {
-    args_._out << std::exchange(delim, " ") << "[";
-    sym.for_each_interval([&](Interval<SymbolValueType> interval_) { args_._out << "10#" << interval_.get_lower() << "..10#" << interval_.get_upper(); });
-    args_._out << "]";
-   }
+   args_._out << charset_literal_to_printable_string(node_->get_charset_literal());
   } break;
   case Tag::Epsilon:
    push(locals_, "epsilon");
@@ -216,7 +211,7 @@ void write_rule_as_tree(GrammarPrinter::Args& args_, std::string const& rule_nam
 
   switch (expr_cur->get_tag()) {
    case ClauseBase::Tag::Literal:
-    args_._out << ": " << literal_sequence_to_printable_string(expr_cur->get_literal());
+    args_._out << ": " << charset_literal_to_printable_string(expr_cur->get_charset_literal());
     break;
    case ClauseBase::Tag::Identifier:
     args_._out << ": " << expr_cur->get_identifier();

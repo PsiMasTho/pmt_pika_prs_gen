@@ -1,14 +1,12 @@
 #pragma once
 
-#include "pmt/base/interval_set.hpp"
 #include "pmt/parser/clause_base.hpp"
-#include "pmt/util/sm/primitives.hpp"
+#include "pmt/parser/grammar/charset_literal.hpp"
 
 #include <deque>
 #include <memory>
 #include <string>
 #include <variant>
-#include <vector>
 
 namespace pmt::parser::grammar {
 
@@ -46,11 +44,10 @@ private:
 
 public:
  using IdentifierType = std::string;
- using LiteralType = std::vector<pmt::base::IntervalSet<pmt::util::sm::SymbolValueType>>;
 
 private:
  // Note: keep the values of the ClauseBase::Tag constants the same as the indices of their types in the variant
- using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, IdentifierType, LiteralType, OneOrMoreType, NotFollowedByType, EpsilonType>;
+ using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, IdentifierType, CharsetLiteral, OneOrMoreType, NotFollowedByType, EpsilonType>;
 
  // -$ Data $-
  VariantType _data;
@@ -93,9 +90,9 @@ public:
  auto get_identifier() const -> IdentifierType const&;
  void set_identifier(IdentifierType identifier_);
 
- auto get_literal() -> LiteralType&;
- auto get_literal() const -> LiteralType const&;
- void set_literal(LiteralType literal_);
+ auto get_charset_literal() -> CharsetLiteral&;
+ auto get_charset_literal() const -> CharsetLiteral const&;
+ void set_charset_literal(CharsetLiteral literal_);
 
  // misc
  void unpack(size_t idx_);

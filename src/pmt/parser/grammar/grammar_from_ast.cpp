@@ -1,5 +1,6 @@
 #include "pmt/parser/grammar/grammar_from_ast.hpp"
 
+#include "parser/grammar/charset_literal.hpp"
 #include "parser/grammar/rule.hpp"
 #include "pmt/asserts.hpp"
 #include "pmt/parser/generic_ast.hpp"
@@ -9,7 +10,6 @@
 #include "pmt/parser/grammar/number.hpp"
 #include "pmt/parser/grammar/repetition_range.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
-#include "primitives.hpp"
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
@@ -361,26 +361,27 @@ void process_frame_01(Locals& locals_, RepetitionFrame& frame_) {
 }
 
 void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
- RuleExpression::LiteralType literal;
+ CharsetLiteral literal;
  std::string const& str_literal = StringLiteral(*frame_._ast_cur_path).get_value();
- for (auto const ch : str_literal) {
-  literal.emplace_back(Interval<SymbolValueType>(ch));
+ for (char const ch : str_literal) {
+  literal.push_back<CharsetLiteral::IsHidden::No>(Interval<SymbolValueType>(ch));
  }
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Literal);
- locals_._ret_part->set_literal(std::move(literal));
+ locals_._ret_part->set_charset_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, IntegerLiteralFrame& frame_) {
- RuleExpression::LiteralType literal;
- literal.emplace_back(Interval<SymbolValueType>(Number(*frame_._ast_cur_path).get_value()));
+ CharsetLiteral literal;
+ literal.push_back<CharsetLiteral::IsHidden::No>(Interval<SymbolValueType>(Number(*frame_._ast_cur_path).get_value()));
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Literal);
- locals_._ret_part->set_literal(std::move(literal));
+ locals_._ret_part->set_charset_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, CharsetFrame& frame_) {
- RuleExpression::LiteralType literal{Charset(*frame_._ast_cur_path).get_values()};
+ CharsetLiteral literal;
+ literal.push_back<CharsetLiteral::IsHidden::No>(Charset(*frame_._ast_cur_path).get_values());
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Literal);
- locals_._ret_part->set_literal(std::move(literal));
+ locals_._ret_part->set_charset_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {

@@ -3,90 +3,79 @@
 #include "pmt/asserts.hpp"
 #include "pmt/base/bitset.hpp"
 #include "pmt/base/overloaded.hpp"
+#include "pmt/parser/builder/state_machine_util.hpp"
 #include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/generic_id.hpp"
+#include "pmt/parser/grammar/charset_literal.hpp"
 #include "pmt/parser/grammar/rule.hpp"
 #include "pmt/parser/rt/pika_program_base.hpp"
 
 #include <cassert>
 #include <set>
+#include <unordered_set>
 
 namespace pmt::parser::builder {
 
 using namespace pmt::base;
 using namespace pmt::parser::rt;
 using namespace pmt::parser::grammar;
+using namespace pmt::util::sm::ct;
 
 namespace {
+using StateMachineFetch = decltype(Overloaded{[](std::vector<StateMachine> const& state_machines_, size_t index_) { return index_ < state_machines_.size() ? &state_machines_[index_] : nullptr; },
+                                              [](std::vector<StateMachine> const&, StateMachine const& item_) {
+                                               return &item_;
+                                              }});
 
-using LitSeqFetcher = decltype(Overloaded{[](std::vector<RuleExpression::LiteralType> const& lit_seq_table_, size_t index_) { return index_ < lit_seq_table_.size() ? &lit_seq_table_[index_] : nullptr; },
-                                          [](std::vector<RuleExpression::LiteralType> const&, RuleExpression::LiteralType const& item_) {
-                                           return &item_;
-                                          }});
-
-class LitSeqHasher {
- std::vector<RuleExpression::LiteralType> const& _lit_seq_table;
+class StateMachineIndirectHash {
+ std::vector<StateMachine> const& _state_machine_table;
 
 public:
  using is_transparent = void;  // NOLINT
 
- explicit LitSeqHasher(std::vector<RuleExpression::LiteralType> const& lit_seq_table_)
-  : _lit_seq_table(lit_seq_table_) {
+ explicit StateMachineIndirectHash(std::vector<StateMachine> const& lit_seq_table_)
+  : _state_machine_table(lit_seq_table_) {
  }
 
  auto operator()(auto const& item_) const -> size_t {
-  size_t seed = Hash::Phi64;
-  RuleExpression::LiteralType const* literal = LitSeqFetcher{}(_lit_seq_table, item_);
-
-  if (literal != nullptr) {
-   for (IntervalSet<SymbolType> const& interval : *literal) {
-    Hash::combine(interval, seed);
-   }
-  }
-
-  return seed;
+  return terminal_state_machine_hash(StateMachineFetch{}(_state_machine_table, item_));
  }
 };
 
-class LitSeqEq {
- std::vector<RuleExpression::LiteralType> const& _lit_seq_table;
+class StateMachineIndirectEq {
+ std::vector<StateMachine> const& _state_machine_table;
 
 public:
  using is_transparent = void;  // NOLINT
 
- explicit LitSeqEq(std::vector<RuleExpression::LiteralType> const& lit_seq_table_)
-  : _lit_seq_table(lit_seq_table_) {
+ explicit StateMachineIndirectEq(std::vector<StateMachine> const& lit_seq_table_)
+  : _state_machine_table(lit_seq_table_) {
  }
 
  auto operator()(auto const& lhs_, auto const& rhs_) const -> bool {
-  RuleExpression::LiteralType const* lhs = LitSeqFetcher{}(_lit_seq_table, lhs_);
-  RuleExpression::LiteralType const* rhs = LitSeqFetcher{}(_lit_seq_table, rhs_);
+  StateMachine const* lhs = StateMachineFetch{}(_state_machine_table, lhs_);
+  StateMachine const* rhs = StateMachineFetch{}(_state_machine_table, rhs_);
   if (lhs == nullptr || rhs == nullptr) {
    return false;
   }
-  return *lhs == *rhs;
+  return terminal_state_machine_eq(*lhs, *rhs);
  }
 };
 
-class LitSeqTableCached {
- std::unordered_set<size_t, LitSeqHasher, LitSeqEq> _lit_seq_set_cache;
- std::vector<RuleExpression::LiteralType>& _lit_seq_table;
+class StateMachinesCached {
+ std::unordered_set<size_t, StateMachineIndirectHash, StateMachineIndirectEq> _state_machine_set_cache;
+ std::vector<StateMachineTables>& _state_machine_table;
 
 public:
- explicit LitSeqTableCached(std::vector<RuleExpression::LiteralType>& lit_seq_table_)
-  : _lit_seq_set_cache(0, LitSeqHasher(lit_seq_table_), LitSeqEq(lit_seq_table_))
-  , _lit_seq_table(lit_seq_table_) {
- }
-
- auto add_or_get_lit_seq_index(RuleExpression::LiteralType const& item_) {
-  auto const itr = _lit_seq_set_cache.find(item_);
-  if (itr != _lit_seq_set_cache.end()) {
+ auto add_or_get_id(CharsetLiteral const& item_) {
+  auto const itr = _state_machine_set_cache.find(item_);
+  if (itr != _state_machine_set_cache.end()) {
    return *itr;
   }
 
-  size_t const idx = _lit_seq_table.size();
-  _lit_seq_table.push_back(item_);
-  _lit_seq_set_cache.insert(idx);
+  size_t const idx = _state_machine_table.size();
+  _state_machine_table.push_back(item_);
+  _state_machine_set_cache.insert(idx);
   return idx;
  }
 };
@@ -137,13 +126,13 @@ PikaProgram::PikaProgram(Grammar const& grammar_) {
  determine_can_match_zero();
 }
 
-auto PikaProgram::fetch_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& {
- assert(clause_id_ < get_clause_count());
- return _clauses[clause_id_];
+auto PikaProgram::fetch_nonterminal_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& {
+ assert(clause_id_ < get_nonterminal_clause_count());
+ return _nonterminal_clauses[clause_id_];
 }
 
-auto PikaProgram::get_clause_count() const -> size_t {
- return _clauses.size();
+auto PikaProgram::get_nonterminal_clause_count() const -> size_t {
+ return _nonterminal_clauses.size();
 }
 
 auto PikaProgram::fetch_rule_info(ClauseBase::IdType rule_info_id_) const -> PikaRuleInfo {
@@ -158,23 +147,18 @@ auto PikaProgram::get_rule_info_count() const -> size_t {
  return _rule_parameter_table.size();
 }
 
-auto PikaProgram::lit_seq_match_at(ClauseBase::IdType lit_seq_id_, size_t idx_, SymbolType sym_) const -> bool {
- assert(idx_ < get_lit_seq_length(lit_seq_id_));
- return _lit_seq_table[lit_seq_id_][idx_].contains(sym_);
+auto PikaProgram::get_terminal_state_machine_tables(size_t idx_) const -> pmt::parser::rt::StateMachineTablesBase const& {
+ assert(idx_ < _terminal_state_machine_tables.size());
+ return _terminal_state_machine_tables[idx_];
 }
 
-auto PikaProgram::get_lit_seq_length(ClauseBase::IdType lit_seq_id_) const -> size_t {
- assert(lit_seq_id_ < _lit_seq_table.size());
- return _lit_seq_table[lit_seq_id_].size();
+auto PikaProgram::get_terminal_state_machine_lookahead_tables(size_t idx_) const -> pmt::parser::rt::StateMachineTablesBase const& {
+ assert(idx_ < _terminal_lookahead_state_machine_tables.size());
+ return _terminal_lookahead_state_machine_tables[idx_];
 }
 
-auto PikaProgram::fetch_lit_seq(ClauseBase::IdType lit_seq_id_) const -> RuleExpression::LiteralType const& {
- assert(lit_seq_id_ < _lit_seq_table.size());
- return _lit_seq_table[lit_seq_id_];
-}
-
-auto PikaProgram::get_lit_seq_count() const -> size_t {
- return _lit_seq_table.size();
+auto PikaProgram::get_terminal_state_machine_count() const -> size_t {
+ return _terminal_state_machine_tables.size();
 }
 
 auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_info_id_) const -> pmt::parser::grammar::RuleParameters const& {
@@ -183,7 +167,7 @@ auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_info_id_) const 
 }
 
 void PikaProgram::initialize(Grammar const& grammar_) {
- LitSeqTableCached lit_seq_table_cached(_lit_seq_table);
+ LitSeqTableCached lit_seq_table_cached(lit_seq_table);
 
  ClauseBase::IdType counter = 0;
  std::unordered_map<ClauseBase::IdType, ClauseBase::IdType> clause_unique_id_to_index;
