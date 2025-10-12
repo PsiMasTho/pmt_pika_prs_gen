@@ -1,10 +1,11 @@
 #include "pmt/parser/builder/state_machine_util.hpp"
 
-#include "parser/primitives.hpp"
 #include "pmt/base/hash.hpp"
 #include "pmt/base/interval_set.hpp"
+#include "pmt/parser/grammar/charset_literal.hpp"
+#include "pmt/parser/primitives.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
-#include "primitives.hpp"
+#include "pmt/util/sm/primitives.hpp"
 
 #include <vector>
 
@@ -12,8 +13,9 @@ namespace pmt::parser::builder {
 using namespace pmt::base;
 using namespace pmt::util::sm;
 using namespace pmt::util::sm::ct;
+using namespace pmt::parser::grammar;
 
-auto terminal_state_machine_hash(StateMachine const& item_) -> size_t {
+auto terminal_state_machine_hash(StateMachine const& item_, AcceptsEqualityHandling accepts_equality_handling_) -> size_t {
  size_t seed = pmt::base::Hash::Phi64;
 
  std::vector<StateNrType> pending;
@@ -42,7 +44,14 @@ auto terminal_state_machine_hash(StateMachine const& item_) -> size_t {
   State const& state_cur = *item_.get_state(state_nr_cur);
 
   // Hash combine the accepts
-  Hash::combine(state_cur.get_accepts(), seed);
+  switch (accepts_equality_handling_) {
+   case AcceptsEqualityHandling::Exact:
+    Hash::combine(state_cur.get_accepts(), seed);
+    break;
+   case AcceptsEqualityHandling::Present:
+    Hash::combine(state_cur.get_accepts().empty(), seed);
+    break;
+  }
 
   // Hash combine the SymbolKindCharacter and SymbolKindHiddenCharacter transitions
   Hash::combine(state_cur.get_symbol_values(SymbolKindCharacter), seed);
@@ -57,7 +66,7 @@ auto terminal_state_machine_hash(StateMachine const& item_) -> size_t {
  return seed;
 }
 
-auto terminal_state_machine_eq(StateMachine const& lhs_, StateMachine const& rhs_) -> bool {
+auto terminal_state_machine_eq(StateMachine const& lhs_, StateMachine const& rhs_, AcceptsEqualityHandling accepts_equality_handling_) -> bool {
  std::vector<std::pair<StateNrType, StateNrType>> pending;
  std::unordered_map<StateNrType, StateNrType> lhs_to_rhs;
 
@@ -110,8 +119,17 @@ auto terminal_state_machine_eq(StateMachine const& lhs_, StateMachine const& rhs
   State const& state_cur_rhs = *lhs_.get_state(state_nr_rhs_cur);
 
   // Compare accepts
-  if (state_cur_lhs.get_accepts() != state_cur_rhs.get_accepts()) {
-   return false;
+  switch (accepts_equality_handling_) {
+   case AcceptsEqualityHandling::Exact:
+    if (state_cur_lhs.get_accepts() != state_cur_rhs.get_accepts()) {
+     return false;
+    }
+    break;
+   case AcceptsEqualityHandling::Present:
+    if (state_cur_lhs.get_accepts().empty() != state_cur_rhs.get_accepts().empty()) {
+     return false;
+    }
+    break;
   }
 
   if (!cmp_and_follow_transitions(SymbolKindCharacter, state_cur_lhs, state_cur_rhs) || !cmp_and_follow_transitions(SymbolKindHiddenCharacter, state_cur_lhs, state_cur_rhs)) {
@@ -120,6 +138,30 @@ auto terminal_state_machine_eq(StateMachine const& lhs_, StateMachine const& rhs
  }
 
  return true;
+}
+
+auto state_machine_from_charset_literal(CharsetLiteral const& charset_literal_, AcceptsIndexType accept_) -> StateMachine {
+ StateMachine state_machine;
+ StateNrType state_nr_prev = state_machine.create_new_state();
+ State* state_prev = state_machine.get_state(state_nr_prev);
+
+ for (size_t i = 1; i <= charset_literal_.size(); ++i) {
+  StateNrType state_nr_cur = state_machine.create_new_state();
+  State* state_cur = state_machine.get_state(state_nr_cur);
+
+  if (!charset_literal_.get_symbol_set_at(i - 1).empty()) {
+   charset_literal_.get_symbol_set_at(i - 1).for_each_interval([&](Interval<SymbolValueType> interval_) { state_prev->add_symbol_transition(charset_literal_.is_hidden() ? SymbolKindHiddenCharacter : SymbolKindCharacter, interval_, state_nr_cur); });
+  }
+
+  if (i == charset_literal_.size()) {
+   state_cur->get_accepts().insert(Interval(accept_));
+  } else {
+   state_prev = state_cur;
+   state_nr_prev = state_nr_cur;
+  }
+ }
+
+ return state_machine;
 }
 
 }  // namespace pmt::parser::builder

@@ -11,7 +11,7 @@ using namespace pmt::parser::grammar;
 
 namespace {
 static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdType clause_id_) {
- ClauseBase const& clause = args_._program.fetch_clause(clause_id_);
+ ClauseBase const& clause = args_._program.fetch_nonterminal_clause(clause_id_);
 
  // Header: the clause id, then a braced block
  args_._out << clause_id_ << " {\n";
@@ -21,7 +21,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
 
  // children: ascending list of child clause IDs or the literal
  if (clause.get_tag() == ClauseBase::Tag::Literal) {
-  args_._out << "  literal: " << literal_sequence_to_printable_string(args_._program.fetch_lit_seq(clause.get_child_id_at(0)));
+  args_._out << "  literal: ...";
  } else {
   std::string delim;
   args_._out << "  children: [";
@@ -60,7 +60,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
 }
 
 void print_clauses(PikaProgramPrinter::Args& args_) {
- for (size_t i = 0; i < args_._program.get_clause_count(); ++i) {
+ for (size_t i = 0; i < args_._program.get_nonterminal_clause_count(); ++i) {
   print_clause_block(args_, i);
  }
  args_._out << std::endl;

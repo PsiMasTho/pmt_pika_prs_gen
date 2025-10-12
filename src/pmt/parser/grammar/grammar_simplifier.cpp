@@ -1,21 +1,15 @@
 #include "pmt/parser/grammar/grammar_simplifier.hpp"
-#include <unordered_set>
 
-#include "parser/clause_base.hpp"
-#include "parser/grammar/charset_literal.hpp"
-#include "parser/grammar/grammar.hpp"
-#include "parser/grammar/rule.hpp"
+#include "pmt/parser/clause_base.hpp"
+#include "pmt/parser/grammar/charset_literal.hpp"
+#include "pmt/parser/grammar/grammar.hpp"
+#include "pmt/parser/grammar/rule.hpp"
+
+#include <unordered_set>
 
 namespace pmt::parser::grammar {
 
 namespace {
-
-void concat_charset_literals(CharsetLiteral& lhs_, CharsetLiteral const& rhs_) {
- for (size_t i = 0; i < rhs_.size(); ++i) {
-  lhs_.push_back<CharsetLiteral::IsHidden::No>(rhs_.get_symbol_set_at<CharsetLiteral::IsHidden::No>(i));
-  lhs_.get_symbol_set_at<CharsetLiteral::IsHidden::Yes>(lhs_.size() - 1) = rhs_.get_symbol_set_at<CharsetLiteral::IsHidden::Yes>(i);
- }
-}
 
 auto get_referenced_rules(RuleExpression const* rule_expression_) -> std::unordered_set<std::string> {
  std::unordered_set<std::string> ret;
@@ -87,18 +81,25 @@ void prune(Grammar& grammar_) {
 }
 
 void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
+ class StackItem {
+ public:
+  RuleExpression* _parent = nullptr;
+  size_t _idx;
+  bool _in_regular = false;
+ };
+
  bool repeat = false;
 
  do {
   repeat = false;
-  std::vector<std::pair<RuleExpression*, size_t>> pending;
+  std::vector<StackItem> pending;
 
   for (size_t j = 0; j < rule_expression_->get_children_size(); ++j) {
    pending.emplace_back(rule_expression_.get(), j);
   }
 
   while (!pending.empty()) {
-   auto [parent, idx] = pending.back();
+   auto [parent, idx, in_regular] = pending.back();
    pending.pop_back();
    RuleExpression* const child = parent->get_child_at(idx);
 
@@ -108,7 +109,7 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
       RuleExpression::UniqueHandle grandchild = child->take_child_at_front();
       parent->take_child_at(idx);
       parent->give_child_at(idx, std::move(grandchild));
-      pending.emplace_back(parent, idx);
+      pending.emplace_back(parent, idx, in_regular);
       repeat = true;
      } else {
       // Any choices in choices can be immediately flattened
@@ -125,8 +126,21 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
        repeat = true;
       }
 
+      // Any neighboring Regular can be merged and have the choice moved inside
+      for (size_t j = 0; j + 1 < child->get_children_size(); ++j) {
+       while (j + 1 < child->get_children_size() && child->get_child_at(j)->get_tag() == ClauseBase::Tag::Regular && child->get_child_at(j + 1)->get_tag() == ClauseBase::Tag::Regular) {
+        if (child->get_child_at(j)->get_child_at_front()->get_tag() != ClauseBase::Tag::Choice) {
+         RuleExpression::UniqueHandle tmp = child->get_child_at(j)->take_child_at_front();
+         child->get_child_at(j)->give_child_at_front(RuleExpression::construct(ClauseBase::Tag::Choice));
+         child->get_child_at(j)->get_child_at_front()->give_child_at_back(std::move(tmp));
+        }
+        child->get_child_at(j)->get_child_at_front()->give_child_at_back(child->take_child_at(j + 1));
+        repeat = true;
+       }
+      }
+
       for (size_t j = 0; j < child->get_children_size(); ++j) {
-       pending.emplace_back(child, j);
+       pending.emplace_back(child, j, in_regular);
       }
      }
      break;
@@ -141,18 +155,19 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
       repeat = true;
       j = 0;
      }
-     // Merge neighboring string literals
-     for (size_t j = 0; j < child->get_children_size() - 1; ++j) {
-      RuleExpression* const lhs = child->get_child_at(j);
-      RuleExpression* const rhs = child->get_child_at(j + 1);
-      if (lhs->get_tag() != ClauseBase::Tag::Literal || rhs->get_tag() != ClauseBase::Tag::Literal) {
-       continue;
+     // Any neighboring Regular can be merged and have the sequence moved inside
+     for (size_t j = 0; j + 1 < child->get_children_size(); ++j) {
+      while (j + 1 < child->get_children_size() && child->get_child_at(j)->get_tag() == ClauseBase::Tag::Regular && child->get_child_at(j + 1)->get_tag() == ClauseBase::Tag::Regular) {
+       if (child->get_child_at(j)->get_child_at_front()->get_tag() != ClauseBase::Tag::Sequence) {
+        RuleExpression::UniqueHandle tmp = child->get_child_at(j)->take_child_at_front();
+        child->get_child_at(j)->give_child_at_front(RuleExpression::construct(ClauseBase::Tag::Sequence));
+        child->get_child_at(j)->get_child_at_front()->give_child_at_back(std::move(tmp));
+       }
+       child->get_child_at(j)->get_child_at_front()->give_child_at_back(child->take_child_at(j + 1));
+       repeat = true;
       }
-      concat_charset_literals(lhs->get_charset_literal(), rhs->get_charset_literal());
-      child->take_child_at(j + 1);
-      repeat = true;
-      j = 0;
      }
+
      // Remove any epsilons which are not the only child
      for (size_t i = 1; i < child->get_children_size();) {
       if (child->get_child_at(i)->get_tag() == ClauseBase::Tag::Epsilon) {
@@ -168,7 +183,7 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
       RuleExpression::UniqueHandle grandchild = child->take_child_at_back();
       parent->take_child_at(idx);
       parent->give_child_at(idx, std::move(grandchild));
-      pending.emplace_back(parent, idx);
+      pending.emplace_back(parent, idx, in_regular);
       repeat = true;
      } else {
       bool hasChoices = false;
@@ -189,21 +204,61 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
 
        parent->take_child_at(idx);
        parent->give_child_at(idx, std::move(new_choice));
-       pending.emplace_back(parent, idx);
+       pending.emplace_back(parent, idx, in_regular);
        repeat = true;
        break;
       }
       if (!hasChoices) {
        for (size_t j = 0; j < child->get_children_size(); ++j) {
-        pending.emplace_back(child, j);
+        pending.emplace_back(child, j, in_regular);
        }
       }
      }
      break;
     case ClauseBase::Tag::OneOrMore:
     case ClauseBase::Tag::NotFollowedBy:
-     pending.emplace_back(child, 0);
+     pending.emplace_back(child, 0, in_regular);
      break;
+    case ClauseBase::Tag::Hidden: {
+     switch (child->get_child_at_front()->get_tag()) {
+      case ClauseBase::Tag::Literal: {
+       RuleExpression::UniqueHandle grandchild_replacement = child->take_child_at_front();
+       grandchild_replacement->get_charset_literal().set_hidden(true);
+       parent->take_child_at(idx);
+       parent->give_child_at(idx, std::move(grandchild_replacement));
+       pending.emplace_back(parent, idx, in_regular);
+      } break;
+      case ClauseBase::Tag::NotFollowedBy:
+      case ClauseBase::Tag::OneOrMore:
+      case ClauseBase::Tag::Sequence:
+      case ClauseBase::Tag::Choice:
+      case ClauseBase::Tag::Regular: {
+       RuleExpression::UniqueHandle grandchild_replacement = RuleExpression::construct(child->get_child_at_front()->get_tag());
+       while (child->get_child_at_front()->get_children_size() != 0) {
+        grandchild_replacement->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Hidden));
+        grandchild_replacement->get_child_at_back()->give_child_at_back(child->get_child_at_front()->take_child_at_front());
+       }
+       parent->take_child_at(idx);
+       parent->give_child_at(idx, std::move(grandchild_replacement));
+       pending.emplace_back(parent, idx, in_regular);
+       repeat = true;
+      }
+       repeat = true;
+       break;
+      default:
+       break;
+     }
+    } break;
+    case ClauseBase::Tag::Regular: {
+     if (in_regular) {
+      RuleExpression::UniqueHandle grandchild_replacement = child->take_child_at_front();
+      parent->take_child_at(idx);
+      parent->give_child_at(idx, std::move(grandchild_replacement));
+      pending.emplace_back(parent, idx, true);
+     } else {
+      pending.emplace_back(child, 0, true);
+     }
+    } break;
     default:
      break;
    }

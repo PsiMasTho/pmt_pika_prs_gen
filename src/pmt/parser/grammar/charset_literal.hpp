@@ -4,8 +4,6 @@
 #include "pmt/base/interval_set.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
-#include <utility>
-
 namespace pmt::parser::grammar {
 
 class CharsetLiteral : public pmt::base::Hashable<CharsetLiteral> {
@@ -20,11 +18,12 @@ public:
 
 private:
  // -$ Data $-
- std::vector<std::pair<SymbolSet, SymbolSet>> _literal;
+ std::vector<SymbolSet> _literal;
+ bool _is_hidden : 1 = false;
+ ;
 
 public:
  // -$ Functions $-
-
  // --$ Operators $--
  auto operator==(CharsetLiteral const& other_) const -> bool = default;
  auto operator!=(CharsetLiteral const& other_) const -> bool = default;
@@ -33,26 +32,20 @@ public:
  auto hash() const -> size_t;
 
  // --$ Other $--
- template <IsHidden IS_HIDDEN_>
  auto get_symbol_set_at(size_t idx_) const -> SymbolSet const&;
-
- template <IsHidden IS_HIDDEN_>
  auto get_symbol_set_at(size_t idx_) -> SymbolSet&;
 
- template <IsHidden IS_HIDDEN_>
  void push_back(SymbolSet symbol_set_);
-
- template <IsHidden IS_HIDDEN_>
  void push_back(pmt::base::Interval<pmt::util::sm::SymbolValueType> symbol_interval_);
-
- template <IsHidden IS_HIDDEN_>
  void push_back(pmt::util::sm::SymbolValueType symbol_);
+ void push_back();
 
  void pop_back();
+
+ auto is_hidden() const -> bool;
+ void set_hidden(bool value_);
 
  auto size() const -> size_t;
 };
 
 }  // namespace pmt::parser::grammar
-
-#include "pmt/parser/grammar/charset_literal-inl.hpp"

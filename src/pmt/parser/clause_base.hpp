@@ -14,8 +14,9 @@ public:
   Sequence,       // >= 1 child id
   Choice,         // >= 1 child id
   Hidden,         // 1 child id
+  Regular,        // 1 child id
   Identifier,     // NOT IN USE
-  Literal,        // 1 child id
+  Literal,        // NOT IN USE
   OneOrMore,      // 1 child id
   NotFollowedBy,  // 1 child id
   Epsilon,        // 0 child ids

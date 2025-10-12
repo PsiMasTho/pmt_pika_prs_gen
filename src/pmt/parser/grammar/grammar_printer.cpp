@@ -222,6 +222,7 @@ void write_rule_as_tree(GrammarPrinter::Args& args_, std::string const& rule_nam
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::Hidden:
+   case ClauseBase::Tag::Regular:
    case ClauseBase::Tag::NotFollowedBy:
     args_._out << ": ";
     for (size_t i = expr_cur->get_children_size(); i--;) {

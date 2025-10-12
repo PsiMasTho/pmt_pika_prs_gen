@@ -1,4 +1,5 @@
 #include "pmt/parser/clause_base.hpp"
+
 #include "pmt/asserts.hpp"
 
 namespace pmt::parser {
@@ -11,6 +12,8 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "Choice";
   case Tag::Hidden:
    return "Hidden";
+  case Tag::Regular:
+   return "Regular";
   case Tag::Identifier:
    return "Identifier";
   case Tag::Literal:

@@ -18,6 +18,8 @@ RuleExpression::RuleExpression(ClauseBase::Tag tag_)
     return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Choice)>);
    case ClauseBase::Tag::Hidden:
     return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Hidden)>, nullptr);
+   case ClauseBase::Tag::Regular:
+    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Regular)>, nullptr);
    case ClauseBase::Tag::Identifier:
     return IdentifierType{};
    case ClauseBase::Tag::Literal:
@@ -67,7 +69,8 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
    case ClauseBase::Tag::NotFollowedBy:
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::Choice:
-   case ClauseBase::Tag::Hidden: {
+   case ClauseBase::Tag::Hidden:
+   case ClauseBase::Tag::Regular: {
     for (size_t i = 0; i < src->get_children_size(); ++i) {
      UniqueHandle child = construct(src->get_child_at(i)->get_tag());
      dst->give_child_at(i, std::move(child));
@@ -100,6 +103,8 @@ auto RuleExpression::get_children_size() const -> size_t {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data).size();
   case ClauseBase::Tag::Hidden:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::Regular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::NotFollowedBy:
@@ -121,6 +126,8 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
   case ClauseBase::Tag::Hidden:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
+  case ClauseBase::Tag::Regular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NotFollowedBy:
@@ -142,6 +149,8 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
   case ClauseBase::Tag::Hidden:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
+  case ClauseBase::Tag::Regular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NotFollowedBy:
@@ -182,6 +191,9 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
   case ClauseBase::Tag::Hidden:
    std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = nullptr;
    break;
+  case ClauseBase::Tag::Regular:
+   std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data) = nullptr;
+   break;
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = nullptr;
    break;
@@ -208,6 +220,9 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
   } break;
   case ClauseBase::Tag::Hidden:
    std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = child_.release();
+   break;
+  case ClauseBase::Tag::Regular:
+   std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data) = child_.release();
    break;
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = child_.release();

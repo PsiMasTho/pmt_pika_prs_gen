@@ -67,6 +67,7 @@ private:
  void partition_terminals();
  void determine_can_match_zero();
  void determine_seed_parents();
+ void write_terminal_state_machine_dotfiles();
 };
 
 }  // namespace pmt::parser::builder
