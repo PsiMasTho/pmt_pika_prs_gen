@@ -221,7 +221,7 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
      break;
     case ClauseBase::Tag::Hidden: {
      switch (child->get_child_at_front()->get_tag()) {
-      case ClauseBase::Tag::Literal: {
+      case ClauseBase::Tag::CharsetLiteral: {
        RuleExpression::UniqueHandle grandchild_replacement = child->take_child_at_front();
        grandchild_replacement->get_charset_literal().set_hidden(true);
        parent->take_child_at(idx);

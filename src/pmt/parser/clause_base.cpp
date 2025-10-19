@@ -16,8 +16,8 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "Regular";
   case Tag::Identifier:
    return "Identifier";
-  case Tag::Literal:
-   return "Literal";
+  case Tag::CharsetLiteral:
+   return "CharsetLiteral";
   case Tag::OneOrMore:
    return "OneOrMore";
   case Tag::NotFollowedBy:

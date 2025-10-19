@@ -20,7 +20,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
  args_._out << "  kind: " << ClauseBase::tag_to_string(clause.get_tag()) << ";\n";
 
  // children: ascending list of child clause IDs or the literal
- if (clause.get_tag() == ClauseBase::Tag::Literal) {
+ if (clause.get_tag() == ClauseBase::Tag::CharsetLiteral) {
   args_._out << "  literal: ...";
  } else {
   std::string delim;

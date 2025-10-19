@@ -11,15 +11,15 @@ public:
  using IdType = uint64_t;
 
  enum class Tag : uint8_t {
-  Sequence,       // >= 1 child id
-  Choice,         // >= 1 child id
-  Hidden,         // 1 child id
-  Regular,        // 1 child id
-  Identifier,     // NOT IN USE
-  Literal,        // NOT IN USE
-  OneOrMore,      // 1 child id
-  NotFollowedBy,  // 1 child id
-  Epsilon,        // 0 child ids
+  Sequence,        // >= 1 child id
+  Choice,          // >= 1 child id
+  Hidden,          // 1 child id
+  Regular,         // 1 child id
+  Identifier,      // NOT IN USE
+  CharsetLiteral,  // NOT IN USE
+  OneOrMore,       // 1 child id
+  NotFollowedBy,   // 1 child id
+  Epsilon,         // 0 child ids
  };
 
  [[nodiscard]] virtual auto get_tag() const -> Tag = 0;

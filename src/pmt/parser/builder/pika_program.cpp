@@ -7,7 +7,6 @@
 #include "pmt/parser/builder/state_machine_util.hpp"
 #include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/generic_id.hpp"
-#include "pmt/parser/grammar/charset_literal.hpp"
 #include "pmt/parser/grammar/rule.hpp"
 #include "pmt/parser/rt/pika_program_base.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
@@ -69,18 +68,22 @@ public:
 
 class StateMachinesCached {
  std::vector<StateMachine>& _state_machines;
+ Grammar const& _grammar;
  std::unordered_set<size_t, StateMachineIndirectHash, StateMachineIndirectEq> _state_machine_set_cache;
+ RuleNameToSymbolFnType const& _rule_name_to_symbol_fn;
 
 public:
- explicit StateMachinesCached(std::vector<StateMachine>& state_machines_)
+ explicit StateMachinesCached(std::vector<StateMachine>& state_machines_, Grammar const& grammar_, RuleNameToSymbolFnType const& rule_name_to_symbol_fn_)
   : _state_machines(state_machines_)
-  , _state_machine_set_cache(0, StateMachineIndirectHash(_state_machines), StateMachineIndirectEq(_state_machines)) {
+  , _grammar(grammar_)
+  , _state_machine_set_cache(0, StateMachineIndirectHash(_state_machines), StateMachineIndirectEq(_state_machines))
+  , _rule_name_to_symbol_fn(rule_name_to_symbol_fn_) {
  }
 
- auto add_or_get_id(CharsetLiteral const& charset_literal_) -> ClauseBase::IdType {
+ auto add_or_get_id(RuleExpression const& regular_rule_expression_) -> ClauseBase::IdType {
   ClauseBase::IdType const idx = _state_machines.size();
 
-  StateMachine state_machine = state_machine_from_charset_literal(charset_literal_, idx);
+  StateMachine state_machine = state_machine_from_regular_rule(_grammar, regular_rule_expression_, idx, _rule_name_to_symbol_fn);
   auto const itr = _state_machine_set_cache.find(state_machine);
   if (itr != _state_machine_set_cache.end()) {
    return *itr;
@@ -180,7 +183,6 @@ auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_info_id_) const 
 
 void PikaProgram::initialize(Grammar const& grammar_) {
  std::vector<StateMachine> state_machines;
- StateMachinesCached state_machines_cached(state_machines);
 
  ClauseBase::IdType counter = 0;
  std::unordered_map<ClauseBase::IdType, ClauseBase::IdType> clause_unique_id_to_index;
@@ -188,6 +190,12 @@ void PikaProgram::initialize(Grammar const& grammar_) {
  std::unordered_map<std::string, ClauseBase::IdType> rule_name_to_rule_parameter_id;
  std::unordered_map<ClauseBase::IdType, std::unordered_set<ClauseBase::IdType>> registered_rule_map;
  std::vector<std::pair<RuleExpression const*, ClauseBase::IdType>> pending;
+
+ StateMachinesCached state_machines_cached(state_machines, grammar_, [&](std::string const& rule_name_) -> SymbolValueType {
+  auto const itr = rule_name_to_rule_parameter_id.find(rule_name_);
+  assert(itr != rule_name_to_rule_parameter_id.end());
+  return itr->second;
+ });
 
  auto const push_and_visit = [&](RuleExpression const* expr_) {
   bool is_definition = false;
@@ -247,7 +255,7 @@ void PikaProgram::initialize(Grammar const& grammar_) {
     clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at_front()));
    } break;
    case ClauseBase::Tag::Regular: {
-    // clause_cur._child_ids.push_back(state_machines_cached.add_or_get_id(expr_cur->get_charset_literal()));
+    clause_cur._child_ids.push_back(state_machines_cached.add_or_get_id(*expr_cur));
    } break;
    case ClauseBase::Tag::OneOrMore: {
     clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at_front()));
@@ -273,7 +281,7 @@ void PikaProgram::initialize(Grammar const& grammar_) {
  // Change clause unique_id to their actual positions
  for (ExtendedClause& clause : _nonterminal_clauses) {
   for (ClauseBase::IdType& child_id : clause._child_ids) {
-   if (clause.get_tag() == ClauseBase::Tag::Literal) {
+   if (clause.get_tag() == ClauseBase::Tag::CharsetLiteral) {
     continue;
    }
    child_id = clause_unique_id_to_index.find(child_id)->second;
@@ -340,7 +348,7 @@ void PikaProgram::determine_can_match_zero() {
     case ClauseBase::Tag::Identifier: {
      pmt::unreachable();
     } break;
-    case ClauseBase::Tag::Literal: {
+    case ClauseBase::Tag::Regular: {
      mark(i, false);
     } break;
     case ClauseBase::Tag::Hidden:
@@ -353,6 +361,8 @@ void PikaProgram::determine_can_match_zero() {
     case ClauseBase::Tag::Epsilon:
      mark(i, true);
      break;
+    default:
+     pmt::unreachable();
    }
   }
  }

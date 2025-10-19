@@ -136,7 +136,7 @@ void expand_once(GrammarPrinter::Args& args_, Locals& locals_, RuleExpression co
   case Tag::Identifier:
    args_._out << node_->get_identifier();
    break;
-  case Tag::Literal: {
+  case Tag::CharsetLiteral: {
    args_._out << charset_literal_to_printable_string(node_->get_charset_literal());
   } break;
   case Tag::Epsilon:
@@ -210,7 +210,7 @@ void write_rule_as_tree(GrammarPrinter::Args& args_, std::string const& rule_nam
   args_._out << get_indent(depth_cur) << ClauseBase::tag_to_string(expr_cur->get_tag());
 
   switch (expr_cur->get_tag()) {
-   case ClauseBase::Tag::Literal:
+   case ClauseBase::Tag::CharsetLiteral:
     args_._out << ": " << charset_literal_to_printable_string(expr_cur->get_charset_literal());
     break;
    case ClauseBase::Tag::Identifier:
