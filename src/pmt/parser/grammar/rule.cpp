@@ -2,38 +2,30 @@
 
 #include "pmt/asserts.hpp"
 
+#include <concepts>
+
 namespace pmt::parser::grammar {
-namespace {}
+namespace {
+
+template <class V_, std::unsigned_integral IDX_>
+auto default_construct_variant_by_index(IDX_ idx_) -> V_ {
+ std::optional<V_> out;
+ [&]<std::size_t... IS_>(std::index_sequence<IS_...>) {
+  ((idx_ == IS_ ? (out.emplace(std::in_place_index<IS_>), void()) : void()), ...);
+ }(std::make_index_sequence<std::variant_size_v<V_>>{});
+ if (!out.has_value()) {
+  throw std::out_of_range("variant index");
+ }
+ return std::move(*out);
+}
+}  // namespace
 
 void RuleExpression::UniqueHandleDeleter::operator()(RuleExpression* self_) const {
  destruct(self_);
 }
 
 RuleExpression::RuleExpression(ClauseBase::Tag tag_)
- : _data{[tag_]() -> VariantType {
-  switch (tag_) {
-   case ClauseBase::Tag::Sequence:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Sequence)>);
-   case ClauseBase::Tag::Choice:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Choice)>);
-   case ClauseBase::Tag::Hidden:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Hidden)>, nullptr);
-   case ClauseBase::Tag::Regular:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Regular)>, nullptr);
-   case ClauseBase::Tag::Identifier:
-    return IdentifierType{};
-   case ClauseBase::Tag::CharsetLiteral:
-    return CharsetLiteral{};
-   case ClauseBase::Tag::OneOrMore:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>, nullptr);
-   case ClauseBase::Tag::NotFollowedBy:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>, nullptr);
-   case ClauseBase::Tag::Epsilon:
-    return VariantType(std::in_place_index<static_cast<size_t>(ClauseBase::Tag::Epsilon)>);
-   default:
-    pmt::unreachable();
-  }
- }()} {
+ : _data{default_construct_variant_by_index<VariantType>(static_cast<size_t>(tag_))} {
 }
 
 void RuleExpression::destruct(RuleExpression* self_) {
@@ -70,7 +62,8 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::Hidden:
-   case ClauseBase::Tag::Regular: {
+   case ClauseBase::Tag::PegRegular:
+   case ClauseBase::Tag::CfgRegular: {
     for (size_t i = 0; i < src->get_children_size(); ++i) {
      UniqueHandle child = construct(src->get_child_at(i)->get_tag());
      dst->give_child_at(i, std::move(child));
@@ -103,8 +96,10 @@ auto RuleExpression::get_children_size() const -> size_t {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data).size();
   case ClauseBase::Tag::Hidden:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) == nullptr ? 0 : 1;
-  case ClauseBase::Tag::Regular:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::PegRegular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::PegRegular)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::CfgRegular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::CfgRegular)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::NotFollowedBy:
@@ -126,8 +121,10 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
   case ClauseBase::Tag::Hidden:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
-  case ClauseBase::Tag::Regular:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data);
+  case ClauseBase::Tag::PegRegular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::PegRegular)>(_data);
+  case ClauseBase::Tag::CfgRegular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::CfgRegular)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NotFollowedBy:
@@ -149,8 +146,10 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
   case ClauseBase::Tag::Hidden:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
-  case ClauseBase::Tag::Regular:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data);
+  case ClauseBase::Tag::PegRegular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::PegRegular)>(_data);
+  case ClauseBase::Tag::CfgRegular:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::CfgRegular)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NotFollowedBy:
@@ -191,8 +190,11 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
   case ClauseBase::Tag::Hidden:
    std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = nullptr;
    break;
-  case ClauseBase::Tag::Regular:
-   std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data) = nullptr;
+  case ClauseBase::Tag::PegRegular:
+   std::get<static_cast<size_t>(ClauseBase::Tag::PegRegular)>(_data) = nullptr;
+   break;
+  case ClauseBase::Tag::CfgRegular:
+   std::get<static_cast<size_t>(ClauseBase::Tag::CfgRegular)>(_data) = nullptr;
    break;
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = nullptr;
@@ -221,8 +223,11 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
   case ClauseBase::Tag::Hidden:
    std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = child_.release();
    break;
-  case ClauseBase::Tag::Regular:
-   std::get<static_cast<size_t>(ClauseBase::Tag::Regular)>(_data) = child_.release();
+  case ClauseBase::Tag::PegRegular:
+   std::get<static_cast<size_t>(ClauseBase::Tag::PegRegular)>(_data) = child_.release();
+   break;
+  case ClauseBase::Tag::CfgRegular:
+   std::get<static_cast<size_t>(ClauseBase::Tag::CfgRegular)>(_data) = child_.release();
    break;
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = child_.release();

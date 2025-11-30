@@ -34,12 +34,38 @@ auto take(Locals& locals_) -> StateNrType {
  return ret;
 }
 
-void follow_epsilon_transitions(StateMachinePruner::Args& args_, Locals& locals_, State const& state_old_) {
- state_old_.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_old_) { push_and_visit(args_, locals_, state_nr_next_old_); });
+void follow_epsilon_transitions(StateMachinePruner::Args& args_, Locals& locals_, State& state_old_) {
+ IntervalSet<StateNrType> to_remove;
+
+ state_old_.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_old_) {
+  if (args_._state_machine.get_state(state_nr_next_old_) == nullptr) {
+   to_remove.insert(Interval(state_nr_next_old_));
+  } else {
+   push_and_visit(args_, locals_, state_nr_next_old_);
+  }
+ });
+
+ to_remove.for_each_key([&](StateNrType state_nr_to_remove_) { state_old_.remove_epsilon_transition(state_nr_to_remove_); });
 }
 
-void follow_symbol_transitions(StateMachinePruner::Args& args_, Locals& locals_, State const& state_old_) {
- state_old_.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) { state_old_.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) { push_and_visit(args_, locals_, state_nr_next_old_); }); });
+void follow_symbol_transitions(StateMachinePruner::Args& args_, Locals& locals_, State& state_old_) {
+ std::vector<std::pair<SymbolKindType, Interval<SymbolValueType>>> to_remove;
+
+ state_old_.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+  state_old_.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_old_, Interval<SymbolValueType> const& interval_) {
+   if (args_._state_machine.get_state(state_nr_next_old_) == nullptr) {
+    to_remove.emplace_back(kind_, interval_);
+   } else {
+    push_and_visit(args_, locals_, state_nr_next_old_);
+   }
+  });
+ });
+
+ while (!to_remove.empty()) {
+  auto const& [kind, interval] = to_remove.back();
+  state_old_.remove_symbol_transitions(kind, interval);
+  to_remove.pop_back();
+ }
 }
 
 void copy_epsilon_transitions(Locals& locals_, StateMachine& state_machine_new_, State const& state_old_, State& state_new_) {
@@ -58,10 +84,10 @@ void StateMachinePruner::prune(Args args_) {
 
  while (!locals._pending.empty()) {
   StateNrType const state_nr_old = take(locals);
-  State const* state_old = args_._state_machine.get_state(state_nr_old);
+  State& state_old = *args_._state_machine.get_state(state_nr_old);
 
-  follow_epsilon_transitions(args_, locals, *state_old);
-  follow_symbol_transitions(args_, locals, *state_old);
+  follow_epsilon_transitions(args_, locals, state_old);
+  follow_symbol_transitions(args_, locals, state_old);
  }
 
  // Remove states that were not visited

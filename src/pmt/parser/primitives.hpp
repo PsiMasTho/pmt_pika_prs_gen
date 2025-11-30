@@ -12,6 +12,8 @@ enum : pmt::util::sm::SymbolKindType {
  SymbolKindOpen = 3ull,
  SymbolKindClose = 4ull,
  SymbolKindConflict = 5ull,
+ SymbolKindOrderedEpsilonOpen = 7ull,
+ SymbolKindOrderedEpsilonClose = 8ull,
 };
 
 enum : pmt::util::sm::SymbolValueType {

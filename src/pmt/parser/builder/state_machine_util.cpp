@@ -3,6 +3,7 @@
 #include "pmt/asserts.hpp"
 #include "pmt/base/hash.hpp"
 #include "pmt/base/interval_set.hpp"
+#include "pmt/parser/builder/packed_symbol.hpp"
 #include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/grammar/charset_literal.hpp"
 #include "pmt/parser/grammar/grammar.hpp"
@@ -12,9 +13,9 @@
 #include "pmt/util/sm/ct/state_machine_determinizer.hpp"
 #include "pmt/util/sm/ct/state_machine_minimizer.hpp"
 #include "pmt/util/sm/ct/state_machine_part.hpp"
+#include "pmt/util/sm/ct/state_machine_pruner.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
-#include <deque>
 #include <variant>
 #include <vector>
 
@@ -25,6 +26,372 @@ using namespace pmt::util::sm::ct;
 using namespace pmt::parser::grammar;
 
 namespace {
+auto get_trace(StateMachine const& state_machine_, StateNrType state_nr_from_, PackedSymbol choice_from_) -> StateMachine {
+ StateMachine ret;
+
+ std::unordered_map<StateNrType, StateNrType> visited;
+ std::vector<StateNrType> pending;
+
+ auto const push_and_visit = [&](StateNrType state_nr_) -> StateNrType {
+  auto itr = visited.find(state_nr_);
+
+  if (itr == visited.end()) {
+   StateNrType const state_nr_new = ret.create_new_state();
+   itr = visited.emplace(state_nr_, state_nr_new).first;
+   pending.push_back(state_nr_);
+  }
+
+  return itr->second;
+ };
+
+ push_and_visit(state_machine_.get_state(state_nr_from_)->get_symbol_transition(Symbol(SymbolKindOrderedEpsilonOpen, choice_from_.get_packed())));
+
+ while (!pending.empty()) {
+  StateNrType const state_nr_old_cur = pending.back();
+  pending.pop_back();
+  StateNrType const state_nr_new_cur = visited.find(state_nr_old_cur)->second;
+
+  State const& state_old_cur = *state_machine_.get_state(state_nr_old_cur);
+  State& state_new_cur = *ret.get_state(state_nr_new_cur);
+
+  state_old_cur.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+   switch (kind_) {
+    case SymbolKindCharacter:
+    case SymbolKindHiddenCharacter: {
+     state_old_cur.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_old_next_, Interval<SymbolValueType> interval_) { state_new_cur.add_symbol_transition(SymbolKindCharacter, interval_, push_and_visit(state_nr_old_next_)); });
+    } break;
+    case SymbolKindOpen:
+    case SymbolKindClose: {
+     state_old_cur.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_old_next_, Interval<SymbolValueType> interval_) { state_new_cur.add_epsilon_transition(push_and_visit(state_nr_old_next_)); });
+    } break;
+    case SymbolKindOrderedEpsilonOpen: {
+     state_old_cur.get_symbol_transitions(kind_).for_each_key([&](StateNrType state_nr_old_next_, SymbolValueType symbol_) {
+      PackedSymbol const packed_symbol(symbol_);
+      if (choice_from_.get_unpacked_lower() != packed_symbol.get_unpacked_lower() || choice_from_.get_unpacked_upper() == packed_symbol.get_unpacked_upper()) {
+       state_new_cur.add_epsilon_transition(push_and_visit(state_nr_old_next_));
+      }
+     });
+    } break;
+    case SymbolKindOrderedEpsilonClose: {
+     state_old_cur.get_symbol_transitions(kind_).for_each_key([&](StateNrType state_nr_old_next_, SymbolValueType symbol_) {
+      PackedSymbol const packed_symbol(symbol_);
+      if (choice_from_.get_unpacked_lower() != packed_symbol.get_unpacked_lower() || choice_from_.get_unpacked_upper() != packed_symbol.get_unpacked_upper()) {
+       state_new_cur.add_epsilon_transition(push_and_visit(state_nr_old_next_));
+      } else {
+       state_new_cur.get_accepts().insert(Interval<AcceptsIndexType>(1));
+      }
+     });
+    } break;
+    default:
+     pmt::unreachable();
+   }
+  });
+ }
+
+ StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = ret});
+
+ return ret;
+}
+
+void prune_with_trace(StateMachine& state_machine_target_, StateMachine const& state_machine_trace_, StateNrType state_nr_from_, PackedSymbol choice_from_) {
+ class Transition {
+ public:
+  StateNrType _state_nr_from;
+  Symbol _symbol_from;
+ };
+
+ class PendingItem {
+ public:
+  StateNrType _state_nr_target;
+  StateNrType _state_nr_trace;
+  Transition _transition_from;
+  size_t _id;
+  bool _outside = false;
+ };
+
+ Symbol const symbol_from(SymbolKindOrderedEpsilonOpen, choice_from_.get_packed());
+
+ size_t id_counter = 0;
+ IntervalSet<size_t> ids_for_removal;
+ std::unordered_map<size_t, Transition> ids_to_transitions;
+ std::unordered_map<StateNrType, IntervalSet<StateNrType>> pending_history;
+ std::vector<PendingItem> pending;
+
+ auto const push_and_visit = [&](PendingItem pending_item_) {
+  auto itr = pending_history.find(pending_item_._state_nr_target);
+  if (itr == pending_history.end()) {
+   itr = pending_history.emplace(pending_item_._state_nr_target, IntervalSet<StateNrType>{}).first;
+  }
+
+  if (itr->second.contains(pending_item_._state_nr_trace)) {
+   return;
+  }
+
+  itr->second.insert(Interval(pending_item_._state_nr_trace));
+  pending.emplace_back(pending_item_._state_nr_target, pending_item_._state_nr_trace, pending_item_._transition_from, pending_item_._id, pending_item_._outside);
+ };
+
+ auto const take = [&]() {
+  auto const tmp = pending.back();
+  pending.pop_back();
+  return tmp;
+ };
+
+ // clang-format off
+ push_and_visit(
+  PendingItem {
+   ._state_nr_target = state_machine_target_.get_state(state_nr_from_)->get_symbol_transition(symbol_from),
+   ._state_nr_trace = StateNrStart,
+   ._transition_from = Transition {
+    ._state_nr_from = state_nr_from_,
+    ._symbol_from = symbol_from,
+   },
+   ._id = id_counter++,
+  }
+ );
+ // clang-format on
+
+ while (!pending.empty()) {
+  auto const [state_nr_target_cur, state_nr_trace_cur, transition_from_cur, id_cur, outside_cur] = take();
+
+  State* state_target_cur = state_machine_target_.get_state(state_nr_target_cur);
+  State const* state_trace_cur = state_machine_trace_.get_state(state_nr_trace_cur);
+
+  size_t id_next = id_cur;
+
+  if (!outside_cur) {
+   ids_to_transitions.insert_or_assign(id_cur, transition_from_cur);
+  }
+
+  if (!state_trace_cur->get_accepts().empty()) {
+   id_next = id_counter++;
+   ids_for_removal.insert(Interval(id_cur));
+  }
+
+  state_target_cur->get_symbol_kinds().for_each_key([&](SymbolKindType kind_) {
+   switch (kind_) {
+    case SymbolKindCharacter:
+    case SymbolKindHiddenCharacter: {
+     state_trace_cur->get_symbol_transitions(SymbolKindCharacter).for_each_key([&](StateNrType state_nr_trace_next_, SymbolValueType symbol_value_) {
+      Symbol const symbol_cur(kind_, symbol_value_);
+      StateNrType const state_nr_target_next_ = state_target_cur->get_symbol_transition(symbol_cur);
+      if (state_nr_target_next_ == StateNrSink) {
+       return;
+      }
+
+      // clang-format off
+      push_and_visit(
+       PendingItem {
+        ._state_nr_target = state_nr_target_next_,
+        ._state_nr_trace = state_nr_trace_next_,
+        ._transition_from = Transition {
+         ._state_nr_from = state_nr_target_cur,
+         ._symbol_from = symbol_cur,
+        },
+        ._id = id_next,
+        ._outside = outside_cur
+       }
+      );
+      // clang-format on
+     });
+    } break;
+    case SymbolKindOrderedEpsilonOpen:
+    case SymbolKindOrderedEpsilonClose:
+    case SymbolKindOpen:
+    case SymbolKindClose: {
+     bool outside_next = false;
+     state_target_cur->get_symbol_transitions(kind_).for_each_key([&](StateNrType state_nr_target_next_, SymbolValueType symbol_value_) {
+      if (kind_ == SymbolKindOrderedEpsilonOpen && symbol_value_ == choice_from_.get_packed()) {
+       if (outside_cur) {
+        id_next = id_next == id_cur ? id_counter++ : id_next;
+       }
+       outside_next = false;
+      } else if (kind_ == SymbolKindOrderedEpsilonClose && symbol_value_ == choice_from_.get_packed()) {
+       if (!outside_cur) {
+        id_next = id_next == id_cur ? id_counter++ : id_next;
+       }
+       outside_next = true;
+      }
+
+      Symbol const symbol_cur(kind_, symbol_value_);
+
+      // clang-format off
+      push_and_visit(
+       PendingItem {
+        ._state_nr_target = state_nr_target_next_,
+        ._state_nr_trace = state_nr_trace_cur,
+        ._transition_from = Transition {
+         ._state_nr_from = state_nr_target_cur,
+         ._symbol_from = symbol_cur,
+        },
+        ._id = id_next,
+        ._outside = outside_next
+       }
+      );
+      // clang-format on
+     });
+    } break;
+    default:
+     pmt::unreachable();
+   }
+  });
+ }
+
+ ids_for_removal.for_each_key([&](size_t id_to_remove_) {
+  auto const itr = ids_to_transitions.find(id_to_remove_);
+  if (itr == ids_to_transitions.end()) {
+   return;
+  }
+  State* const state = state_machine_target_.get_state(itr->second._state_nr_from);
+  if (state == nullptr) {
+   return;
+  }
+  state->remove_symbol_transition(itr->second._symbol_from);
+ });
+
+ StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_target_});
+}
+
+void convert_ordered_epsilon_to_regular_epsilon(StateMachine& state_machine_) {
+ state_machine_.get_state_nrs().for_each_key([&](StateNrType state_nr_) {
+  State& state = *state_machine_.get_state(state_nr_);
+
+  {
+   std::vector<Interval<SymbolValueType>> to_remove;
+   state.get_symbol_transitions(SymbolKindOrderedEpsilonOpen).for_each_interval([&](StateNrType state_nr_next_, Interval<SymbolValueType> symbols_) {
+    to_remove.push_back(symbols_);
+    state.add_epsilon_transition(state_nr_next_);
+   });
+
+   for (auto const& symbols_ : to_remove) {
+    state.remove_symbol_transitions(SymbolKindOrderedEpsilonOpen, symbols_);
+   }
+  }
+
+  {
+   std::vector<Interval<SymbolValueType>> to_remove;
+   state.get_symbol_transitions(SymbolKindOrderedEpsilonClose).for_each_interval([&](StateNrType state_nr_next_, Interval<SymbolValueType> symbols_) {
+    to_remove.push_back(symbols_);
+    state.add_epsilon_transition(state_nr_next_);
+   });
+
+   for (auto const& symbols_ : to_remove) {
+    state.remove_symbol_transitions(SymbolKindOrderedEpsilonClose, symbols_);
+   }
+  }
+ });
+}
+
+void resolve_ordered_epsilon_transitions(StateMachine& state_machine_) {
+ IntervalSet<StateNrType> visited;
+ std::vector<StateNrType> pending;
+
+ auto const push_and_visit = [&](StateNrType state_nr_) {
+  if (!visited.contains(state_nr_)) {
+   pending.push_back(state_nr_);
+   visited.insert(Interval(state_nr_));
+  }
+ };
+
+ push_and_visit(StateNrStart);
+
+ while (!pending.empty()) {
+  StateNrType const state_nr_cur = pending.back();
+  pending.pop_back();
+
+  if (state_machine_.get_state(state_nr_cur) == nullptr) {
+   continue;
+  }
+
+  IntervalSet<SymbolKindType> const symbol_kinds = state_machine_.get_state(state_nr_cur)->get_symbol_kinds();
+  if (symbol_kinds.contains(SymbolKindOrderedEpsilonOpen)) {
+   // choice_id -> symbols
+   std::unordered_map<size_t, std::vector<SymbolValueType>> choice_id_groups;
+   state_machine_.get_state(state_nr_cur)->get_symbol_values(SymbolKindOrderedEpsilonOpen).for_each_key([&](SymbolValueType symbol_) {
+    PackedSymbol const symbol_packed(symbol_);
+    choice_id_groups[symbol_packed.get_unpacked_lower()].push_back(symbol_packed.get_packed());
+   });
+
+   for (auto& [choice_id, choice_id_group] : choice_id_groups) {
+    std::ranges::sort(choice_id_group, [](SymbolValueType lhs_, SymbolValueType rhs_) { return PackedSymbol(lhs_).get_unpacked_upper() < PackedSymbol(rhs_).get_unpacked_upper(); });
+
+    for (size_t i = 0; i < choice_id_group.size(); ++i) {
+     for (size_t j = choice_id_group.size(); j-- > i + 1;) {
+      SymbolValueType const symbol_higher = choice_id_group[j];
+      SymbolValueType const symbol_lower = choice_id_group[i];
+
+      // Check that the symbols still exist
+      if (state_machine_.get_state(state_nr_cur)->get_symbol_transition(Symbol(SymbolKindOrderedEpsilonOpen, symbol_lower)) == StateNrSink || state_machine_.get_state(state_nr_cur)->get_symbol_transition(Symbol(SymbolKindOrderedEpsilonOpen, symbol_higher)) == StateNrSink) {
+       continue;
+      }
+
+      StateMachine trace_lower = get_trace(state_machine_, state_nr_cur, PackedSymbol(symbol_lower));
+
+      prune_with_trace(state_machine_, trace_lower, state_nr_cur, PackedSymbol(symbol_higher));
+     }
+    }
+   }
+  }
+
+  symbol_kinds.for_each_key([&](SymbolKindType kind_) { state_machine_.get_state(state_nr_cur)->get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_next_, Interval<StateNrType> symbols_) { push_and_visit(state_nr_next_); }); });
+ }
+
+ convert_ordered_epsilon_to_regular_epsilon(state_machine_);
+}
+
+void remove_dead_states(StateMachine& state_machine_) {
+ std::unordered_map<StateNrType, IntervalSet<StateNrType>> reverse_transitions;  // <state_nr_to, state_nrs_from>
+ IntervalSet<StateNrType> state_nrs = state_machine_.get_state_nrs();
+ IntervalSet<StateNrType> accepting_state_nrs;
+
+ state_nrs.for_each_key([&](StateNrType state_nr_from_) {
+  State const& state_from = *state_machine_.get_state(state_nr_from_);
+  state_from.get_accepts().empty() ? void() : accepting_state_nrs.insert(Interval(state_nr_from_));
+
+  state_from.get_epsilon_transitions().for_each_key([&](StateNrType state_nr_to_) { reverse_transitions[state_nr_to_].insert(Interval(state_nr_from_)); });
+
+  state_from.get_symbol_kinds().for_each_key([&](SymbolKindType kind_) { state_from.get_symbol_transitions(kind_).for_each_interval([&](StateNrType state_nr_to_, Interval<StateNrType> symbols_) { reverse_transitions[state_nr_to_].insert(Interval(state_nr_from_)); }); });
+ });
+
+ IntervalSet<StateNrType> visited;
+ std::vector<StateNrType> pending;
+
+ auto const push_and_visit = [&](StateNrType state_nr_) {
+  if (visited.contains(state_nr_)) {
+   return;
+  }
+  pending.push_back(state_nr_);
+  visited.insert(Interval(state_nr_));
+ };
+
+ auto const take = [&]() {
+  auto const tmp = pending.back();
+  pending.pop_back();
+  return tmp;
+ };
+
+ accepting_state_nrs.for_each_key(push_and_visit);
+
+ while (!pending.empty()) {
+  auto const itr = reverse_transitions.find(take());
+  if (itr != reverse_transitions.end()) {
+   itr->second.for_each_key(push_and_visit);
+  }
+ }
+
+ state_nrs.inplace_asymmetric_difference(visited);
+ state_nrs.for_each_key([&](StateNrType state_nr_unvisited_) { state_machine_.remove_state(state_nr_unvisited_); });
+
+ StateMachinePruner::prune(StateMachinePruner::Args{._state_machine = state_machine_});
+}
+
+enum RegularityKind {
+ PegRegular = 0,
+ CfgRegular = 1,
+
+ RegularityKindMax = CfgRegular,
+};
+
 class Locals;
 
 class FrameBase {
@@ -32,6 +399,7 @@ public:
  RuleExpression const* _expr_cur_path;
  size_t _stage = 0;
  bool _is_hiding : 1 = false;
+ RegularityKind _regularity_kind : std::bit_width(static_cast<size_t>(RegularityKindMax)) = RegularityKind::PegRegular;
 };
 
 class PassthroughFrame : public FrameBase {
@@ -71,6 +439,7 @@ public:
  StateMachinePart _sub_part;
  State* _state_cur = nullptr;
  size_t _idx = 0;
+ size_t _choice_id = 0;
 };
 
 class OneOrMoreFrame : public FrameBase {
@@ -91,11 +460,19 @@ class HiddenFrame : public FrameBase {
 public:
 };
 
+class PegRegularFrame : public FrameBase {
+public:
+};
+
+class CfgRegularFrame : public FrameBase {
+public:
+};
+
 class EpsilonFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoiceFrame, OneOrMoreFrame, CharsetLiteralFrame, IdentifierFrame, HiddenFrame, EpsilonFrame>;
+using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoiceFrame, OneOrMoreFrame, CharsetLiteralFrame, IdentifierFrame, HiddenFrame, PegRegularFrame, CfgRegularFrame, EpsilonFrame>;
 
 class Locals {
 public:
@@ -107,6 +484,7 @@ public:
  std::vector<size_t> _identifier_symbol_stack;
  IntervalSet<size_t> _identifier_symbol_stack_contents;
  bool _keep_current_frame : 1 = false;
+ size_t _choice_counter = 0;
 };
 
 auto build_epsilon(Locals& locals_) -> StateMachinePart {
@@ -116,8 +494,8 @@ auto build_epsilon(Locals& locals_) -> StateMachinePart {
  return ret;
 }
 
-auto construct_frame(RuleExpression const* expr_cur_path_, bool is_hiding_) -> Frame {
- FrameBase frame_base{._expr_cur_path = expr_cur_path_, ._stage = 0, ._is_hiding = is_hiding_};
+auto construct_frame(RuleExpression const* expr_cur_path_, bool is_hiding_, RegularityKind regularity_kind_) -> Frame {
+ FrameBase frame_base{._expr_cur_path = expr_cur_path_, ._stage = 0, ._is_hiding = is_hiding_, ._regularity_kind = regularity_kind_};
 
  switch (expr_cur_path_->get_tag()) {
   case ClauseBase::Tag::Sequence:
@@ -129,8 +507,11 @@ auto construct_frame(RuleExpression const* expr_cur_path_, bool is_hiding_) -> F
   case ClauseBase::Tag::Hidden:
    return HiddenFrame{frame_base};
    break;
-  case ClauseBase::Tag::Regular:
-   return PassthroughFrame(frame_base);
+  case ClauseBase::Tag::PegRegular:
+   return PegRegularFrame(frame_base);
+   break;
+  case ClauseBase::Tag::CfgRegular:
+   return CfgRegularFrame(frame_base);
    break;
   case ClauseBase::Tag::Identifier:
    return IdentifierFrame(frame_base);
@@ -151,7 +532,7 @@ auto construct_frame(RuleExpression const* expr_cur_path_, bool is_hiding_) -> F
 }
 
 void process_frame_00(Locals& locals_, PassthroughFrame& frame_) {
- locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), frame_._is_hiding));
+ locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), frame_._is_hiding, frame_._regularity_kind));
 }
 
 void process_frame_00(Locals& locals_, SequenceFrame& frame_) {
@@ -175,9 +556,9 @@ void process_frame_01(Locals& locals_, SequenceFrame& frame_) {
  ++frame_._stage;
 
  if (frame_._is_delimiting) {
-  locals_._callstack.emplace_back(construct_frame(frame_._delim_cur_path, frame_._is_hiding));
+  locals_._callstack.emplace_back(construct_frame(frame_._delim_cur_path, frame_._is_hiding, frame_._regularity_kind));
  } else {
-  locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at(frame_._index_permutation[frame_._idx]), frame_._is_hiding));
+  locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at(frame_._index_permutation[frame_._idx]), frame_._is_hiding, frame_._regularity_kind));
  }
 }
 
@@ -217,6 +598,7 @@ void process_frame_00(Locals& locals_, ChoiceFrame& frame_) {
  StateNrType state_nr_incoming = locals_._state_machine_target.create_new_state();
  frame_._state_cur = locals_._state_machine_target.get_state(state_nr_incoming);
  frame_._sub_part.set_incoming_state_nr(state_nr_incoming);
+ frame_._choice_id = locals_._choice_counter++;
 
  locals_._keep_current_frame = true;
  ++frame_._stage;
@@ -226,15 +608,27 @@ void process_frame_01(Locals& locals_, ChoiceFrame& frame_) {
  locals_._keep_current_frame = true;
  ++frame_._stage;
 
- locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at(frame_._idx), frame_._is_hiding));
+ locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at(frame_._idx), frame_._is_hiding, frame_._regularity_kind));
 }
 
 void process_frame_02(Locals& locals_, ChoiceFrame& frame_) {
  --frame_._stage;
  ++frame_._idx;
 
- frame_._state_cur->add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
- frame_._sub_part.merge_outgoing_transitions(locals_._ret_part);
+ if (frame_._regularity_kind == RegularityKind::PegRegular) {
+  frame_._state_cur->add_symbol_transition(Symbol(SymbolKindOrderedEpsilonOpen, PackedSymbol(frame_._choice_id, frame_._idx - 1).get_packed()), *locals_._ret_part.get_incoming_state_nr());
+ } else {
+  frame_._state_cur->add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
+ }
+
+ // create a SymbolKindOrderedEpsilonClose transition
+ if (frame_._regularity_kind == RegularityKind::PegRegular) {
+  StateNrType state_nr_close = locals_._state_machine_target.create_new_state();
+  locals_._ret_part.connect_outgoing_transitions_to(state_nr_close, locals_._state_machine_target);
+  frame_._sub_part.add_outgoing_symbol_transition(state_nr_close, Symbol(SymbolKindOrderedEpsilonClose, PackedSymbol(frame_._choice_id, frame_._idx - 1).get_packed()));
+ } else {
+  frame_._sub_part.merge_outgoing_transitions(locals_._ret_part);
+ }
 
  if (frame_._idx < frame_._expr_cur_path->get_children_size()) {
   locals_._keep_current_frame = true;
@@ -248,14 +642,26 @@ void process_frame_00(Locals& locals_, OneOrMoreFrame& frame_) {
  locals_._keep_current_frame = true;
  ++frame_._stage;
 
- locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), frame_._is_hiding));
+ locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), frame_._is_hiding, frame_._regularity_kind));
 }
 
 void process_frame_01(Locals& locals_, OneOrMoreFrame& frame_) {
- StateNrType const state_nr_last = locals_._state_machine_target.create_new_state();
- locals_._ret_part.connect_outgoing_transitions_to(state_nr_last, locals_._state_machine_target);
- locals_._state_machine_target.get_state(state_nr_last)->add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
- locals_._ret_part.add_outgoing_epsilon_transition(state_nr_last);
+ if (frame_._regularity_kind == RegularityKind::CfgRegular) {
+  StateNrType const state_nr_last = locals_._state_machine_target.create_new_state();
+  locals_._ret_part.connect_outgoing_transitions_to(state_nr_last, locals_._state_machine_target);
+  locals_._state_machine_target.get_state(state_nr_last)->add_epsilon_transition(*locals_._ret_part.get_incoming_state_nr());
+  locals_._ret_part.add_outgoing_epsilon_transition(state_nr_last);
+ } else {
+  size_t const choice_id = locals_._choice_counter++;
+  StateNrType const state_nr_last_1 = locals_._state_machine_target.create_new_state();
+  State& state_last = *locals_._state_machine_target.get_state(state_nr_last_1);
+  locals_._ret_part.connect_outgoing_transitions_to(state_nr_last_1, locals_._state_machine_target);
+  StateNrType const state_nr_last_2 = locals_._state_machine_target.create_new_state();
+  state_last.add_symbol_transition(Symbol(SymbolKindOrderedEpsilonOpen, PackedSymbol(choice_id, 0).get_packed()), *locals_._ret_part.get_incoming_state_nr());
+  state_last.add_symbol_transition(Symbol(SymbolKindOrderedEpsilonOpen, PackedSymbol(choice_id, 1).get_packed()), state_nr_last_2);
+  locals_._ret_part.add_outgoing_symbol_transition(state_nr_last_1, Symbol(SymbolKindOrderedEpsilonClose, PackedSymbol(choice_id, 0).get_packed()));
+  locals_._ret_part.add_outgoing_symbol_transition(state_nr_last_2, Symbol(SymbolKindOrderedEpsilonClose, PackedSymbol(choice_id, 1).get_packed()));
+ }
 }
 
 void process_frame_00(Locals& locals_, CharsetLiteralFrame& frame_) {
@@ -300,7 +706,7 @@ void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {
  ++frame_._stage;
  locals_._keep_current_frame = true;
  Rule const* rule = locals_._grammar.get_rule(frame_._expr_cur_path->get_identifier());
- locals_._callstack.emplace_back(construct_frame(rule->_definition.get(), frame_._is_hiding ? true : rule->_parameters._hide));
+ locals_._callstack.emplace_back(construct_frame(rule->_definition.get(), frame_._is_hiding ? true : rule->_parameters._hide, frame_._regularity_kind));
  frame_._state_nr_open = locals_._state_machine_target.create_new_state();
 }
 
@@ -310,13 +716,25 @@ void process_frame_01(Locals& locals_, IdentifierFrame& frame_) {
  StateNrType const state_nr_close = locals_._state_machine_target.create_new_state();
  locals_._ret_part.connect_outgoing_transitions_to(state_nr_close, locals_._state_machine_target);
  locals_._ret_part.add_outgoing_symbol_transition(state_nr_close, Symbol(SymbolKindClose, frame_._identifier_symbol_cur));
+
+ locals_._identifier_symbol_stack_contents.erase(Interval(locals_._identifier_symbol_stack.back()));
+ locals_._identifier_symbol_stack.pop_back();
 }
 
 void process_frame_00(Locals& locals_, HiddenFrame& frame_) {
- locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), true));
+ locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), true, frame_._regularity_kind));
+}
+
+void process_frame_00(Locals& locals_, PegRegularFrame& frame_) {
+ locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), frame_._is_hiding, RegularityKind::PegRegular));
+}
+
+void process_frame_00(Locals& locals_, CfgRegularFrame& frame_) {
+ locals_._callstack.emplace_back(construct_frame(frame_._expr_cur_path->get_child_at_back(), frame_._is_hiding, RegularityKind::CfgRegular));
 }
 
 void process_frame_00(Locals& locals_, EpsilonFrame& frame_) {
+ locals_._ret_part = build_epsilon(locals_);
 }
 
 void dispatch(Locals& locals_, Frame& frame_) {
@@ -360,7 +778,7 @@ void dispatch(Locals& locals_, Frame& frame_) {
 }
 
 auto build_loop(Locals& locals_, RuleExpression const& expr_start_) -> StateMachinePart {
- locals_._callstack.emplace_back(construct_frame(&expr_start_, false));
+ locals_._callstack.emplace_back(construct_frame(&expr_start_, false, RegularityKind::PegRegular));
 
  while (!locals_._callstack.empty()) {
   locals_._keep_current_frame = false;
@@ -517,6 +935,47 @@ auto terminal_state_machine_eq(StateMachine const& lhs_, StateMachine const& rhs
  return true;
 }
 
+auto get_accepts_reachable_without_consuming_characters(StateMachine const& state_machine_) -> IntervalSet<AcceptsIndexType> {
+ IntervalSet<AcceptsIndexType> ret;
+
+ IntervalSet<StateNrType> visited;
+ std::vector<StateNrType> pending;
+
+ auto const push_and_visit = [&](StateNrType state_nr_, auto const&...) {
+  if (!visited.contains(state_nr_)) {
+   visited.insert(Interval(state_nr_));
+   pending.push_back(state_nr_);
+  }
+ };
+
+ auto const take = [&]() {
+  State const* const tmp = state_machine_.get_state(pending.back());
+  pending.pop_back();
+  return tmp;
+ };
+
+ push_and_visit(StateNrStart);
+
+ // Follow all transitions that do not consume a character and collect the accepts
+ while (!pending.empty()) {
+  State const* const state_cur = take();
+  if (state_cur == nullptr) {
+   continue;
+  }
+
+  ret.inplace_or(state_cur->get_accepts());
+
+  state_cur->get_symbol_transitions(SymbolKindOpen).for_each_interval(push_and_visit);
+  state_cur->get_symbol_transitions(SymbolKindClose).for_each_interval(push_and_visit);
+  state_cur->get_symbol_transitions(SymbolKindConflict).for_each_interval(push_and_visit);
+ }
+
+ return ret;
+}
+
+auto create_lookahead_state_machine(StateMachine const& state_machine_) -> StateMachine {
+}
+
 auto state_machine_from_regular_rule(Grammar const& grammar_, RuleExpression const& regular_rule_expression_, AcceptsIndexType accept_, RuleNameToSymbolFnType const& rule_name_to_symbol_fn_) -> StateMachine {
  StateMachine ret;
 
@@ -531,6 +990,9 @@ auto state_machine_from_regular_rule(Grammar const& grammar_, RuleExpression con
 
  // determinize & minimize
  StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = ret});
+ resolve_ordered_epsilon_transitions(ret);
+ StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._state_machine = ret});
+ remove_dead_states(ret);
  StateMachineMinimizer::minimize(ret);
 
  return ret;

@@ -366,25 +366,22 @@ void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
  for (char const ch : str_literal) {
   literal.push_back(Interval<SymbolValueType>(ch));
  }
- locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Regular);
- locals_._ret_part->give_child_at_front(RuleExpression::construct(ClauseBase::Tag::CharsetLiteral));
- locals_._ret_part->get_child_at_front()->set_charset_literal(std::move(literal));
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
+ locals_._ret_part->set_charset_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, IntegerLiteralFrame& frame_) {
  CharsetLiteral literal;
  literal.push_back(Interval<SymbolValueType>(Number(*frame_._ast_cur_path).get_value()));
- locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Regular);
- locals_._ret_part->give_child_at_front(RuleExpression::construct(ClauseBase::Tag::CharsetLiteral));
- locals_._ret_part->get_child_at_front()->set_charset_literal(std::move(literal));
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
+ locals_._ret_part->set_charset_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, CharsetFrame& frame_) {
  CharsetLiteral literal;
  literal.push_back(Charset(*frame_._ast_cur_path).get_values());
- locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Regular);
- locals_._ret_part->give_child_at_front(RuleExpression::construct(ClauseBase::Tag::CharsetLiteral));
- locals_._ret_part->get_child_at_front()->set_charset_literal(std::move(literal));
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
+ locals_._ret_part->set_charset_literal(std::move(literal));
 }
 
 void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {

@@ -15,7 +15,6 @@ class Symbol : public pmt::base::Hashable<Symbol> {
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- Symbol() = default;
  Symbol(SymbolKindType kind_, SymbolValueType value_);
 
  // --$ Operators $--

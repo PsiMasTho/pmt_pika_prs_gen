@@ -28,6 +28,7 @@ public:
 
  void remove_epsilon_transition(StateNrType state_nr_);
  void remove_symbol_transition(Symbol symbol_);
+ void remove_symbol_transitions(SymbolKindType kind_, pmt::base::Interval<SymbolValueType> interval_);
  void clear_symbol_transitions();
 
  auto get_accepts() const -> pmt::base::IntervalSet<AcceptsIndexType> const&;

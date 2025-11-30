@@ -2,15 +2,17 @@
 
 #include "pmt/asserts.hpp"
 #include "pmt/base/bitset.hpp"
+#include "pmt/base/match.hpp"
 #include "pmt/base/overloaded.hpp"
-#include "pmt/parser/builder/lexer_graph_writer.hpp"
 #include "pmt/parser/builder/state_machine_util.hpp"
+#include "pmt/parser/builder/terminal_graph_writer.hpp"
 #include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/generic_id.hpp"
 #include "pmt/parser/grammar/rule.hpp"
+#include "pmt/parser/primitives.hpp"
 #include "pmt/parser/rt/pika_program_base.hpp"
 #include "pmt/util/sm/ct/state_machine.hpp"
-#include "primitives.hpp"
+#include "pmt/util/sm/primitives.hpp"
 
 #include <cassert>
 #include <set>
@@ -95,6 +97,12 @@ public:
  }
 };
 
+auto create_lookahead_state_machines(std::vector<StateMachine> const& state_machines_) -> std::vector<StateMachine> {
+}
+
+void merge_terminal_state_machines(std::vector<StateMachine>& state_machines_) {
+}
+
 }  // namespace
 
 ExtendedClause::ExtendedClause(Tag tag_)
@@ -139,6 +147,7 @@ auto ExtendedClause::can_match_zero() const -> bool {
 PikaProgram::PikaProgram(Grammar const& grammar_) {
  initialize(grammar_);
  determine_can_match_zero();
+ determine_seed_parents();
 }
 
 auto PikaProgram::fetch_nonterminal_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& {
@@ -153,7 +162,7 @@ auto PikaProgram::get_nonterminal_clause_count() const -> size_t {
 auto PikaProgram::fetch_rule_info(ClauseBase::IdType rule_info_id_) const -> PikaRuleInfo {
  assert(rule_info_id_ < _rule_parameters.size());
  std::string const& id_string = _rule_parameters[rule_info_id_]._id_string;
- size_t const idx = pmt::base::binary_find_index(_rule_ids.begin(), _rule_ids.end(), id_string);
+ size_t const idx = binary_find_index(_rule_ids.begin(), _rule_ids.end(), id_string);
  GenericId::IdType const id = idx < _rule_ids.size() ? idx : GenericId::string_to_id(id_string);
  return PikaRuleInfo{._rule_id = id, ._merge = _rule_parameters[rule_info_id_]._merge};
 }
@@ -191,6 +200,12 @@ void PikaProgram::initialize(Grammar const& grammar_) {
  std::unordered_map<ClauseBase::IdType, std::unordered_set<ClauseBase::IdType>> registered_rule_map;
  std::vector<std::pair<RuleExpression const*, ClauseBase::IdType>> pending;
 
+ // Fill rule parameters
+ for (std::string const& rule_name : grammar_.get_rule_names()) {
+  rule_name_to_rule_parameter_id[rule_name] = _rule_parameters.size();
+  _rule_parameters.push_back(grammar_.get_rule(rule_name)->_parameters);
+ }
+
  StateMachinesCached state_machines_cached(state_machines, grammar_, [&](std::string const& rule_name_) -> SymbolValueType {
   auto const itr = rule_name_to_rule_parameter_id.find(rule_name_);
   assert(itr != rule_name_to_rule_parameter_id.end());
@@ -207,8 +222,6 @@ void PikaProgram::initialize(Grammar const& grammar_) {
    }
    prev = expr_;
    expr_ = grammar_.get_rule(expr_->get_identifier())->_definition.get();
-   rule_name_to_rule_parameter_id[rule_name] = _rule_parameters.size();
-   _rule_parameters.push_back(grammar_.get_rule(rule_name)->_parameters);
   }
 
   if (prev != expr_) {
@@ -254,7 +267,8 @@ void PikaProgram::initialize(Grammar const& grammar_) {
    case ClauseBase::Tag::Hidden: {
     clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at_front()));
    } break;
-   case ClauseBase::Tag::Regular: {
+   case ClauseBase::Tag::PegRegular:
+   case ClauseBase::Tag::CfgRegular: {
     clause_cur._child_ids.push_back(state_machines_cached.add_or_get_id(*expr_cur));
    } break;
    case ClauseBase::Tag::OneOrMore: {
@@ -281,7 +295,7 @@ void PikaProgram::initialize(Grammar const& grammar_) {
  // Change clause unique_id to their actual positions
  for (ExtendedClause& clause : _nonterminal_clauses) {
   for (ClauseBase::IdType& child_id : clause._child_ids) {
-   if (clause.get_tag() == ClauseBase::Tag::CharsetLiteral) {
+   if (Match::is_any_of(clause.get_tag(), ClauseBase::Tag::PegRegular, ClauseBase::Tag::CfgRegular)) {
     continue;
    }
    child_id = clause_unique_id_to_index.find(child_id)->second;
@@ -297,15 +311,25 @@ void PikaProgram::initialize(Grammar const& grammar_) {
   rule_id_set.insert(rule_parameters._id_string);
  }
 
- for (size_t i = 0; i < state_machines.size(); ++i) {
-  LexerGraphWriter graph_writer(state_machines[i], std::to_string(i), "terminal_graph_" + std::to_string(i) + ".dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); });
-  graph_writer.write_dot();
+ // Write the dotfiles for the state machines individually, maybe remove this eventually
+ for (size_t i = 0; StateMachine const& state_machine : state_machines) {
+  TerminalGraphWriter(state_machine, std::to_string(i), "terminal_graph_" + std::to_string(i) + ".dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
+  ++i;
+ }
+
+ merge_terminal_state_machines(state_machines);
+
+ for (StateMachine const& state_machine : state_machines) {
+  static std::unordered_set<SymbolKindType> const cached_transition_kinds = {SymbolKindOpen, SymbolKindClose, SymbolKindConflict};
+  _terminal_state_machine_tables.emplace_back(state_machine, cached_transition_kinds);
  }
 }
 
 void PikaProgram::determine_can_match_zero() {
- pmt::base::Bitset solved(_nonterminal_clauses.size());
+ Bitset solved(_nonterminal_clauses.size());
  bool changed = true;
+
+ IntervalSet<ClauseBase::IdType> const terminal_can_match_zero_cache = determine_terminal_state_machines_can_match_zero();
 
  auto const mark = [&](ClauseBase::IdType clause_id_, bool can_match_zero_) {
   if (solved.get(clause_id_)) {
@@ -348,8 +372,9 @@ void PikaProgram::determine_can_match_zero() {
     case ClauseBase::Tag::Identifier: {
      pmt::unreachable();
     } break;
-    case ClauseBase::Tag::Regular: {
-     mark(i, false);
+    case ClauseBase::Tag::PegRegular:
+    case ClauseBase::Tag::CfgRegular: {
+     mark(i, terminal_can_match_zero_cache.contains(_nonterminal_clauses[i].get_child_id_at(0)));
     } break;
     case ClauseBase::Tag::Hidden:
     case ClauseBase::Tag::OneOrMore: {
@@ -370,7 +395,23 @@ void PikaProgram::determine_can_match_zero() {
  assert(solved.all() && "FAILED TO DETERMINE CAN_MATCH_ZERO");
 }
 
+auto PikaProgram::determine_terminal_state_machines_can_match_zero() -> IntervalSet<ClauseBase::IdType> {
+ IntervalSet<ClauseBase::IdType> ret;
+ for (StateMachineTables const& state_machine_tables : _terminal_state_machine_tables) {
+  ret.inplace_or(get_accepts_reachable_without_consuming_characters(state_machine_tables.get_state_machine()));
+ }
+
+ return ret;
+}
+
+void PikaProgram::determine_seed_parents() {
+}
+
 void PikaProgram::write_terminal_state_machine_dotfiles() {
+ for (size_t i = 0; StateMachineTables const& state_machine_tables : _terminal_state_machine_tables) {
+  TerminalGraphWriter(state_machine_tables.get_state_machine(), std::to_string(i), "terminal_graph_combined_" + std::to_string(i) + ".dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
+  ++i;
+ }
 }
 
 }  // namespace pmt::parser::builder

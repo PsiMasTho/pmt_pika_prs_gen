@@ -64,8 +64,8 @@ public:
 
 private:
  void initialize(pmt::parser::grammar::Grammar const& grammar_);
- void partition_terminals();
  void determine_can_match_zero();
+ auto determine_terminal_state_machines_can_match_zero() -> pmt::base::IntervalSet<ClauseBase::IdType>;
  void determine_seed_parents();
  void write_terminal_state_machine_dotfiles();
 };

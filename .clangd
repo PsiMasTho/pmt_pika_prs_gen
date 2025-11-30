@@ -19,3 +19,5 @@ Diagnostics:
       - cppcoreguidelines-avoid-non-const-global-variables
       - cppcoreguidelines-init-variables
       - readability-identifier-naming*
+Completion:
+  HeaderInsertion: Never

@@ -42,6 +42,10 @@ auto StateMachineTables::get_accept_count() const -> size_t {
  return _accept_count;
 }
 
+auto StateMachineTables::get_state_machine() const -> StateMachine const& {
+ return _state_machine;
+}
+
 void StateMachineTables::fill_accepts_bitsets_cache() {
  _accept_count = 0;
 

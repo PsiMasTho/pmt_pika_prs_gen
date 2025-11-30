@@ -9,6 +9,13 @@
 #include <cassert>
 
 namespace pmt::base {
+
+template <std::integral KEY_, typename VALUE_>
+IntervalMap<KEY_, VALUE_>::IntervalMap(Interval<KEY_> interval_, VALUE_ value_)
+ : IntervalMap() {
+ insert(interval_, std::move(value_));
+}
+
 template <std::integral KEY_, typename VALUE_>
 IntervalMap<KEY_, VALUE_>::IntervalMap(IntervalMap const& other_)
  : _intervals(nullptr)

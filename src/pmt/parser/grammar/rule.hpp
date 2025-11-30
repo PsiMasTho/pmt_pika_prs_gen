@@ -38,7 +38,8 @@ private:
  using SequenceType = std::deque<RuleExpression*>;
  using ChoiceType = std::deque<RuleExpression*>;
  using HiddenType = RuleExpression*;
- using RegularType = RuleExpression*;
+ using PegRegularType = RuleExpression*;
+ using CfgRegularType = RuleExpression*;
  using OneOrMoreType = RuleExpression*;
  using NotFollowedByType = RuleExpression*;
 
@@ -50,7 +51,7 @@ public:
 
 private:
  // Note: keep the values of the ClauseBase::Tag constants the same as the indices of their types in the variant
- using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, RegularType, IdentifierType, CharsetLiteral, OneOrMoreType, NotFollowedByType, EpsilonType>;
+ using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, PegRegularType, CfgRegularType, IdentifierType, CharsetLiteral, OneOrMoreType, NotFollowedByType, EpsilonType>;
 
  // -$ Data $-
  VariantType _data;

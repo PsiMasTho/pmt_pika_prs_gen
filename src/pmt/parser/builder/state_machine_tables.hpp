@@ -29,6 +29,9 @@ public:
  auto get_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
  auto get_accept_count() const -> size_t override;
 
+ // --$ Other $--
+ auto get_state_machine() const -> pmt::util::sm::ct::StateMachine const&;
+
 private:
  void fill_accepts_bitsets_cache();
  void fill_transitions_bitset_cache(pmt::util::sm::SymbolKindType kind_);

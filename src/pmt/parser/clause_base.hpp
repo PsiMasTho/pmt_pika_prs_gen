@@ -14,7 +14,8 @@ public:
   Sequence,        // >= 1 child id
   Choice,          // >= 1 child id
   Hidden,          // 1 child id
-  Regular,         // 1 child id
+  PegRegular,      // 1 child id
+  CfgRegular,      // 1 child id
   Identifier,      // NOT IN USE
   CharsetLiteral,  // NOT IN USE
   OneOrMore,       // 1 child id

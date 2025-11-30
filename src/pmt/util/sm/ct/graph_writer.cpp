@@ -191,6 +191,11 @@ void GraphWriter::replace_accepts_table(std::string& str_) {
   accepts_table_replacement += "</TD></TR>";
  }
 
+ // Empty table causes errors unless we add something so add this
+ if (accepts.empty()) {
+  accepts_table_replacement += "<TR><TD></TD></TR>";
+ }
+
  accepts_table_replacement += "</TABLE>";
 
  replace_skeleton_label(str_, "ACCEPTS_TABLE", accepts_table_replacement);

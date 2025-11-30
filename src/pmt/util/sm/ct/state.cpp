@@ -32,6 +32,15 @@ void State::remove_symbol_transition(Symbol symbol_) {
  itr->second.erase(Interval(symbol_.get_value()));
 }
 
+void State::remove_symbol_transitions(SymbolKindType kind_, Interval<SymbolValueType> interval_) {
+ auto const itr = _symbol_transitions.find(kind_);
+ if (itr == _symbol_transitions.end()) {
+  return;
+ }
+
+ itr->second.erase(interval_);
+}
+
 void State::clear_symbol_transitions() {
  _symbol_transitions.clear();
 }

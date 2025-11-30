@@ -18,14 +18,17 @@ enum : StateNrType {
 
 enum : SymbolKindType {
  SymbolKindMax = std::numeric_limits<SymbolKindType>::max(),
+ SymbolKindInvalid = SymbolKindMax,
 };
 
 enum : SymbolValueType {
  SymbolValueMax = std::numeric_limits<SymbolValueType>::max(),
+ SymbolValueInvalid = SymbolValueMax,
 };
 
 enum : size_t {
- AcceptIndexInvalid = std::numeric_limits<size_t>::max(),
+ AcceptIndexMax = std::numeric_limits<AcceptsIndexType>::max(),
+ AcceptIndexInvalid = AcceptIndexMax,
 };
 
 }  // namespace pmt::util::sm

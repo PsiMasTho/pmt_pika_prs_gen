@@ -31,6 +31,7 @@ public:
  // -$ Functions $-
  // --$ Lifetime $--
  IntervalMap() = default;
+ IntervalMap(Interval<KEY_> interval_, VALUE_ value_);
  IntervalMap(IntervalMap const&);
  IntervalMap(IntervalMap&&) noexcept;
  ~IntervalMap();

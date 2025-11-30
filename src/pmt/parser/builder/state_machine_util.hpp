@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pmt/base/interval_set.hpp"
 #include "pmt/fw_decl.hpp"
 #include "pmt/util/sm/primitives.hpp"
 
@@ -23,6 +24,10 @@ enum AcceptsEqualityHandling {
 };
 auto terminal_state_machine_hash(pmt::util::sm::ct::StateMachine const& item_, AcceptsEqualityHandling accepts_equality_handling_) -> size_t;
 auto terminal_state_machine_eq(pmt::util::sm::ct::StateMachine const& lhs_, pmt::util::sm::ct::StateMachine const& rhs_, AcceptsEqualityHandling accepts_equality_handling_) -> bool;
+
+auto get_accepts_reachable_without_consuming_characters(pmt::util::sm::ct::StateMachine const& state_machine_) -> pmt::base::IntervalSet<pmt::util::sm::AcceptsIndexType>;
+
+auto create_lookahead_state_machine(pmt::util::sm::ct::StateMachine const& state_machine_) -> pmt::util::sm::ct::StateMachine;
 
 using RuleNameToSymbolFnType = std::function<pmt::util::sm::SymbolValueType(std::string const&)>;
 

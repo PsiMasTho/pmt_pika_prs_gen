@@ -12,8 +12,10 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "Choice";
   case Tag::Hidden:
    return "Hidden";
-  case Tag::Regular:
-   return "Regular";
+  case Tag::PegRegular:
+   return "PegRegular";
+  case Tag::CfgRegular:
+   return "CfgRegular";
   case Tag::Identifier:
    return "Identifier";
   case Tag::CharsetLiteral:
