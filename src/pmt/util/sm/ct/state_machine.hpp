@@ -1,16 +1,15 @@
 #pragma once
 
 #include "pmt/base/interval_set.hpp"
+#include "pmt/base/multi_vector.hpp"
 #include "pmt/util/sm/ct/state.hpp"
-
-#include <map>
 
 namespace pmt::util::sm::ct {
 
 class StateMachine {
 private:
  // -$ Data $-
- std::map<StateNrType, State> _states;
+ pmt::base::MultiVector<StateNrType, State> _states;
 
 public:
  // -$ Functions $-

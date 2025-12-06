@@ -1,48 +1,56 @@
 #include "pmt/util/sm/ct/state_machine.hpp"
 
+#include "pmt/base/algo.hpp"
+
 namespace pmt::util::sm::ct {
 using namespace pmt::base;
 
 auto StateMachine::get_state(StateNrType state_nr_) -> State* {
- auto it = _states.find(state_nr_);
- if (it == _states.end()) {
-  return nullptr;
- }
- return &it->second;
+ std::span<StateNrType> const state_nrs = _states.get_span_by_type<StateNrType>();
+ size_t const idx = binary_find_index(state_nrs.begin(), state_nrs.end(), state_nr_);
+ return (idx == state_nrs.size()) ? nullptr : &_states.get_span_by_type<State>()[idx];
 }
 
 auto StateMachine::get_state(StateNrType state_nr_) const -> State const* {
- auto it = _states.find(state_nr_);
- if (it == _states.end()) {
-  return nullptr;
- }
- return &it->second;
+ std::span<StateNrType const> const state_nrs = _states.get_span_by_type<StateNrType>();
+ size_t const idx = binary_find_index(state_nrs.begin(), state_nrs.end(), state_nr_);
+ return (idx == state_nrs.size()) ? nullptr : &_states.get_span_by_type<State>()[idx];
 }
 
 auto StateMachine::get_state_nrs() const -> IntervalSet<StateNrType> {
  IntervalSet<StateNrType> ret;
- for (auto const& [state_nr, _] : _states) {
+ for (StateNrType const state_nr : _states.get_span_by_type<StateNrType>()) {
   ret.insert(Interval<StateNrType>(state_nr));
  }
  return ret;
 }
 
 auto StateMachine::get_or_create_state(StateNrType state_nr_) -> State& {
- return _states[state_nr_];
+ std::span<StateNrType> const state_nrs = _states.get_span_by_type<StateNrType>();
+ size_t const idx = binary_find_index(state_nrs.begin(), state_nrs.end(), state_nr_);
+ if (idx == state_nrs.size()) {
+  _states.insert(idx, state_nr_, State());
+ }
+ return _states.get_span_by_type<State>()[idx];
 }
 
 auto StateMachine::get_unused_state_nr() const -> StateNrType {
- return _states.empty() ? 0 : std::prev(_states.end())->first + 1;
+ return _states.empty() ? 0 : (_states.get_span_by_type<StateNrType>().back() + 1);
 }
 
 auto StateMachine::create_new_state() -> StateNrType {
  StateNrType const state_nr = get_unused_state_nr();
- _states.emplace(state_nr, State());
+ _states.push_back(state_nr, State());
  return state_nr;
 }
 
 void StateMachine::remove_state(StateNrType state_nr_) {
- _states.erase(state_nr_);
+ std::span<StateNrType> const state_nrs = _states.get_span_by_type<StateNrType>();
+ size_t const idx = binary_find_index(state_nrs.begin(), state_nrs.end(), state_nr_);
+ if (idx == state_nrs.size()) {
+  return;
+ }
+ _states.erase(idx);
 }
 
 auto StateMachine::get_state_count() const -> size_t {
