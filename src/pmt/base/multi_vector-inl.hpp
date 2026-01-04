@@ -26,6 +26,16 @@ MultiVector<TS_...>::MultiVector(MultiVector const& other_)
 }
 
 template <typename... TS_>
+MultiVector<TS_...>::MultiVector(MultiVector&& other_) noexcept
+ : _tuple(other_._tuple)
+ , _size(other_._size)
+ , _capacity_idx(other_._capacity_idx) {
+ other_._tuple = std::make_tuple(static_cast<std::remove_pointer_t<TS_>*>(nullptr)...);
+ other_._size = 0;
+ other_._capacity_idx = 0;
+}
+
+template <typename... TS_>
 MultiVector<TS_...>::~MultiVector() {
  clear();
  [&]<size_t... IDX_>(std::index_sequence<IDX_...>) {
@@ -50,6 +60,26 @@ auto MultiVector<TS_...>::operator=(MultiVector const& other_) -> MultiVector& {
  swap_tmp = _capacity_idx;
  _capacity_idx = tmp._capacity_idx;
  tmp._capacity_idx = swap_tmp;
+
+ return *this;
+}
+
+template <typename... TS_>
+auto MultiVector<TS_...>::operator=(MultiVector&& other_) noexcept -> MultiVector& {
+ if (this == &other_) {
+  return *this;
+ }
+
+ std::swap(_tuple, other_._tuple);
+
+ // swap bitfields manually because std::swap doesnt work
+ size_t swap_tmp = _size;
+ _size = other_._size;
+ other_._size = swap_tmp;
+
+ swap_tmp = _capacity_idx;
+ _capacity_idx = other_._capacity_idx;
+ other_._capacity_idx = swap_tmp;
 
  return *this;
 }
@@ -165,14 +195,15 @@ void MultiVector<TS_...>::pop_back() {
 template <typename... TS_>
 void MultiVector<TS_...>::insert(size_t inner_idx_, TS_... values_) {
  reserve(size() + 1);
- [&]<size_t... IDX_>(std::index_sequence<IDX_...>) {
-  (..., (std::uninitialized_move_n(std::get<IDX_>(_tuple) + inner_idx_, size() - inner_idx_, std::get<IDX_>(_tuple) + inner_idx_ + 1)));
- }(std::make_index_sequence<sizeof...(TS_)>{});
 
  [&]<size_t... IDX_>(std::index_sequence<IDX_...>) {
-  (..., (std::construct_at(std::get<IDX_>(_tuple) + inner_idx_, std::get<IDX_>(std::forward_as_tuple(values_...)))));
+  (..., (std::construct_at(std::get<IDX_>(_tuple) + size(), std::get<IDX_>(std::forward_as_tuple(values_...)))));
  }(std::make_index_sequence<sizeof...(TS_)>{});
  ++_size;
+
+ [&]<size_t... IDX_>(std::index_sequence<IDX_...>) {
+  (..., (std::rotate(std::get<IDX_>(_tuple) + inner_idx_, std::get<IDX_>(_tuple) + size() - 1, std::get<IDX_>(_tuple) + size())));
+ }(std::make_index_sequence<sizeof...(TS_)>{});
 }
 
 template <typename... TS_>

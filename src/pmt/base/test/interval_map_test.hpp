@@ -7,6 +7,7 @@ public:
  static void run();
 
 private:
+ static void test_move_assign();
  static void test_insert();
  static void test_erase();
  static void test_copy();

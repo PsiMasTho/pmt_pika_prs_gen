@@ -4,6 +4,14 @@
 
 namespace pmt::parser {
 
+auto ClauseBase::has_literal_id() const -> bool {
+ return get_tag() == Tag::CharsetLiteral;
+}
+
+auto ClauseBase::has_non_terminal_id() const -> bool {
+ return get_tag() == Tag::Identifier;
+}
+
 auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
  switch (tag_) {
   case Tag::Sequence:
@@ -12,10 +20,6 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "Choice";
   case Tag::Hidden:
    return "Hidden";
-  case Tag::PegRegular:
-   return "PegRegular";
-  case Tag::CfgRegular:
-   return "CfgRegular";
   case Tag::Identifier:
    return "Identifier";
   case Tag::CharsetLiteral:

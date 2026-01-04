@@ -60,6 +60,9 @@ public:
 
  auto get_keys() const -> IntervalSet<KEY_>;
 
+ // bitwise operations
+ auto clone_and(IntervalSet<KEY_> keys_to_keep_) const -> IntervalMap;
+
  // iteration
  template <std::invocable<VALUE_ const&, Interval<KEY_>> F_>
  void for_each_interval(F_&& f_) const;

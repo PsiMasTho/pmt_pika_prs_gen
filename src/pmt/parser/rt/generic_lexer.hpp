@@ -4,7 +4,7 @@
 #include "pmt/fw_decl.hpp"
 #include "pmt/parser/source_position.hpp"
 #include "pmt/parser/token.hpp"
-#include "pmt/util/sm/primitives.hpp"
+#include "pmt/sm/primitives.hpp"
 
 #include <string_view>
 
@@ -33,7 +33,7 @@ private:
  size_t _linecount_cursor;
  size_t _linecount_last = 0;
  SourcePosition::LinenoType _linecount_at_last = 1;
- pmt::util::sm::StateNrType _state_nr_linecount;
+ pmt::sm::StateNrType _state_nr_linecount;
 
 public:
  // -$ Functions $-

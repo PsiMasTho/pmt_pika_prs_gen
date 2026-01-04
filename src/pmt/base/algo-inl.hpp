@@ -87,4 +87,8 @@ auto move_bidir(T_ data_begin_, T_ data_end_, T_ dest_) {
  }
 }
 
+constexpr auto get_max_unsigned_value_for_bit_count(size_t bit_count_) -> uintmax_t {
+ return (bit_count_ == sizeof(uintmax_t) * 8) ? ~0ull : ((1ull << bit_count_) - 1);
+}
+
 }  // namespace pmt::base

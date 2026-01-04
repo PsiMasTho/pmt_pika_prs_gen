@@ -10,7 +10,7 @@
 
 namespace pmt::parser::rt {
 using namespace pmt::base;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 namespace {}
 
@@ -35,7 +35,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
  StateNrType state_nr_cur = StateNrStart;
 
  for (size_t p = _cursor; p <= _input.size() + 1; ++p) {
-  if (state_nr_cur == StateNrSink) {
+  if (state_nr_cur == StateNrInvalid) {
    break;
   }
 
@@ -58,7 +58,7 @@ auto GenericLexer::lex(Bitset::ChunkSpanConst accepts_) -> LexReturn {
    break;
   }
 
-  SymbolValueType const symbol = (p == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolValueType>(_input[p]);
+  SymbolType const symbol = (p == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolType>(_input[p]);
   state_nr_cur = _lexer_tables.get_state_nr_next(state_nr_cur, symbol);
  }
 
@@ -115,7 +115,7 @@ auto GenericLexer::get_source_position_at(size_t p_) -> SourcePosition {
    _state_nr_linecount = StateNrStart;
   }
 
-  SymbolValueType const symbol = (p_ == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolValueType>(_input[_linecount_cursor]);
+  SymbolType const symbol = (p_ == _input.size()) ? SymbolValueEoi : NumericCast::cast<SymbolType>(_input[_linecount_cursor]);
   _state_nr_linecount = _lexer_tables.get_linecount_state_nr_next(_state_nr_linecount, symbol);
   ++_linecount_cursor;
  }

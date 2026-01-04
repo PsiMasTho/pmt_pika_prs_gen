@@ -50,7 +50,7 @@ void Interval<T_>::inplace_or(Interval const& other_) {
 
 template <std::integral T_>
 auto Interval<T_>::clone_and(Interval const& other_) const -> std::optional<Interval> {
- Interval const* higher = _lower < other_.get_lower() ? this : &other_;
+ Interval const* higher = _lower < other_.get_lower() ? &other_ : this;
  Interval const* lower = (higher == this) ? &other_ : this;
 
  if (higher->get_lower() > lower->get_upper()) {

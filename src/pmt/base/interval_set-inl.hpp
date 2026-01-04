@@ -218,6 +218,19 @@ void IntervalSet<KEY_>::inplace_asymmetric_difference(IntervalSet const& other_)
 }
 
 template <std::integral KEY_>
+auto IntervalSet<KEY_>::clone_and(Interval<KEY_> interval_) -> IntervalSet {
+ IntervalSet ret;
+
+ for (size_t i = find_interval_index<KEY_>(get_lowers(), get_uppers(), interval_.get_lower(), i)._idx; i < size(); ++i) {
+  if (std::optional<Interval<KEY_>> const overlap = interval_.clone_and(get_by_index(i)); overlap.has_value()) {
+   ret.insert(*overlap);
+  }
+ }
+
+ return ret;
+}
+
+template <std::integral KEY_>
 auto IntervalSet<KEY_>::clone_and(IntervalSet const& other_) const -> IntervalSet {
  // Make sure lhs is smaller or equal
  IntervalSet const& lhs = (size() <= other_.size()) ? *this : other_;
@@ -233,19 +246,15 @@ auto IntervalSet<KEY_>::clone_and(IntervalSet const& other_) const -> IntervalSe
   Interval<KEY_> const lhs_interval = lhs.get_by_index(j);
 
   /* Search in rhs from where we left off */
-  IntervalIndex const rhs_index = find_interval_index<KEY_>(rhs_lowers, rhs_uppers, lhs_interval.get_lower(), i);
-  i = rhs_index._idx;
+  i = find_interval_index<KEY_>(rhs_lowers, rhs_uppers, lhs_interval.get_lower(), i)._idx;
 
   while (i < rhs.size()) {
-   Interval<KEY_> rhs_interval = rhs.get_by_index(i);
-
-   if (rhs_interval.get_lower() > lhs_interval.get_upper()) {
-    /* Step back once in case the previous i would have overlapped with the next j */
+   std::optional<Interval<KEY_>> const overlap = lhs_interval.clone_and(rhs.get_by_index(i));
+   if (!overlap.has_value()) {
     i = (i == 0) ? 0 : i - 1;
     break;
    }
-
-   ret.insert(Interval<KEY_>(std::max(lhs_interval.get_lower(), rhs_interval.get_lower()), std::min(lhs_interval.get_upper(), rhs_interval.get_upper())));
+   ret.insert(*overlap);
    ++i;
   }
  }

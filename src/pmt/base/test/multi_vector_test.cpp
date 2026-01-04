@@ -64,6 +64,10 @@ void MultiVectorTest::test_insert_erase_and_swap() {
  multi_vector.swap_elements(0, 1);
  assert(multi_vector.get_span_by_index<0>()[0] == 3);
  assert(multi_vector.get_span_by_index<1>()[0] == "three");
+
+ multi_vector.insert(1, 4, "fourfourfourfourfourfourfourfourfourfour");
+ multi_vector.insert(2, 5, "fivefivefivefivefivefivefivefivefivefive");
+ multi_vector.insert(0, 0, "zerozerozerozerozerozerozerozerozerozero");
 }
 
 void MultiVectorTest::test_resize_and_clear() {

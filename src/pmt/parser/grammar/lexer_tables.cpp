@@ -143,11 +143,11 @@ std::array<uint8_t const, 0x1> const LINECOUNT_ACCEPTS = {
 
 } // namespace
 
-auto LexerTables::get_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
+auto LexerTables::get_state_nr_next(pmt::sm::StateNrType state_nr_, pmt::sm::SymbolType symbol_) const -> pmt::sm::StateNrType {
  return pmt::parser::rt::get_state_nr_next_generic(LEXER_TRANSITIONS, LEXER_TRANSITIONS_STATE_OFFSETS, LEXER_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
 }
 
-auto LexerTables::get_state_accepts(pmt::util::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
+auto LexerTables::get_state_accepts(pmt::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst {
  return pmt::base::Bitset::ChunkSpanConst(LEXER_ACCEPTS.begin() + state_nr_ * 0x1, 0x1);
 }
 
@@ -171,11 +171,11 @@ auto LexerTables::get_accept_index_id(size_t index_) const -> pmt::parser::Gener
  return LEXER_ACCEPT_IDS[index_];
 }
 
-auto LexerTables::get_linecount_state_nr_next(pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolValueType symbol_) const -> pmt::util::sm::StateNrType {
+auto LexerTables::get_linecount_state_nr_next(pmt::sm::StateNrType state_nr_, pmt::sm::SymbolType symbol_) const -> pmt::sm::StateNrType {
  return pmt::parser::rt::get_state_nr_next_generic(LINECOUNT_TRANSITIONS, LINECOUNT_TRANSITIONS_STATE_OFFSETS, LINECOUNT_TRANSITIONS_SYMBOL_KIND_OFFSETS, state_nr_, pmt::parser::SymbolKindCharacter, symbol_);
 }
 
-auto LexerTables::is_linecount_state_nr_accepting(pmt::util::sm::SymbolValueType state_nr_) const -> bool {
+auto LexerTables::is_linecount_state_nr_accepting(pmt::sm::SymbolType state_nr_) const -> bool {
  return std::binary_search(LINECOUNT_ACCEPTS.begin(), LINECOUNT_ACCEPTS.end(), state_nr_);
 }
 

@@ -117,6 +117,7 @@ void equalize_bitset_sizes(Bitset& lhs_, Bitset& rhs_) {
 void IntervalSetTest::run() {
  test_insert();
  test_and();
+ test_and_empty();
  test_erase();
  test_popcnt();
  test_asymmetric_difference();
@@ -164,6 +165,13 @@ void IntervalSetTest::test_and() {
 
   assert(overlap_is_bs == unordered_set_overlap_bs);
  }
+}
+
+void IntervalSetTest::test_and_empty() {
+ IntervalSet<int> a;
+ IntervalSet<int> b(Interval<int>(10, 20));
+ assert(a.clone_and(b).empty());
+ assert(b.clone_and(a).empty());
 }
 
 void IntervalSetTest::test_erase() {

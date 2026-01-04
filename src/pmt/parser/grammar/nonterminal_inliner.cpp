@@ -4,13 +4,13 @@
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/grammar_data.hpp"
-#include "pmt/util/sm/primitives.hpp"
+#include "pmt/sm/primitives.hpp"
 
 #include <unordered_set>
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 namespace {
 

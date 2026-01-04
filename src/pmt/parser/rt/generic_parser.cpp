@@ -5,7 +5,6 @@
 #include "pmt/parser/primitives.hpp"
 #include "pmt/parser/rt/parser_tables_base.hpp"
 #include "pmt/parser/rt/util.hpp"
-#include "pmt/util/sm/primitives.hpp"
 
 #include <cassert>
 #include <deque>
@@ -14,7 +13,7 @@
 
 namespace pmt::parser::rt {
 using namespace pmt::base;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 namespace {
 
@@ -31,7 +30,7 @@ public:
  std::deque<GenericLexer::LexReturn> _lex_queue;
  GenericLexer* _lexer = nullptr;
  ParserTablesBase const* _parser_tables = nullptr;
- pmt::util::sm::StateNrType _state_nr_cur = pmt::util::sm::StateNrStart;
+ pmt::sm::StateNrType _state_nr_cur = pmt::sm::StateNrStart;
  GenericAst::UniqueHandle _ast_root = nullptr;
  size_t _conflict_count = 0;
 };
@@ -61,7 +60,7 @@ auto GenericParser::parse(Args args_) -> GenericAst::UniqueHandle {
  locals._conflict_accepts_valid.resize(Bitset::get_required_chunk_count(args_._parser_tables.get_conflict_count()), Bitset::ALL_SET_MASKS[false]);
 
  while (true) {
-  if (locals._state_nr_cur == StateNrSink) {
+  if (locals._state_nr_cur == StateNrInvalid) {
    break;
   }
 
@@ -75,9 +74,9 @@ auto GenericParser::parse(Args args_) -> GenericAst::UniqueHandle {
    } break;
    case ParserTablesBase::StateTypeAccept: {
     size_t const accept_idx = args_._parser_tables.get_state_accept_index(locals._state_nr_cur);
-    assert(accept_idx != AcceptIndexInvalid);
+    assert(accept_idx != AcceptsIndexInvalid);
     if (accept_idx == args_._parser_tables.get_eoi_accept_index()) {
-     locals._state_nr_cur = StateNrSink;
+     locals._state_nr_cur = StateNrInvalid;
      break;
     }
 
@@ -130,7 +129,7 @@ auto GenericParser::parse(Args args_) -> GenericAst::UniqueHandle {
     size_t consumed_from_queue = 0;
 
     while (true) {
-     if (state_nr_conflict_cur == StateNrSink) {
+     if (state_nr_conflict_cur == StateNrInvalid) {
       break;
      }
 

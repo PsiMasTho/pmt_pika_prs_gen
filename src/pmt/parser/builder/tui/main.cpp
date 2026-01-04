@@ -13,6 +13,7 @@
 #include "pmt/parser/grammar/post_parse.hpp"
 #include "pmt/parser/rt/generic_lexer.hpp"
 #include "pmt/parser/rt/generic_parser.hpp"
+#include "pmt/parser/rt/pika_parser.hpp"
 
 #include <iostream>
 
@@ -21,7 +22,7 @@ using namespace pmt::parser::grammar;
 using namespace pmt::parser::rt;
 using namespace pmt::parser;
 using namespace pmt::parser::builder::tui;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 using namespace pmt::base;
 
 namespace {
@@ -56,9 +57,9 @@ auto main(int argc, char const* const* argv) -> int try {
 
  std::string const input_grammar((std::istreambuf_iterator<char>(args._input_grammar_file)), std::istreambuf_iterator<char>());
 
- GenericAst::UniqueHandle ast = get_grammar_ast(input_grammar);
+ GenericAst::UniqueHandle ast_grammar = get_grammar_ast(input_grammar);
 
- Grammar grammar = GrammarFromAst::make(GrammarFromAst::Args{._ast = *ast});
+ Grammar grammar = GrammarFromAst::make(GrammarFromAst::Args{._ast = *ast_grammar});
  GrammarSimplifier::simplify(GrammarSimplifier::Args{._grammar = grammar});
  write_typed_grammar(grammar);
 
@@ -68,6 +69,11 @@ auto main(int argc, char const* const* argv) -> int try {
  if (!args._input_test_file.has_value()) {
   return 1;
  }
+
+ std::string const input_test((std::istreambuf_iterator<char>(*args._input_test_file)), std::istreambuf_iterator<char>());
+
+ GenericAst::UniqueHandle ast_testfile = PikaParser::parse(program, input_test);
+
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';
  return 1;

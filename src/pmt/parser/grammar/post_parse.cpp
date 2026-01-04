@@ -8,7 +8,7 @@
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/number.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
-#include "pmt/util/sm/primitives.hpp"
+#include "pmt/sm/primitives.hpp"
 
 #include <cassert>
 #include <cctype>
@@ -21,7 +21,7 @@
 namespace pmt::parser::grammar {
 using namespace pmt::base;
 using namespace pmt::parser;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 namespace {
 
@@ -34,7 +34,7 @@ public:
  GenericId::IdType _id_cur;
 };
 
-auto is_displayable(SymbolValueType symbol_) {
+auto is_displayable(SymbolType symbol_) {
  switch (symbol_) {
   case '"': {
    return false;

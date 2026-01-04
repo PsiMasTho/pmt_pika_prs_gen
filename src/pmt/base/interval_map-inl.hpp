@@ -74,14 +74,18 @@ auto IntervalMap<KEY_, VALUE_>::operator=(IntervalMap&& other_) noexcept -> Inte
   return *this;
  }
 
- _intervals = std::move(other_._intervals);
- _values = other_._values;
- _size = other_._size;
- _capacity_idx = other_._capacity_idx;
+ std::swap(_intervals, other_._intervals);
+ std::swap(_values, other_._values);
 
- other_._values = nullptr;
- other_._size = 0;
- other_._capacity_idx = 0;
+ // swap bitfields manually because std::swap doesnt work
+ size_t swap_tmp = _size;
+ _size = other_._size;
+ other_._size = swap_tmp;
+
+ swap_tmp = _capacity_idx;
+ _capacity_idx = other_._capacity_idx;
+ other_._capacity_idx = swap_tmp;
+
  return *this;
 }
 
@@ -329,6 +333,15 @@ template <std::integral KEY_, typename VALUE_>
 auto IntervalMap<KEY_, VALUE_>::get_keys() const -> IntervalSet<KEY_> {
  IntervalSet<KEY_> ret;
  for_each_interval([&ret](VALUE_ const&, Interval<KEY_> const interval_) { ret.insert(interval_); });
+ return ret;
+}
+
+template <std::integral KEY_, typename VALUE_>
+auto IntervalMap<KEY_, VALUE_>::clone_and(IntervalSet<KEY_> keys_to_keep_) const -> IntervalMap {
+ IntervalMap ret;
+
+ for_each_interval([&](VALUE_ const& value_, Interval<KEY_> original_interval_) { keys_to_keep_.clone_and(original_interval_).for_each_interval([&](Interval<KEY_> constrained_interval_) { ret.insert(constrained_interval_, value_); }); });
+
  return ret;
 }
 

@@ -13,13 +13,16 @@ template <typename... TS_>
 class MultiVector {
  // -$ Types / Constants $-
  using PtrTuple = std::tuple<TS_*...>;
- using ValueReferenceTuple = std::tuple<std::remove_pointer_t<TS_>&...>;
- using ValueConstReferenceTuple = std::tuple<std::remove_pointer_t<TS_> const&...>;
 
  enum : size_t {
   InitialCapacityIdx = 3
  };
 
+public:
+ using ValueReferenceTuple = std::tuple<std::remove_pointer_t<TS_>&...>;
+ using ValueConstReferenceTuple = std::tuple<std::remove_pointer_t<TS_> const&...>;
+
+private:
  // -$ Data $-
  PtrTuple _tuple;
  size_t _size : AmortizedGrowth::MaxCapacityBitWidth;
@@ -30,12 +33,12 @@ public:
  // --$ Lifetime $--
  MultiVector();
  MultiVector(MultiVector const& other_);
- MultiVector(MultiVector&&) noexcept = default;
+ MultiVector(MultiVector&& other_) noexcept;
  ~MultiVector();
 
  // --$ Operators $--
  auto operator=(MultiVector const& other_) -> MultiVector&;
- auto operator=(MultiVector&&) noexcept -> MultiVector& = default;
+ auto operator=(MultiVector&& other_) noexcept -> MultiVector&;
  auto operator==(MultiVector const& other_) const -> bool;
  auto operator!=(MultiVector const& other_) const -> bool;
 

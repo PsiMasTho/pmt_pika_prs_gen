@@ -111,7 +111,7 @@ auto GrammarData::lookup_nonterminal_definition_by_index(size_t index_) const ->
  return (index_ == _nonterminal_accepts.size()) ? _start_nonterminal_definition : _nonterminal_accepts[index_]._definition_path;
 }
 
-auto GrammarData::get_non_generic_ids() const -> std::map<std::string, pmt::util::sm::AcceptsIndexType> const& {
+auto GrammarData::get_non_generic_ids() const -> std::map<std::string, pmt::sm::AcceptsIndexType> const& {
  return _non_generic_ids;
 }
 

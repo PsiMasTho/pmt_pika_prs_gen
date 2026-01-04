@@ -2,20 +2,17 @@
 
 #include "pmt/asserts.hpp"
 #include "pmt/base/bitset.hpp"
-#include "pmt/base/match.hpp"
 #include "pmt/base/overloaded.hpp"
-#include "pmt/parser/builder/state_machine_util.hpp"
 #include "pmt/parser/builder/terminal_graph_writer.hpp"
 #include "pmt/parser/clause_base.hpp"
-#include "pmt/parser/generic_id.hpp"
 #include "pmt/parser/grammar/rule.hpp"
-#include "pmt/parser/primitives.hpp"
 #include "pmt/parser/rt/pika_program_base.hpp"
-#include "pmt/util/sm/ct/state_machine.hpp"
-#include "pmt/util/sm/primitives.hpp"
+#include "pmt/sm/primitives.hpp"
+#include "pmt/sm/state_machine.hpp"
+#include "pmt/sm/state_machine_determinizer.hpp"
+#include "pmt/sm/state_machine_minimizer.hpp"
 
 #include <cassert>
-#include <set>
 #include <unordered_set>
 
 namespace pmt::parser::builder {
@@ -23,94 +20,114 @@ namespace pmt::parser::builder {
 using namespace pmt::base;
 using namespace pmt::parser::rt;
 using namespace pmt::parser::grammar;
-using namespace pmt::util::sm;
-using namespace pmt::util::sm::ct;
+using namespace pmt::sm;
 
 namespace {
 
-using StateMachineFetch = decltype(Overloaded{[](std::vector<StateMachine> const& state_machines_, size_t index_) { return index_ < state_machines_.size() ? &state_machines_[index_] : nullptr; },
-                                              [](std::vector<StateMachine> const&, StateMachine const& item_) {
-                                               return &item_;
-                                              }});
+auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_literals_, std::span<ClauseBase::IdType const> charset_literal_clause_unique_ids_) -> StateMachine {
+ StateMachine ret;
+ ret.create_new_state();  // StateNrStart
 
-class StateMachineIndirectHash {
- std::vector<StateMachine> const& _state_machines;
+ for (size_t idx = 0; CharsetLiteral const& charset_literal : charset_literals_) {
+  StateNrType state_nr_prev = ret.create_new_state();
+  ret.get_state(StateNrStart)->add_epsilon_transition(state_nr_prev);
+
+  for (size_t i = 1; i < charset_literal.size() + 1; ++i) {
+   StateNrType state_nr_cur = ret.create_new_state();
+
+   if (!charset_literal.get_symbol_set_at(i - 1).empty()) {
+    charset_literal.get_symbol_set_at(i - 1).for_each_interval([&](Interval<SymbolType> interval_) { ret.get_state(state_nr_prev)->add_symbol_transitions(interval_, state_nr_cur); });
+   } else {
+    ret.get_state(state_nr_prev)->add_epsilon_transition(state_nr_cur);
+   }
+
+   state_nr_prev = state_nr_cur;
+  }
+
+  ret.get_state(state_nr_prev)->add_accept(charset_literal_clause_unique_ids_[idx++]);
+ }
+
+ return StateMachineMinimizer::minimize(StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._input_state_machine = ret, ._state_nr_from = StateNrStart}));
+}
+
+using CharsetLiteralFetch = decltype(Overloaded{[](std::vector<CharsetLiteral> const& charset_literals_, size_t index_) { return index_ < charset_literals_.size() ? &charset_literals_[index_] : nullptr; },
+                                                [](std::vector<CharsetLiteral> const&, CharsetLiteral const& item_) {
+                                                 return &item_;
+                                                }});
+
+class CharsetLiteralIndirectHash {
+ std::vector<CharsetLiteral> const& _charset_literals;
 
 public:
  using is_transparent = void;  // NOLINT
 
- explicit StateMachineIndirectHash(std::vector<StateMachine> const& state_machines_)
-  : _state_machines(state_machines_) {
+ explicit CharsetLiteralIndirectHash(std::vector<CharsetLiteral> const& charset_literals_)
+  : _charset_literals(charset_literals_) {
  }
 
  auto operator()(auto const& item_) const -> size_t {
-  return terminal_state_machine_hash(*StateMachineFetch{}(_state_machines, item_), AcceptsEqualityHandling::Present);
+  return CharsetLiteralFetch{}(_charset_literals, item_)->hash();
  }
 };
 
-class StateMachineIndirectEq {
- std::vector<StateMachine> const& _state_machines;
+class CharsetLiteralIndirectEq {
+ std::vector<CharsetLiteral> const& _charset_literals;
 
 public:
  using is_transparent = void;  // NOLINT
 
- explicit StateMachineIndirectEq(std::vector<StateMachine> const& state_machines_)
-  : _state_machines(state_machines_) {
+ explicit CharsetLiteralIndirectEq(std::vector<CharsetLiteral> const& charset_literals_)
+  : _charset_literals(charset_literals_) {
  }
 
  auto operator()(auto const& lhs_, auto const& rhs_) const -> bool {
-  StateMachine const* lhs = StateMachineFetch{}(_state_machines, lhs_);
-  StateMachine const* rhs = StateMachineFetch{}(_state_machines, rhs_);
+  CharsetLiteral const* lhs = CharsetLiteralFetch{}(_charset_literals, lhs_);
+  CharsetLiteral const* rhs = CharsetLiteralFetch{}(_charset_literals, rhs_);
   if (lhs == nullptr || rhs == nullptr) {
    return false;
   }
-  return terminal_state_machine_eq(*lhs, *rhs, AcceptsEqualityHandling::Present);
+  return *lhs == *rhs;
  }
 };
 
-class StateMachinesCached {
- std::vector<StateMachine>& _state_machines;
- Grammar const& _grammar;
- std::unordered_set<size_t, StateMachineIndirectHash, StateMachineIndirectEq> _state_machine_set_cache;
- RuleNameToSymbolFnType const& _rule_name_to_symbol_fn;
+class CharsetLiteralsCached {
+ std::vector<CharsetLiteral>& _charset_literals;
+ std::unordered_set<size_t, CharsetLiteralIndirectHash, CharsetLiteralIndirectEq> _index_cache;
 
 public:
- explicit StateMachinesCached(std::vector<StateMachine>& state_machines_, Grammar const& grammar_, RuleNameToSymbolFnType const& rule_name_to_symbol_fn_)
-  : _state_machines(state_machines_)
-  , _grammar(grammar_)
-  , _state_machine_set_cache(0, StateMachineIndirectHash(_state_machines), StateMachineIndirectEq(_state_machines))
-  , _rule_name_to_symbol_fn(rule_name_to_symbol_fn_) {
+ explicit CharsetLiteralsCached(std::vector<CharsetLiteral>& charset_literals_)
+  : _charset_literals(charset_literals_)
+  , _index_cache(0, CharsetLiteralIndirectHash(_charset_literals), CharsetLiteralIndirectEq(_charset_literals)) {
  }
 
- auto add_or_get_id(RuleExpression const& regular_rule_expression_) -> ClauseBase::IdType {
-  ClauseBase::IdType const idx = _state_machines.size();
-
-  StateMachine state_machine = state_machine_from_regular_rule(_grammar, regular_rule_expression_, idx, _rule_name_to_symbol_fn);
-  auto const itr = _state_machine_set_cache.find(state_machine);
-  if (itr != _state_machine_set_cache.end()) {
-   return *itr;
+ // Returns <id, is_new>
+ auto add_or_get_id(CharsetLiteral const& charset_literal_) -> std::pair<ClauseBase::IdType, bool> {
+  auto const itr = _index_cache.find(charset_literal_);
+  if (itr != _index_cache.end()) {
+   return {*itr, false};
   }
 
-  _state_machines.push_back(std::move(state_machine));
-  _state_machine_set_cache.insert(idx);
-  return idx;
+  ClauseBase::IdType const idx = _charset_literals.size();
+
+  _charset_literals.push_back(charset_literal_);
+  _index_cache.insert(idx);
+  return {idx, true};
  }
 };
-
-auto create_lookahead_state_machines(std::vector<StateMachine> const& state_machines_) -> std::vector<StateMachine> {
-}
-
-void merge_terminal_state_machines(std::vector<StateMachine>& state_machines_) {
-}
 
 }  // namespace
 
-ExtendedClause::ExtendedClause(Tag tag_)
- : _tag(tag_) {
+ExtendedClause::ExtendedClause(Tag tag_, ClauseBase::IdType id_)
+ : _tag(tag_)
+ , _id(id_) {
 }
 
 auto ExtendedClause::get_tag() const -> Tag {
  return _tag;
+}
+
+auto ExtendedClause::get_id() const -> IdType {
+ return _id;
 }
 
 auto ExtendedClause::get_child_id_at(size_t idx_) const -> ClauseBase::IdType {
@@ -122,13 +139,12 @@ auto ExtendedClause::get_child_id_count() const -> size_t {
  return _child_ids.size();
 }
 
-auto ExtendedClause::get_registered_rule_id_at(size_t idx_) const -> ClauseBase::IdType {
- assert(idx_ < _registered_rule_ids.size());
- return _registered_rule_ids[idx_];
+auto ExtendedClause::get_literal_id() const -> IdType {
+ return _literal_id;
 }
 
-auto ExtendedClause::get_registered_rule_id_count() const -> size_t {
- return _registered_rule_ids.size();
+auto ExtendedClause::get_non_terminal_id() const -> IdType {
+ return _non_terminal_id;
 }
 
 auto ExtendedClause::get_seed_parent_id_at(size_t idx_) const -> ClauseBase::IdType {
@@ -150,236 +166,166 @@ PikaProgram::PikaProgram(Grammar const& grammar_) {
  determine_seed_parents();
 }
 
-auto PikaProgram::fetch_nonterminal_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& {
- assert(clause_id_ < get_nonterminal_clause_count());
- return _nonterminal_clauses[clause_id_];
+auto PikaProgram::fetch_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& {
+ assert(clause_id_ < get_clause_count());
+ return _clauses[clause_id_];
 }
 
-auto PikaProgram::get_nonterminal_clause_count() const -> size_t {
- return _nonterminal_clauses.size();
+auto PikaProgram::get_clause_count() const -> size_t {
+ return _clauses.size();
 }
 
-auto PikaProgram::fetch_rule_info(ClauseBase::IdType rule_info_id_) const -> PikaRuleInfo {
- assert(rule_info_id_ < _rule_parameters.size());
- std::string const& id_string = _rule_parameters[rule_info_id_]._id_string;
- size_t const idx = binary_find_index(_rule_ids.begin(), _rule_ids.end(), id_string);
- GenericId::IdType const id = idx < _rule_ids.size() ? idx : GenericId::string_to_id(id_string);
- return PikaRuleInfo{._rule_id = id, ._merge = _rule_parameters[rule_info_id_]._merge};
+auto PikaProgram::fetch_non_terminal(ClauseBase::IdType non_terminal_id_) const -> NonTerminal {
+ assert(non_terminal_id_ < _rule_parameters.size());
+ return _rule_parameters[non_terminal_id_];
 }
 
-auto PikaProgram::get_rule_info_count() const -> size_t {
+auto PikaProgram::get_non_terminal_count() const -> size_t {
  return _rule_parameters.size();
 }
 
-auto PikaProgram::get_terminal_state_machine_tables(size_t idx_) const -> pmt::parser::rt::StateMachineTablesBase const& {
- assert(idx_ < _terminal_state_machine_tables.size());
- return _terminal_state_machine_tables[idx_];
+auto PikaProgram::get_literal_state_machine_tables() const -> StateMachineTablesBase const& {
+ return _literal_state_machine_tables;
 }
 
-auto PikaProgram::get_terminal_state_machine_lookahead_tables(size_t idx_) const -> pmt::parser::rt::StateMachineTablesBase const& {
- assert(idx_ < _terminal_lookahead_state_machine_tables.size());
- return _terminal_lookahead_state_machine_tables[idx_];
+auto PikaProgram::fetch_literal(ClauseBase::IdType literal_id_) const -> CharsetLiteral const& {
+ assert(literal_id_ < _literals.size());
+ return _literals[literal_id_];
 }
 
-auto PikaProgram::get_terminal_state_machine_count() const -> size_t {
- return _terminal_state_machine_tables.size();
-}
-
-auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_info_id_) const -> pmt::parser::grammar::RuleParameters const& {
- assert(rule_info_id_ < _rule_parameters.size());
- return _rule_parameters[rule_info_id_];
+auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType non_terminal_id_) const -> RuleParameters const& {
+ assert(non_terminal_id_ < _rule_parameters.size());
+ return _rule_parameters[non_terminal_id_];
 }
 
 void PikaProgram::initialize(Grammar const& grammar_) {
- std::vector<StateMachine> state_machines;
+ std::vector<ClauseBase::IdType> charset_literal_clause_ids;
+ CharsetLiteralsCached charset_literals_cached(_literals);
 
- ClauseBase::IdType counter = 0;
- std::unordered_map<ClauseBase::IdType, ClauseBase::IdType> clause_unique_id_to_index;
- std::unordered_map<std::string, ClauseBase::IdType> rule_name_to_definition_clause_unique_id;
- std::unordered_map<std::string, ClauseBase::IdType> rule_name_to_rule_parameter_id;
- std::unordered_map<ClauseBase::IdType, std::unordered_set<ClauseBase::IdType>> registered_rule_map;
- std::vector<std::pair<RuleExpression const*, ClauseBase::IdType>> pending;
+ std::unordered_map<RuleExpression const*, ClauseBase::IdType> visited;
+ std::function<ClauseBase::IdType(RuleExpression const*)> recursive_worker = [&](RuleExpression const* expr_) -> ClauseBase::IdType {
+  if (auto const itr = visited.find(expr_); itr != visited.end()) {
+   return itr->second;
+  }
 
- // Fill rule parameters
- for (std::string const& rule_name : grammar_.get_rule_names()) {
-  rule_name_to_rule_parameter_id[rule_name] = _rule_parameters.size();
-  _rule_parameters.push_back(grammar_.get_rule(rule_name)->_parameters);
- }
-
- StateMachinesCached state_machines_cached(state_machines, grammar_, [&](std::string const& rule_name_) -> SymbolValueType {
-  auto const itr = rule_name_to_rule_parameter_id.find(rule_name_);
-  assert(itr != rule_name_to_rule_parameter_id.end());
-  return itr->second;
- });
-
- auto const push_and_visit = [&](RuleExpression const* expr_) {
-  bool is_definition = false;
-  RuleExpression const* prev = expr_;
-  while (expr_->get_tag() == ClauseBase::Tag::Identifier) {
-   std::string const& rule_name = expr_->get_identifier();
-   if (auto const itr = rule_name_to_definition_clause_unique_id.find(rule_name); itr != rule_name_to_definition_clause_unique_id.end()) {
-    return itr->second;
+  if (expr_->get_tag() == ClauseBase::Tag::CharsetLiteral) {
+   auto const [literal_id, is_new] = charset_literals_cached.add_or_get_id(expr_->get_charset_literal());
+   ClauseBase::IdType const clause_id = is_new ? _clauses.size() : charset_literal_clause_ids[literal_id];
+   if (is_new) {
+    charset_literal_clause_ids.push_back(clause_id);
+    _clauses.emplace_back(expr_->get_tag(), clause_id);
    }
-   prev = expr_;
-   expr_ = grammar_.get_rule(expr_->get_identifier())->_definition.get();
+
+   _clauses[clause_id]._literal_id = literal_id;
+   visited[expr_] = clause_id;
+   return clause_id;
   }
 
-  if (prev != expr_) {
-   rule_name_to_definition_clause_unique_id[prev->get_identifier()] = counter;
-   registered_rule_map[counter].insert(rule_name_to_rule_parameter_id.find(prev->get_identifier())->second);
-  }
+  ClauseBase::IdType const clause_id = _clauses.size();
+  visited[expr_] = clause_id;
+  _clauses.emplace_back(expr_->get_tag(), clause_id);
 
-  pending.emplace_back(expr_, counter);
-  return counter++;
- };
-
- auto const take = [&] {
-  auto ret = pending.back();
-  pending.pop_back();
-  return ret;
- };
-
- auto const add_clause = [&](ExtendedClause clause_, ClauseBase::IdType unique_id_) {
-  clause_unique_id_to_index[unique_id_] = _nonterminal_clauses.size();
-  _nonterminal_clauses.emplace_back(std::move(clause_));
- };
-
- RuleExpression::UniqueHandle const start_expr = RuleExpression::construct(ClauseBase::Tag::Identifier);
- start_expr->set_identifier(grammar_.get_start_rule_name());
- push_and_visit(start_expr.get());
-
- while (!pending.empty()) {
-  auto const [expr_cur, unique_id_cur] = take();
-
-  ExtendedClause clause_cur(expr_cur->get_tag());
-
-  switch (expr_cur->get_tag()) {
+  switch (expr_->get_tag()) {
    case ClauseBase::Tag::Sequence: {
-    for (size_t i = 0; i < expr_cur->get_children_size(); ++i) {
-     clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at(i)));
+    for (size_t i = 0; i < expr_->get_children_size(); ++i) {
+     ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at(i));
+     _clauses[clause_id]._child_ids.push_back(child_id);
     }
    } break;
    case ClauseBase::Tag::Choice: {
-    for (size_t i = 0; i < expr_cur->get_children_size(); ++i) {
-     clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at(i)));
+    for (size_t i = 0; i < expr_->get_children_size(); ++i) {
+     ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at(i));
+     _clauses[clause_id]._child_ids.push_back(child_id);
     }
    } break;
    case ClauseBase::Tag::Hidden: {
-    clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at_front()));
-   } break;
-   case ClauseBase::Tag::PegRegular:
-   case ClauseBase::Tag::CfgRegular: {
-    clause_cur._child_ids.push_back(state_machines_cached.add_or_get_id(*expr_cur));
+    ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at_front());
+    _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
    case ClauseBase::Tag::OneOrMore: {
-    clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at_front()));
+    ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at_front());
+    _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
    case ClauseBase::Tag::NotFollowedBy: {
-    clause_cur._child_ids.push_back(push_and_visit(expr_cur->get_child_at_front()));
+    ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at_front());
+    _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
-   case ClauseBase::Tag::Epsilon: {
+   case ClauseBase::Tag::Epsilon:
+   case ClauseBase::Tag::CharsetLiteral:
+    break;
+   case ClauseBase::Tag::Identifier: {
+    ClauseBase::IdType const child_id = recursive_worker(grammar_.get_rule(expr_->get_identifier())->_definition.get());
+    _clauses[clause_id]._child_ids.push_back(child_id);
+    _clauses[clause_id]._non_terminal_id = _rule_parameters.size();
+    _rule_parameters.push_back(grammar_.get_rule(expr_->get_identifier())->_parameters);
    } break;
    default:
     pmt::unreachable();
   }
-  add_clause(clause_cur, unique_id_cur);
- }
 
- // Add registered rules
- for (auto const& [clause_unique_id, registered_rule_ids] : registered_rule_map) {
-  for (ClauseBase::IdType registered_rule_id : registered_rule_ids) {
-   _nonterminal_clauses[clause_unique_id_to_index.find(clause_unique_id)->second]._registered_rule_ids.push_back(registered_rule_id);
-  }
- }
+  return clause_id;
+ };
 
- // Change clause unique_id to their actual positions
- for (ExtendedClause& clause : _nonterminal_clauses) {
-  for (ClauseBase::IdType& child_id : clause._child_ids) {
-   if (Match::is_any_of(clause.get_tag(), ClauseBase::Tag::PegRegular, ClauseBase::Tag::CfgRegular)) {
-    continue;
-   }
-   child_id = clause_unique_id_to_index.find(child_id)->second;
-  }
- }
+ recursive_worker(grammar_.get_rule(grammar_.get_start_rule_name())->_definition.get());
 
- // Fill the rule id table
- std::set<std::string> rule_id_set;
- for (RuleParameters const& rule_parameters : _rule_parameters) {
-  if (GenericId::is_generic_id(rule_parameters._id_string)) {
-   continue;
-  }
-  rule_id_set.insert(rule_parameters._id_string);
- }
+ // Build the terminal state machine from the charset literals
+ _literal_state_machine_tables = StateMachineTables(charset_literals_to_state_machine(_literals, charset_literal_clause_ids));
 
- // Write the dotfiles for the state machines individually, maybe remove this eventually
- for (size_t i = 0; StateMachine const& state_machine : state_machines) {
-  TerminalGraphWriter(state_machine, std::to_string(i), "terminal_graph_" + std::to_string(i) + ".dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
-  ++i;
- }
-
- merge_terminal_state_machines(state_machines);
-
- for (StateMachine const& state_machine : state_machines) {
-  static std::unordered_set<SymbolKindType> const cached_transition_kinds = {SymbolKindOpen, SymbolKindClose, SymbolKindConflict};
-  _terminal_state_machine_tables.emplace_back(state_machine, cached_transition_kinds);
- }
+ // write dotfile
+ TerminalGraphWriter(_literal_state_machine_tables.get_state_machine(), "title", "terminal_graph.dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
 }
 
 void PikaProgram::determine_can_match_zero() {
- Bitset solved(_nonterminal_clauses.size());
+ Bitset solved(_clauses.size());
  bool changed = true;
-
- IntervalSet<ClauseBase::IdType> const terminal_can_match_zero_cache = determine_terminal_state_machines_can_match_zero();
 
  auto const mark = [&](ClauseBase::IdType clause_id_, bool can_match_zero_) {
   if (solved.get(clause_id_)) {
    return;
   }
   solved.set(clause_id_, true);
-  _nonterminal_clauses[clause_id_]._can_match_zero = can_match_zero_;
+  _clauses[clause_id_]._can_match_zero = can_match_zero_;
   changed = true;
  };
 
  while (changed) {
   changed = false;
 
-  for (std::size_t i = _nonterminal_clauses.size(); i-- > 0;) {
-   switch (_nonterminal_clauses[i].get_tag()) {
+  for (std::size_t i = _clauses.size(); i-- > 0;) {
+   switch (_clauses[i].get_tag()) {
     case ClauseBase::Tag::Sequence:
     case ClauseBase::Tag::Choice: {
-     bool const is_sequence = _nonterminal_clauses[i].get_tag() == ClauseBase::Tag::Sequence;
-     if (_nonterminal_clauses[i].get_child_id_count() == 0) {
+     bool const is_sequence = _clauses[i].get_tag() == ClauseBase::Tag::Sequence;
+     if (_clauses[i].get_child_id_count() == 0) {
       mark(i, true);
      }
 
      bool saw_unsolved = false;
      size_t j = 0;
-     for (; j < _nonterminal_clauses[i].get_child_id_count(); ++j) {
-      ClauseBase::IdType const child_id = _nonterminal_clauses[i].get_child_id_at(j);
+     for (; j < _clauses[i].get_child_id_count(); ++j) {
+      ClauseBase::IdType const child_id = _clauses[i].get_child_id_at(j);
       if (!solved.get(child_id)) {
        saw_unsolved = true;
        continue;
       }
-      if (_nonterminal_clauses[child_id].can_match_zero() == !is_sequence) {
+      if (_clauses[child_id].can_match_zero() == !is_sequence) {
        mark(i, !is_sequence);
        break;
       }
      }
-     if (!solved.get(i) && j == _nonterminal_clauses[i].get_child_id_count() && !saw_unsolved) {
+     if (!solved.get(i) && j == _clauses[i].get_child_id_count() && !saw_unsolved) {
       mark(i, is_sequence);
      }
     } break;
-    case ClauseBase::Tag::Identifier: {
-     pmt::unreachable();
+
+    case ClauseBase::Tag::CharsetLiteral: {
+     mark(i, false);
     } break;
-    case ClauseBase::Tag::PegRegular:
-    case ClauseBase::Tag::CfgRegular: {
-     mark(i, terminal_can_match_zero_cache.contains(_nonterminal_clauses[i].get_child_id_at(0)));
-    } break;
+    case ClauseBase::Tag::Identifier:
     case ClauseBase::Tag::Hidden:
     case ClauseBase::Tag::OneOrMore: {
-     if (solved.get(_nonterminal_clauses[i].get_child_id_at(0))) {
-      mark(i, _nonterminal_clauses[_nonterminal_clauses[i].get_child_id_at(0)].can_match_zero());
+     if (solved.get(_clauses[i].get_child_id_at(0))) {
+      mark(i, _clauses[_clauses[i].get_child_id_at(0)].can_match_zero());
      }
     } break;
     case ClauseBase::Tag::NotFollowedBy:
@@ -395,22 +341,56 @@ void PikaProgram::determine_can_match_zero() {
  assert(solved.all() && "FAILED TO DETERMINE CAN_MATCH_ZERO");
 }
 
-auto PikaProgram::determine_terminal_state_machines_can_match_zero() -> IntervalSet<ClauseBase::IdType> {
- IntervalSet<ClauseBase::IdType> ret;
- for (StateMachineTables const& state_machine_tables : _terminal_state_machine_tables) {
-  ret.inplace_or(get_accepts_reachable_without_consuming_characters(state_machine_tables.get_state_machine()));
- }
-
- return ret;
-}
-
 void PikaProgram::determine_seed_parents() {
-}
+ Bitset visited(_clauses.size());
+ std::function<void(ClauseBase::IdType)> recursive_worker = [&](ClauseBase::IdType clause_id_) {
+  if (visited.exchange(clause_id_, true)) {
+   return;
+  }
 
-void PikaProgram::write_terminal_state_machine_dotfiles() {
- for (size_t i = 0; StateMachineTables const& state_machine_tables : _terminal_state_machine_tables) {
-  TerminalGraphWriter(state_machine_tables.get_state_machine(), std::to_string(i), "terminal_graph_combined_" + std::to_string(i) + ".dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
-  ++i;
+  ExtendedClause& clause = _clauses[clause_id_];
+
+  switch (clause.get_tag()) {
+   case ClauseBase::Tag::Sequence: {
+    if (clause.get_child_id_count() != 0) {
+     ClauseBase::IdType const first_child_id = clause.get_child_id_at(0);
+     _clauses[first_child_id]._seed_parent_ids.push_back(clause_id_);
+    }
+    for (size_t i = 0; i + 1 < clause.get_child_id_count(); ++i) {
+     if (this->fetch_clause(clause.get_child_id_at(i)).can_match_zero()) {
+      ClauseBase::IdType const next_child_id = clause.get_child_id_at(i + 1);
+      _clauses[next_child_id]._seed_parent_ids.push_back(clause_id_);
+     } else {
+      break;
+     }
+    }
+
+   } break;
+   case ClauseBase::Tag::Identifier:
+   case ClauseBase::Tag::Hidden:
+   case ClauseBase::Tag::OneOrMore:
+   case ClauseBase::Tag::Choice: {
+    for (size_t i = 0; i < clause.get_child_id_count(); ++i) {
+     ClauseBase::IdType const child_id = clause.get_child_id_at(i);
+     _clauses[child_id]._seed_parent_ids.push_back(clause_id_);
+    }
+   } break;
+   default:
+    pmt::unreachable();
+   case ClauseBase::Tag::NotFollowedBy:
+   case ClauseBase::Tag::Epsilon:
+   case ClauseBase::Tag::CharsetLiteral:
+    break;
+  }
+
+  // Evaluate children
+  for (size_t i = 0; i < clause.get_child_id_count(); ++i) {
+   recursive_worker(clause.get_child_id_at(i));
+  }
+ };
+
+ if (!_clauses.empty()) {
+  recursive_worker(0);
  }
 }
 

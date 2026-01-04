@@ -4,6 +4,7 @@
 
 namespace pmt::parser {
 using namespace pmt::base;
+using namespace pmt::sm;
 
 auto is_symbol_printable(SymbolType symbol_) -> bool {
  return Match::is_in_any_of(symbol_, Interval('A', 'Z'), Interval('a', 'z'), Interval('0', '9'),

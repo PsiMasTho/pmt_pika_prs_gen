@@ -11,27 +11,29 @@ public:
  using IdType = uint64_t;
 
  enum class Tag : uint8_t {
-  Sequence,        // >= 1 child id
-  Choice,          // >= 1 child id
-  Hidden,          // 1 child id
-  PegRegular,      // 1 child id
-  CfgRegular,      // 1 child id
-  Identifier,      // NOT IN USE
-  CharsetLiteral,  // NOT IN USE
-  OneOrMore,       // 1 child id
-  NotFollowedBy,   // 1 child id
-  Epsilon,         // 0 child ids
+  Sequence,        // >= 1 clause ids
+  Choice,          // >= 1 clause ids
+  Hidden,          // 1 clause id
+  Identifier,      // 1 clause id + 1 nonterminal id
+  CharsetLiteral,  // 1 literal id
+  OneOrMore,       // 1 clause id
+  NotFollowedBy,   // 1 clause id
+  Epsilon,         // 0 clause ids
  };
 
  [[nodiscard]] virtual auto get_tag() const -> Tag = 0;
+ [[nodiscard]] virtual auto get_id() const -> IdType = 0;
 
- [[nodiscard]] virtual auto get_child_id_at(size_t idx_) const -> ClauseBase::IdType = 0;
+ [[nodiscard]] virtual auto get_child_id_at(size_t idx_) const -> IdType = 0;
  [[nodiscard]] virtual auto get_child_id_count() const -> size_t = 0;
 
- [[nodiscard]] virtual auto get_registered_rule_id_at(size_t idx_) const -> ClauseBase::IdType = 0;
- [[nodiscard]] virtual auto get_registered_rule_id_count() const -> size_t = 0;
+ [[nodiscard]] virtual auto get_literal_id() const -> IdType = 0;
+ [[nodiscard]] auto has_literal_id() const -> bool;
 
- [[nodiscard]] virtual auto get_seed_parent_id_at(size_t idx_) const -> ClauseBase::IdType = 0;
+ [[nodiscard]] virtual auto get_non_terminal_id() const -> IdType = 0;
+ [[nodiscard]] auto has_non_terminal_id() const -> bool;
+
+ [[nodiscard]] virtual auto get_seed_parent_id_at(size_t idx_) const -> IdType = 0;
  [[nodiscard]] virtual auto get_seed_parent_count() const -> size_t = 0;
 
  [[nodiscard]] virtual auto can_match_zero() const -> bool = 0;

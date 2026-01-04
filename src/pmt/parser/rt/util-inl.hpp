@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <span>
 
 namespace pmt::parser::rt {
@@ -20,7 +21,7 @@ auto find_first_set_bit(pmt::base::Bitset::ChunkSpanConst const& bitset_) -> siz
   }
  }
 
- return total;
+ return get_bit(bitset_, total) ? total : std::numeric_limits<size_t>::max();
 }
 
 void set_bit(pmt::base::Bitset::ChunkSpan bitset_, size_t index_) {
@@ -29,6 +30,14 @@ void set_bit(pmt::base::Bitset::ChunkSpan bitset_, size_t index_) {
 
  assert(chunk_index < bitset_.size());
  bitset_[chunk_index] |= pmt::base::Bitset::ChunkType(1) << bit_index;
+}
+
+void clear_bit(pmt::base::Bitset::ChunkSpan bitset_, size_t index_) {
+ size_t const chunk_index = index_ / pmt::base::Bitset::ChunkBit;
+ size_t const bit_index = index_ % pmt::base::Bitset::ChunkBit;
+
+ assert(chunk_index < bitset_.size());
+ bitset_[chunk_index] &= ~(pmt::base::Bitset::ChunkType(1) << bit_index);
 }
 
 auto get_bit(pmt::base::Bitset::ChunkSpanConst bitset_, size_t index_) -> bool {
@@ -61,27 +70,27 @@ auto get_popcount(pmt::base::Bitset::ChunkSpanConst bitset_) -> size_t {
  return count;
 }
 
-auto encode_symbol(pmt::util::sm::SymbolValueType symbol_) -> pmt::util::sm::SymbolValueType {
- return (symbol_ == pmt::util::sm::SymbolValueMax) ? 0 : symbol_ + 1;
+auto encode_symbol(pmt::sm::SymbolType symbol_) -> pmt::sm::SymbolType {
+ return (symbol_ == SymbolValueMaxValid) ? 0 : symbol_ + 1;
 }
 
-auto decode_symbol(pmt::util::sm::SymbolValueType symbol_) -> pmt::util::sm::SymbolValueType {
- return (symbol_ == 0) ? pmt::util::sm::SymbolValueMax : symbol_ - 1;
+auto decode_symbol(pmt::sm::SymbolType symbol_) -> pmt::sm::SymbolType {
+ return (symbol_ == 0) ? SymbolValueMaxValid : symbol_ - 1;
 }
 
-auto lowers_lt(pmt::util::sm::SymbolValueType lhs_, pmt::util::sm::SymbolValueType rhs_) -> bool {
+auto lowers_lt(pmt::sm::SymbolType lhs_, pmt::sm::SymbolType rhs_) -> bool {
  return decode_symbol(lhs_) < decode_symbol(rhs_);
 }
 
-auto encode_accept_index(pmt::util::sm::AcceptsIndexType index_) -> pmt::util::sm::AcceptsIndexType {
+auto encode_accept_index(pmt::sm::AcceptsIndexType index_) -> pmt::sm::AcceptsIndexType {
  return index_ + 1;
 }
 
-auto decode_accept_index(pmt::util::sm::AcceptsIndexType index_) -> pmt::util::sm::AcceptsIndexType {
+auto decode_accept_index(pmt::sm::AcceptsIndexType index_) -> pmt::sm::AcceptsIndexType {
  return index_ - 1;
 }
 
-auto get_state_nr_next_generic(std::ranges::random_access_range auto transitions_, std::ranges::random_access_range auto state_offsets_, std::ranges::random_access_range auto symbol_kind_offsets_, pmt::util::sm::StateNrType state_nr_, pmt::util::sm::SymbolKindType kind_, pmt::util::sm::SymbolValueType symbol_) -> pmt::util::sm::StateNrType {
+auto get_state_nr_next_generic(std::ranges::random_access_range auto transitions_, std::ranges::random_access_range auto state_offsets_, std::ranges::random_access_range auto symbol_kind_offsets_, pmt::sm::StateNrType state_nr_, SymbolKindType kind_, pmt::sm::SymbolType symbol_) -> pmt::sm::StateNrType {
  size_t const start = state_offsets_[symbol_kind_offsets_[kind_] + state_nr_];
  size_t const end = state_offsets_[symbol_kind_offsets_[kind_] + state_nr_ + 1];
  size_t const size = end - start;
@@ -98,19 +107,19 @@ auto get_state_nr_next_generic(std::ranges::random_access_range auto transitions
 
  if (idx == lowers.size()) {
   if (idx == 0 || symbol_ > decode_symbol(uppers[idx - 1])) {
-   return pmt::util::sm::StateNrSink;
+   return pmt::sm::StateNrInvalid;
   }
   return values[idx - 1];
  }
 
  if (symbol_ < decode_symbol(lowers[idx])) {
   if (idx == 0) {
-   return pmt::util::sm::StateNrSink;
+   return pmt::sm::StateNrInvalid;
   }
   if (symbol_ <= decode_symbol(uppers[idx - 1])) {
    return values[idx - 1];
   }
-  return pmt::util::sm::StateNrSink;
+  return pmt::sm::StateNrInvalid;
  }
 
  return values[idx];

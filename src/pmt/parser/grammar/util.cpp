@@ -2,14 +2,14 @@
 
 #include "pmt/base/interval_container_common.hpp"
 #include "pmt/parser/grammar/charset_literal.hpp"
-#include "pmt/parser/primitives.hpp"
 #include "pmt/parser/util.hpp"
+#include "pmt/sm/primitives.hpp"
 
 #include <cassert>
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 namespace {
 
@@ -49,7 +49,9 @@ auto charset_to_string(IntervalSet<SymbolType> const& charset_) -> std::string {
  return ret;
 }
 
-auto charset_literal_to_printable_string_body(CharsetLiteral const& charset_literal_) {
+}  // namespace
+
+auto charset_literal_to_printable_string(CharsetLiteral const& charset_literal_) -> std::string {
  std::string ret;
  std::string delim;
  for (size_t i = 0; i < charset_literal_.size(); ++i) {
@@ -57,12 +59,6 @@ auto charset_literal_to_printable_string_body(CharsetLiteral const& charset_lite
  }
 
  return ret;
-}
-
-}  // namespace
-
-auto charset_literal_to_printable_string(CharsetLiteral const& charset_literal_) -> std::string {
- return "{" + charset_literal_to_printable_string_body(charset_literal_) + "}" + (charset_literal_.is_hidden() ? "~" : "");
 }
 
 }  // namespace pmt::parser::grammar

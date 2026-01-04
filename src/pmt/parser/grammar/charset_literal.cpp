@@ -6,6 +6,7 @@
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
+using namespace pmt::sm;
 
 auto CharsetLiteral::hash() const -> size_t {
  size_t seed = Hash::Phi64;
@@ -33,28 +34,16 @@ void CharsetLiteral::push_back(SymbolSet symbol_set_) {
  get_symbol_set_at(size() - 1) = std::move(symbol_set_);
 }
 
-void CharsetLiteral::push_back(Interval<pmt::util::sm::SymbolValueType> symbol_interval_) {
+void CharsetLiteral::push_back(Interval<SymbolType> symbol_interval_) {
  push_back(SymbolSet(symbol_interval_));
 }
 
-void CharsetLiteral::push_back(pmt::util::sm::SymbolValueType symbol_) {
- push_back(Interval<pmt::util::sm::SymbolValueType>(symbol_));
-}
-
-void CharsetLiteral::push_back() {
- _literal.emplace_back();
+void CharsetLiteral::push_back(SymbolType symbol_) {
+ push_back(Interval<SymbolType>(symbol_));
 }
 
 void CharsetLiteral::pop_back() {
  _literal.pop_back();
-}
-
-auto CharsetLiteral::is_hidden() const -> bool {
- return _is_hidden;
-}
-
-void CharsetLiteral::set_hidden(bool value_) {
- _is_hidden = value_;
 }
 
 auto CharsetLiteral::size() const -> size_t {

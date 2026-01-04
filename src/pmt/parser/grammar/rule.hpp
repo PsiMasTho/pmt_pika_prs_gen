@@ -2,6 +2,7 @@
 
 #include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/grammar/charset_literal.hpp"
+#include "pmt/parser/rt/non_terminal.hpp"
 
 #include <deque>
 #include <memory>
@@ -10,17 +11,9 @@
 
 namespace pmt::parser::grammar {
 
-class RuleParameters {
+class RuleParameters : public pmt::parser::rt::NonTerminal {
 public:
- static inline bool const MERGE_DEFAULT = false;
- static inline bool const UNPACK_DEFAULT = false;
- static inline bool const HIDE_DEFAULT = false;
-
- std::string _display_name;
  std::string _id_string;
- bool _merge : 1 = MERGE_DEFAULT;
- bool _unpack : 1 = UNPACK_DEFAULT;
- bool _hide : 1 = HIDE_DEFAULT;
 };
 
 class RuleExpression {
@@ -38,8 +31,6 @@ private:
  using SequenceType = std::deque<RuleExpression*>;
  using ChoiceType = std::deque<RuleExpression*>;
  using HiddenType = RuleExpression*;
- using PegRegularType = RuleExpression*;
- using CfgRegularType = RuleExpression*;
  using OneOrMoreType = RuleExpression*;
  using NotFollowedByType = RuleExpression*;
 
@@ -51,7 +42,7 @@ public:
 
 private:
  // Note: keep the values of the ClauseBase::Tag constants the same as the indices of their types in the variant
- using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, PegRegularType, CfgRegularType, IdentifierType, CharsetLiteral, OneOrMoreType, NotFollowedByType, EpsilonType>;
+ using VariantType = std::variant<SequenceType, ChoiceType, HiddenType, IdentifierType, CharsetLiteral, OneOrMoreType, NotFollowedByType, EpsilonType>;
 
  // -$ Data $-
  VariantType _data;

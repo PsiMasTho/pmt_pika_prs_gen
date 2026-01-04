@@ -34,6 +34,8 @@ void realloc_unique_ptr(std::unique_ptr<T_[]>& ptr_, size_t old_size_, size_t ne
 template <typename T_>
 auto move_bidir(T_ data_begin_, T_ data_end_, T_ dest_);
 
+constexpr auto get_max_unsigned_value_for_bit_count(size_t bit_count_) -> uintmax_t;
+
 }  // namespace pmt::base
 
 #include "pmt/base/algo-inl.hpp"

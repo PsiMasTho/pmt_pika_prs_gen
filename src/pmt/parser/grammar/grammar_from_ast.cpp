@@ -13,7 +13,7 @@
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 namespace {
 class FrameBase {
@@ -364,7 +364,7 @@ void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
  CharsetLiteral literal;
  std::string const& str_literal = StringLiteral(*frame_._ast_cur_path).get_value();
  for (char const ch : str_literal) {
-  literal.push_back(Interval<SymbolValueType>(ch));
+  literal.push_back(Interval<SymbolType>(ch));
  }
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
  locals_._ret_part->set_charset_literal(std::move(literal));
@@ -372,7 +372,7 @@ void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
 
 void process_frame_00(Locals& locals_, IntegerLiteralFrame& frame_) {
  CharsetLiteral literal;
- literal.push_back(Interval<SymbolValueType>(Number(*frame_._ast_cur_path).get_value()));
+ literal.push_back(Interval<SymbolType>(Number(*frame_._ast_cur_path).get_value()));
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
  locals_._ret_part->set_charset_literal(std::move(literal));
 }

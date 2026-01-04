@@ -8,10 +8,13 @@
 
 namespace pmt::parser::builder {
 using namespace pmt::parser::grammar;
+using namespace pmt::base;
+using namespace pmt::sm;
 
 namespace {
+
 static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdType clause_id_) {
- ClauseBase const& clause = args_._program.fetch_nonterminal_clause(clause_id_);
+ ClauseBase const& clause = args_._program.fetch_clause(clause_id_);
 
  // Header: the clause id, then a braced block
  args_._out << clause_id_ << " {\n";
@@ -21,7 +24,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
 
  // children: ascending list of child clause IDs or the literal
  if (clause.get_tag() == ClauseBase::Tag::CharsetLiteral) {
-  args_._out << "  literal: ...";
+  args_._out << "  literal: " << charset_literal_to_printable_string(args_._program.fetch_literal(clause.get_literal_id())) << ";\n";
  } else {
   std::string delim;
   args_._out << "  children: [";
@@ -31,16 +34,9 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
   args_._out << "];\n";
  }
 
- // rules:
- {
-  args_._out << "  rules: [";
-  std::string delim;
-  for (size_t i = 0; i < clause.get_registered_rule_id_count(); ++i) {
-   auto rid = clause.get_registered_rule_id_at(i);
-   auto const& rp = args_._program.fetch_rule_parameters(rid);
-   args_._out << std::exchange(delim, ", ") << rp._display_name;
-  }
-  args_._out << "];\n";
+ // identifier:
+ if (clause.get_tag() == ClauseBase::Tag::Identifier) {
+  args_._out << "  identifier: " << args_._program.fetch_rule_parameters(clause.get_non_terminal_id())._display_name << ";\n";
  }
 
  // seed parents:
@@ -60,7 +56,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
 }
 
 void print_clauses(PikaProgramPrinter::Args& args_) {
- for (size_t i = 0; i < args_._program.get_nonterminal_clause_count(); ++i) {
+ for (size_t i = 0; i < args_._program.get_clause_count(); ++i) {
   print_clause_block(args_, i);
  }
  args_._out << std::endl;

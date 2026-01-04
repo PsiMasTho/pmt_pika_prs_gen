@@ -6,7 +6,7 @@
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
-using namespace pmt::util::sm;
+using namespace pmt::sm;
 
 #include <cassert>
 

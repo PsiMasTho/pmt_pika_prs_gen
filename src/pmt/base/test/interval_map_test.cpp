@@ -165,9 +165,35 @@ void test_erase_impl() {
 }  // namespace
 
 void IntervalMapTest::run() {
+ test_move_assign();
  test_insert();
  test_erase();
  test_copy();
+}
+
+void IntervalMapTest::test_move_assign() {
+ static size_t const TEST_CASE_COUNT = 50;
+ static size_t const VECTOR_SIZE = 8;
+ std::vector<IntervalMap<size_t, std::string>> interval_maps(VECTOR_SIZE);
+
+ for (size_t i = 0; i < TEST_CASE_COUNT; ++i) {
+  static size_t const range = 200;
+  static float const density = 0.8f;
+  static size_t const max_step = 32;
+  static size_t const value_max = 6;
+  static size_t const prefill_spacing = 25;
+
+  TestMapPair<size_t> test_set_pair = make_rng_filled_maps<size_t>(range, density, max_step, value_max, prefill_spacing);
+
+  // Make a copy to compare against after move
+  IntervalMap<size_t, std::string> copy_of_interval_map = test_set_pair._interval_map;
+
+  // overwriting on purpose for the test
+  size_t const vector_index = i % VECTOR_SIZE;
+  interval_maps[vector_index] = std::move(test_set_pair._interval_map);
+
+  assert(interval_maps[vector_index] == copy_of_interval_map);
+ }
 }
 
 void IntervalMapTest::test_insert() {

@@ -59,6 +59,7 @@ public:
  void inplace_or(IntervalSet const& other_);
  void inplace_asymmetric_difference(IntervalSet const& other_);
 
+ auto clone_and(Interval<KEY_> interval_) -> IntervalSet;
  auto clone_and(IntervalSet const& other_) const -> IntervalSet;
  auto clone_asymmetric_difference(IntervalSet const& other_) const -> IntervalSet;
 
