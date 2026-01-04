@@ -15,11 +15,10 @@ using namespace pmt::base;
 namespace {
 
 void debug_print_memo_table(MemoTable const& memo_table_) {
- // If the memo table contains match 0 at position 0 for the start clause and the length of the input, then parsing succeeded
  ClauseBase const& start_clause = memo_table_.get_pika_program().fetch_clause(0);
  MemoTable::Key start_key{._clause = &start_clause, ._position = 0};
  MemoTable::IndexType const start_match_index = memo_table_.find(start_key);
- if (start_match_index != MemoTable::MemoIndexMatchNotFound && memo_table_.get_match_by_index(start_match_index)._length == memo_table_.get_input().size()) {
+ if (start_match_index != MemoTable::MemoIndexMatchNotFound && memo_table_.get_match_length_by_index(start_match_index) == memo_table_.get_input().size()) {
   std::cout << "!PARSING SUCCESS!\n";
  } else {
   std::cout << "!PARSING FAILED!.\n";
