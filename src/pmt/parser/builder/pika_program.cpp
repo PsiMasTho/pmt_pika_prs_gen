@@ -336,6 +336,11 @@ void PikaProgram::determine_can_match_zero() {
        saw_unsolved = true;
        continue;
       }
+      if (_clauses[child_id].can_match_zero() && !is_sequence && j + 1 < _clauses[i].get_child_id_count()) {
+       // Choice has alternative that can match zero in non-final position
+       // -$ Todo $- make this error reporting nicer
+       throw std::runtime_error("Invalid grammar");
+      }
       if (_clauses[child_id].can_match_zero() == !is_sequence) {
        mark(i, !is_sequence);
        break;
