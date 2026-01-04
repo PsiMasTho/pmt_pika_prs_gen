@@ -4,7 +4,7 @@
 
 #include <cassert>
 #include <iterator>
-#include <queue>
+#include <vector>
 
 namespace pmt::parser {
 
@@ -180,16 +180,16 @@ void GenericAst::give_child_at_back(UniqueHandle child_) {
 void GenericAst::merge() {
  UniqueHandle result = construct(Tag::String, get_id());
 
- std::queue<GenericAst*> queue;
- queue.push(this);
- while (!queue.empty()) {
-  auto* node = queue.front();
-  queue.pop();
+ std::vector<GenericAst*> stack;
+ stack.push_back(this);
+ while (!stack.empty()) {
+  auto* node = stack.back();
+  stack.pop_back();
   if (node->get_tag() == Tag::String) {
    result->get_string() += node->get_string();
   } else {
-   for (size_t i = 0; i < node->get_children_size(); ++i) {
-    queue.push(node->get_child_at(i));
+   for (size_t i = node->get_children_size(); i--;) {
+    stack.push_back(node->get_child_at(i));
    }
   }
  }
