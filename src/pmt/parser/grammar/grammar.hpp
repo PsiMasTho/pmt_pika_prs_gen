@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pmt/parser/grammar/id_table.hpp"
 #include "pmt/parser/grammar/rule.hpp"
 
 #include <unordered_map>
@@ -9,23 +10,26 @@ namespace pmt::parser::grammar {
 
 class Grammar {
  // -$ Data $-
- std::unordered_map<std::string, Rule> _rules;
- std::string _start_rule;
+ IdTable _id_table;
+ std::unordered_map<std::string, Rule> _rules;  // name -> rule
+ std::string _start_rule_name;
 
 public:
  // -$ Functions $-
  // --$ Other $--
+ auto get_start_expression() const -> RuleExpression::UniqueHandle;
+
  auto get_start_rule_name() const -> std::string const&;
  void set_start_rule_name(std::string name_);
+ auto get_rule_names() const -> std::unordered_set<std::string>;
 
  auto get_rule(std::string const& name_) -> Rule*;
  auto get_rule(std::string const& name_) const -> Rule const*;
 
- auto get_or_create_rule(std::string const& name_) -> Rule&;
-
- auto get_rule_names() const -> std::unordered_set<std::string>;
-
+ void insert_or_assign_rule(std::string const& name_, Rule rule_);
  void remove_rule(std::string const& name_);
+
+ auto get_id_table() const -> IdTable const&;
 };
 
 }  // namespace pmt::parser::grammar

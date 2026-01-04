@@ -2,7 +2,7 @@
 
 #include "pmt/base/hashable.hpp"
 #include "pmt/fw_decl.hpp"
-#include "pmt/parser/clause_base.hpp"
+#include "pmt/parser/rt/clause_base.hpp"
 #include "pmt/parser/rt/clause_queue.hpp"
 
 #include <limits>

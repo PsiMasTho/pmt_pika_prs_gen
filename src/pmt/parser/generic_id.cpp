@@ -32,7 +32,7 @@ auto GenericId::id_to_string(IdType id_) -> std::string {
   case IdReserved9:
    return "IdReserved9";
   default:
-   throw std::runtime_error("Invalid id");
+   throw std::runtime_error("Invalid id value: " + std::to_string(id_));
  }
 }
 
@@ -43,7 +43,7 @@ auto GenericId::string_to_id(std::string_view str_) -> IdType {
   }
  }
 
- throw std::runtime_error("Invalid id");
+ throw std::runtime_error("Invalid id string: " + std::string(str_));
 }
 
 auto GenericId::is_generic_id(IdType id_) -> bool {

@@ -1,7 +1,7 @@
 #include "pmt/parser/grammar/grammar_printer.hpp"
 
-#include "parser/clause_base.hpp"
 #include "parser/grammar/util.hpp"
+#include "parser/rt/clause_base.hpp"
 #include "pmt/asserts.hpp"
 #include "pmt/base/overloaded.hpp"
 #include "pmt/parser/grammar/grammar.hpp"
@@ -14,6 +14,7 @@
 namespace pmt::parser::grammar {
 using namespace pmt::base;
 using namespace pmt::sm;
+using namespace pmt::parser::rt;
 
 namespace {
 using ExpressionWithoutParent = RuleExpression const*;
@@ -55,11 +56,11 @@ void write_rule_lhs_as_grammar(GrammarPrinter::Args& args_, Locals& locals_, std
   parameter_str += std::exchange(delim, ", ") + "display_name = \"" + rule_._parameters._display_name + "\"";
  }
 
- if (rule_._parameters._merge != RuleParameters::MERGE_DEFAULT) {
+ if (rule_._parameters._merge != RuleParametersView::MERGE_DEFAULT) {
   parameter_str += std::exchange(delim, ", ") + "merge = " + BOOLALPHA[rule_._parameters._merge];
  }
 
- if (rule_._parameters._unpack != RuleParameters::UNPACK_DEFAULT) {
+ if (rule_._parameters._unpack != RuleParametersView::UNPACK_DEFAULT) {
   parameter_str += std::exchange(delim, ", ") + "unpack = " + BOOLALPHA[rule_._parameters._unpack];
  }
 

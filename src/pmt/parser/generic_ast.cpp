@@ -109,6 +109,11 @@ void GenericAst::set_string(StringType string_) {
  _data = std::move(string_);
 }
 
+void GenericAst::set_string(StringViewType string_view_) {
+ assert(get_tag() == Tag::String);
+ _data = StringType{string_view_};
+}
+
 auto GenericAst::get_children_size() const -> size_t {
  assert(get_tag() == Tag::Children);
  return std::get_if<ChildrenType>(&_data)->size();

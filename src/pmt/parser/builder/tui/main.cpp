@@ -73,6 +73,8 @@ auto main(int argc, char const* const* argv) -> int try {
  std::string const input_test((std::istreambuf_iterator<char>(*args._input_test_file)), std::istreambuf_iterator<char>());
 
  GenericAst::UniqueHandle ast_testfile = PikaParser::parse(program, input_test);
+ GenericAstPrinter::Args ast_printer_args{._id_to_string_fn = [&](GenericId::IdType id_) { return program.get_id_table().id_to_string(id_); }, ._out = std::cout, ._ast = *ast_testfile, ._indent_width = 2};
+ GenericAstPrinter::print(ast_printer_args);
 
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';

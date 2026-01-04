@@ -1,4 +1,4 @@
-#include "pmt/parser/grammar/rule.hpp"
+#include "pmt/parser/grammar/rule_expression.hpp"
 
 #include "pmt/asserts.hpp"
 

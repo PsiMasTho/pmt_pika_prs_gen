@@ -4,13 +4,12 @@
 #include "pmt/base/bitset.hpp"
 #include "pmt/base/overloaded.hpp"
 #include "pmt/parser/builder/terminal_graph_writer.hpp"
-#include "pmt/parser/clause_base.hpp"
-#include "pmt/parser/grammar/rule.hpp"
+#include "pmt/parser/grammar/grammar.hpp"
+#include "pmt/parser/grammar/rule_expression.hpp"
 #include "pmt/parser/rt/pika_program_base.hpp"
 #include "pmt/sm/primitives.hpp"
 #include "pmt/sm/state_machine.hpp"
 #include "pmt/sm/state_machine_determinizer.hpp"
-#include "pmt/sm/state_machine_minimizer.hpp"
 
 #include <cassert>
 #include <unordered_set>
@@ -47,7 +46,7 @@ auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_l
   ret.get_state(state_nr_prev)->add_accept(charset_literal_clause_unique_ids_[idx++]);
  }
 
- return StateMachineMinimizer::minimize(StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._input_state_machine = ret, ._state_nr_from = StateNrStart}));
+ return StateMachineDeterminizer::determinize(StateMachineDeterminizer::Args{._input_state_machine = ret, ._state_nr_from = StateNrStart});
 }
 
 using CharsetLiteralFetch = decltype(Overloaded{[](std::vector<CharsetLiteral> const& charset_literals_, size_t index_) { return index_ < charset_literals_.size() ? &charset_literals_[index_] : nullptr; },
@@ -117,6 +116,11 @@ public:
 
 }  // namespace
 
+ExtendedRuleParameters::ExtendedRuleParameters(pmt::parser::grammar::RuleParameters const& base_, GenericId::IdType id_value_)
+ : pmt::parser::grammar::RuleParameters(base_)
+ , _id_value(id_value_) {
+}
+
 ExtendedClause::ExtendedClause(Tag tag_, ClauseBase::IdType id_)
  : _tag(tag_)
  , _id(id_) {
@@ -143,8 +147,8 @@ auto ExtendedClause::get_literal_id() const -> IdType {
  return _literal_id;
 }
 
-auto ExtendedClause::get_non_terminal_id() const -> IdType {
- return _non_terminal_id;
+auto ExtendedClause::get_rule_id() const -> IdType {
+ return _rule_id;
 }
 
 auto ExtendedClause::get_seed_parent_id_at(size_t idx_) const -> ClauseBase::IdType {
@@ -160,7 +164,8 @@ auto ExtendedClause::can_match_zero() const -> bool {
  return _can_match_zero;
 }
 
-PikaProgram::PikaProgram(Grammar const& grammar_) {
+PikaProgram::PikaProgram(Grammar const& grammar_)
+ : _id_table(grammar_.get_id_table()) {
  initialize(grammar_);
  determine_can_match_zero();
  determine_seed_parents();
@@ -175,16 +180,23 @@ auto PikaProgram::get_clause_count() const -> size_t {
  return _clauses.size();
 }
 
-auto PikaProgram::fetch_non_terminal(ClauseBase::IdType non_terminal_id_) const -> NonTerminal {
- assert(non_terminal_id_ < _rule_parameters.size());
- return _rule_parameters[non_terminal_id_];
+auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_id_) const -> RuleParametersView {
+ ExtendedRuleParameters const& params = fetch_extended_rule_parameters(rule_id_);
+ return RuleParametersView{
+  ._display_name = params._display_name,
+  ._id_string = params._id_string,
+  ._id_value = params._id_value,
+  ._merge = params._merge,
+  ._unpack = params._unpack,
+  ._hide = params._hide,
+ };
 }
 
-auto PikaProgram::get_non_terminal_count() const -> size_t {
+auto PikaProgram::get_rule_count() const -> size_t {
  return _rule_parameters.size();
 }
 
-auto PikaProgram::get_literal_state_machine_tables() const -> StateMachineTablesBase const& {
+auto PikaProgram::get_terminal_state_machine_tables() const -> StateMachineTablesBase const& {
  return _literal_state_machine_tables;
 }
 
@@ -193,9 +205,13 @@ auto PikaProgram::fetch_literal(ClauseBase::IdType literal_id_) const -> Charset
  return _literals[literal_id_];
 }
 
-auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType non_terminal_id_) const -> RuleParameters const& {
- assert(non_terminal_id_ < _rule_parameters.size());
- return _rule_parameters[non_terminal_id_];
+auto PikaProgram::fetch_extended_rule_parameters(ClauseBase::IdType rule_id_) const -> ExtendedRuleParameters const& {
+ assert(rule_id_ < _rule_parameters.size());
+ return _rule_parameters[rule_id_];
+}
+
+auto PikaProgram::get_id_table() const -> pmt::parser::grammar::IdTable const& {
+ return _id_table;
 }
 
 void PikaProgram::initialize(Grammar const& grammar_) {
@@ -256,8 +272,19 @@ void PikaProgram::initialize(Grammar const& grammar_) {
    case ClauseBase::Tag::Identifier: {
     ClauseBase::IdType const child_id = recursive_worker(grammar_.get_rule(expr_->get_identifier())->_definition.get());
     _clauses[clause_id]._child_ids.push_back(child_id);
-    _clauses[clause_id]._non_terminal_id = _rule_parameters.size();
-    _rule_parameters.push_back(grammar_.get_rule(expr_->get_identifier())->_parameters);
+    _clauses[clause_id]._rule_id = _rule_parameters.size();
+
+    Rule const& rule = *grammar_.get_rule(expr_->get_identifier());
+    _rule_parameters.push_back(ExtendedRuleParameters{
+     RuleParameters{
+      ._display_name = rule._parameters._display_name,
+      ._id_string = rule._parameters._id_string,
+      ._merge = rule._parameters._merge,
+      ._unpack = rule._parameters._unpack,
+      ._hide = rule._parameters._hide,
+     },
+     _id_table.string_to_id(rule._parameters._id_string),
+    });
    } break;
    default:
     pmt::unreachable();
@@ -266,7 +293,8 @@ void PikaProgram::initialize(Grammar const& grammar_) {
   return clause_id;
  };
 
- recursive_worker(grammar_.get_rule(grammar_.get_start_rule_name())->_definition.get());
+ RuleExpression::UniqueHandle const start_expr = grammar_.get_start_expression();
+ recursive_worker(start_expr.get());
 
  // Build the terminal state machine from the charset literals
  _literal_state_machine_tables = StateMachineTables(charset_literals_to_state_machine(_literals, charset_literal_clause_ids));

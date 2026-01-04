@@ -1,9 +1,9 @@
 #include "pmt/parser/grammar/grammar_simplifier.hpp"
 
-#include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/grammar/charset_literal.hpp"
 #include "pmt/parser/grammar/grammar.hpp"
 #include "pmt/parser/grammar/rule.hpp"
+#include "pmt/parser/rt/clause_base.hpp"
 
 #include <unordered_set>
 

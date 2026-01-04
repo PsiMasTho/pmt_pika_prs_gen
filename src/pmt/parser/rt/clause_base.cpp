@@ -1,4 +1,4 @@
-#include "pmt/parser/clause_base.hpp"
+#include "pmt/parser/rt/clause_base.hpp"
 
 #include "pmt/asserts.hpp"
 
@@ -8,7 +8,7 @@ auto ClauseBase::has_literal_id() const -> bool {
  return get_tag() == Tag::CharsetLiteral;
 }
 
-auto ClauseBase::has_non_terminal_id() const -> bool {
+auto ClauseBase::has_rule_id() const -> bool {
  return get_tag() == Tag::Identifier;
 }
 

@@ -13,6 +13,7 @@ class GenericAst {
 public:
  // -$ Types / Constants $-
  using StringType = std::string;
+ using StringViewType = std::basic_string_view<StringType::value_type>;
 
  enum class Tag {
   String,
@@ -54,6 +55,7 @@ public:
  auto get_string() -> StringType&;
  auto get_string() const -> StringType const&;
  void set_string(StringType string_);
+ void set_string(StringViewType string_view_);
 
  auto get_children_size() const -> size_t;
  auto get_child_at(size_t index_) -> GenericAst*;

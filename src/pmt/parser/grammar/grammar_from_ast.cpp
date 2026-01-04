@@ -14,6 +14,7 @@
 namespace pmt::parser::grammar {
 using namespace pmt::base;
 using namespace pmt::sm;
+using namespace pmt::parser::rt;
 
 namespace {
 class FrameBase {
@@ -89,11 +90,11 @@ using Frame = std::variant<ExpressionFrame, SequenceFrame, PermuteFrame, Permute
 
 class Locals {
 public:
- std::unordered_map<std::string, GenericAst const*> _definitions;
+ std::unordered_map<std::string, std::pair<RuleParameters, GenericAst const*>> _rules;  // rule name -> <parameters, definition ast>
+ std::unordered_map<std::string, GenericId::IdType> _id_string_to_id_map;               // Only non-generic ids
  Grammar _ret;
  RuleExpression::UniqueHandle _ret_part;
  std::deque<Frame> _callstack;
- size_t _extra_rules_created = 0;
  bool _keep_current_frame;
 };
 
@@ -124,8 +125,9 @@ void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const&
  std::string rule_display_name = rule_name;
 
  std::string rule_id_string = GenericId::id_to_string(GenericId::IdDefault);
- bool rule_merge = RuleParameters::MERGE_DEFAULT;
- bool rule_unpack = RuleParameters::UNPACK_DEFAULT;
+ bool rule_merge = RuleParametersView::MERGE_DEFAULT;
+ bool rule_unpack = RuleParametersView::UNPACK_DEFAULT;
+ bool rule_hide = RuleParametersView::HIDE_DEFAULT;
 
  GenericAst const* rule_definition = nullptr;
 
@@ -144,6 +146,9 @@ void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const&
    case Ast::NtParameterUnpack: {
     rule_unpack = child.get_string() == "true";
    } break;
+   case Ast::NtParameterHide: {
+    rule_hide = child.get_string() == "true";
+   } break;
    case Ast::NtNonterminalDefinition:
    case Ast::NtTerminalDefinition: {
     rule_definition = child.get_child_at(0);
@@ -151,14 +156,14 @@ void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const&
   }
  }
 
- Rule& rule = locals_._ret.get_or_create_rule(rule_name);
- rule._parameters._display_name = std::move(rule_display_name);
- rule._parameters._id_string = std::move(rule_id_string);
- rule._parameters._merge = rule_merge;
- rule._parameters._unpack = rule_unpack;
-
- assert(rule_definition != nullptr);
- locals_._definitions[rule_name] = rule_definition;
+ RuleParameters rule_parameters{
+  ._display_name = rule_display_name,
+  ._id_string = rule_id_string,
+  ._merge = rule_merge,
+  ._unpack = rule_unpack,
+  ._hide = rule_hide,
+ };
+ locals_._rules[rule_name] = std::make_pair(std::move(rule_parameters), rule_definition);
 }
 
 void initial_traversal(Locals& locals_, GenericAst const& ast_) {
@@ -462,8 +467,11 @@ auto construct_definition(Locals& locals_, GenericAst const* ast_) -> RuleExpres
 }
 
 void construct_definitions(Locals& locals_) {
- for (auto& [rule_name, rule_definition] : locals_._definitions) {
-  locals_._ret.get_or_create_rule(rule_name)._definition = construct_definition(locals_, rule_definition);
+ for (auto& [rule_name, rule_definition] : locals_._rules) {
+  locals_._ret.insert_or_assign_rule(rule_name, Rule{
+                                                 ._parameters = std::move(rule_definition.first),
+                                                 ._definition = construct_definition(locals_, rule_definition.second),
+                                                });
  }
 }
 

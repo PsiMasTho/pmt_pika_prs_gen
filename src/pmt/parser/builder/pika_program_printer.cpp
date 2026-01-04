@@ -1,8 +1,8 @@
 #include "pmt/parser/builder/pika_program_printer.hpp"
 
 #include "pmt/parser/builder/pika_program.hpp"
-#include "pmt/parser/clause_base.hpp"
 #include "pmt/parser/grammar/util.hpp"
+#include "pmt/parser/rt/clause_base.hpp"
 
 #include <string>
 
@@ -36,7 +36,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
 
  // identifier:
  if (clause.get_tag() == ClauseBase::Tag::Identifier) {
-  args_._out << "  identifier: " << args_._program.fetch_rule_parameters(clause.get_non_terminal_id())._display_name << ";\n";
+  args_._out << "  identifier: " << args_._program.fetch_rule_parameters(clause.get_rule_id())._display_name << ";\n";
  }
 
  // seed parents:

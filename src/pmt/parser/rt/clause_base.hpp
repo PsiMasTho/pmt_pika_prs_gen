@@ -14,7 +14,7 @@ public:
   Sequence,        // >= 1 clause ids
   Choice,          // >= 1 clause ids
   Hidden,          // 1 clause id
-  Identifier,      // 1 clause id + 1 nonterminal id
+  Identifier,      // 1 clause id + 1 rule id
   CharsetLiteral,  // 1 literal id
   OneOrMore,       // 1 clause id
   NotFollowedBy,   // 1 clause id
@@ -30,8 +30,8 @@ public:
  [[nodiscard]] virtual auto get_literal_id() const -> IdType = 0;
  [[nodiscard]] auto has_literal_id() const -> bool;
 
- [[nodiscard]] virtual auto get_non_terminal_id() const -> IdType = 0;
- [[nodiscard]] auto has_non_terminal_id() const -> bool;
+ [[nodiscard]] virtual auto get_rule_id() const -> IdType = 0;
+ [[nodiscard]] auto has_rule_id() const -> bool;
 
  [[nodiscard]] virtual auto get_seed_parent_id_at(size_t idx_) const -> IdType = 0;
  [[nodiscard]] virtual auto get_seed_parent_count() const -> size_t = 0;
