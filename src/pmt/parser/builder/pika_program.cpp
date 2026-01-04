@@ -270,20 +270,23 @@ void PikaProgram::initialize(Grammar const& grammar_) {
    case ClauseBase::Tag::CharsetLiteral:
     break;
    case ClauseBase::Tag::Identifier: {
-    ClauseBase::IdType const child_id = recursive_worker(grammar_.get_rule(expr_->get_identifier())->_definition.get());
+    Rule const* rule = grammar_.get_rule(expr_->get_identifier());
+    if (rule == nullptr) {
+     throw std::runtime_error("Unknown rule identifier '" + expr_->get_identifier() + "'");  // -$ Todo $- better error reporting
+    }
+    ClauseBase::IdType const child_id = recursive_worker(rule->_definition.get());
     _clauses[clause_id]._child_ids.push_back(child_id);
     _clauses[clause_id]._rule_id = _rule_parameters.size();
 
-    Rule const& rule = *grammar_.get_rule(expr_->get_identifier());
     _rule_parameters.push_back(ExtendedRuleParameters{
      RuleParameters{
-      ._display_name = rule._parameters._display_name,
-      ._id_string = rule._parameters._id_string,
-      ._merge = rule._parameters._merge,
-      ._unpack = rule._parameters._unpack,
-      ._hide = rule._parameters._hide,
+      ._display_name = rule->_parameters._display_name,
+      ._id_string = rule->_parameters._id_string,
+      ._merge = rule->_parameters._merge,
+      ._unpack = rule->_parameters._unpack,
+      ._hide = rule->_parameters._hide,
      },
-     _id_table.string_to_id(rule._parameters._id_string),
+     _id_table.string_to_id(rule->_parameters._id_string),
     });
    } break;
    default:

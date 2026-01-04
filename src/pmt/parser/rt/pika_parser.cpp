@@ -25,6 +25,8 @@ void debug_print_memo_table(MemoTable const& memo_table_) {
   std::cout << "!PARSING FAILED!.\n";
  }
 
+ return;  // Disable for now
+
  for (size_t i = 0; i < memo_table_.get_match_count(); ++i) {
   MemoTable::Match const& match = memo_table_.get_match_by_index(i);
   std::cout << "Match " << i << ": Clause ID " << match._key._clause->get_id() << ", Tag " << ClauseBase::tag_to_string(match._key._clause->get_tag());
