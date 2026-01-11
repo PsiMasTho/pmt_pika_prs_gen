@@ -68,7 +68,7 @@ auto match_not_followed_by(MemoTable const& memo_table_, MemoTable::Key key_, st
 }
 
 auto match_epsilon(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_) -> std::optional<MemoTable::Match> {
- return MemoTable::Match{._key = key_, ._length = 0, ._matching_subclauses = {}};
+ return MemoTable::Match{._key = key_, ._length = 0};
 }
 
 auto match_identifier(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_) -> std::optional<MemoTable::Match> {
@@ -103,6 +103,5 @@ auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std
   default:
    pmt::unreachable();
  }
- return std::nullopt;
 }
 }  // namespace pmt::parser::rt

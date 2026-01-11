@@ -8,6 +8,7 @@
 
 namespace pmt::parser::builder {
 using namespace pmt::parser::grammar;
+using namespace pmt::parser::rt;
 using namespace pmt::base;
 using namespace pmt::sm;
 
@@ -36,7 +37,7 @@ static void print_clause_block(PikaProgramPrinter::Args& args_, ClauseBase::IdTy
 
  // identifier:
  if (clause.get_tag() == ClauseBase::Tag::Identifier) {
-  args_._out << "  identifier: " << args_._program.fetch_rule_parameters(clause.get_rule_id())._display_name << ";\n";
+  args_._out << "  identifier: " << args_._program.fetch_rule_parameters(clause.get_rule_id()).get_display_name() << ";\n";
  }
 
  // seed parents:

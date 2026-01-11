@@ -43,16 +43,16 @@ private:
 
  // -$ Functions $-
  // --$ Lifetime $--
- explicit RuleExpression(ClauseBase::Tag tag_);
+ explicit RuleExpression(pmt::parser::rt::ClauseBase::Tag tag_);
 
 public:
  static void destruct(RuleExpression* self_);
- static auto construct(ClauseBase::Tag tag_) -> UniqueHandle;
+ static auto construct(pmt::parser::rt::ClauseBase::Tag tag_) -> UniqueHandle;
 
  static auto clone(RuleExpression const& other_) -> UniqueHandle;
 
  // --$ Other $--
- auto get_tag() const -> ClauseBase::Tag;
+ auto get_tag() const -> pmt::parser::rt::ClauseBase::Tag;
 
  // recursive types getters / setters
  auto get_children_size() const -> size_t;

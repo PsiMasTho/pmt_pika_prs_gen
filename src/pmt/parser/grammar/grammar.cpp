@@ -3,7 +3,7 @@
 namespace pmt::parser::grammar {
 
 auto Grammar::get_start_expression() const -> RuleExpression::UniqueHandle {
- RuleExpression::UniqueHandle ret = RuleExpression::construct(ClauseBase::Tag::Identifier);
+ RuleExpression::UniqueHandle ret = RuleExpression::construct(pmt::parser::rt::ClauseBase::Tag::Identifier);
  ret->set_identifier(_start_rule_name);
  return ret;
 }

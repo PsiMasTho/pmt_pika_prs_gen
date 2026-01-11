@@ -4,7 +4,6 @@
 #include "pmt/base/hashable.hpp"
 
 #include <array>
-#include <concepts>
 #include <memory>
 #include <span>
 
@@ -73,10 +72,6 @@ public:
  auto get_chunk_count() const -> size_t;
  static auto get_required_chunk_count(size_t size_) -> size_t;
 
- // iteration
- template <std::invocable<size_t> F_>
- void for_each_bit(F_&& f_) const;
-
  auto front() const -> bool;
  auto back() const -> bool;
  auto any() const -> bool;
@@ -112,5 +107,3 @@ private:
  static auto round_up_to_capacity_idx(size_t size_) -> size_t;
 };
 }  // namespace pmt::base
-
-#include "pmt/base/bitset-inl.hpp"

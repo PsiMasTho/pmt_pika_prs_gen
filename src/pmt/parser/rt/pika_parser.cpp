@@ -6,14 +6,26 @@
 #include "pmt/parser/rt/memo_table.hpp"
 #include "pmt/parser/rt/pika_program_base.hpp"
 #include "pmt/parser/rt/state_machine_tables_base.hpp"
-#include "pmt/parser/rt/util.hpp"
 
+#include <concepts>
 #include <iostream>
 
 namespace pmt::parser::rt {
 using namespace pmt::sm;
 using namespace pmt::base;
 namespace {
+
+void for_each_bit(std::span<Bitset::ChunkType const> bits_, std::invocable<size_t> auto&& f_) {
+ uint64_t base = 0;
+ for (Bitset::ChunkType chunk : bits_) {
+  while (chunk != pmt::base::Bitset::ALL_SET_MASKS[false]) {
+   size_t const b = std::countr_zero(chunk);
+   std::forward<decltype(f_)>(f_)(base + b);
+   chunk &= (chunk - 1);
+  }
+  base += pmt::base::Bitset::ChunkBit;
+ }
+}
 
 void debug_print_memo_table(MemoTable const& memo_table_) {
  ClauseBase const& start_clause = memo_table_.get_pika_program().fetch_clause(0);
@@ -25,47 +37,54 @@ void debug_print_memo_table(MemoTable const& memo_table_) {
   std::cout << "!PARSING FAILED!.\n";
  }
 
- return;  // Disable for now
+ return;
 
  for (size_t i = 0; i < memo_table_.get_match_count(); ++i) {
   MemoTable::Match const& match = memo_table_.get_match_by_index(i);
   std::cout << "Match " << i << ": Clause ID " << match._key._clause->get_id() << ", Tag " << ClauseBase::tag_to_string(match._key._clause->get_tag());
 
   if (match._key._clause->get_tag() == ClauseBase::Tag::Identifier) {
-   std::cout << " (" << memo_table_.get_pika_program().fetch_rule_parameters(match._key._clause->get_rule_id())._display_name << ") ";
+   std::cout << " (" << memo_table_.get_pika_program().fetch_rule_parameters(match._key._clause->get_rule_id()).get_display_name() << ") ";
   }
 
-  std::cout << ", Position " << match._key._position << ", Length " << match._length << ", Text: '" << memo_table_.get_input().substr(match._key._position, match._length) << "'\n";
+  std::cout << ", Position " << match._key._position << ", Length " << match._length << ", Text: '";
+
+  // Cut text to max 32 chars, adding "..." if longer
+  if (match._length > 32) {
+   std::cout << memo_table_.get_input().substr(match._key._position, 32) << "...";
+  } else {
+   std::cout << memo_table_.get_input().substr(match._key._position, match._length);
+  }
+  std::cout << "'";
+
+  std::cout << ", Children: [";
+  for (size_t j = 0; j < match._matching_subclauses.size(); ++j) {
+   if (j > 0) {
+    std::cout << ", ";
+   }
+   std::cout << match._matching_subclauses[j];
+  }
+  std::cout << "]" << std::endl;
  }
 }
 
 void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_, size_t cursor_, MemoTable& memo_table_, ClauseQueue& clause_queue_) {
  size_t const cursor_start = cursor_;
- size_t const accepts_count = terminal_state_machine_tables_.get_accept_count();
-
  StateNrType state_nr_cur = StateNrStart;
 
- std::vector<Bitset::ChunkType> accepts(accepts_count, Bitset::ALL_SET_MASKS[false]);
-
  for (; cursor_ < memo_table_.get_input().size() + 1 && state_nr_cur != StateNrInvalid; ++cursor_) {
-  // Check for accepting state
-  if (auto const& accepts_span = terminal_state_machine_tables_.get_state_accepts(state_nr_cur); find_first_set_bit(accepts_span) < accepts_count) {
-   std::copy(accepts_span.begin(), accepts_span.end(), accepts.begin());
-   while (true) {
-    size_t const first_set_bit = find_first_set_bit(accepts);
-    if (first_set_bit >= accepts_count) {
-     break;
-    }
+  for_each_bit(terminal_state_machine_tables_.get_state_accepts(state_nr_cur), [&](size_t accept_) {
+   MemoTable::Match match{
+    ._key = {._clause = &memo_table_.get_pika_program().fetch_clause(accept_), ._position = cursor_start},
+    ._length = cursor_ - cursor_start,
+    ._matching_subclauses = {},
+   };
 
-    MemoTable::Match match{
-     ._key = {._clause = &memo_table_.get_pika_program().fetch_clause(first_set_bit), ._position = cursor_start},
-     ._length = cursor_ - cursor_start,
-     ._matching_subclauses = {},
-    };
+   memo_table_.insert(match._key, match, clause_queue_);
+  });
 
-    memo_table_.insert(match._key, match, clause_queue_);
-    clear_bit(accepts, first_set_bit);
-   }
+  if (cursor_ == memo_table_.get_input().size()) {
+   break;
   }
 
   state_nr_cur = terminal_state_machine_tables_.get_state_nr_next(state_nr_cur, memo_table_.get_input()[cursor_]);
@@ -112,16 +131,16 @@ auto memo_table_to_ast(MemoTable& memo_table_) -> GenericAst::UniqueHandle {
     break;
    case ClauseBase::Tag::Identifier: {
     // apply rule parameters
-    RuleParametersView const& non_terminal = memo_table_.get_pika_program().fetch_rule_parameters(child_match_._key._clause->get_rule_id());
-    if (non_terminal._hide) {
+    RuleParametersBase const& rule_parameters = memo_table_.get_pika_program().fetch_rule_parameters(child_match_._key._clause->get_rule_id());
+    if (rule_parameters.get_hide()) {
      break;
     }
-    if (non_terminal._merge) {
+    if (rule_parameters.get_merge()) {
      child_->merge();
     }
-    child_->set_id(non_terminal._id_value);
+    child_->set_id(rule_parameters.get_id_value());
     parent_.give_child_at_back(std::move(child_));
-    if (non_terminal._unpack) {
+    if (rule_parameters.get_unpack()) {
      parent_.unpack(parent_.get_children_size() - 1);
     }
    } break;

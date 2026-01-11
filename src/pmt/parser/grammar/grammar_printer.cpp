@@ -56,11 +56,11 @@ void write_rule_lhs_as_grammar(GrammarPrinter::Args& args_, Locals& locals_, std
   parameter_str += std::exchange(delim, ", ") + "display_name = \"" + rule_._parameters._display_name + "\"";
  }
 
- if (rule_._parameters._merge != RuleParametersView::MERGE_DEFAULT) {
+ if (rule_._parameters._merge != RuleParametersBase::MERGE_DEFAULT) {
   parameter_str += std::exchange(delim, ", ") + "merge = " + BOOLALPHA[rule_._parameters._merge];
  }
 
- if (rule_._parameters._unpack != RuleParametersView::UNPACK_DEFAULT) {
+ if (rule_._parameters._unpack != RuleParametersBase::UNPACK_DEFAULT) {
   parameter_str += std::exchange(delim, ", ") + "unpack = " + BOOLALPHA[rule_._parameters._unpack];
  }
 

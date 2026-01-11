@@ -2,6 +2,7 @@
 
 #include "pmt/parser/generic_id.hpp"
 
+#include <concepts>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -17,6 +18,10 @@ public:
 
  auto id_to_string(GenericId::IdType id_) const -> std::string;
  auto string_to_id(std::string const& id_string_) const -> GenericId::IdType;
+
+ void for_each_id(std::invocable<std::string const&, GenericId::IdType> auto&& func_) const;
 };
 
 }  // namespace pmt::parser::grammar
+
+#include "pmt/parser/grammar/id_table-inl.hpp"

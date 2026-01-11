@@ -4,15 +4,13 @@
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Generate the parsing code
-pmt_parser_builder_tui                                           \
- --input-grammar-file        "${scriptdir}/grammar.grm"          \
- --output-lexer-source-file  "${scriptdir}/lexer_tables.cpp"     \
- --output-lexer-header-file  "${scriptdir}/lexer_tables.hpp"     \
- --output-parser-source-file "${scriptdir}/parser_tables.cpp"    \
- --output-parser-header-file "${scriptdir}/parser_tables.hpp"    \
- --output-id-constants-file  "${scriptdir}/id_constants-inl.hpp" \
- --output-id-strings-file    "${scriptdir}/id_strings-inl.hpp"   \
- --lexer-class-name          LexerTables                         \
- --parser-class-name         ParserTables                        \
- --namespace-name            pmt::parser::grammar                \
+pmt_parser_builder_tui                                                        \
+ --input-grammar-file "${scriptdir}/grammar_2.grm"                            \
+ --pika-program-header-include-filename "pmt/parser/grammar/pika_program.hpp" \
+ --pika-program-output-header-file "${scriptdir}/pika_program.hpp"            \
+ --pika-program-output-source-file "${scriptdir}/pika_program.cpp"            \
+ --pika-program-class-name PikaProgram                                        \
+ --pika-program-namespace-name pmt::parser::grammar                           \
+ --id-strings-output-file "${scriptdir}/id_strings_2-inl.hpp"                     \
+ --id-constants-output-file "${scriptdir}/id_constants_2-inl.hpp"                 \
  --no-dotfiles

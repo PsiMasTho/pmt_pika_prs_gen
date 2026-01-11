@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 namespace pmt::parser::grammar {
+using namespace pmt::parser::rt;
 
 namespace {
 

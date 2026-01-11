@@ -6,6 +6,7 @@
 #include "pmt/sm/state_machine.hpp"
 #include "pmt/util/skeleton_replacer_base.hpp"
 
+#include <functional>
 #include <limits>
 
 namespace pmt::sm {
@@ -56,22 +57,25 @@ public:
   FontFlags _font_flags = FontFlags::None;
  };
 
+ using AcceptsToLabelFn = std::function<std::string(AcceptsIndexType)>;
+
 private:
  // -$ Data $-
  std::string _graph;
  StateMachine const& _state_machine;
  std::ostream& _os_graph;
+ std::ostream& _os_accepts_table;
+ AcceptsToLabelFn _accepts_to_label_fn;
 
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- GraphWriter(StateMachine const& state_machine_, std::ostream& os_graph_);
+ GraphWriter(StateMachine const& state_machine_, std::ostream& os_graph_, std::ostream& os_accepts_table_, AcceptsToLabelFn accepts_to_label_fn_ = {});
 
  // --$ Other $--
  void write_dot();
 
 private:
- virtual auto accepts_to_label(size_t accepts_) -> std::string;
  virtual void symbol_set_to_transitions(pmt::base::IntervalSet<SymbolType> const& in_symbol_intervals_, std::vector<Transition>& out_transitions_) = 0;
  virtual auto get_accepting_node_color() const -> Color;
  virtual auto get_accepting_node_shape() const -> NodeShape;
@@ -81,7 +85,6 @@ private:
  virtual auto get_epsilon_edge_style() const -> EdgeStyle;
  virtual auto get_layout_direction() const -> LayoutDirection;
  virtual auto get_graph_title() const -> std::string;
- virtual auto get_accepts_title() const -> std::string;
 
  void replace_layout_direction(std::string& str_);
  void replace_accepting_node_shape(std::string& str_);
@@ -92,11 +95,10 @@ private:
  void replace_epsilon_edge_color(std::string& str_);
  void replace_epsilon_edges(std::string& str_);
  void replace_symbol_edges(std::string& str_);
- void replace_accepts_label(std::string& str_);
- void replace_accepts_table(std::string& str_);
  void replace_graph_title(std::string& str_);
 
  void replace_timestamp(std::string& str_);
+ void write_accepts_table();
 
  static auto to_string(EdgeStyle edge_style_) -> std::string;
  static auto to_string(NodeShape node_shape_) -> std::string;

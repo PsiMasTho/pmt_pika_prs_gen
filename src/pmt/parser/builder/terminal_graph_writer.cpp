@@ -27,15 +27,11 @@ auto to_displayable(SymbolType symbol_) -> std::string {
 
 }  // namespace
 
-TerminalGraphWriter::TerminalGraphWriter(StateMachine const& state_machine_, std::string const& title_, std::string const& output_filename_, AcceptsToLabelFn terminal_to_name_fn_)
- : GraphWriter(state_machine_, _os_graph)
- , _terminal_to_name_fn(std::move(terminal_to_name_fn_))
+TerminalGraphWriter::TerminalGraphWriter(StateMachine const& state_machine_, std::string const& title_, std::string const& output_filename_, std::string const& accepts_table_filename_, AcceptsToLabelFn terminal_to_name_fn_)
+ : GraphWriter(state_machine_, _os_graph, _os_accepts_table, std::move(terminal_to_name_fn_))
  , _os_graph(output_filename_)
+ , _os_accepts_table(accepts_table_filename_)
  , _title(title_) {
-}
-
-auto TerminalGraphWriter::accepts_to_label(size_t accepts_) -> std::string {
- return _terminal_to_name_fn(accepts_);
 }
 
 void TerminalGraphWriter::symbol_set_to_transitions(pmt::base::IntervalSet<pmt::sm::SymbolType> const& in_symbol_intervals_, std::vector<Transition>& out_transitions_) {

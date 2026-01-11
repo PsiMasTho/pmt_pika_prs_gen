@@ -5,8 +5,8 @@
 #include "pmt/asserts.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/ast_2.hpp"
 #include "pmt/parser/grammar/charset.hpp"
-#include "pmt/parser/grammar/index_permutation_generator.hpp"
 #include "pmt/parser/grammar/number.hpp"
 #include "pmt/parser/grammar/repetition_range.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
@@ -35,20 +35,6 @@ public:
  size_t _idx = 0;
  bool _is_permuted : 1 = false;
  bool _is_delimiting : 1 = false;
-};
-
-class PermuteFrame : public FrameBase {
-public:
- RuleExpression::UniqueHandle _sub_part;
- IndexPermutationGenerator _index_permutation_generator;
- size_t _idx = 0;
-};
-
-class PermuteDelimitedFrame : public FrameBase {
-public:
- RuleExpression::UniqueHandle _sub_part;
- IndexPermutationGenerator _index_permutation_generator;
- size_t _idx = 0;
 };
 
 class ChoicesFrame : public FrameBase {
@@ -86,7 +72,7 @@ class EpsilonFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<ExpressionFrame, SequenceFrame, PermuteFrame, PermuteDelimitedFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, HiddenFrame, EpsilonFrame>;
+using Frame = std::variant<ExpressionFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, HiddenFrame, EpsilonFrame>;
 
 class Locals {
 public:
@@ -125,9 +111,9 @@ void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const&
  std::string rule_display_name = rule_name;
 
  std::string rule_id_string = GenericId::id_to_string(GenericId::IdDefault);
- bool rule_merge = RuleParametersView::MERGE_DEFAULT;
- bool rule_unpack = RuleParametersView::UNPACK_DEFAULT;
- bool rule_hide = RuleParametersView::HIDE_DEFAULT;
+ bool rule_merge = RuleParametersBase::MERGE_DEFAULT;
+ bool rule_unpack = RuleParametersBase::UNPACK_DEFAULT;
+ bool rule_hide = RuleParametersBase::HIDE_DEFAULT;
 
  GenericAst const* rule_definition = nullptr;
 
@@ -156,13 +142,12 @@ void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const&
   }
  }
 
- RuleParameters rule_parameters{
-  ._display_name = rule_display_name,
-  ._id_string = rule_id_string,
-  ._merge = rule_merge,
-  ._unpack = rule_unpack,
-  ._hide = rule_hide,
- };
+ RuleParameters rule_parameters;
+ rule_parameters._display_name = rule_display_name;
+ rule_parameters._id_string = rule_id_string;
+ rule_parameters._merge = rule_merge;
+ rule_parameters._unpack = rule_unpack;
+ rule_parameters._hide = rule_hide;
  locals_._rules[rule_name] = std::make_pair(std::move(rule_parameters), rule_definition);
 }
 

@@ -19,7 +19,6 @@ private:
  static void test_any();
  static void test_none();
  static void test_all();
- static void test_for_each_bit();
 };
 
 };  // namespace pmt::base::test

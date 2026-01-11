@@ -5,6 +5,8 @@
 
 namespace pmt::base {
 
+// -$ Todo $- Get rid of this, it can cause a weird issue when the derived class
+// doesn't define an equality operator and it defaults to always true.
 template <typename CRTP_>
 class Hashable {
 public:

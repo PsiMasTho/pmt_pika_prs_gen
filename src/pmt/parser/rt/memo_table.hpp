@@ -31,6 +31,7 @@ public:
   size_t _position;
 
   auto hash() const -> size_t;
+  auto operator==(Key const& other_) const -> bool = default;
  };
 
  class Match {

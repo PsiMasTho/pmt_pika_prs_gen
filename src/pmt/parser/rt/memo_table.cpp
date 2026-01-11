@@ -40,7 +40,7 @@ void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_
 
   if ((itr_old_match == _table.end() || new_match_->_length > get_match_by_index(itr_old_match->second)._length)) {
    _matches.push_back(std::move(new_match_.value()));
-   _table.insert({key_, _matches.size() - 1});
+   _table.insert_or_assign(key_, _matches.size() - 1);
    match_updated = true;
   }
  }

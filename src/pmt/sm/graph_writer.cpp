@@ -22,10 +22,6 @@ auto GraphWriter::Color::hash() const -> size_t {
  return seed;
 }
 
-auto GraphWriter::accepts_to_label(size_t accepts_) -> std::string {
- return std::to_string(accepts_);
-}
-
 auto GraphWriter::get_accepting_node_color() const -> Color {
  return Color{._r = 0, ._g = 0, ._b = 255};
 }
@@ -58,13 +54,16 @@ auto GraphWriter::get_graph_title() const -> std::string {
  return "State Machine";
 }
 
-auto GraphWriter::get_accepts_title() const -> std::string {
- return "Accept:StateNrs";
-}
-
-GraphWriter::GraphWriter(StateMachine const& state_machine_, std::ostream& os_graph_)
+GraphWriter::GraphWriter(StateMachine const& state_machine_, std::ostream& os_graph_, std::ostream& os_accepts_table_, AcceptsToLabelFn accepts_to_label_fn_)
  : _state_machine(state_machine_)
- , _os_graph(os_graph_) {
+ , _os_graph(os_graph_)
+ , _os_accepts_table(os_accepts_table_)
+ , _accepts_to_label_fn(std::move(accepts_to_label_fn_)) {
+ if (!_accepts_to_label_fn) {
+  _accepts_to_label_fn = [](AcceptsIndexType accepts_) {
+   return std::to_string(accepts_);
+  };
+ }
  std::ifstream is_graph_skel("/home/pmt/repos/pmt/skel/pmt/sm/state_machine-skel.dot");
  _graph = std::string(std::istreambuf_iterator<char>(is_graph_skel), std::istreambuf_iterator<char>{});
 }
@@ -80,11 +79,10 @@ void GraphWriter::write_dot() {
  replace_epsilon_edge_color(_graph);
  replace_epsilon_edges(_graph);
  replace_symbol_edges(_graph);
- replace_accepts_label(_graph);
- replace_accepts_table(_graph);
  replace_graph_title(_graph);
 
  _os_graph << _graph;
+ write_accepts_table();
 }
 
 void GraphWriter::replace_layout_direction(std::string& str_) {
@@ -206,36 +204,22 @@ void GraphWriter::replace_symbol_edges(std::string& str_) {
  replace_skeleton_label(str_, "SYMBOL_EDGES", symbol_edges_replacement);
 }
 
-void GraphWriter::replace_accepts_label(std::string& str_) {
- replace_skeleton_label(str_, "ACCEPTS_LABEL", get_accepts_title());
-}
-
-void GraphWriter::replace_accepts_table(std::string& str_) {
+void GraphWriter::write_accepts_table() {
  std::unordered_map<AcceptsIndexType, std::set<StateNrType>> accepts;
  for (StateNrType const state_nr : _state_machine.get_state_nrs()) {
   State const& state = *_state_machine.get_state(state_nr);
   state.get_accepts().for_each_key([&](AcceptsIndexType accept_index_) { accepts[accept_index_].insert(state_nr); });
  }
 
- std::string accepts_table_replacement = R"(<TABLE BORDER="0" CELLBORDER="1">)";
+ _os_accepts_table << "Accept:StateNrs\n";
  for (auto const& [accept, state_nrs_accepted] : accepts) {
-  std::string const lhs = accepts_to_label(accept);
-  accepts_table_replacement += "<TR><TD>" + lhs + ": ";
+  _os_accepts_table << _accepts_to_label_fn(accept) << ": ";
   std::string delim;
   for (StateNrType state_nr : state_nrs_accepted) {
-   accepts_table_replacement += std::exchange(delim, ", ") + std::to_string(state_nr);
+   _os_accepts_table << std::exchange(delim, ", ") << std::to_string(state_nr);
   }
-  accepts_table_replacement += "</TD></TR>";
+  _os_accepts_table << '\n';
  }
-
- // Empty table causes errors unless we add something so add this
- if (accepts.empty()) {
-  accepts_table_replacement += "<TR><TD></TD></TR>";
- }
-
- accepts_table_replacement += "</TABLE>";
-
- replace_skeleton_label(str_, "ACCEPTS_TABLE", accepts_table_replacement);
 }
 
 void GraphWriter::replace_graph_title(std::string& str_) {

@@ -2,6 +2,8 @@
 
 #include "pmt/base/interval_set.hpp"
 
+#include <vector>
+
 namespace pmt::sm {
 using namespace pmt::base;
 
@@ -9,21 +11,21 @@ namespace {
 
 class Locals {
 public:
- std::unordered_map<StateNrType, IntervalSet<StateNrType>> _new_to_old;
  std::unordered_map<IntervalSet<StateNrType>, StateNrType> _old_to_new;
+ std::vector<IntervalSet<StateNrType>> _new_to_old;
  std::vector<StateNrType> _pending;
  StateMachine _output_state_machine;
 };
 
-auto push_and_visit(Locals& locals_, IntervalSet<StateNrType> state_nr_set_) -> StateNrType {
+auto push_and_visit(Locals& locals_, IntervalSet<StateNrType> const& state_nr_set_) -> StateNrType {
  if (auto const itr = locals_._old_to_new.find(state_nr_set_); itr != locals_._old_to_new.end()) {
   return itr->second;
  }
 
- StateNrType const state_nr = locals_._output_state_machine.get_unused_state_nr();
+ StateNrType const state_nr = locals_._new_to_old.size();
  locals_._output_state_machine.get_or_create_state(state_nr);
- locals_._new_to_old.insert_or_assign(state_nr, state_nr_set_);
  locals_._old_to_new.insert_or_assign(state_nr_set_, state_nr);
+ locals_._new_to_old.push_back(state_nr_set_);
  locals_._pending.push_back(state_nr);
  return state_nr;
 }
@@ -98,14 +100,13 @@ auto StateMachineDeterminizer::determinize(Args args_) -> StateMachine {
 
  while (!locals._pending.empty()) {
   StateNrType const state_nr_cur = take(locals);
-  IntervalSet<StateNrType> const& state_nr_set_cur = locals._new_to_old.find(state_nr_cur)->second;
 
   // Set up the accepts
-  state_nr_set_cur.for_each_key([&](StateNrType state_nr_old_) { locals._output_state_machine.get_state(state_nr_cur)->add_accepts(args_._input_state_machine.get_state(state_nr_old_)->get_accepts()); });
+  locals._new_to_old[state_nr_cur].for_each_key([&](StateNrType state_nr_old_) { locals._output_state_machine.get_state(state_nr_cur)->add_accepts(args_._input_state_machine.get_state(state_nr_old_)->get_accepts()); });
 
   // Set up the transitions
-  get_symbols(args_, state_nr_set_cur).for_each_key([&](SymbolType symbol_) {
-   StateNrType const state_nr_next = push_and_visit(locals, get_e_closure(args_, locals, get_moves(args_, state_nr_set_cur, symbol_)));
+  get_symbols(args_, locals._new_to_old[state_nr_cur]).for_each_key([&](SymbolType symbol_) {
+   StateNrType const state_nr_next = push_and_visit(locals, get_e_closure(args_, locals, get_moves(args_, locals._new_to_old[state_nr_cur], symbol_)));
    locals._output_state_machine.get_state(state_nr_cur)->add_symbol_transition(symbol_, state_nr_next);
   });
  }

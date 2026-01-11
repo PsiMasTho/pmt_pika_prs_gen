@@ -4,13 +4,14 @@
 #include <cstdint>
 #include <string>
 
-namespace pmt::parser {
+namespace pmt::parser::rt {
 
 class ClauseBase {
 public:
  using IdType = uint64_t;
 
  enum class Tag : uint8_t {
+  // Child IDs
   Sequence,        // >= 1 clause ids
   Choice,          // >= 1 clause ids
   Hidden,          // 1 clause id
@@ -18,7 +19,7 @@ public:
   CharsetLiteral,  // 1 literal id
   OneOrMore,       // 1 clause id
   NotFollowedBy,   // 1 clause id
-  Epsilon,         // 0 clause ids
+  Epsilon,         // not stored in memo table
  };
 
  [[nodiscard]] virtual auto get_tag() const -> Tag = 0;
@@ -41,4 +42,4 @@ public:
  [[nodiscard]] static auto tag_to_string(Tag tag_) -> std::string;
 };
 
-}  // namespace pmt::parser
+}  // namespace pmt::parser::rt

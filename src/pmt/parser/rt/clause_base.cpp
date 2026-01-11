@@ -2,7 +2,7 @@
 
 #include "pmt/asserts.hpp"
 
-namespace pmt::parser {
+namespace pmt::parser::rt {
 
 auto ClauseBase::has_literal_id() const -> bool {
  return get_tag() == Tag::CharsetLiteral;
@@ -35,4 +35,4 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
  }
 }
 
-}  // namespace pmt::parser
+}  // namespace pmt::parser::rt

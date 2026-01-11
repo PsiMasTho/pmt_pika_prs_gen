@@ -5,6 +5,8 @@
 #include <concepts>
 
 namespace pmt::parser::grammar {
+using namespace pmt::parser::rt;
+
 namespace {
 
 template <class V_, std::unsigned_integral IDX_>

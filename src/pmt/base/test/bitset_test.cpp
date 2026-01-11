@@ -40,7 +40,6 @@ void BitsetTest::run() {
  test_any();
  test_none();
  test_all();
- test_for_each_bit();
 }
 
 void BitsetTest::test_lifetime_functions() {
@@ -307,23 +306,6 @@ void BitsetTest::test_all() {
   Bitset b1 = Bitset(SIZE, true);
   b1.set(i / 7, false);
   assert(!b1.all());
- }
-}
-
-void BitsetTest::test_for_each_bit() {
- for (size_t i = 0; i < 30; ++i) {
-  std::unordered_set<size_t> indices_1;
-  std::unordered_set<size_t> indices_2;
-  Bitset bs = get_randomly_filled_bitset(80000, 0.5f);
-
-  bs.for_each_bit([&](size_t index_) { indices_1.insert(index_); });
-
-  for (size_t j = 0; j < bs.size(); ++j) {
-   if (bs.get(j)) {
-    indices_2.insert(j);
-   }
-  }
-  assert(indices_1 == indices_2);
  }
 }
 

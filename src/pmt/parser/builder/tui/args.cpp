@@ -63,23 +63,18 @@ Args::Args(int argc_, char const* const* argv_) {
 
  try_open_file_from_arg(cmdl, "input-grammar-file", _input_grammar_file);
  try_open_optional_file_from_arg(cmdl, "input-test-file", _input_test_file);
- try_fetch_required_arg(cmdl, "output-lexer-header-file", _lexer_header_include_filename);
- try_open_file_from_arg(cmdl, "output-lexer-header-file", _output_lexer_header_file);
- try_open_file_from_arg(cmdl, "output-lexer-source-file", _output_lexer_source_file);
- try_open_required_file_from_optional_arg(cmdl, "lexer-header-skel-file", _lexer_header_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/lexer_tables-skel.hpp");
- try_open_required_file_from_optional_arg(cmdl, "lexer-source-skel-file", _lexer_source_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/lexer_tables-skel.cpp");
- try_fetch_required_arg(cmdl, "output-parser-header-file", _parser_header_include_filename);
- try_open_file_from_arg(cmdl, "output-parser-header-file", _output_parser_header_file);
- try_open_file_from_arg(cmdl, "output-parser-source-file", _output_parser_source_file);
- try_open_required_file_from_optional_arg(cmdl, "parser-header-skel-file", _parser_header_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/parser_tables-skel.hpp");
- try_open_required_file_from_optional_arg(cmdl, "parser-source-skel-file", _parser_source_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/parser_tables-skel.cpp");
- try_open_file_from_arg(cmdl, "output-id-constants-file", _output_id_constants_file);
- try_open_required_file_from_optional_arg(cmdl, "id-constants-skel-file", _id_constants_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/id_constants-skel.hpp");
- try_open_file_from_arg(cmdl, "output-id-strings-file", _output_id_strings_file);
+ try_fetch_required_arg(cmdl, "pika-program-header-include-filename", _pika_program_header_include_filename);
+ try_open_file_from_arg(cmdl, "pika-program-output-header-file", _pika_program_output_header_file);
+ try_open_file_from_arg(cmdl, "pika-program-output-source-file", _pika_program_output_source_file);
+ try_open_required_file_from_optional_arg(cmdl, "pika-program-header-skel-file", _pika_program_header_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/pika_program-skel.hpp");
+ try_open_required_file_from_optional_arg(cmdl, "pika-program-source-skel-file", _pika_program_source_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/pika_program-skel.cpp");
+ try_fetch_optional_arg(cmdl, "pika-program-class-name", _pika_program_class_name, std::string());
+ try_fetch_optional_arg(cmdl, "pika-program-namespace-name", _pika_program_namespace_name, std::string());
+
+ try_open_file_from_arg(cmdl, "id-strings-output-file", _id_strings_output_file);
  try_open_required_file_from_optional_arg(cmdl, "id-strings-skel-file", _id_strings_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/id_strings-skel.hpp");
- try_fetch_required_arg(cmdl, "lexer-class-name", _lexer_class_name);
- try_fetch_required_arg(cmdl, "parser-class-name", _parser_class_name);
- try_fetch_required_arg(cmdl, "namespace-name", _namespace_name);
+ try_open_file_from_arg(cmdl, "id-constants-output-file", _id_constants_output_file);
+ try_open_required_file_from_optional_arg(cmdl, "id-constants-skel-file", _id_constants_skel_file, "/home/pmt/repos/pmt/skel/pmt/parser/builder/id_constants-skel.hpp");
 
  _write_dotfiles = !cmdl["no-dotfiles"];
 }

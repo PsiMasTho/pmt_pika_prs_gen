@@ -23,6 +23,10 @@ using namespace pmt::sm;
 
 namespace {
 
+enum : ClauseBase::IdType {
+ IdTmpEpsilon = std::numeric_limits<ClauseBase::IdType>::max(),
+};
+
 auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_literals_, std::span<ClauseBase::IdType const> charset_literal_clause_unique_ids_) -> StateMachine {
  StateMachine ret;
  ret.create_new_state();  // StateNrStart
@@ -116,11 +120,6 @@ public:
 
 }  // namespace
 
-ExtendedRuleParameters::ExtendedRuleParameters(pmt::parser::grammar::RuleParameters const& base_, GenericId::IdType id_value_)
- : pmt::parser::grammar::RuleParameters(base_)
- , _id_value(id_value_) {
-}
-
 ExtendedClause::ExtendedClause(Tag tag_, ClauseBase::IdType id_)
  : _tag(tag_)
  , _id(id_) {
@@ -180,16 +179,8 @@ auto PikaProgram::get_clause_count() const -> size_t {
  return _clauses.size();
 }
 
-auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_id_) const -> RuleParametersView {
- ExtendedRuleParameters const& params = fetch_extended_rule_parameters(rule_id_);
- return RuleParametersView{
-  ._display_name = params._display_name,
-  ._id_string = params._id_string,
-  ._id_value = params._id_value,
-  ._merge = params._merge,
-  ._unpack = params._unpack,
-  ._hide = params._hide,
- };
+auto PikaProgram::fetch_rule_parameters(ClauseBase::IdType rule_id_) const -> RuleParametersBase const& {
+ return _rule_parameters[rule_id_];
 }
 
 auto PikaProgram::get_rule_count() const -> size_t {
@@ -205,11 +196,6 @@ auto PikaProgram::fetch_literal(ClauseBase::IdType literal_id_) const -> Charset
  return _literals[literal_id_];
 }
 
-auto PikaProgram::fetch_extended_rule_parameters(ClauseBase::IdType rule_id_) const -> ExtendedRuleParameters const& {
- assert(rule_id_ < _rule_parameters.size());
- return _rule_parameters[rule_id_];
-}
-
 auto PikaProgram::get_id_table() const -> pmt::parser::grammar::IdTable const& {
  return _id_table;
 }
@@ -218,6 +204,7 @@ void PikaProgram::initialize(Grammar const& grammar_) {
  std::vector<ClauseBase::IdType> charset_literal_clause_ids;
  CharsetLiteralsCached charset_literals_cached(_literals);
 
+ IntervalSet<ClauseBase::IdType> clauses_with_epsilon_children;
  std::unordered_map<RuleExpression const*, ClauseBase::IdType> visited;
  std::function<ClauseBase::IdType(RuleExpression const*)> recursive_worker = [&](RuleExpression const* expr_) -> ClauseBase::IdType {
   if (auto const itr = visited.find(expr_); itr != visited.end()) {
@@ -235,38 +222,49 @@ void PikaProgram::initialize(Grammar const& grammar_) {
    _clauses[clause_id]._literal_id = literal_id;
    visited[expr_] = clause_id;
    return clause_id;
+  } else if (expr_->get_tag() == ClauseBase::Tag::Epsilon) {
+   ClauseBase::IdType const clause_id = IdTmpEpsilon;
+   visited[expr_] = clause_id;
+   return clause_id;
   }
 
   ClauseBase::IdType const clause_id = _clauses.size();
   visited[expr_] = clause_id;
   _clauses.emplace_back(expr_->get_tag(), clause_id);
 
+  auto const recurse = [&](RuleExpression const* expr_) {
+   ClauseBase::IdType const child_id = recursive_worker(expr_);
+   if (child_id == IdTmpEpsilon) {
+    clauses_with_epsilon_children.insert(Interval(clause_id));
+   }
+   return child_id;
+  };
+
   switch (expr_->get_tag()) {
    case ClauseBase::Tag::Sequence: {
     for (size_t i = 0; i < expr_->get_children_size(); ++i) {
-     ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at(i));
+     ClauseBase::IdType const child_id = recurse(expr_->get_child_at(i));
      _clauses[clause_id]._child_ids.push_back(child_id);
     }
    } break;
    case ClauseBase::Tag::Choice: {
     for (size_t i = 0; i < expr_->get_children_size(); ++i) {
-     ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at(i));
+     ClauseBase::IdType const child_id = recurse(expr_->get_child_at(i));
      _clauses[clause_id]._child_ids.push_back(child_id);
     }
    } break;
    case ClauseBase::Tag::Hidden: {
-    ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at_front());
+    ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
     _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
    case ClauseBase::Tag::OneOrMore: {
-    ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at_front());
+    ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
     _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
    case ClauseBase::Tag::NotFollowedBy: {
-    ClauseBase::IdType const child_id = recursive_worker(expr_->get_child_at_front());
+    ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
     _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
-   case ClauseBase::Tag::Epsilon:
    case ClauseBase::Tag::CharsetLiteral:
     break;
    case ClauseBase::Tag::Identifier: {
@@ -274,21 +272,19 @@ void PikaProgram::initialize(Grammar const& grammar_) {
     if (rule == nullptr) {
      throw std::runtime_error("Unknown rule identifier '" + expr_->get_identifier() + "'");  // -$ Todo $- better error reporting
     }
-    ClauseBase::IdType const child_id = recursive_worker(rule->_definition.get());
+    ClauseBase::IdType const child_id = recurse(rule->_definition.get());
     _clauses[clause_id]._child_ids.push_back(child_id);
     _clauses[clause_id]._rule_id = _rule_parameters.size();
 
-    _rule_parameters.push_back(ExtendedRuleParameters{
-     RuleParameters{
-      ._display_name = rule->_parameters._display_name,
-      ._id_string = rule->_parameters._id_string,
-      ._merge = rule->_parameters._merge,
-      ._unpack = rule->_parameters._unpack,
-      ._hide = rule->_parameters._hide,
-     },
-     _id_table.string_to_id(rule->_parameters._id_string),
-    });
+    _rule_parameters.emplace_back();
+    _rule_parameters.back()._display_name = rule->_parameters._display_name;
+    _rule_parameters.back()._id_string = rule->_parameters._id_string;
+    _rule_parameters.back()._id_value = _id_table.string_to_id(rule->_parameters._id_string);
+    _rule_parameters.back()._merge = rule->_parameters._merge;
+    _rule_parameters.back()._unpack = rule->_parameters._unpack;
+    _rule_parameters.back()._hide = rule->_parameters._hide;
    } break;
+   case ClauseBase::Tag::Epsilon:
    default:
     pmt::unreachable();
   }
@@ -299,11 +295,25 @@ void PikaProgram::initialize(Grammar const& grammar_) {
  RuleExpression::UniqueHandle const start_expr = grammar_.get_start_expression();
  recursive_worker(start_expr.get());
 
+ // Replace temporary epsilon children with a single shared epsilon clause
+ if (!clauses_with_epsilon_children.empty()) {
+  ClauseBase::IdType const epsilon_clause_id = _clauses.size();
+  _clauses.emplace_back(ClauseBase::Tag::Epsilon, epsilon_clause_id);
+  clauses_with_epsilon_children.for_each_key([&](ClauseBase::IdType clause_id_) {
+   ExtendedClause& clause = _clauses[clause_id_];
+   for (ClauseBase::IdType& child_id : clause._child_ids) {
+    if (child_id == IdTmpEpsilon) {
+     child_id = epsilon_clause_id;
+    }
+   }
+  });
+ }
+
  // Build the terminal state machine from the charset literals
  _literal_state_machine_tables = StateMachineTables(charset_literals_to_state_machine(_literals, charset_literal_clause_ids));
 
  // write dotfile
- TerminalGraphWriter(_literal_state_machine_tables.get_state_machine(), "title", "terminal_graph.dot", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
+ TerminalGraphWriter(_literal_state_machine_tables.get_state_machine(), "title", "terminal_graph.dot", "terminal_accepts.txt", [&](AcceptsIndexType idx_) { return std::to_string(idx_); }).write_dot();
 }
 
 void PikaProgram::determine_can_match_zero() {

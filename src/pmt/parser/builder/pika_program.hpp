@@ -14,35 +14,28 @@ PMT_FW_DECL_NS_CLASS(pmt::parser::grammar, Grammar)
 
 namespace pmt::parser::builder {
 
-class ExtendedRuleParameters : public pmt::parser::grammar::RuleParameters {
+class ExtendedClause : public pmt::parser::rt::ClauseBase {
 public:
- ExtendedRuleParameters(pmt::parser::grammar::RuleParameters const& base_, GenericId::IdType id_value_);
-
- GenericId::IdType _id_value = GenericId::IdUninitialized;
-};
-
-class ExtendedClause : public ClauseBase {
-public:
- ClauseBase::Tag _tag;
- ClauseBase::IdType _id = 0;
- std::vector<ClauseBase::IdType> _seed_parent_ids;
- std::vector<ClauseBase::IdType> _child_ids;
- ClauseBase::IdType _literal_id = 0;  // -$ Todo $- only _literal_id or _rule_id is used depending on the tag
- ClauseBase::IdType _rule_id = 0;
+ pmt::parser::rt::ClauseBase::Tag _tag;
+ pmt::parser::rt::ClauseBase::IdType _id = 0;
+ std::vector<pmt::parser::rt::ClauseBase::IdType> _seed_parent_ids;
+ std::vector<pmt::parser::rt::ClauseBase::IdType> _child_ids;
+ pmt::parser::rt::ClauseBase::IdType _literal_id = 0;  // -$ Todo $- only _literal_id or _rule_id is used depending on the tag
+ pmt::parser::rt::ClauseBase::IdType _rule_id = 0;
  bool _can_match_zero : 1 = false;
 
- ExtendedClause(Tag tag_, ClauseBase::IdType id_);
+ ExtendedClause(Tag tag_, pmt::parser::rt::ClauseBase::IdType id_);
 
  [[nodiscard]] auto get_tag() const -> Tag override;
  [[nodiscard]] auto get_id() const -> IdType override;
 
- [[nodiscard]] auto get_child_id_at(size_t idx_) const -> ClauseBase::IdType override;
+ [[nodiscard]] auto get_child_id_at(size_t idx_) const -> pmt::parser::rt::ClauseBase::IdType override;
  [[nodiscard]] auto get_child_id_count() const -> size_t override;
 
  [[nodiscard]] auto get_literal_id() const -> IdType override;
  [[nodiscard]] auto get_rule_id() const -> IdType override;
 
- [[nodiscard]] auto get_seed_parent_id_at(size_t idx_) const -> ClauseBase::IdType override;
+ [[nodiscard]] auto get_seed_parent_id_at(size_t idx_) const -> pmt::parser::rt::ClauseBase::IdType override;
  [[nodiscard]] auto get_seed_parent_count() const -> size_t override;
 
  [[nodiscard]] auto can_match_zero() const -> bool override;
@@ -54,7 +47,7 @@ class PikaProgram : public pmt::parser::rt::PikaProgramBase {
  pmt::parser::grammar::IdTable _id_table;
  std::vector<ExtendedClause> _clauses;
  std::vector<pmt::parser::grammar::CharsetLiteral> _literals;
- std::vector<ExtendedRuleParameters> _rule_parameters;
+ std::vector<pmt::parser::grammar::RuleParameters> _rule_parameters;
 
  StateMachineTables _literal_state_machine_tables;
 
@@ -64,17 +57,16 @@ public:
  explicit PikaProgram(pmt::parser::grammar::Grammar const& grammar_);
 
  // --$ Inherited: pmt::parser::rt::PikaProgramBase $--
- [[nodiscard]] auto fetch_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& override;
+ [[nodiscard]] auto fetch_clause(pmt::parser::rt::ClauseBase::IdType clause_id_) const -> pmt::parser::rt::ClauseBase const& override;
  [[nodiscard]] auto get_clause_count() const -> size_t override;
 
- [[nodiscard]] auto fetch_rule_parameters(ClauseBase::IdType rule_id_) const -> pmt::parser::rt::RuleParametersView override;
+ [[nodiscard]] auto fetch_rule_parameters(pmt::parser::rt::ClauseBase::IdType rule_id_) const -> pmt::parser::rt::RuleParametersBase const& override;
  [[nodiscard]] auto get_rule_count() const -> size_t override;
 
  [[nodiscard]] auto get_terminal_state_machine_tables() const -> pmt::parser::rt::StateMachineTablesBase const& override;
 
  // --$ Other $--
- auto fetch_literal(ClauseBase::IdType literal_id_) const -> pmt::parser::grammar::CharsetLiteral const&;
- auto fetch_extended_rule_parameters(ClauseBase::IdType rule_id_) const -> ExtendedRuleParameters const&;
+ auto fetch_literal(pmt::parser::rt::ClauseBase::IdType literal_id_) const -> pmt::parser::grammar::CharsetLiteral const&;
 
  auto get_id_table() const -> pmt::parser::grammar::IdTable const&;
 
