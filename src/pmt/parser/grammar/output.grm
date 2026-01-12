@@ -1,119 +1,91 @@
-Definition: %tilde
-    CharsetLiteral: "~"
-
-Definition: $whitespace
-    OneOrMore: 
-      CharsetLiteral: [10#10" "]
-
-Definition: %comment
+Definition: repetition_postfix
     Choice: 
-      Identifier: $single_line_comment
-      Identifier: $multi_line_comment
+      Identifier: question
+      Identifier: star
+      Identifier: plus
+      Identifier: repetition_range
 
-Definition: %repetition_range
+Definition: production
     Choice: 
       Sequence: 
+        Identifier: identifier
+        Identifier: blank
         Hidden: 
-          CharsetLiteral: "{"
-        Identifier: %blank
-        Choice: 
-          Sequence: 
-            Identifier: %integer_literal
-            Identifier: %blank
-          Epsilon
-        Identifier: %comma
-        Identifier: %blank
-        Choice: 
-          Sequence: 
-            Identifier: %integer_literal
-            Identifier: %blank
-          Epsilon
+          CharsetLiteral: "="
+        Identifier: blank
+        Identifier: definition
+        Identifier: blank
         Hidden: 
-          CharsetLiteral: "}"
+          CharsetLiteral: ";"
       Sequence: 
+        Identifier: identifier
+        Identifier: blank
         Hidden: 
-          CharsetLiteral: "{"
-        Identifier: %blank
-        Identifier: %integer_literal
-        Identifier: %blank
+          CharsetLiteral: 10#60
+        Identifier: parameter_list
         Hidden: 
-          CharsetLiteral: "}"
+          CharsetLiteral: 10#62
+        Identifier: blank
+        Hidden: 
+          CharsetLiteral: "="
+        Identifier: blank
+        Identifier: definition
+        Hidden: 
+          CharsetLiteral: ";"
 
-Definition: %charset_expression
+Definition: newline
+    CharsetLiteral: 10#10
+
+Definition: single_line_comment
     Sequence: 
-      Hidden: 
-        CharsetLiteral: "["
-      Identifier: %blank
-      Identifier: %charset_item
-      Choice: 
-        OneOrMore: 
-          Sequence: 
-            Identifier: %blank
-            Hidden: 
-              CharsetLiteral: ","
-            Identifier: %blank
-            Identifier: %charset_item
-        Epsilon
-      Identifier: %blank
-      Hidden: 
-        CharsetLiteral: "]"
+      CharsetLiteral: "/", "/"
+      Identifier: single_line_comment_rhs
 
-Definition: %kw_epsilon
-    CharsetLiteral: "e", "p", "s", "i", "l", "o", "n"
-
-Definition: %expression
-    Choice: 
-      Sequence: 
-        Identifier: %identifier
-        Choice: 
-          Identifier: %repetition_expression
-          Epsilon
-      Sequence: 
-        Identifier: %identifier
-        Choice: 
-          Identifier: %repetition_expression
-          Identifier: %tilde
-          Epsilon
-      Sequence: 
-        Identifier: %string_literal
-        Choice: 
-          Identifier: %repetition_expression
-          Identifier: %tilde
-          Epsilon
-      Sequence: 
-        Identifier: %integer_literal
-        Choice: 
-          Identifier: %repetition_expression
-          Identifier: %tilde
-          Epsilon
-      Identifier: %kw_epsilon
-      Sequence: 
-        Identifier: %charset_expression
-        Choice: 
-          Identifier: %repetition_expression
-          Identifier: %tilde
-          Epsilon
-      Sequence: 
-        Hidden: 
-          CharsetLiteral: "("
-        Identifier: %blank
-        Identifier: %choices
-        Hidden: 
-          CharsetLiteral: ")"
-        Choice: 
-          Identifier: %repetition_expression
-          Epsilon
-
-Definition: %kw_parameter_unpack
-    CharsetLiteral: "u", "n", "p", "a", "c", "k"
-
-Definition: %kw_parameter_display_name
-    CharsetLiteral: "d", "i", "s", "p", "l", "a", "y", "_", "n", "a", "m", "e"
-
-Definition: %kw_parameter_merge
+Definition: kw_parameter_merge
     CharsetLiteral: "m", "e", "r", "g", "e"
 
-Definition: $identifier_rhs
+Definition: parameter_displayname
+    Sequence: 
+      Identifier: kw_parameter_display_name
+      Identifier: blank
+      Hidden: 
+        CharsetLiteral: "="
+      Identifier: blank
+      Identifier: string_literal
+
+Definition: repetition_range
+    Choice: 
+      Sequence: 
+        Hidden: 
+          CharsetLiteral: "{"
+        Identifier: blank
+        Choice: 
+          Sequence: 
+            Identifier: integer_literal
+            Identifier: blank
+          Epsilon
+        Identifier: comma
+        Identifier: blank
+        Choice: 
+          Sequence: 
+            Identifier: integer_literal
+            Identifier: blank
+          Epsilon
+        Hidden: 
+          CharsetLiteral: "}"
+      Sequence: 
+        Hidden: 
+          CharsetLiteral: "{"
+        Identifier: blank
+        Identifier: integer_literal
+        Identifier: blank
+        Hidden: 
+          CharsetLiteral: "}"
+
+Definition: whitespace
+    CharsetLiteral: " "
+
+Definition: identifier_rhs
     Sequence: 
       CharsetLiteral: ["A".."Z""_""a".."z"]
       Choice: 
@@ -121,303 +93,354 @@ Definition: $identifier_rhs
           CharsetLiteral: ["0".."9""A".."Z""_""a".."z"]
         Epsilon
 
-Definition: %identifier
+Definition: multi_line_comment
+    Sequence: 
+      CharsetLiteral: "/", "*"
+      Identifier: multi_line_comment_rhs
+
+Definition: comment
+    Choice: 
+      Identifier: single_line_comment
+      Identifier: multi_line_comment
+
+Definition: identifier
     Sequence: 
       Hidden: 
         CharsetLiteral: "$"
-      Identifier: $identifier_rhs
+      Identifier: identifier_rhs
 
-Definition: %parameter_list
+Definition: grammar_property
     Sequence: 
-      Identifier: %blank
-      Identifier: %parameter
-      Choice: 
-        OneOrMore: 
-          Sequence: 
-            Identifier: %blank
-            Hidden: 
-              CharsetLiteral: ","
-            Identifier: %blank
-            Identifier: %parameter
-        Epsilon
-      Identifier: %blank
-
-Definition: %charset_range
-    Sequence: 
-      Identifier: %charset_literal
-      Identifier: %blank
-      Hidden: 
-        CharsetLiteral: ".", "."
-      Identifier: %blank
-      Identifier: %charset_literal
-
-Definition: %repetition_expression
-    Choice: 
-      Identifier: %question
-      Identifier: %star
-      Identifier: %plus
-      Identifier: %repetition_range
-
-Definition: %grammar_property
-    Sequence: 
-      Identifier: %grammar_property_start
-      Identifier: %blank
+      Identifier: grammar_property_start
+      Identifier: blank
       Hidden: 
         CharsetLiteral: "="
-      Identifier: %blank
-      Identifier: %identifier
-      Identifier: %blank
+      Identifier: blank
+      Identifier: identifier
+      Identifier: blank
       Hidden: 
         CharsetLiteral: ";"
 
-Definition: %charset_literal
-    Choice: 
-      Identifier: %character_literal
-      Identifier: %integer_literal
-
-Definition: %sequence
+Definition: parameter_id
     Sequence: 
-      Identifier: %expression
-      Choice: 
-        OneOrMore: 
-          Sequence: 
-            Identifier: %blank
-            Identifier: %expression
-        Epsilon
-
-Definition: %definition
-    Identifier: %choices
-
-Definition: %parameter_hide
-    Sequence: 
-      Identifier: %kw_parameter_hide
-      Identifier: %blank
+      Identifier: kw_parameter_id
+      Identifier: blank
       Hidden: 
         CharsetLiteral: "="
-      Identifier: %blank
-      Identifier: %boolean_literal
+      Identifier: blank
+      Identifier: id_string_literal
 
-Definition: %choices
+Definition: parameter_merge
     Sequence: 
-      Identifier: %sequence
-      Choice: 
-        OneOrMore: 
-          Sequence: 
-            Identifier: %blank
-            Hidden: 
-              CharsetLiteral: "|"
-            Identifier: %blank
-            Identifier: %sequence
-        Epsilon
-      Identifier: %blank
-
-Definition: %production
-    Choice: 
-      Sequence: 
-        Identifier: %identifier
-        Identifier: %blank
-        Hidden: 
-          CharsetLiteral: "="
-        Identifier: %blank
-        Identifier: %definition
-        Identifier: %blank
-        Hidden: 
-          CharsetLiteral: ";"
-      Sequence: 
-        Identifier: %identifier
-        Identifier: %blank
-        Hidden: 
-          CharsetLiteral: 10#60
-        Identifier: %parameter_list
-        Hidden: 
-          CharsetLiteral: 10#62
-        Identifier: %blank
-        Hidden: 
-          CharsetLiteral: "="
-        Identifier: %blank
-        Identifier: %definition
-        Hidden: 
-          CharsetLiteral: ";"
-
-Definition: %parameter_displayname
-    Sequence: 
-      Identifier: %kw_parameter_display_name
-      Identifier: %blank
+      Identifier: kw_parameter_merge
+      Identifier: blank
       Hidden: 
         CharsetLiteral: "="
-      Identifier: %blank
-      Identifier: %string_literal
+      Identifier: blank
+      Identifier: boolean_literal
 
-Definition: %parameter_id
-    Sequence: 
-      Identifier: %kw_parameter_id
-      Identifier: %blank
-      Hidden: 
-        CharsetLiteral: "="
-      Identifier: %blank
-      Identifier: %id_string_literal
-
-Definition: $single_line_comment_rhs
-    Choice: 
-      CharsetLiteral: 10#10
-      Sequence: 
-        Identifier: $any
-        Identifier: $single_line_comment_rhs
-
-Definition: $multi_line_comment
-    Sequence: 
-      CharsetLiteral: "/", "*"
-      Identifier: $multi_line_comment_rhs
-
-Definition: %charset_item
-    Choice: 
-      Identifier: %charset_range
-      Identifier: %charset_literal
-
-Definition: %question
-    CharsetLiteral: "?"
-
-Definition: %integer_literal
-    Sequence: 
-      Identifier: $integer_literal_lhs
-      CharsetLiteral: "#"
-      Identifier: $integer_literal_rhs
-
-Definition: %star
-    CharsetLiteral: "*"
-
-Definition: $string_middle
-    CharsetLiteral: [" ".."!""#".."~"]
-
-Definition: %plus
-    CharsetLiteral: "+"
-
-Definition: %kw_parameter_id
-    CharsetLiteral: "i", "d"
-
-Definition: %string_literal
-    Sequence: 
-      Hidden: 
-        CharsetLiteral: 10#34
-      Choice: 
-        OneOrMore: 
-          Identifier: $string_middle
-        Epsilon
-      Hidden: 
-        CharsetLiteral: 10#34
-
-Definition: %id_string_literal
-    Sequence: 
-      Hidden: 
-        CharsetLiteral: 10#34
-      Identifier: $id_string_middle
-      Hidden: 
-        CharsetLiteral: 10#34
-
-Definition: %parameter_unpack
-    Sequence: 
-      Identifier: %kw_parameter_unpack
-      Identifier: %blank
-      Hidden: 
-        CharsetLiteral: "="
-      Identifier: %blank
-      Identifier: %boolean_literal
-
-Definition: %character_literal
-    Sequence: 
-      Hidden: 
-        CharsetLiteral: 10#34
-      Identifier: $string_middle
-      Hidden: 
-        CharsetLiteral: 10#34
-
-Definition: %statement
-    Choice: 
-      Identifier: %production
-      Identifier: %grammar_property
-
-Definition: %parameter_merge
-    Sequence: 
-      Identifier: %kw_parameter_merge
-      Identifier: %blank
-      Hidden: 
-        CharsetLiteral: "="
-      Identifier: %blank
-      Identifier: %boolean_literal
-
-Definition: $multi_line_comment_rhs
+Definition: multi_line_comment_rhs
     Choice: 
       CharsetLiteral: "*", "/"
       Sequence: 
-        Identifier: $any
-        Identifier: $multi_line_comment_rhs
+        Identifier: any
+        Identifier: multi_line_comment_rhs
 
-Definition: %boolean_literal
+Definition: charset_range
+    Sequence: 
+      Identifier: charset_literal
+      Identifier: blank
+      Hidden: 
+        CharsetLiteral: ".", "."
+      Identifier: blank
+      Identifier: charset_literal
+
+Definition: parameter_unpack
+    Sequence: 
+      Identifier: kw_parameter_unpack
+      Identifier: blank
+      Hidden: 
+        CharsetLiteral: "="
+      Identifier: blank
+      Identifier: boolean_literal
+
+Definition: statement
+    Choice: 
+      Identifier: production
+      Identifier: grammar_property
+
+Definition: charset
+    Sequence: 
+      Hidden: 
+        CharsetLiteral: "["
+      Identifier: blank
+      Identifier: charset_item
+      Choice: 
+        OneOrMore: 
+          Sequence: 
+            Identifier: blank
+            Hidden: 
+              CharsetLiteral: ","
+            Identifier: blank
+            Identifier: charset_item
+        Epsilon
+      Identifier: blank
+      Hidden: 
+        CharsetLiteral: "]"
+
+Definition: plain
+    Choice: 
+      Identifier: identifier
+      Identifier: string_literal
+      Identifier: integer_literal
+      Identifier: charset
+      Sequence: 
+        Hidden: 
+          CharsetLiteral: "("
+        Identifier: blank
+        Identifier: choices
+        Hidden: 
+          CharsetLiteral: ")"
+      Identifier: kw_epsilon
+
+Definition: string_middle
+    CharsetLiteral: [" ".."!""#".."~"]
+
+Definition: repetition
+    Choice: 
+      Sequence: 
+        Identifier: identifier
+        Identifier: repetition_postfix
+      Sequence: 
+        Identifier: string_literal
+        Identifier: repetition_postfix
+      Sequence: 
+        Identifier: integer_literal
+        Identifier: repetition_postfix
+      Sequence: 
+        Identifier: charset
+        Identifier: repetition_postfix
+      Sequence: 
+        Hidden: 
+          CharsetLiteral: "("
+        Identifier: blank
+        Identifier: choices
+        Hidden: 
+          CharsetLiteral: ")"
+        Identifier: repetition_postfix
+
+Definition: sequence
+    Sequence: 
+      Identifier: expression
+      Choice: 
+        OneOrMore: 
+          Sequence: 
+            Identifier: blank
+            Identifier: expression
+        Epsilon
+
+Definition: grammar
+    Sequence: 
+      Identifier: blank
+      Identifier: statement
+      Choice: 
+        OneOrMore: 
+          Sequence: 
+            Identifier: blank
+            Identifier: statement
+        Epsilon
+      Identifier: blank
+
+Definition: parameter_hide
+    Sequence: 
+      Identifier: kw_parameter_hide
+      Identifier: blank
+      Hidden: 
+        CharsetLiteral: "="
+      Identifier: blank
+      Identifier: boolean_literal
+
+Definition: hidden
+    Choice: 
+      Sequence: 
+        Identifier: identifier
+        Identifier: tilde
+      Sequence: 
+        Identifier: string_literal
+        Identifier: tilde
+      Sequence: 
+        Identifier: integer_literal
+        Identifier: tilde
+      Sequence: 
+        Identifier: charset
+        Identifier: tilde
+      Sequence: 
+        Hidden: 
+          CharsetLiteral: "("
+        Identifier: blank
+        Identifier: choices
+        Hidden: 
+          CharsetLiteral: ")"
+        Identifier: tilde
+
+Definition: single_line_comment_rhs
+    Choice: 
+      Identifier: newline
+      Sequence: 
+        Identifier: any
+        Identifier: single_line_comment_rhs
+
+Definition: parameter_list
+    Sequence: 
+      Identifier: blank
+      Identifier: parameter
+      Choice: 
+        OneOrMore: 
+          Sequence: 
+            Identifier: blank
+            Hidden: 
+              CharsetLiteral: ","
+            Identifier: blank
+            Identifier: parameter
+        Epsilon
+      Identifier: blank
+
+Definition: character_literal
+    Sequence: 
+      Hidden: 
+        CharsetLiteral: 10#34
+      Identifier: string_middle
+      Hidden: 
+        CharsetLiteral: 10#34
+
+Definition: integer_literal_lhs
+    OneOrMore: 
+      CharsetLiteral: ["0".."9"]
+
+Definition: integer_literal_rhs
+    OneOrMore: 
+      CharsetLiteral: ["0".."9""A".."Z""a".."z"]
+
+Definition: plus
+    CharsetLiteral: "+"
+
+Definition: id_string_middle
+    Sequence: 
+      CharsetLiteral: ["A".."Z""_""a".."z"]
+      Choice: 
+        OneOrMore: 
+          CharsetLiteral: ["0".."9""A".."Z""_""a".."z"]
+        Epsilon
+
+Definition: parameter
+    Choice: 
+      Identifier: parameter_id
+      Identifier: parameter_displayname
+      Identifier: parameter_unpack
+      Identifier: parameter_hide
+      Identifier: parameter_merge
+
+Definition: choices
+    Sequence: 
+      Identifier: sequence
+      Choice: 
+        OneOrMore: 
+          Sequence: 
+            Identifier: blank
+            Hidden: 
+              CharsetLiteral: "|"
+            Identifier: blank
+            Identifier: sequence
+        Epsilon
+      Identifier: blank
+
+Definition: kw_parameter_id
+    CharsetLiteral: "i", "d"
+
+Definition: question
+    CharsetLiteral: "?"
+
+Definition: tilde
+    CharsetLiteral: "~"
+
+Definition: grammar_property_start
+    CharsetLiteral: "@", "s", "t", "a", "r", "t"
+
+Definition: integer_literal
+    Sequence: 
+      Identifier: integer_literal_lhs
+      CharsetLiteral: "#"
+      Identifier: integer_literal_rhs
+
+Definition: kw_parameter_hide
+    CharsetLiteral: "h", "i", "d", "e"
+
+Definition: boolean_literal
     Choice: 
       CharsetLiteral: "t", "r", "u", "e"
       CharsetLiteral: "f", "a", "l", "s", "e"
 
-Definition: %comma
-    CharsetLiteral: ","
-
-Definition: $integer_literal_lhs
-    OneOrMore: 
-      CharsetLiteral: ["0".."9"]
-
-Definition: $single_line_comment
-    Sequence: 
-      CharsetLiteral: "/", "/"
-      Identifier: $single_line_comment_rhs
-
-Definition: %kw_parameter_hide
-    CharsetLiteral: "h", "i", "d", "e"
-
-Definition: %newline
-    CharsetLiteral: 10#10
-
-Definition: %grammar_property_start
-    CharsetLiteral: "@", "s", "t", "a", "r", "t"
-
-Definition: $id_string_middle
-    Sequence: 
-      CharsetLiteral: ["A".."Z""_""a".."z"]
-      Choice: 
-        OneOrMore: 
-          CharsetLiteral: ["0".."9""A".."Z""_""a".."z"]
-        Epsilon
-
-Definition: $any
-    CharsetLiteral: [10#0..10#127]
-
-Definition: $integer_literal_rhs
-    OneOrMore: 
-      CharsetLiteral: ["0".."9""A".."Z""a".."z"]
-
-Definition: %blank
+Definition: blank
     Choice: 
       OneOrMore: 
         Choice: 
-          Identifier: %comment
-          Identifier: $whitespace
-          Identifier: %newline
+          Identifier: comment
+          Identifier: whitespace
+          Identifier: newline
       Epsilon
 
-Definition: %grammar
+Definition: star
+    CharsetLiteral: "*"
+
+Definition: comma
+    CharsetLiteral: ","
+
+Definition: any
+    CharsetLiteral: [10#0..10#127]
+
+Definition: kw_parameter_display_name
+    CharsetLiteral: "d", "i", "s", "p", "l", "a", "y", "_", "n", "a", "m", "e"
+
+Definition: definition
+    Identifier: choices
+
+Definition: id_string_literal
     Sequence: 
-      Identifier: %blank
-      Identifier: %statement
+      Hidden: 
+        CharsetLiteral: 10#34
+      Identifier: id_string_middle
+      Hidden: 
+        CharsetLiteral: 10#34
+
+Definition: kw_epsilon
+    CharsetLiteral: "e", "p", "s", "i", "l", "o", "n"
+
+Definition: string_literal
+    Sequence: 
+      Hidden: 
+        CharsetLiteral: 10#34
       Choice: 
         OneOrMore: 
-          Sequence: 
-            Identifier: %blank
-            Identifier: %statement
+          Identifier: string_middle
         Epsilon
-      Identifier: %blank
+      Hidden: 
+        CharsetLiteral: 10#34
 
-Definition: %parameter
+Definition: kw_parameter_unpack
+    CharsetLiteral: "u", "n", "p", "a", "c", "k"
+
+Definition: charset_literal
     Choice: 
-      Identifier: %parameter_id
-      Identifier: %parameter_displayname
-      Identifier: %parameter_unpack
-      Identifier: %parameter_hide
-      Identifier: %parameter_merge
+      Identifier: character_literal
+      Identifier: integer_literal
+
+Definition: charset_item
+    Choice: 
+      Identifier: charset_range
+      Identifier: charset_literal
+
+Definition: expression
+    Choice: 
+      Identifier: hidden
+      Identifier: repetition
+      Identifier: plain

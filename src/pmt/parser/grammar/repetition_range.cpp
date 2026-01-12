@@ -3,14 +3,13 @@
 #include "pmt/asserts.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
-#include "pmt/parser/grammar/ast_2.hpp"
 
 #include <cassert>
 
 namespace pmt::parser::grammar {
 namespace {
 auto get_repetition_number(GenericAst const& token_) -> std::optional<Number::NumberType> {
- if (token_.get_id() != Ast::TkIntegerLiteral && token_.get_id() != Ast2::IntegerLiteral) {
+ if (token_.get_id() != Ast::IntegerLiteral) {
   return std::nullopt;
  }
 
@@ -21,22 +20,18 @@ auto get_repetition_number(GenericAst const& token_) -> std::optional<Number::Nu
 
 RepetitionRange::RepetitionRange(pmt::parser::GenericAst const& ast_) {
  switch (ast_.get_id()) {
-  case Ast2::Plus:
-  case Ast::TkPlus: {
+  case Ast::Plus: {
    _lower = 1;
   } break;
-  case Ast2::Star:
-  case Ast::TkStar: {
+  case Ast::Star: {
    _lower = 0;
    _upper = std::nullopt;
   } break;
-  case Ast2::Question:
-  case Ast::TkQuestion: {
+  case Ast::Question: {
    _lower = 0;
    _upper = 1;
   } break;
-  case Ast2::RepetitionRange:
-  case Ast::NtRepetitionRange: {
+  case Ast::RepetitionRange: {
    switch (ast_.get_children_size()) {
     case 1: {
      std::optional<Number::NumberType> num = get_repetition_number(*ast_.get_child_at(0));

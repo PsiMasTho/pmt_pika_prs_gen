@@ -1,0 +1,124 @@
+@start = $grammar;
+
+// - ANY -
+$any = [10#0..10#127];
+
+// - COMMENTS AND WHITESPACE -
+$newline = 16#A;
+$whitespace = " ";
+$single_line_comment = "//" $single_line_comment_rhs;
+$single_line_comment_rhs = $newline | $any $single_line_comment_rhs;
+$multi_line_comment = "/*" $multi_line_comment_rhs;  
+$multi_line_comment_rhs = "*/" | $any $multi_line_comment_rhs;  
+$comment = $single_line_comment | $multi_line_comment;
+$blank<hide = true> = ($comment | $whitespace | $newline)*;
+
+// - KEYWORDS -
+$kw_epsilon<id                = "Epsilon", hide = true>              = "epsilon";
+$kw_parameter_unpack<id       = "ParameterUnpack", hide = true>      = "unpack";
+$kw_parameter_hide<id         = "ParameterHide", hide = true>        = "hide";
+$kw_parameter_merge<id        = "ParameterMerge", hide = true>       = "merge";
+$kw_parameter_id<id           = "ParameterId", hide = true>          = "id";
+$kw_parameter_display_name<id = "ParameterDisplayName", hide = true> = "display_name";
+
+// - SYMBOLS -
+$comma<id    = "Comma", merge = true>    = ",";
+$plus<id     = "Plus", merge = true>     = "+";
+$star<id     = "Star", merge = true>     = "*";
+$question<id = "Question", merge = true> = "?";
+$tilde<hide  = true>                     = "~";
+
+
+// - LITERALS -
+$string_middle = ["A".."Z", "a".."z", "0".."9",
+                10#33, 10#35..10#47, 10#58..10#64, 10#91..10#96, 10#123..10#126, // Punctuation, except double quote
+                10#32                                                            // Space
+                ];
+$string_literal<id = "StringLiteral", merge = true>       = 10#34~ $string_middle* 10#34~;
+$character_literal<id = "CharacterLiteral", merge = true> = 10#34~ $string_middle 10#34~;
+$integer_literal_lhs                                      = ["0".."9"]+;
+$integer_literal_rhs                                      = ["A".."Z", "a".."z", "0".."9"]+;
+$integer_literal<id   = "IntegerLiteral", merge = true>   = $integer_literal_lhs "#" $integer_literal_rhs;
+$id_string_middle                                         = ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*;
+$id_string_literal<id = "IdStringLiteral", merge = true>  = 10#34~ $id_string_middle 10#34~;
+$boolean_literal<id   = "BooleanLiteral", merge = true>   = "true" | "false";
+$identifier_rhs                                           = ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*; 
+$identifier<id        = "Identifier", merge = true>       = ("$"~) $identifier_rhs;
+
+// - GRAMMAR PROPERTIES -
+$grammar_property_start<id = "GrammarPropertyStart", merge = true> = "@start";
+$grammar_property<id       = "GrammarProperty">                    = $grammar_property_start $blank "="~ $blank $identifier $blank ";"~;
+
+// - PARAMETERS -
+$parameter_id<id = "ParameterId", merge = true>                   = $kw_parameter_id           $blank "="~ $blank $id_string_literal;
+$parameter_displayname<id = "ParameterDisplayName", merge = true> = $kw_parameter_display_name $blank "="~ $blank $string_literal;
+$parameter_unpack<id = "ParameterUnpack", merge = true>           = $kw_parameter_unpack       $blank "="~ $blank $boolean_literal;
+$parameter_hide<id = "ParameterHide", merge = true>               = $kw_parameter_hide         $blank "="~ $blank $boolean_literal;
+$parameter_merge<id = "ParameterMerge", merge = true>             = $kw_parameter_merge        $blank "="~ $blank $boolean_literal;
+$parameter<unpack = true> = $parameter_id | $parameter_displayname | $parameter_unpack | $parameter_hide | $parameter_merge;
+$parameter_list<unpack = true> = $blank $parameter ($blank ","~ $blank $parameter)* $blank;
+
+// - GRAMMAR -
+$grammar<unpack = true> = $blank $statement ($blank $statement)* $blank;
+
+// - STATEMENT -
+$statement<unpack = true> = $production | $grammar_property;
+
+// - PRODUCTION -
+$production<id = "Production"> = $identifier $blank "="~ $blank $definition $blank ";"~ |
+                                 $identifier $blank "<"~ $parameter_list ">"~ $blank "="~ $blank $definition ";"~;
+
+// - DEFINITION -
+$definition<id = "Definition"> = $choices;
+
+// - CHOICES -
+$choices<id = "Choices"> = $sequence ($blank "|"~ $blank $sequence)* $blank;
+
+// - SEQUENCE -
+$sequence<id = "Sequence"> = $expression ($blank $expression)*;
+
+// - EXPRESSION -
+$expression<unpack = true> = $hidden     |
+                             $repetition |
+                             $plain;
+
+// - HIDDEN -
+$hidden<id = "Hidden"> = $identifier $tilde      |
+                         $string_literal $tilde  |
+                         $integer_literal $tilde |
+                         $charset  $tilde        |
+                         "("~ $blank $choices ")"~ $tilde;
+
+// - REPETITION -
+$repetition<id = "Repetition"> = $identifier $repetition_postfix      |
+                                 $string_literal $repetition_postfix  |
+                                 $integer_literal $repetition_postfix |
+                                 $charset  $repetition_postfix        |
+                                 "("~ $blank $choices ")"~ $repetition_postfix;
+
+// - PLAIN -
+$plain<unpack = true > = $identifier                   |
+                             $string_literal           |
+                             $integer_literal          |
+                             $charset                  |
+                             "("~ $blank $choices ")"~ |
+                             $kw_epsilon;
+
+// - REPETITION_POSTFIX -
+$repetition_postfix<unpack = true> = $question |
+                                     $star     |
+                                     $plus     |
+                                     $repetition_range;
+
+$repetition_range<id = "RepetitionRange"> = "{"~ $blank ($integer_literal $blank)? $comma $blank ($integer_literal $blank)? "}"~ |
+                                            "{"~ $blank $integer_literal $blank "}"~;
+
+// - CHARSET -
+$charset<id = "Charset"> = "["~ $blank $charset_item ($blank ","~ $blank $charset_item)* $blank "]"~;
+$charset_item<unpack = true> = $charset_range |
+                               $charset_literal;
+$charset_range<id = "CharsetRange"> = $charset_literal $blank ".."~ $blank $charset_literal;
+$charset_literal<unpack = true> = $character_literal |
+                                  $integer_literal;
+
+

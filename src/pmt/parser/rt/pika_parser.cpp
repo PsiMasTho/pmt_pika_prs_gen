@@ -15,6 +15,13 @@ using namespace pmt::sm;
 using namespace pmt::base;
 namespace {
 
+auto check_parse_success(MemoTable const& memo_table_) -> bool {
+ ClauseBase const& start_clause = memo_table_.get_pika_program().fetch_clause(0);
+ MemoTable::Key start_key{._clause = &start_clause, ._position = 0};
+ MemoTable::IndexType const start_match_index = memo_table_.find(start_key);
+ return start_match_index != MemoTable::MemoIndexMatchNotFound && memo_table_.get_match_length_by_index(start_match_index) == memo_table_.get_input().size();
+}
+
 void for_each_bit(std::span<Bitset::ChunkType const> bits_, std::invocable<size_t> auto&& f_) {
  uint64_t base = 0;
  for (Bitset::ChunkType chunk : bits_) {
@@ -28,10 +35,7 @@ void for_each_bit(std::span<Bitset::ChunkType const> bits_, std::invocable<size_
 }
 
 void debug_print_memo_table(MemoTable const& memo_table_) {
- ClauseBase const& start_clause = memo_table_.get_pika_program().fetch_clause(0);
- MemoTable::Key start_key{._clause = &start_clause, ._position = 0};
- MemoTable::IndexType const start_match_index = memo_table_.find(start_key);
- if (start_match_index != MemoTable::MemoIndexMatchNotFound && memo_table_.get_match_length_by_index(start_match_index) == memo_table_.get_input().size()) {
+ if (check_parse_success(memo_table_)) {
   std::cout << "!PARSING SUCCESS!\n";
  } else {
   std::cout << "!PARSING FAILED!.\n";
@@ -112,6 +116,10 @@ auto populate_memo_table(PikaProgramBase const& pika_program_, std::string_view 
 }
 
 auto memo_table_to_ast(MemoTable& memo_table_) -> GenericAst::UniqueHandle {
+ if (!check_parse_success(memo_table_)) {
+  return nullptr;
+ }
+
  GenericAst::UniqueHandle ast_root = GenericAst::construct(GenericAst::Tag::Children, GenericId::IdRoot);
 
  auto const process_and_add_child = [&](GenericAst& parent_, GenericAst::UniqueHandle child_, MemoTable::Match const& child_match_) {

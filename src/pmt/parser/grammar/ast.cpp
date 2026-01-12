@@ -6,7 +6,7 @@ namespace pmt::parser::grammar {
 namespace {
 char const* const ID_STRINGS[] = {
 #include "pmt/parser/grammar/id_strings-inl.hpp"
- "NtHidden", "NtPermute", "NtPermuteDelimited", "NtIntersect"};
+};
 }  // namespace
 
 auto Ast::id_to_string(GenericId::IdType id_) -> std::string {
