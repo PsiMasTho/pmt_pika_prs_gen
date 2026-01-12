@@ -1,14 +1,13 @@
-#include "pmt/parser/grammar/grammar_from_ast.hpp"
+#include "pmt/parser/grammar/grammar_from_ast_2.hpp"
 
 #include "parser/grammar/charset_literal.hpp"
 #include "parser/grammar/rule.hpp"
 #include "pmt/asserts.hpp"
 #include "pmt/parser/generic_ast.hpp"
-#include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/ast_2.hpp"
 #include "pmt/parser/grammar/charset.hpp"
 #include "pmt/parser/grammar/number.hpp"
 #include "pmt/parser/grammar/repetition_range.hpp"
-#include "pmt/parser/grammar/string_literal.hpp"
 
 namespace pmt::parser::grammar {
 using namespace pmt::base;
@@ -29,11 +28,7 @@ public:
 class SequenceFrame : public FrameBase {
 public:
  RuleExpression::UniqueHandle _sub_part;
- std::optional<GenericAst const*> _delim_cur_path;
- std::vector<size_t> _index_permutation;
  size_t _idx = 0;
- bool _is_permuted : 1 = false;
- bool _is_delimiting : 1 = false;
 };
 
 class ChoicesFrame : public FrameBase {
@@ -84,7 +79,7 @@ public:
 };
 
 void initial_traversal_handle_grammar_property_start(Locals& locals_, GenericAst const& ast_) {
- assert(ast_.get_id() == Ast::TkNonterminalIdentifier || ast_.get_id() == Ast::TkTerminalIdentifier);
+ assert(ast_.get_id() == Ast2::Identifier);
  locals_._ret.set_start_rule_name(ast_.get_string());
 }
 
@@ -93,19 +88,16 @@ void initial_traversal_handle_grammar_property(Locals& locals_, GenericAst const
  GenericAst const& property_value = *ast_.get_child_at(1);
 
  switch (property_name.get_id()) {
-  case Ast::TkGrammarPropertyStart:
+  case Ast2::GrammarPropertyStart:
    initial_traversal_handle_grammar_property_start(locals_, property_value);
    break;
-  case Ast::TkGrammarPropertyWhitespace:
-  case Ast::TkGrammarPropertyComment:
-  case Ast::TkGrammarPropertyNewline:
    break;
   default:
    pmt::unreachable();
  }
 }
 
-void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const& ast_) {
+void initial_traversal_handle_production(Locals& locals_, GenericAst const& ast_) {
  std::string rule_name = ast_.get_child_at(0)->get_string();
  std::string rule_display_name = rule_name;
 
@@ -119,23 +111,22 @@ void initial_traversal_handle_rule_production(Locals& locals_, GenericAst const&
  for (size_t i = 1; i < ast_.get_children_size(); ++i) {
   GenericAst const& child = *ast_.get_child_at(i);
   switch (child.get_id()) {
-   case Ast::NtParameterId: {
-    rule_id_string = StringLiteral(child).get_value();
+   case Ast2::ParameterId: {
+    rule_id_string = child.get_string();
    } break;
-   case Ast::NtParameterDisplayName: {
-    rule_display_name = StringLiteral(child).get_value();
+   case Ast2::ParameterDisplayName: {
+    rule_display_name = child.get_string();
    } break;
-   case Ast::NtParameterMerge: {
+   case Ast2::ParameterMerge: {
     rule_merge = child.get_string() == "true";
    } break;
-   case Ast::NtParameterUnpack: {
+   case Ast2::ParameterUnpack: {
     rule_unpack = child.get_string() == "true";
    } break;
-   case Ast::NtParameterHide: {
+   case Ast2::ParameterHide: {
     rule_hide = child.get_string() == "true";
    } break;
-   case Ast::NtNonterminalDefinition:
-   case Ast::NtTerminalDefinition: {
+   case Ast2::Definition: {
     rule_definition = child.get_child_at(0);
    } break;
   }
@@ -154,12 +145,11 @@ void initial_traversal(Locals& locals_, GenericAst const& ast_) {
  for (size_t i = 0; i < ast_.get_children_size(); ++i) {
   GenericAst const& child = *ast_.get_child_at(i);
   switch (child.get_id()) {
-   case Ast::NtGrammarProperty:
+   case Ast2::GrammarProperty:
     initial_traversal_handle_grammar_property(locals_, *ast_.get_child_at(i));
     break;
-   case Ast::NtTerminalProduction:
-   case Ast::NtNonterminalProduction:
-    initial_traversal_handle_rule_production(locals_, *ast_.get_child_at(i));
+   case Ast2::Production:
+    initial_traversal_handle_production(locals_, *ast_.get_child_at(i));
     break;
   }
  }
@@ -173,40 +163,34 @@ auto construct_frame(GenericAst const* ast_cur_path_) -> Frame {
  FrameBase frame_base{._ast_cur_path = ast_cur_path_, ._stage = 0};
 
  switch (ast_cur_path_->get_id()) {
-  case Ast::NtNonterminalDefinition:
-  case Ast::NtTerminalDefinition:
-  case Ast::NtNonterminalExpression:
-  case Ast::NtTerminalExpression: {
+  case Ast2::Definition: {
    return ExpressionFrame{frame_base};
   } break;
-  case Ast::NtNonterminalChoices:
-  case Ast::NtTerminalChoices: {
+  case Ast2::Choices: {
    return ChoicesFrame{frame_base};
   } break;
-  case Ast::NtRepetitionExpression: {
+  case Ast2::Repetition: {
    return RepetitionFrame{frame_base};
   } break;
-  case Ast::NtNonterminalSequence:
-  case Ast::NtTerminalSequence: {
+  case Ast2::Sequence: {
    return SequenceFrame{frame_base};
   } break;
-  case Ast::TkNonterminalIdentifier:
-  case Ast::TkTerminalIdentifier: {
+  case Ast2::Identifier: {
    return IdentifierFrame{frame_base};
   } break;
-  case Ast::TkStringLiteral: {
+  case Ast2::StringLiteral: {
    return StringLiteralFrame{frame_base};
   } break;
-  case Ast::TkIntegerLiteral: {
+  case Ast2::IntegerLiteral: {
    return IntegerLiteralFrame{frame_base};
   } break;
-  case Ast::NtTerminalCharset: {
+  case Ast2::Charset: {
    return CharsetFrame{frame_base};
   }
-  case Ast::NtHidden: {
+  case Ast2::Hidden: {
    return HiddenFrame{frame_base};
   }
-  case Ast::TkEpsilon: {
+  case Ast2::Epsilon: {
    return EpsilonFrame{frame_base};
   }
   default:
@@ -220,19 +204,7 @@ void process_frame_00(Locals& locals_, ExpressionFrame& frame_) {
 
 void process_frame_00(Locals& locals_, SequenceFrame& frame_) {
  ++frame_._stage;
-
- if (!frame_._is_permuted) {
-  std::generate_n(std::back_inserter(frame_._index_permutation), frame_._ast_cur_path->get_children_size(), [n = 0]() mutable { return n++; });
-  frame_._is_permuted = true;
- }
-
- if (frame_._index_permutation.empty()) {
-  locals_._ret_part = build_epsilon();
-  return;
- }
-
  frame_._sub_part = RuleExpression::construct(ClauseBase::Tag::Sequence);
-
  locals_._keep_current_frame = true;
 }
 
@@ -240,32 +212,19 @@ void process_frame_01(Locals& locals_, SequenceFrame& frame_) {
  locals_._keep_current_frame = true;
  ++frame_._stage;
 
- if (frame_._is_delimiting) {
-  locals_._callstack.emplace_back(construct_frame(*frame_._delim_cur_path));
- } else {
-  locals_._callstack.emplace_back(construct_frame(frame_._ast_cur_path->get_child_at(frame_._index_permutation[frame_._idx])));
- }
+ locals_._callstack.emplace_back(construct_frame(frame_._ast_cur_path->get_child_at(frame_._idx)));
 }
 
 void process_frame_02(Locals& locals_, SequenceFrame& frame_) {
  --frame_._stage;
-
- if (frame_._is_delimiting) {
-  frame_._is_delimiting = false;
-  frame_._sub_part->give_child_at_back(std::move(locals_._ret_part));
-  locals_._keep_current_frame = true;
-  return;
- }
-
  ++frame_._idx;
 
  frame_._sub_part->give_child_at_back(std::move(locals_._ret_part));
 
  // If is last
- if (frame_._idx == frame_._index_permutation.size()) {
+ if (frame_._idx == frame_._ast_cur_path->get_children_size()) {
   locals_._ret_part = std::move(frame_._sub_part);
  } else {
-  frame_._is_delimiting = frame_._delim_cur_path.has_value();
   locals_._keep_current_frame = true;
  }
 }
@@ -351,7 +310,7 @@ void process_frame_01(Locals& locals_, RepetitionFrame& frame_) {
 
 void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
  CharsetLiteral literal;
- std::string const& str_literal = StringLiteral(*frame_._ast_cur_path).get_value();
+ std::string const& str_literal = frame_._ast_cur_path->get_string();
  for (char const ch : str_literal) {
   literal.push_back(Interval<SymbolType>(ch));
  }
@@ -461,7 +420,7 @@ void construct_definitions(Locals& locals_) {
 
 }  // namespace
 
-auto GrammarFromAst::make(Args args_) -> Grammar {
+auto GrammarFromAst2::make(Args args_) -> Grammar {
  Locals locals;
  initial_traversal(locals, args_._ast);
  construct_definitions(locals);

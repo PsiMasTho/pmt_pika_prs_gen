@@ -7,7 +7,7 @@
 }
 1 {
   kind: Sequence;
-  children: [2, 31, 278, 283];
+  children: [2, 31, 298, 303];
   seed_parents: [0];
   canMatchZeroChars: false
 }
@@ -20,8 +20,8 @@
 }
 3 {
   kind: Choice;
-  children: [4, 284];
-  seed_parents: [2, 49, 52, 76, 88, 91, 95, 100, 102, 135, 148, 151, 157, 159, 161, 170, 179, 184, 187, 189, 190, 195, 200, 207, 209, 222, 224, 230, 232, 241, 243, 249, 251, 256, 258, 260, 263, 265, 272, 274, 276, 281, 283];
+  children: [4, 304];
+  seed_parents: [2, 49, 52, 93, 106, 109, 115, 118, 120, 127, 149, 153, 155, 159, 164, 166, 179, 191, 199, 204, 207, 209, 210, 215, 220, 227, 229, 242, 244, 250, 252, 261, 263, 269, 271, 276, 278, 280, 283, 285, 292, 294, 296, 301, 303];
   canMatchZeroChars: true
 }
 4 {
@@ -207,8 +207,8 @@
 }
 32 {
   kind: Choice;
-  children: [33, 268];
-  seed_parents: [31, 282];
+  children: [33, 288];
+  seed_parents: [31, 302];
   canMatchZeroChars: false
 }
 33 {
@@ -220,13 +220,13 @@
 }
 34 {
   kind: Choice;
-  children: [35, 193];
+  children: [35, 213];
   seed_parents: [33];
   canMatchZeroChars: false
 }
 35 {
   kind: Sequence;
-  children: [36, 49, 50, 52, 53, 190, 191];
+  children: [36, 49, 50, 52, 53, 210, 211];
   seed_parents: [34];
   canMatchZeroChars: false
 }
@@ -240,7 +240,7 @@
 37 {
   kind: Sequence;
   children: [38, 43];
-  seed_parents: [36, 61, 105, 194, 275];
+  seed_parents: [36, 63, 135, 185, 214, 295];
   canMatchZeroChars: false
 }
 38 {
@@ -289,12 +289,12 @@
 45 {
   kind: CharsetLiteral;
   literal: ["A".."Z""_""a".."z"];
-  seed_parents: [44, 214];
+  seed_parents: [44, 234];
   canMatchZeroChars: false
 }
 46 {
   kind: Choice;
-  children: [47, 284];
+  children: [47, 304];
   seed_parents: [];
   canMatchZeroChars: true
 }
@@ -307,7 +307,7 @@
 48 {
   kind: CharsetLiteral;
   literal: ["0".."9""A".."Z""_""a".."z"];
-  seed_parents: [47, 216];
+  seed_parents: [47, 236];
   canMatchZeroChars: false
 }
 49 {
@@ -326,7 +326,7 @@
 51 {
   kind: CharsetLiteral;
   literal: "=";
-  seed_parents: [50, 208, 223, 231, 242, 250, 264, 273];
+  seed_parents: [50, 228, 243, 251, 262, 270, 284, 293];
   canMatchZeroChars: false
 }
 52 {
@@ -347,13 +347,13 @@
   kind: Identifier;
   children: [55];
   identifier: %choices;
-  seed_parents: [53, 266];
+  seed_parents: [53, 286];
   canMatchZeroChars: false
 }
 55 {
   kind: Sequence;
-  children: [56, 181, 189];
-  seed_parents: [54, 171];
+  children: [56, 201, 209];
+  seed_parents: [54, 128, 180, 192];
   canMatchZeroChars: false
 }
 56 {
@@ -365,8 +365,8 @@
 }
 57 {
   kind: Sequence;
-  children: [58, 176];
-  seed_parents: [56, 188];
+  children: [58, 196];
+  seed_parents: [56, 208];
   canMatchZeroChars: false
 }
 58 {
@@ -378,644 +378,645 @@
 }
 59 {
   kind: Choice;
-  children: [60, 104, 110, 123, 128, 130, 167];
-  seed_parents: [58, 180];
+  children: [60, 132, 183];
+  seed_parents: [58, 200];
   canMatchZeroChars: false
 }
 60 {
-  kind: Sequence;
-  children: [61, 62];
+  kind: Identifier;
+  children: [61];
+  identifier: %hidden;
   seed_parents: [59];
   canMatchZeroChars: false
 }
 61 {
-  kind: Identifier;
-  children: [37];
-  identifier: %identifier;
+  kind: Choice;
+  children: [62, 66, 77, 88, 124];
   seed_parents: [60];
   canMatchZeroChars: false
 }
 62 {
-  kind: Choice;
-  children: [63, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Sequence;
+  children: [63, 64];
+  seed_parents: [61];
+  canMatchZeroChars: false
 }
 63 {
   kind: Identifier;
-  children: [64];
-  identifier: %repetition_expression;
+  children: [37];
+  identifier: %identifier;
   seed_parents: [62];
   canMatchZeroChars: false
 }
 64 {
-  kind: Choice;
-  children: [65, 67, 69, 71];
-  seed_parents: [63, 107, 121, 126, 165, 175];
+  kind: Identifier;
+  children: [65];
+  identifier: %tilde;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 65 {
-  kind: Identifier;
-  children: [66];
-  identifier: %question;
-  seed_parents: [64];
+  kind: CharsetLiteral;
+  literal: "~";
+  seed_parents: [64, 76, 87, 123, 131];
   canMatchZeroChars: false
 }
 66 {
-  kind: CharsetLiteral;
-  literal: "?";
-  seed_parents: [65];
+  kind: Sequence;
+  children: [67, 76];
+  seed_parents: [61];
   canMatchZeroChars: false
 }
 67 {
   kind: Identifier;
   children: [68];
-  identifier: %star;
-  seed_parents: [64];
+  identifier: %string_literal;
+  seed_parents: [66];
   canMatchZeroChars: false
 }
 68 {
-  kind: CharsetLiteral;
-  literal: "*";
-  seed_parents: [67];
+  kind: Sequence;
+  children: [69, 71, 75];
+  seed_parents: [67, 169, 186, 245];
   canMatchZeroChars: false
 }
 69 {
-  kind: Identifier;
+  kind: Hidden;
   children: [70];
-  identifier: %plus;
-  seed_parents: [64];
+  seed_parents: [68];
   canMatchZeroChars: false
 }
 70 {
   kind: CharsetLiteral;
-  literal: "+";
-  seed_parents: [69];
+  literal: 10#34;
+  seed_parents: [69, 75, 102, 104, 232, 237];
   canMatchZeroChars: false
 }
 71 {
-  kind: Identifier;
-  children: [72];
-  identifier: %repetition_range;
-  seed_parents: [64];
-  canMatchZeroChars: false
+  kind: Choice;
+  children: [72, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
 }
 72 {
-  kind: Choice;
-  children: [73, 98];
+  kind: OneOrMore;
+  children: [73];
   seed_parents: [71];
   canMatchZeroChars: false
 }
 73 {
-  kind: Sequence;
-  children: [74, 76, 77, 89, 91, 92, 96];
+  kind: Identifier;
+  children: [74];
+  identifier: $string_middle;
   seed_parents: [72];
   canMatchZeroChars: false
 }
 74 {
-  kind: Hidden;
-  children: [75];
-  seed_parents: [73];
+  kind: CharsetLiteral;
+  literal: [" ".."!""#".."~"];
+  seed_parents: [73, 103];
   canMatchZeroChars: false
 }
 75 {
-  kind: CharsetLiteral;
-  literal: "{";
-  seed_parents: [74, 99];
+  kind: Hidden;
+  children: [70];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 76 {
   kind: Identifier;
-  children: [3];
-  identifier: %blank;
+  children: [65];
+  identifier: %tilde;
   seed_parents: [];
-  canMatchZeroChars: true
+  canMatchZeroChars: false
 }
 77 {
-  kind: Choice;
-  children: [78, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Sequence;
+  children: [78, 87];
+  seed_parents: [61];
+  canMatchZeroChars: false
 }
 78 {
-  kind: Sequence;
-  children: [79, 88];
+  kind: Identifier;
+  children: [79];
+  identifier: %integer_literal;
   seed_parents: [77];
   canMatchZeroChars: false
 }
 79 {
-  kind: Identifier;
-  children: [80];
-  identifier: %integer_literal;
-  seed_parents: [78];
+  kind: Sequence;
+  children: [80, 83, 84];
+  seed_parents: [78, 105, 152, 158, 165, 172, 187];
   canMatchZeroChars: false
 }
 80 {
-  kind: Sequence;
-  children: [81, 84, 85];
-  seed_parents: [79, 94, 101, 124, 147];
+  kind: Identifier;
+  children: [81];
+  identifier: $integer_literal_lhs;
+  seed_parents: [79];
   canMatchZeroChars: false
 }
 81 {
-  kind: Identifier;
+  kind: OneOrMore;
   children: [82];
-  identifier: $integer_literal_lhs;
   seed_parents: [80];
   canMatchZeroChars: false
 }
 82 {
-  kind: OneOrMore;
-  children: [83];
+  kind: CharsetLiteral;
+  literal: ["0".."9"];
   seed_parents: [81];
   canMatchZeroChars: false
 }
 83 {
   kind: CharsetLiteral;
-  literal: ["0".."9"];
-  seed_parents: [82];
-  canMatchZeroChars: false
-}
-84 {
-  kind: CharsetLiteral;
   literal: "#";
   seed_parents: [];
   canMatchZeroChars: false
 }
-85 {
+84 {
   kind: Identifier;
-  children: [86];
+  children: [85];
   identifier: $integer_literal_rhs;
   seed_parents: [];
   canMatchZeroChars: false
 }
-86 {
+85 {
   kind: OneOrMore;
-  children: [87];
+  children: [86];
+  seed_parents: [84];
+  canMatchZeroChars: false
+}
+86 {
+  kind: CharsetLiteral;
+  literal: ["0".."9""A".."Z""a".."z"];
   seed_parents: [85];
   canMatchZeroChars: false
 }
 87 {
-  kind: CharsetLiteral;
-  literal: ["0".."9""A".."Z""a".."z"];
-  seed_parents: [86];
+  kind: Identifier;
+  children: [65];
+  identifier: %tilde;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 88 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Sequence;
+  children: [89, 123];
+  seed_parents: [61];
+  canMatchZeroChars: false
 }
 89 {
   kind: Identifier;
   children: [90];
-  identifier: %comma;
-  seed_parents: [];
+  identifier: %charset;
+  seed_parents: [88];
   canMatchZeroChars: false
 }
 90 {
-  kind: CharsetLiteral;
-  literal: ",";
-  seed_parents: [89, 158, 257];
+  kind: Sequence;
+  children: [91, 93, 94, 112, 120, 121];
+  seed_parents: [89, 175, 188];
   canMatchZeroChars: false
 }
 91 {
+  kind: Hidden;
+  children: [92];
+  seed_parents: [90];
+  canMatchZeroChars: false
+}
+92 {
+  kind: CharsetLiteral;
+  literal: "[";
+  seed_parents: [91];
+  canMatchZeroChars: false
+}
+93 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
-}
-92 {
-  kind: Choice;
-  children: [93, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
-}
-93 {
-  kind: Sequence;
-  children: [94, 95];
-  seed_parents: [92];
-  canMatchZeroChars: false
 }
 94 {
   kind: Identifier;
-  children: [80];
-  identifier: %integer_literal;
-  seed_parents: [93];
+  children: [95];
+  identifier: %charset_item;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 95 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Choice;
+  children: [96, 111];
+  seed_parents: [94, 119];
+  canMatchZeroChars: false
 }
 96 {
-  kind: Hidden;
+  kind: Identifier;
   children: [97];
-  seed_parents: [];
+  identifier: %charset_range;
+  seed_parents: [95];
   canMatchZeroChars: false
 }
 97 {
-  kind: CharsetLiteral;
-  literal: "}";
-  seed_parents: [96, 103];
+  kind: Sequence;
+  children: [98, 106, 107, 109, 110];
+  seed_parents: [96];
   canMatchZeroChars: false
 }
 98 {
-  kind: Sequence;
-  children: [99, 100, 101, 102, 103];
-  seed_parents: [72];
+  kind: Identifier;
+  children: [99];
+  identifier: %charset_literal;
+  seed_parents: [97];
   canMatchZeroChars: false
 }
 99 {
-  kind: Hidden;
-  children: [75];
-  seed_parents: [98];
+  kind: Choice;
+  children: [100, 105];
+  seed_parents: [98, 110, 111];
   canMatchZeroChars: false
 }
 100 {
   kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  children: [101];
+  identifier: %character_literal;
+  seed_parents: [99];
+  canMatchZeroChars: false
 }
 101 {
-  kind: Identifier;
-  children: [80];
-  identifier: %integer_literal;
-  seed_parents: [];
+  kind: Sequence;
+  children: [102, 103, 104];
+  seed_parents: [100];
   canMatchZeroChars: false
 }
 102 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Hidden;
+  children: [70];
+  seed_parents: [101];
+  canMatchZeroChars: false
 }
 103 {
-  kind: Hidden;
-  children: [97];
+  kind: Identifier;
+  children: [74];
+  identifier: $string_middle;
   seed_parents: [];
   canMatchZeroChars: false
 }
 104 {
-  kind: Sequence;
-  children: [105, 106];
-  seed_parents: [59];
+  kind: Hidden;
+  children: [70];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 105 {
   kind: Identifier;
-  children: [37];
-  identifier: %identifier;
-  seed_parents: [104];
+  children: [79];
+  identifier: %integer_literal;
+  seed_parents: [99];
   canMatchZeroChars: false
 }
 106 {
-  kind: Choice;
-  children: [107, 108, 284];
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
 107 {
-  kind: Identifier;
-  children: [64];
-  identifier: %repetition_expression;
-  seed_parents: [106];
+  kind: Hidden;
+  children: [108];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 108 {
-  kind: Identifier;
-  children: [109];
-  identifier: %tilde;
-  seed_parents: [106];
+  kind: CharsetLiteral;
+  literal: ".", ".";
+  seed_parents: [107];
   canMatchZeroChars: false
 }
 109 {
-  kind: CharsetLiteral;
-  literal: "~";
-  seed_parents: [108, 122, 127, 166];
-  canMatchZeroChars: false
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
 }
 110 {
-  kind: Sequence;
-  children: [111, 120];
-  seed_parents: [59];
+  kind: Identifier;
+  children: [99];
+  identifier: %charset_literal;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 111 {
   kind: Identifier;
-  children: [112];
-  identifier: %string_literal;
-  seed_parents: [110];
+  children: [99];
+  identifier: %charset_literal;
+  seed_parents: [95];
   canMatchZeroChars: false
 }
 112 {
-  kind: Sequence;
-  children: [113, 115, 119];
-  seed_parents: [111, 225];
-  canMatchZeroChars: false
+  kind: Choice;
+  children: [113, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
 }
 113 {
-  kind: Hidden;
+  kind: OneOrMore;
   children: [114];
   seed_parents: [112];
   canMatchZeroChars: false
 }
 114 {
-  kind: CharsetLiteral;
-  literal: 10#34;
-  seed_parents: [113, 119, 144, 146, 212, 217];
+  kind: Sequence;
+  children: [115, 116, 118, 119];
+  seed_parents: [113];
   canMatchZeroChars: false
 }
 115 {
-  kind: Choice;
-  children: [116, 284];
-  seed_parents: [];
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [114];
   canMatchZeroChars: true
 }
 116 {
-  kind: OneOrMore;
+  kind: Hidden;
   children: [117];
-  seed_parents: [115];
+  seed_parents: [114];
   canMatchZeroChars: false
 }
 117 {
-  kind: Identifier;
-  children: [118];
-  identifier: $string_middle;
-  seed_parents: [116];
+  kind: CharsetLiteral;
+  literal: ",";
+  seed_parents: [116, 154, 277];
   canMatchZeroChars: false
 }
 118 {
-  kind: CharsetLiteral;
-  literal: [" ".."!""#".."~"];
-  seed_parents: [117, 145];
-  canMatchZeroChars: false
-}
-119 {
-  kind: Hidden;
-  children: [114];
-  seed_parents: [];
-  canMatchZeroChars: false
-}
-120 {
-  kind: Choice;
-  children: [121, 122, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
-}
-121 {
-  kind: Identifier;
-  children: [64];
-  identifier: %repetition_expression;
-  seed_parents: [120];
-  canMatchZeroChars: false
-}
-122 {
-  kind: Identifier;
-  children: [109];
-  identifier: %tilde;
-  seed_parents: [120];
-  canMatchZeroChars: false
-}
-123 {
-  kind: Sequence;
-  children: [124, 125];
-  seed_parents: [59];
-  canMatchZeroChars: false
-}
-124 {
-  kind: Identifier;
-  children: [80];
-  identifier: %integer_literal;
-  seed_parents: [123];
-  canMatchZeroChars: false
-}
-125 {
-  kind: Choice;
-  children: [126, 127, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
-}
-126 {
-  kind: Identifier;
-  children: [64];
-  identifier: %repetition_expression;
-  seed_parents: [125];
-  canMatchZeroChars: false
-}
-127 {
-  kind: Identifier;
-  children: [109];
-  identifier: %tilde;
-  seed_parents: [125];
-  canMatchZeroChars: false
-}
-128 {
-  kind: Identifier;
-  children: [129];
-  identifier: %kw_epsilon;
-  seed_parents: [59];
-  canMatchZeroChars: false
-}
-129 {
-  kind: CharsetLiteral;
-  literal: "e", "p", "s", "i", "l", "o", "n";
-  seed_parents: [128];
-  canMatchZeroChars: false
-}
-130 {
-  kind: Sequence;
-  children: [131, 164];
-  seed_parents: [59];
-  canMatchZeroChars: false
-}
-131 {
-  kind: Identifier;
-  children: [132];
-  identifier: %charset_expression;
-  seed_parents: [130];
-  canMatchZeroChars: false
-}
-132 {
-  kind: Sequence;
-  children: [133, 135, 136, 154, 161, 162];
-  seed_parents: [131];
-  canMatchZeroChars: false
-}
-133 {
-  kind: Hidden;
-  children: [134];
-  seed_parents: [132];
-  canMatchZeroChars: false
-}
-134 {
-  kind: CharsetLiteral;
-  literal: "[";
-  seed_parents: [133];
-  canMatchZeroChars: false
-}
-135 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
+119 {
+  kind: Identifier;
+  children: [95];
+  identifier: %charset_item;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+120 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+121 {
+  kind: Hidden;
+  children: [122];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+122 {
+  kind: CharsetLiteral;
+  literal: "]";
+  seed_parents: [121];
+  canMatchZeroChars: false
+}
+123 {
+  kind: Identifier;
+  children: [65];
+  identifier: %tilde;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+124 {
+  kind: Sequence;
+  children: [125, 127, 128, 129, 131];
+  seed_parents: [61];
+  canMatchZeroChars: false
+}
+125 {
+  kind: Hidden;
+  children: [126];
+  seed_parents: [124];
+  canMatchZeroChars: false
+}
+126 {
+  kind: CharsetLiteral;
+  literal: "(";
+  seed_parents: [125, 178, 190];
+  canMatchZeroChars: false
+}
+127 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+128 {
+  kind: Identifier;
+  children: [55];
+  identifier: %choices;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+129 {
+  kind: Hidden;
+  children: [130];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+130 {
+  kind: CharsetLiteral;
+  literal: ")";
+  seed_parents: [129, 181, 193];
+  canMatchZeroChars: false
+}
+131 {
+  kind: Identifier;
+  children: [65];
+  identifier: %tilde;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+132 {
+  kind: Identifier;
+  children: [133];
+  identifier: %repetition;
+  seed_parents: [59];
+  canMatchZeroChars: false
+}
+133 {
+  kind: Choice;
+  children: [134, 168, 171, 174, 177];
+  seed_parents: [132];
+  canMatchZeroChars: false
+}
+134 {
+  kind: Sequence;
+  children: [135, 136];
+  seed_parents: [133];
+  canMatchZeroChars: false
+}
+135 {
+  kind: Identifier;
+  children: [37];
+  identifier: %identifier;
+  seed_parents: [134];
+  canMatchZeroChars: false
+}
 136 {
   kind: Identifier;
   children: [137];
-  identifier: %charset_item;
+  identifier: %repetition_postfix;
   seed_parents: [];
   canMatchZeroChars: false
 }
 137 {
   kind: Choice;
-  children: [138, 153];
-  seed_parents: [136, 160];
+  children: [138, 140, 142, 144];
+  seed_parents: [136, 170, 173, 176, 182];
   canMatchZeroChars: false
 }
 138 {
   kind: Identifier;
   children: [139];
-  identifier: %charset_range;
+  identifier: %question;
   seed_parents: [137];
   canMatchZeroChars: false
 }
 139 {
-  kind: Sequence;
-  children: [140, 148, 149, 151, 152];
+  kind: CharsetLiteral;
+  literal: "?";
   seed_parents: [138];
   canMatchZeroChars: false
 }
 140 {
   kind: Identifier;
   children: [141];
-  identifier: %charset_literal;
-  seed_parents: [139];
+  identifier: %star;
+  seed_parents: [137];
   canMatchZeroChars: false
 }
 141 {
-  kind: Choice;
-  children: [142, 147];
-  seed_parents: [140, 152, 153];
+  kind: CharsetLiteral;
+  literal: "*";
+  seed_parents: [140];
   canMatchZeroChars: false
 }
 142 {
   kind: Identifier;
   children: [143];
-  identifier: %character_literal;
-  seed_parents: [141];
+  identifier: %plus;
+  seed_parents: [137];
   canMatchZeroChars: false
 }
 143 {
-  kind: Sequence;
-  children: [144, 145, 146];
+  kind: CharsetLiteral;
+  literal: "+";
   seed_parents: [142];
   canMatchZeroChars: false
 }
 144 {
-  kind: Hidden;
-  children: [114];
-  seed_parents: [143];
+  kind: Identifier;
+  children: [145];
+  identifier: %repetition_range;
+  seed_parents: [137];
   canMatchZeroChars: false
 }
 145 {
-  kind: Identifier;
-  children: [118];
-  identifier: $string_middle;
-  seed_parents: [];
+  kind: Choice;
+  children: [146, 162];
+  seed_parents: [144];
   canMatchZeroChars: false
 }
 146 {
-  kind: Hidden;
-  children: [114];
-  seed_parents: [];
+  kind: Sequence;
+  children: [147, 149, 150, 154, 155, 156, 160];
+  seed_parents: [145];
   canMatchZeroChars: false
 }
 147 {
-  kind: Identifier;
-  children: [80];
-  identifier: %integer_literal;
-  seed_parents: [141];
+  kind: Hidden;
+  children: [148];
+  seed_parents: [146];
   canMatchZeroChars: false
 }
 148 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: CharsetLiteral;
+  literal: "{";
+  seed_parents: [147, 163];
+  canMatchZeroChars: false
 }
 149 {
-  kind: Hidden;
-  children: [150];
-  seed_parents: [];
-  canMatchZeroChars: false
-}
-150 {
-  kind: CharsetLiteral;
-  literal: ".", ".";
-  seed_parents: [149];
-  canMatchZeroChars: false
-}
-151 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
+}
+150 {
+  kind: Choice;
+  children: [151, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+151 {
+  kind: Sequence;
+  children: [152, 153];
+  seed_parents: [150];
+  canMatchZeroChars: false
 }
 152 {
   kind: Identifier;
-  children: [141];
-  identifier: %charset_literal;
-  seed_parents: [];
+  children: [79];
+  identifier: %integer_literal;
+  seed_parents: [151];
   canMatchZeroChars: false
 }
 153 {
   kind: Identifier;
-  children: [141];
-  identifier: %charset_literal;
-  seed_parents: [137];
-  canMatchZeroChars: false
-}
-154 {
-  kind: Choice;
-  children: [155, 284];
+  children: [3];
+  identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
+154 {
+  kind: Identifier;
+  children: [117];
+  identifier: %comma;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
 155 {
-  kind: OneOrMore;
-  children: [156];
-  seed_parents: [154];
-  canMatchZeroChars: false
-}
-156 {
-  kind: Sequence;
-  children: [157, 158, 159, 160];
-  seed_parents: [155];
-  canMatchZeroChars: false
-}
-157 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
-  seed_parents: [156];
+  seed_parents: [];
   canMatchZeroChars: true
 }
-158 {
-  kind: Hidden;
-  children: [90];
+156 {
+  kind: Choice;
+  children: [157, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+157 {
+  kind: Sequence;
+  children: [158, 159];
   seed_parents: [156];
+  canMatchZeroChars: false
+}
+158 {
+  kind: Identifier;
+  children: [79];
+  identifier: %integer_literal;
+  seed_parents: [157];
   canMatchZeroChars: false
 }
 159 {
@@ -1026,123 +1027,125 @@
   canMatchZeroChars: true
 }
 160 {
-  kind: Identifier;
-  children: [137];
-  identifier: %charset_item;
+  kind: Hidden;
+  children: [161];
   seed_parents: [];
   canMatchZeroChars: false
 }
 161 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: CharsetLiteral;
+  literal: "}";
+  seed_parents: [160, 167];
+  canMatchZeroChars: false
 }
 162 {
-  kind: Hidden;
-  children: [163];
-  seed_parents: [];
+  kind: Sequence;
+  children: [163, 164, 165, 166, 167];
+  seed_parents: [145];
   canMatchZeroChars: false
 }
 163 {
-  kind: CharsetLiteral;
-  literal: "]";
+  kind: Hidden;
+  children: [148];
   seed_parents: [162];
   canMatchZeroChars: false
 }
 164 {
-  kind: Choice;
-  children: [165, 166, 284];
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
 165 {
   kind: Identifier;
-  children: [64];
-  identifier: %repetition_expression;
-  seed_parents: [164];
+  children: [79];
+  identifier: %integer_literal;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 166 {
-  kind: Identifier;
-  children: [109];
-  identifier: %tilde;
-  seed_parents: [164];
-  canMatchZeroChars: false
-}
-167 {
-  kind: Sequence;
-  children: [168, 170, 171, 172, 174];
-  seed_parents: [59];
-  canMatchZeroChars: false
-}
-168 {
-  kind: Hidden;
-  children: [169];
-  seed_parents: [167];
-  canMatchZeroChars: false
-}
-169 {
-  kind: CharsetLiteral;
-  literal: "(";
-  seed_parents: [168];
-  canMatchZeroChars: false
-}
-170 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-171 {
-  kind: Identifier;
-  children: [55];
-  identifier: %choices;
+167 {
+  kind: Hidden;
+  children: [161];
   seed_parents: [];
+  canMatchZeroChars: false
+}
+168 {
+  kind: Sequence;
+  children: [169, 170];
+  seed_parents: [133];
+  canMatchZeroChars: false
+}
+169 {
+  kind: Identifier;
+  children: [68];
+  identifier: %string_literal;
+  seed_parents: [168];
+  canMatchZeroChars: false
+}
+170 {
+  kind: Identifier;
+  children: [137];
+  identifier: %repetition_postfix;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+171 {
+  kind: Sequence;
+  children: [172, 173];
+  seed_parents: [133];
   canMatchZeroChars: false
 }
 172 {
-  kind: Hidden;
-  children: [173];
-  seed_parents: [];
+  kind: Identifier;
+  children: [79];
+  identifier: %integer_literal;
+  seed_parents: [171];
   canMatchZeroChars: false
 }
 173 {
-  kind: CharsetLiteral;
-  literal: ")";
-  seed_parents: [172];
+  kind: Identifier;
+  children: [137];
+  identifier: %repetition_postfix;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 174 {
-  kind: Choice;
-  children: [175, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Sequence;
+  children: [175, 176];
+  seed_parents: [133];
+  canMatchZeroChars: false
 }
 175 {
   kind: Identifier;
-  children: [64];
-  identifier: %repetition_expression;
+  children: [90];
+  identifier: %charset;
   seed_parents: [174];
   canMatchZeroChars: false
 }
 176 {
-  kind: Choice;
-  children: [177, 284];
+  kind: Identifier;
+  children: [137];
+  identifier: %repetition_postfix;
   seed_parents: [];
-  canMatchZeroChars: true
+  canMatchZeroChars: false
 }
 177 {
-  kind: OneOrMore;
-  children: [178];
-  seed_parents: [176];
+  kind: Sequence;
+  children: [178, 179, 180, 181, 182];
+  seed_parents: [133];
   canMatchZeroChars: false
 }
 178 {
-  kind: Sequence;
-  children: [179, 180];
+  kind: Hidden;
+  children: [126];
   seed_parents: [177];
   canMatchZeroChars: false
 }
@@ -1150,181 +1153,181 @@
   kind: Identifier;
   children: [3];
   identifier: %blank;
-  seed_parents: [178];
+  seed_parents: [];
   canMatchZeroChars: true
 }
 180 {
   kind: Identifier;
-  children: [59];
-  identifier: %expression;
-  seed_parents: [178];
+  children: [55];
+  identifier: %choices;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 181 {
-  kind: Choice;
-  children: [182, 284];
+  kind: Hidden;
+  children: [130];
   seed_parents: [];
-  canMatchZeroChars: true
+  canMatchZeroChars: false
 }
 182 {
-  kind: OneOrMore;
-  children: [183];
-  seed_parents: [181];
+  kind: Identifier;
+  children: [137];
+  identifier: %repetition_postfix;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 183 {
-  kind: Sequence;
-  children: [184, 185, 187, 188];
-  seed_parents: [182];
+  kind: Identifier;
+  children: [184];
+  identifier: %plain;
+  seed_parents: [59];
   canMatchZeroChars: false
 }
 184 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [183];
-  canMatchZeroChars: true
-}
-185 {
-  kind: Hidden;
-  children: [186];
+  kind: Choice;
+  children: [185, 186, 187, 188, 189, 194];
   seed_parents: [183];
   canMatchZeroChars: false
 }
+185 {
+  kind: Identifier;
+  children: [37];
+  identifier: %identifier;
+  seed_parents: [184];
+  canMatchZeroChars: false
+}
 186 {
-  kind: CharsetLiteral;
-  literal: "|";
-  seed_parents: [185];
+  kind: Identifier;
+  children: [68];
+  identifier: %string_literal;
+  seed_parents: [184];
   canMatchZeroChars: false
 }
 187 {
   kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  children: [79];
+  identifier: %integer_literal;
+  seed_parents: [184];
+  canMatchZeroChars: false
 }
 188 {
   kind: Identifier;
-  children: [57];
-  identifier: %sequence;
-  seed_parents: [];
+  children: [90];
+  identifier: %charset;
+  seed_parents: [184];
   canMatchZeroChars: false
 }
 189 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
-}
-190 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
-}
-191 {
-  kind: Hidden;
-  children: [192];
-  seed_parents: [];
+  kind: Sequence;
+  children: [190, 191, 192, 193];
+  seed_parents: [184];
   canMatchZeroChars: false
 }
+190 {
+  kind: Hidden;
+  children: [126];
+  seed_parents: [189];
+  canMatchZeroChars: false
+}
+191 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
 192 {
-  kind: CharsetLiteral;
-  literal: ";";
-  seed_parents: [191, 267, 277];
+  kind: Identifier;
+  children: [55];
+  identifier: %choices;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 193 {
-  kind: Sequence;
-  children: [194, 195, 196, 198, 261, 263, 264, 265, 266, 267];
-  seed_parents: [34];
+  kind: Hidden;
+  children: [130];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 194 {
   kind: Identifier;
-  children: [37];
-  identifier: %identifier;
-  seed_parents: [193];
+  children: [195];
+  identifier: %kw_epsilon;
+  seed_parents: [184];
   canMatchZeroChars: false
 }
 195 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
+  kind: CharsetLiteral;
+  literal: "e", "p", "s", "i", "l", "o", "n";
+  seed_parents: [194];
+  canMatchZeroChars: false
+}
+196 {
+  kind: Choice;
+  children: [197, 304];
   seed_parents: [];
   canMatchZeroChars: true
 }
-196 {
-  kind: Hidden;
-  children: [197];
-  seed_parents: [];
-  canMatchZeroChars: false
-}
 197 {
-  kind: CharsetLiteral;
-  literal: 10#60;
+  kind: OneOrMore;
+  children: [198];
   seed_parents: [196];
   canMatchZeroChars: false
 }
 198 {
-  kind: Identifier;
-  children: [199];
-  identifier: %parameter_list;
-  seed_parents: [];
+  kind: Sequence;
+  children: [199, 200];
+  seed_parents: [197];
   canMatchZeroChars: false
 }
 199 {
-  kind: Sequence;
-  children: [200, 201, 253, 260];
-  seed_parents: [198];
-  canMatchZeroChars: false
-}
-200 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
-  seed_parents: [199];
+  seed_parents: [198];
   canMatchZeroChars: true
 }
-201 {
+200 {
   kind: Identifier;
-  children: [202];
-  identifier: %parameter;
-  seed_parents: [199];
+  children: [59];
+  identifier: %expression;
+  seed_parents: [198];
   canMatchZeroChars: false
 }
-202 {
+201 {
   kind: Choice;
-  children: [203, 218, 226, 237, 245];
-  seed_parents: [201, 259];
+  children: [202, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+202 {
+  kind: OneOrMore;
+  children: [203];
+  seed_parents: [201];
   canMatchZeroChars: false
 }
 203 {
-  kind: Identifier;
-  children: [204];
-  identifier: %parameter_id;
+  kind: Sequence;
+  children: [204, 205, 207, 208];
   seed_parents: [202];
   canMatchZeroChars: false
 }
 204 {
-  kind: Sequence;
-  children: [205, 207, 208, 209, 210];
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
   seed_parents: [203];
-  canMatchZeroChars: false
+  canMatchZeroChars: true
 }
 205 {
-  kind: Identifier;
+  kind: Hidden;
   children: [206];
-  identifier: %kw_parameter_id;
-  seed_parents: [204];
+  seed_parents: [203];
   canMatchZeroChars: false
 }
 206 {
   kind: CharsetLiteral;
-  literal: "i", "d";
+  literal: "|";
   seed_parents: [205];
   canMatchZeroChars: false
 }
@@ -1336,8 +1339,9 @@
   canMatchZeroChars: true
 }
 208 {
-  kind: Hidden;
-  children: [51];
+  kind: Identifier;
+  children: [57];
+  identifier: %sequence;
   seed_parents: [];
   canMatchZeroChars: false
 }
@@ -1350,346 +1354,345 @@
 }
 210 {
   kind: Identifier;
-  children: [211];
-  identifier: %id_string_literal;
+  children: [3];
+  identifier: %blank;
   seed_parents: [];
-  canMatchZeroChars: false
+  canMatchZeroChars: true
 }
 211 {
-  kind: Sequence;
-  children: [212, 213, 217];
-  seed_parents: [210];
+  kind: Hidden;
+  children: [212];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 212 {
-  kind: Hidden;
-  children: [114];
-  seed_parents: [211];
+  kind: CharsetLiteral;
+  literal: ";";
+  seed_parents: [211, 287, 297];
   canMatchZeroChars: false
 }
 213 {
-  kind: Identifier;
-  children: [214];
-  identifier: $id_string_middle;
-  seed_parents: [];
+  kind: Sequence;
+  children: [214, 215, 216, 218, 281, 283, 284, 285, 286, 287];
+  seed_parents: [34];
   canMatchZeroChars: false
 }
 214 {
-  kind: Sequence;
-  children: [45, 215];
+  kind: Identifier;
+  children: [37];
+  identifier: %identifier;
   seed_parents: [213];
   canMatchZeroChars: false
 }
 215 {
-  kind: Choice;
-  children: [216, 284];
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
 216 {
-  kind: OneOrMore;
-  children: [48];
-  seed_parents: [215];
+  kind: Hidden;
+  children: [217];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 217 {
-  kind: Hidden;
-  children: [114];
-  seed_parents: [];
+  kind: CharsetLiteral;
+  literal: 10#60;
+  seed_parents: [216];
   canMatchZeroChars: false
 }
 218 {
   kind: Identifier;
   children: [219];
-  identifier: %parameter_displayname;
-  seed_parents: [202];
+  identifier: %parameter_list;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 219 {
   kind: Sequence;
-  children: [220, 222, 223, 224, 225];
+  children: [220, 221, 273, 280];
   seed_parents: [218];
   canMatchZeroChars: false
 }
 220 {
   kind: Identifier;
-  children: [221];
-  identifier: %kw_parameter_display_name;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [219];
+  canMatchZeroChars: true
+}
+221 {
+  kind: Identifier;
+  children: [222];
+  identifier: %parameter;
   seed_parents: [219];
   canMatchZeroChars: false
 }
-221 {
-  kind: CharsetLiteral;
-  literal: "d", "i", "s", "p", "l", "a", "y", "_", "n", "a", "m", "e";
-  seed_parents: [220];
+222 {
+  kind: Choice;
+  children: [223, 238, 246, 257, 265];
+  seed_parents: [221, 279];
   canMatchZeroChars: false
 }
-222 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
-}
 223 {
-  kind: Hidden;
-  children: [51];
-  seed_parents: [];
+  kind: Identifier;
+  children: [224];
+  identifier: %parameter_id;
+  seed_parents: [222];
   canMatchZeroChars: false
 }
 224 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Sequence;
+  children: [225, 227, 228, 229, 230];
+  seed_parents: [223];
+  canMatchZeroChars: false
 }
 225 {
   kind: Identifier;
-  children: [112];
-  identifier: %string_literal;
-  seed_parents: [];
+  children: [226];
+  identifier: %kw_parameter_id;
+  seed_parents: [224];
   canMatchZeroChars: false
 }
 226 {
-  kind: Identifier;
-  children: [227];
-  identifier: %parameter_unpack;
-  seed_parents: [202];
+  kind: CharsetLiteral;
+  literal: "i", "d";
+  seed_parents: [225];
   canMatchZeroChars: false
 }
 227 {
-  kind: Sequence;
-  children: [228, 230, 231, 232, 233];
-  seed_parents: [226];
-  canMatchZeroChars: false
-}
-228 {
-  kind: Identifier;
-  children: [229];
-  identifier: %kw_parameter_unpack;
-  seed_parents: [227];
-  canMatchZeroChars: false
-}
-229 {
-  kind: CharsetLiteral;
-  literal: "u", "n", "p", "a", "c", "k";
-  seed_parents: [228];
-  canMatchZeroChars: false
-}
-230 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-231 {
+228 {
   kind: Hidden;
   children: [51];
   seed_parents: [];
   canMatchZeroChars: false
 }
-232 {
+229 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
+}
+230 {
+  kind: Identifier;
+  children: [231];
+  identifier: %id_string_literal;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+231 {
+  kind: Sequence;
+  children: [232, 233, 237];
+  seed_parents: [230];
+  canMatchZeroChars: false
+}
+232 {
+  kind: Hidden;
+  children: [70];
+  seed_parents: [231];
+  canMatchZeroChars: false
 }
 233 {
   kind: Identifier;
   children: [234];
-  identifier: %boolean_literal;
+  identifier: $id_string_middle;
   seed_parents: [];
   canMatchZeroChars: false
 }
 234 {
-  kind: Choice;
-  children: [235, 236];
-  seed_parents: [233, 244, 252];
+  kind: Sequence;
+  children: [45, 235];
+  seed_parents: [233];
   canMatchZeroChars: false
 }
 235 {
-  kind: CharsetLiteral;
-  literal: "t", "r", "u", "e";
-  seed_parents: [234];
-  canMatchZeroChars: false
+  kind: Choice;
+  children: [236, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
 }
 236 {
-  kind: CharsetLiteral;
-  literal: "f", "a", "l", "s", "e";
-  seed_parents: [234];
+  kind: OneOrMore;
+  children: [48];
+  seed_parents: [235];
   canMatchZeroChars: false
 }
 237 {
-  kind: Identifier;
-  children: [238];
-  identifier: %parameter_hide;
-  seed_parents: [202];
+  kind: Hidden;
+  children: [70];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 238 {
-  kind: Sequence;
-  children: [239, 241, 242, 243, 244];
-  seed_parents: [237];
+  kind: Identifier;
+  children: [239];
+  identifier: %parameter_displayname;
+  seed_parents: [222];
   canMatchZeroChars: false
 }
 239 {
-  kind: Identifier;
-  children: [240];
-  identifier: %kw_parameter_hide;
+  kind: Sequence;
+  children: [240, 242, 243, 244, 245];
   seed_parents: [238];
   canMatchZeroChars: false
 }
 240 {
-  kind: CharsetLiteral;
-  literal: "h", "i", "d", "e";
+  kind: Identifier;
+  children: [241];
+  identifier: %kw_parameter_display_name;
   seed_parents: [239];
   canMatchZeroChars: false
 }
 241 {
+  kind: CharsetLiteral;
+  literal: "d", "i", "s", "p", "l", "a", "y", "_", "n", "a", "m", "e";
+  seed_parents: [240];
+  canMatchZeroChars: false
+}
+242 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-242 {
+243 {
   kind: Hidden;
   children: [51];
   seed_parents: [];
   canMatchZeroChars: false
 }
-243 {
+244 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-244 {
+245 {
   kind: Identifier;
-  children: [234];
-  identifier: %boolean_literal;
+  children: [68];
+  identifier: %string_literal;
   seed_parents: [];
   canMatchZeroChars: false
 }
-245 {
-  kind: Identifier;
-  children: [246];
-  identifier: %parameter_merge;
-  seed_parents: [202];
-  canMatchZeroChars: false
-}
 246 {
-  kind: Sequence;
-  children: [247, 249, 250, 251, 252];
-  seed_parents: [245];
+  kind: Identifier;
+  children: [247];
+  identifier: %parameter_unpack;
+  seed_parents: [222];
   canMatchZeroChars: false
 }
 247 {
-  kind: Identifier;
-  children: [248];
-  identifier: %kw_parameter_merge;
+  kind: Sequence;
+  children: [248, 250, 251, 252, 253];
   seed_parents: [246];
   canMatchZeroChars: false
 }
 248 {
-  kind: CharsetLiteral;
-  literal: "m", "e", "r", "g", "e";
+  kind: Identifier;
+  children: [249];
+  identifier: %kw_parameter_unpack;
   seed_parents: [247];
   canMatchZeroChars: false
 }
 249 {
+  kind: CharsetLiteral;
+  literal: "u", "n", "p", "a", "c", "k";
+  seed_parents: [248];
+  canMatchZeroChars: false
+}
+250 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-250 {
+251 {
   kind: Hidden;
   children: [51];
   seed_parents: [];
   canMatchZeroChars: false
 }
-251 {
+252 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-252 {
+253 {
   kind: Identifier;
-  children: [234];
+  children: [254];
   identifier: %boolean_literal;
   seed_parents: [];
   canMatchZeroChars: false
 }
-253 {
-  kind: Choice;
-  children: [254, 284];
-  seed_parents: [];
-  canMatchZeroChars: true
-}
 254 {
-  kind: OneOrMore;
-  children: [255];
-  seed_parents: [253];
+  kind: Choice;
+  children: [255, 256];
+  seed_parents: [253, 264, 272];
   canMatchZeroChars: false
 }
 255 {
-  kind: Sequence;
-  children: [256, 257, 258, 259];
+  kind: CharsetLiteral;
+  literal: "t", "r", "u", "e";
   seed_parents: [254];
   canMatchZeroChars: false
 }
 256 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [255];
-  canMatchZeroChars: true
+  kind: CharsetLiteral;
+  literal: "f", "a", "l", "s", "e";
+  seed_parents: [254];
+  canMatchZeroChars: false
 }
 257 {
-  kind: Hidden;
-  children: [90];
-  seed_parents: [255];
+  kind: Identifier;
+  children: [258];
+  identifier: %parameter_hide;
+  seed_parents: [222];
   canMatchZeroChars: false
 }
 258 {
-  kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  kind: Sequence;
+  children: [259, 261, 262, 263, 264];
+  seed_parents: [257];
+  canMatchZeroChars: false
 }
 259 {
   kind: Identifier;
-  children: [202];
-  identifier: %parameter;
-  seed_parents: [];
+  children: [260];
+  identifier: %kw_parameter_hide;
+  seed_parents: [258];
   canMatchZeroChars: false
 }
 260 {
+  kind: CharsetLiteral;
+  literal: "h", "i", "d", "e";
+  seed_parents: [259];
+  canMatchZeroChars: false
+}
+261 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-261 {
-  kind: Hidden;
-  children: [262];
-  seed_parents: [];
-  canMatchZeroChars: false
-}
 262 {
-  kind: CharsetLiteral;
-  literal: 10#62;
-  seed_parents: [261];
+  kind: Hidden;
+  children: [51];
+  seed_parents: [];
   canMatchZeroChars: false
 }
 263 {
@@ -1700,127 +1703,127 @@
   canMatchZeroChars: true
 }
 264 {
-  kind: Hidden;
-  children: [51];
+  kind: Identifier;
+  children: [254];
+  identifier: %boolean_literal;
   seed_parents: [];
   canMatchZeroChars: false
 }
 265 {
   kind: Identifier;
-  children: [3];
-  identifier: %blank;
-  seed_parents: [];
-  canMatchZeroChars: true
+  children: [266];
+  identifier: %parameter_merge;
+  seed_parents: [222];
+  canMatchZeroChars: false
 }
 266 {
-  kind: Identifier;
-  children: [54];
-  identifier: %definition;
-  seed_parents: [];
+  kind: Sequence;
+  children: [267, 269, 270, 271, 272];
+  seed_parents: [265];
   canMatchZeroChars: false
 }
 267 {
-  kind: Hidden;
-  children: [192];
-  seed_parents: [];
+  kind: Identifier;
+  children: [268];
+  identifier: %kw_parameter_merge;
+  seed_parents: [266];
   canMatchZeroChars: false
 }
 268 {
-  kind: Identifier;
-  children: [269];
-  identifier: %grammar_property;
-  seed_parents: [32];
+  kind: CharsetLiteral;
+  literal: "m", "e", "r", "g", "e";
+  seed_parents: [267];
   canMatchZeroChars: false
 }
 269 {
-  kind: Sequence;
-  children: [270, 272, 273, 274, 275, 276, 277];
-  seed_parents: [268];
-  canMatchZeroChars: false
-}
-270 {
-  kind: Identifier;
-  children: [271];
-  identifier: %grammar_property_start;
-  seed_parents: [269];
-  canMatchZeroChars: false
-}
-271 {
-  kind: CharsetLiteral;
-  literal: "@", "s", "t", "a", "r", "t";
-  seed_parents: [270];
-  canMatchZeroChars: false
-}
-272 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-273 {
+270 {
   kind: Hidden;
   children: [51];
   seed_parents: [];
   canMatchZeroChars: false
 }
-274 {
+271 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
-275 {
+272 {
   kind: Identifier;
-  children: [37];
-  identifier: %identifier;
+  children: [254];
+  identifier: %boolean_literal;
   seed_parents: [];
+  canMatchZeroChars: false
+}
+273 {
+  kind: Choice;
+  children: [274, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+274 {
+  kind: OneOrMore;
+  children: [275];
+  seed_parents: [273];
+  canMatchZeroChars: false
+}
+275 {
+  kind: Sequence;
+  children: [276, 277, 278, 279];
+  seed_parents: [274];
   canMatchZeroChars: false
 }
 276 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
-  seed_parents: [];
+  seed_parents: [275];
   canMatchZeroChars: true
 }
 277 {
   kind: Hidden;
-  children: [192];
-  seed_parents: [];
+  children: [117];
+  seed_parents: [275];
   canMatchZeroChars: false
 }
 278 {
-  kind: Choice;
-  children: [279, 284];
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
   seed_parents: [];
   canMatchZeroChars: true
 }
 279 {
-  kind: OneOrMore;
-  children: [280];
-  seed_parents: [278];
+  kind: Identifier;
+  children: [222];
+  identifier: %parameter;
+  seed_parents: [];
   canMatchZeroChars: false
 }
 280 {
-  kind: Sequence;
-  children: [281, 282];
-  seed_parents: [279];
-  canMatchZeroChars: false
-}
-281 {
   kind: Identifier;
   children: [3];
   identifier: %blank;
-  seed_parents: [280];
+  seed_parents: [];
   canMatchZeroChars: true
 }
+281 {
+  kind: Hidden;
+  children: [282];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
 282 {
-  kind: Identifier;
-  children: [32];
-  identifier: %statement;
-  seed_parents: [280];
+  kind: CharsetLiteral;
+  literal: 10#62;
+  seed_parents: [281];
   canMatchZeroChars: false
 }
 283 {
@@ -1831,9 +1834,140 @@
   canMatchZeroChars: true
 }
 284 {
+  kind: Hidden;
+  children: [51];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+285 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+286 {
+  kind: Identifier;
+  children: [54];
+  identifier: %definition;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+287 {
+  kind: Hidden;
+  children: [212];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+288 {
+  kind: Identifier;
+  children: [289];
+  identifier: %grammar_property;
+  seed_parents: [32];
+  canMatchZeroChars: false
+}
+289 {
+  kind: Sequence;
+  children: [290, 292, 293, 294, 295, 296, 297];
+  seed_parents: [288];
+  canMatchZeroChars: false
+}
+290 {
+  kind: Identifier;
+  children: [291];
+  identifier: %grammar_property_start;
+  seed_parents: [289];
+  canMatchZeroChars: false
+}
+291 {
+  kind: CharsetLiteral;
+  literal: "@", "s", "t", "a", "r", "t";
+  seed_parents: [290];
+  canMatchZeroChars: false
+}
+292 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+293 {
+  kind: Hidden;
+  children: [51];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+294 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+295 {
+  kind: Identifier;
+  children: [37];
+  identifier: %identifier;
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+296 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+297 {
+  kind: Hidden;
+  children: [212];
+  seed_parents: [];
+  canMatchZeroChars: false
+}
+298 {
+  kind: Choice;
+  children: [299, 304];
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+299 {
+  kind: OneOrMore;
+  children: [300];
+  seed_parents: [298];
+  canMatchZeroChars: false
+}
+300 {
+  kind: Sequence;
+  children: [301, 302];
+  seed_parents: [299];
+  canMatchZeroChars: false
+}
+301 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [300];
+  canMatchZeroChars: true
+}
+302 {
+  kind: Identifier;
+  children: [32];
+  identifier: %statement;
+  seed_parents: [300];
+  canMatchZeroChars: false
+}
+303 {
+  kind: Identifier;
+  children: [3];
+  identifier: %blank;
+  seed_parents: [];
+  canMatchZeroChars: true
+}
+304 {
   kind: Epsilon;
   children: [];
-  seed_parents: [3, 46, 62, 77, 92, 106, 115, 120, 125, 154, 164, 174, 176, 181, 215, 253, 278];
+  seed_parents: [3, 46, 71, 112, 150, 156, 196, 201, 235, 273, 298];
   canMatchZeroChars: true
 }
 

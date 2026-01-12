@@ -2,6 +2,7 @@
 
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/ast_2.hpp"
 #include "pmt/parser/grammar/number.hpp"
 
 namespace pmt::parser::grammar {
@@ -14,7 +15,7 @@ namespace {
 using IntervalType = Interval<Charset::SetType::KeyType>;
 
 auto get_interval(pmt::parser::GenericAst const &ast_) -> IntervalType {
- if (ast_.get_id() == Ast::NtCharsetRange) {
+ if (ast_.get_id() == Ast::NtCharsetRange || ast_.get_id() == Ast2::CharsetRange) {
   return IntervalType(Number(*ast_.get_child_at(0)).get_value(), Number(*ast_.get_child_at(1)).get_value());
  }
 
@@ -22,7 +23,7 @@ auto get_interval(pmt::parser::GenericAst const &ast_) -> IntervalType {
 }
 
 auto get_set(pmt::parser::GenericAst const &ast_) -> Charset::SetType {
- assert(ast_.get_id() == Ast::NtTerminalCharset);
+ assert(ast_.get_id() == Ast::NtTerminalCharset || ast_.get_id() == Ast2::Charset);
  Charset::SetType ret;
  for (size_t i = 0; i < ast_.get_children_size(); ++i) {
   ret.insert(get_interval(*ast_.get_child_at(i)));

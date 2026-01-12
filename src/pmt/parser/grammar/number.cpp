@@ -2,6 +2,7 @@
 
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/ast_2.hpp"
 #include "pmt/parser/grammar/string_literal.hpp"
 
 #include <cassert>
@@ -63,11 +64,15 @@ auto number_convert(std::string_view num_, Number::NumberType base_) -> Number::
 
 auto single_char_as_value(GenericAst const& ast_) -> Number::NumberType {
  switch (ast_.get_id()) {
+  case Ast2::CharacterLiteral: {
+   return ast_.get_string().front();
+  } break;
   case Ast::TkStringLiteral: {
    std::string const& str_literal = StringLiteral(ast_).get_value();
    assert(str_literal.size() == 1);
    return str_literal.front();
   } break;
+  case Ast2::IntegerLiteral:
   case Ast::TkIntegerLiteral: {
    auto const [base_str, number_str] = split_number(ast_.get_string());
    Number::NumberType const base = number_convert(base_str, 10);

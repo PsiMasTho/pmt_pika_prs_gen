@@ -8,6 +8,7 @@
 #include "pmt/parser/grammar/ast.hpp"
 #include "pmt/parser/grammar/ast_2.hpp"
 #include "pmt/parser/grammar/grammar_from_ast.hpp"
+#include "pmt/parser/grammar/grammar_from_ast_2.hpp"
 #include "pmt/parser/grammar/grammar_printer.hpp"
 #include "pmt/parser/grammar/grammar_simplifier.hpp"
 #include "pmt/parser/grammar/lexer_tables.hpp"
@@ -79,14 +80,18 @@ auto main(int argc, char const* const* argv) -> int try {
 
  std::string const input_grammar((std::istreambuf_iterator<char>(args._input_grammar_file)), std::istreambuf_iterator<char>());
 
- GenericAst::UniqueHandle ast_grammar = get_grammar_ast(input_grammar);
- // GenericAst::UniqueHandle ast_grammar_2 = get_grammar_ast_2(input_grammar);
+ // GenericAst::UniqueHandle ast_grammar = get_grammar_ast(input_grammar);
+ GenericAst::UniqueHandle ast_grammar_2 = get_grammar_ast_2(input_grammar);
 
- Grammar grammar = GrammarFromAst::make(GrammarFromAst::Args{._ast = *ast_grammar});
- GrammarSimplifier::simplify(GrammarSimplifier::Args{._grammar = grammar});
- // write_typed_grammar(grammar);
+ // Grammar grammar = GrammarFromAst::make(GrammarFromAst::Args{._ast = *ast_grammar});
+ // GrammarSimplifier::simplify(GrammarSimplifier::Args{._grammar = grammar});
+ //  write_typed_grammar(grammar);
 
- pmt::parser::builder::PikaProgram const program(grammar);
+ Grammar grammar_2 = GrammarFromAst2::make(GrammarFromAst2::Args{._ast = *ast_grammar_2});
+ GrammarSimplifier::simplify(GrammarSimplifier::Args{._grammar = grammar_2});
+ write_typed_grammar(grammar_2);
+
+ pmt::parser::builder::PikaProgram const program(grammar_2);
  write_program_to_file(program);
 
  if (args._input_test_file.has_value()) {

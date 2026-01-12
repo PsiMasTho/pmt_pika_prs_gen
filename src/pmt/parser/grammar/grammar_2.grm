@@ -25,8 +25,9 @@ $multi_line_comment_rhs = "*/" | $any $multi_line_comment_rhs;
 %comma<id    = "Comma", merge = true>    = ",";
 %plus<id     = "Plus", merge = true>     = "+";
 %star<id     = "Star", merge = true>     = "*";
-%tilde<id    = "Tilde", merge = true>    = "~";
 %question<id = "Question", merge = true> = "?";
+%tilde<hide  = true>                     = "~";
+
 
 // - LITERALS -
 $string_middle = ["A".."Z", "a".."z", "0".."9",
@@ -77,27 +78,47 @@ $identifier_rhs                                           = ["A".."Z", "a".."z",
 %sequence<id = "Sequence"> = %expression (%blank %expression)*;
 
 // - EXPRESSION -
-%expression<unpack = true> = %identifier %repetition_expression?                     |
-                             %identifier (%repetition_expression | %tilde)?          |
-                             %string_literal (%repetition_expression | %tilde)?      |
-                             %integer_literal (%repetition_expression | %tilde)?     |
-                             %kw_epsilon                                             |
-                             %charset_expression  (%repetition_expression | %tilde)? |
-                             "("~ %blank %choices ")"~ %repetition_expression?;
+%expression<unpack = true> = %hidden |
+                             %repetition |
+                             %plain;
+
+// - HIDDEN -
+%hidden<id = "Hidden"> = %identifier %tilde |
+                         %string_literal %tilde |
+                         %integer_literal %tilde |
+                         %charset  %tilde |
+                         "("~ %blank %choices ")"~ %tilde;
+
+// - REPETITION -
+%repetition<id = "Repetition"> = %identifier %repetition_postfix |
+                                 %string_literal %repetition_postfix |
+                                 %integer_literal %repetition_postfix |
+                                 %charset  %repetition_postfix |
+                                 "("~ %blank %choices ")"~ %repetition_postfix;
+
+// - PLAIN -
+%plain<unpack = true > = %identifier                   |
+                             %string_literal           |
+                             %integer_literal          |
+                             %charset                  |
+                             "("~ %blank %choices ")"~ |
+                             %kw_epsilon;
+
+// - REPETITION_POSTFIX -
+%repetition_postfix<unpack = true> = %question |
+                                     %star     |
+                                     %plus     |
+                                     %repetition_range;
+
+%repetition_range<id = "RepetitionRange"> = "{"~ %blank (%integer_literal %blank)? %comma %blank (%integer_literal %blank)? "}"~ |
+                                            "{"~ %blank %integer_literal %blank "}"~;
 
 // - CHARSET -
-%charset_expression<id = "TerminalCharset"> = "["~ %blank %charset_item (%blank ","~ %blank %charset_item)* %blank "]"~;
+%charset<id = "Charset"> = "["~ %blank %charset_item (%blank ","~ %blank %charset_item)* %blank "]"~;
 %charset_item<unpack = true> = %charset_range |
                                %charset_literal;
 %charset_range<id = "CharsetRange"> = %charset_literal %blank ".."~ %blank %charset_literal;
 %charset_literal<unpack = true> = %character_literal |
                                   %integer_literal;
 
-// - REPETITION_EXPRESSION -
-%repetition_expression<id = "RepetitionExpression"> = %question |
-                                                      %star     |
-                                                      %plus     |
-                                                      %repetition_range;
 
-%repetition_range<id = "RepetitionRange"> = "{"~ %blank (%integer_literal %blank)? %comma %blank (%integer_literal %blank)? "}"~ |
-                                            "{"~ %blank %integer_literal %blank "}"~;

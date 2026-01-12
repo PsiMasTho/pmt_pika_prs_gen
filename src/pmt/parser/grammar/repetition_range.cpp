@@ -3,13 +3,14 @@
 #include "pmt/asserts.hpp"
 #include "pmt/parser/generic_ast.hpp"
 #include "pmt/parser/grammar/ast.hpp"
+#include "pmt/parser/grammar/ast_2.hpp"
 
 #include <cassert>
 
 namespace pmt::parser::grammar {
 namespace {
 auto get_repetition_number(GenericAst const& token_) -> std::optional<Number::NumberType> {
- if (token_.get_id() != Ast::TkIntegerLiteral) {
+ if (token_.get_id() != Ast::TkIntegerLiteral && token_.get_id() != Ast2::IntegerLiteral) {
   return std::nullopt;
  }
 
@@ -20,17 +21,21 @@ auto get_repetition_number(GenericAst const& token_) -> std::optional<Number::Nu
 
 RepetitionRange::RepetitionRange(pmt::parser::GenericAst const& ast_) {
  switch (ast_.get_id()) {
+  case Ast2::Plus:
   case Ast::TkPlus: {
    _lower = 1;
   } break;
+  case Ast2::Star:
   case Ast::TkStar: {
    _lower = 0;
    _upper = std::nullopt;
   } break;
+  case Ast2::Question:
   case Ast::TkQuestion: {
    _lower = 0;
    _upper = 1;
   } break;
+  case Ast2::RepetitionRange:
   case Ast::NtRepetitionRange: {
    switch (ast_.get_children_size()) {
     case 1: {
