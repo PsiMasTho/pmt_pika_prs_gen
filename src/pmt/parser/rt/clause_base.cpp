@@ -26,8 +26,8 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "CharsetLiteral";
   case Tag::OneOrMore:
    return "OneOrMore";
-  case Tag::NotFollowedBy:
-   return "NotFollowedBy";
+  case Tag::NegativeLookahead:
+   return "NegativeLookahead";
   case Tag::Epsilon:
    return "Epsilon";
   default:

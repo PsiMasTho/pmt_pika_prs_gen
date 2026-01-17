@@ -12,14 +12,14 @@ public:
 
  enum class Tag : uint8_t {
   // Child IDs
-  Sequence,        // >= 1 clause ids
-  Choice,          // >= 1 clause ids
-  Hidden,          // 1 clause id
-  Identifier,      // 1 clause id + 1 rule id
-  CharsetLiteral,  // 1 literal id
-  OneOrMore,       // 1 clause id
-  NotFollowedBy,   // 1 clause id
-  Epsilon,         // not stored in memo table
+  Sequence,           // >= 1 clause ids
+  Choice,             // >= 1 clause ids
+  Hidden,             // 1 clause id
+  Identifier,         // 1 clause id + 1 rule id
+  CharsetLiteral,     // 1 literal id
+  OneOrMore,          // 1 clause id
+  NegativeLookahead,  // 1 clause id
+  Epsilon,            // not stored in memo table
  };
 
  [[nodiscard]] virtual auto get_tag() const -> Tag = 0;

@@ -11,8 +11,7 @@ class StateMachineTables : public pmt::parser::rt::StateMachineTablesBase {
 private:
  // -$ Data $-
  pmt::sm::StateMachine _state_machine;
- std::vector<pmt::base::Bitset> _accepts_bitsets_cache;  // Indexed by StateNrType
- size_t _max_accept_cached = 0;
+ std::vector<std::vector<pmt::sm::AcceptsIndexType>> _state_accepts_cache;
 
 public:
  // -$ Functions $-
@@ -21,11 +20,12 @@ public:
 
  // --$ Inherited: pmt::util::sm::StateMachineTablesBase $--
  auto get_state_nr_next(pmt::sm::StateNrType state_nr_, pmt::sm::SymbolType symbol_) const -> pmt::sm::StateNrType override;
- auto get_state_accepts(pmt::sm::StateNrType state_nr_) const -> pmt::base::Bitset::ChunkSpanConst override;
+
+ auto get_state_accept_count(pmt::sm::StateNrType state_nr_) const -> size_t override;
+ auto get_state_accept_at(pmt::sm::StateNrType state_nr_, size_t index_) const -> pmt::sm::AcceptsIndexType override;
 
  // --$ Other $--
  auto get_state_machine() const -> pmt::sm::StateMachine const&;
- auto get_max_accept() const -> pmt::sm::AcceptsIndexType;
 
 private:
  void init_cache();

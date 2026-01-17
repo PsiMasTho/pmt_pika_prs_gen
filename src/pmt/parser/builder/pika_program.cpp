@@ -118,6 +118,16 @@ public:
  }
 };
 
+void renumber_clause_ids(std::vector<ExtendedClause>& clauses_, std::unordered_map<ClauseBase::IdType, ClauseBase::IdType> const& id_mapping_) {
+ for (ExtendedClause& clause : clauses_) {
+  for (ClauseBase::IdType& child_id : clause._child_ids) {
+   auto const itr = id_mapping_.find(child_id);
+   assert(itr != id_mapping_.end());
+   child_id = itr->second;
+  }
+ }
+}
+
 }  // namespace
 
 ExtendedClause::ExtendedClause(Tag tag_, ClauseBase::IdType id_)
@@ -261,7 +271,7 @@ void PikaProgram::initialize(Grammar const& grammar_) {
     ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
     _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
-   case ClauseBase::Tag::NotFollowedBy: {
+   case ClauseBase::Tag::NegativeLookahead: {
     ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
     _clauses[clause_id]._child_ids.push_back(child_id);
    } break;
@@ -374,7 +384,12 @@ void PikaProgram::determine_can_match_zero() {
       mark(i, _clauses[_clauses[i].get_child_id_at(0)].can_match_zero());
      }
     } break;
-    case ClauseBase::Tag::NotFollowedBy:
+    case ClauseBase::Tag::NegativeLookahead: {
+     ClauseBase::IdType const child_id = _clauses[i].get_child_id_at(0);
+     if (solved.get(child_id) && _clauses[child_id].can_match_zero()) {
+      throw std::runtime_error("Invalid grammar");
+     }
+    }
     case ClauseBase::Tag::Epsilon:
      mark(i, true);
      break;
@@ -415,7 +430,8 @@ void PikaProgram::determine_seed_parents() {
    case ClauseBase::Tag::Identifier:
    case ClauseBase::Tag::Hidden:
    case ClauseBase::Tag::OneOrMore:
-   case ClauseBase::Tag::Choice: {
+   case ClauseBase::Tag::Choice:
+   case ClauseBase::Tag::NegativeLookahead: {
     for (size_t i = 0; i < clause.get_child_id_count(); ++i) {
      ClauseBase::IdType const child_id = clause.get_child_id_at(i);
      _clauses[child_id]._seed_parent_ids.push_back(clause_id_);
@@ -423,7 +439,6 @@ void PikaProgram::determine_seed_parents() {
    } break;
    default:
     pmt::unreachable();
-   case ClauseBase::Tag::NotFollowedBy:
    case ClauseBase::Tag::Epsilon:
    case ClauseBase::Tag::CharsetLiteral:
     break;

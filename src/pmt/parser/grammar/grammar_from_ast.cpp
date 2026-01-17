@@ -62,11 +62,19 @@ class HiddenFrame : public FrameBase {
 public:
 };
 
+class NegativeLookaheadFrame : public FrameBase {
+public:
+};
+
+class PositiveLookaheadFrame : public FrameBase {
+public:
+};
+
 class EpsilonFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<ExpressionFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, HiddenFrame, EpsilonFrame>;
+using Frame = std::variant<ExpressionFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, HiddenFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame>;
 
 class Locals {
 public:
@@ -159,10 +167,10 @@ auto build_epsilon() -> RuleExpression::UniqueHandle {
  return RuleExpression::construct(ClauseBase::Tag::Sequence);
 }
 
-auto construct_frame(GenericAst const* ast_cur_path_) -> Frame {
- FrameBase frame_base{._ast_cur_path = ast_cur_path_, ._stage = 0};
+auto construct_frame(GenericAst const* ast_cur_) -> Frame {
+ FrameBase frame_base{._ast_cur_path = ast_cur_, ._stage = 0};
 
- switch (ast_cur_path_->get_id()) {
+ switch (ast_cur_->get_id()) {
   case Ast::Definition: {
    return ExpressionFrame{frame_base};
   } break;
@@ -186,13 +194,19 @@ auto construct_frame(GenericAst const* ast_cur_path_) -> Frame {
   } break;
   case Ast::Charset: {
    return CharsetFrame{frame_base};
-  }
+  } break;
   case Ast::Hidden: {
    return HiddenFrame{frame_base};
-  }
+  } break;
+  case Ast::NegativeLookahead: {
+   return NegativeLookaheadFrame{frame_base};
+  } break;
+  case Ast::PositiveLookahead: {
+   return PositiveLookaheadFrame{frame_base};
+  } break;
   case Ast::Epsilon: {
    return EpsilonFrame{frame_base};
-  }
+  } break;
   default:
    pmt::unreachable();
  }
@@ -348,6 +362,33 @@ void process_frame_01(Locals& locals_, HiddenFrame& frame_) {
  RuleExpression::UniqueHandle hidden = RuleExpression::construct(ClauseBase::Tag::Hidden);
  hidden->give_child_at_back(std::move(locals_._ret_part));
  locals_._ret_part = std::move(hidden);
+}
+
+void process_frame_00(Locals& locals_, NegativeLookaheadFrame& frame_) {
+ locals_._keep_current_frame = true;
+ ++frame_._stage;
+
+ locals_._callstack.emplace_back(construct_frame(frame_._ast_cur_path->get_child_at(0)));
+}
+
+void process_frame_01(Locals& locals_, NegativeLookaheadFrame& frame_) {
+ RuleExpression::UniqueHandle negative_lookahead = RuleExpression::construct(ClauseBase::Tag::NegativeLookahead);
+ negative_lookahead->give_child_at_back(std::move(locals_._ret_part));
+ locals_._ret_part = std::move(negative_lookahead);
+}
+
+void process_frame_00(Locals& locals_, PositiveLookaheadFrame& frame_) {
+ locals_._keep_current_frame = true;
+ ++frame_._stage;
+
+ locals_._callstack.emplace_back(construct_frame(frame_._ast_cur_path->get_child_at(0)));
+}
+
+void process_frame_01(Locals& locals_, PositiveLookaheadFrame& frame_) {
+ RuleExpression::UniqueHandle outer = RuleExpression::construct(ClauseBase::Tag::NegativeLookahead);
+ outer->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::NegativeLookahead));
+ outer->get_child_at_back()->give_child_at_back(std::move(locals_._ret_part));
+ locals_._ret_part = std::move(outer);
 }
 
 void process_frame_00(Locals& locals_, EpsilonFrame& frame_) {

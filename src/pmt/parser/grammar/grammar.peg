@@ -14,7 +14,7 @@ $comment = $single_line_comment | $multi_line_comment;
 $blank<hide = true> = ($comment | $whitespace | $newline)*;
 
 // - KEYWORDS -
-$kw_epsilon<id                = "Epsilon", hide = true>              = "epsilon";
+$kw_epsilon<id                = "Epsilon">                           = "epsilon";
 $kw_parameter_unpack<id       = "ParameterUnpack", hide = true>      = "unpack";
 $kw_parameter_hide<id         = "ParameterHide", hide = true>        = "hide";
 $kw_parameter_merge<id        = "ParameterMerge", hide = true>       = "merge";
@@ -27,6 +27,8 @@ $plus<id     = "Plus", merge = true>     = "+";
 $star<id     = "Star", merge = true>     = "*";
 $question<id = "Question", merge = true> = "?";
 $tilde<hide  = true>                     = "~";
+$exclamation<hide = true>                = "!";
+$ampersand<hide = true>                  = "&";
 
 
 // - LITERALS -
@@ -80,6 +82,8 @@ $sequence<id = "Sequence"> = $expression ($blank $expression)*;
 // - EXPRESSION -
 $expression<unpack = true> = $hidden     |
                              $repetition |
+                             $negative_lookahead |
+                             $positive_lookahead |
                              $plain;
 
 // - HIDDEN -
@@ -88,6 +92,20 @@ $hidden<id = "Hidden"> = $identifier $tilde      |
                          $integer_literal $tilde |
                          $charset  $tilde        |
                          "("~ $blank $choices ")"~ $tilde;
+
+// - NEGATIVE_LOOKAHEAD -
+$negative_lookahead<id = "NegativeLookahead"> = $identifier $exclamation      |
+                                                $string_literal $exclamation  |
+                                                $integer_literal $exclamation |
+                                                $charset  $exclamation        |
+                                                "("~ $blank $choices ")"~ $exclamation;
+
+// - POSITIVE_LOOKAHEAD -
+$positive_lookahead<id = "PositiveLookahead"> = $identifier $ampersand      |
+                                                $string_literal $ampersand  |
+                                                $integer_literal $ampersand |
+                                                $charset  $ampersand        |
+                                                "("~ $blank $choices ")"~ $ampersand;
 
 // - REPETITION -
 $repetition<id = "Repetition"> = $identifier $repetition_postfix      |

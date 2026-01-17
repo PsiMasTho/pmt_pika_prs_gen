@@ -7,87 +7,109 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <span>
 
 /* $replace NAMESPACE_OPEN */
 using namespace pmt::parser;
 using namespace pmt::parser::rt;
-using namespace pmt::base;
 using namespace pmt::sm;
 
 namespace {
 
 using TerminalTransitionsType = /* $replace TERMINAL_TRANSITIONS_TYPE */;
 using TerminalTransitionsOffsetsType = /* $replace TERMINAL_TRANSITIONS_OFFSETS_TYPE */;
+using TerminalAcceptsType = /* $replace TERMINAL_ACCEPTS_TYPE */;
+using TerminalAcceptsOffsetsType = /* $replace TERMINAL_ACCEPTS_OFFSETS_TYPE */;
 using ClauseChildIdsOffsetsType = /* $replace CLAUSE_CHILD_IDS_OFFSETS_TYPE */;
 using ClauseChildIdsType = /* $replace CLAUSE_CHILD_IDS_TYPE */;
 using ClauseSeedParentIdsOffsetsType = /* $replace CLAUSE_SEED_PARENT_IDS_OFFSETS_TYPE */;
 using ClauseSeedParentIdsType = /* $replace CLAUSE_SEED_PARENT_IDS_TYPE */;
 using ClauseSpecialIdType = /* $replace CLAUSE_SPECIAL_ID_TYPE */;
+using RuleParameterDisplayNameIndirectType = /* $replace RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE */;
+using RuleParameterIdStringIndirectType = /* $replace RULE_PARAMETER_ID_STRING_INDIRECT_TYPE */;
+using RuleParameterIdTableType = GenericId::IdType;
+using RuleParameterIdIndirectType = /* $replace RULE_PARAMETER_ID_INDIRECT_TYPE */;
+using ClauseClassIdType = /* $replace CLAUSE_CLASS_ID_TYPE */;
+using RuleParameterClassIdType = /* $replace RULE_PARAMETER_CLASS_ID_TYPE */;
+using BitsetChunkType = /* $replace BITSET_CHUNK_TYPE */;
 
 
-template <size_t BITCOUNT_>
+template <std::integral CHUNK_T_>
+class ChunkBit {
+ public:
+  inline static constexpr size_t Value = sizeof(CHUNK_T_) * CHAR_BIT;
+};
+
+template <std::integral CHUNK_T_, size_t BITCOUNT_>
 class ChunksNeeded {
 public:
- inline static constexpr size_t Value = (BITCOUNT_ + Bitset::ChunkBit - 1) / Bitset::ChunkBit;
+ inline static constexpr size_t Value = (BITCOUNT_ + ChunkBit<CHUNK_T_>::Value - 1) / ChunkBit<CHUNK_T_>::Value;
 };
 
 enum : size_t {
+ StringTableSize = /* $replace STRING_TABLE_SIZE */,
  TerminalStateCount = /* $replace TERMINAL_STATE_COUNT */,
  TerminalTransitionsSize = TerminalStateCount * 3, // lowers, uppers, values
  TerminalTransitionsOffsetsSize = TerminalStateCount + 1,
- TerminalAcceptsChunkCount = /* $replace TERMINAL_ACCEPTS_CHUNK_COUNT */,
- TerminalAcceptsSize = TerminalStateCount * TerminalAcceptsChunkCount,
+ TerminalAcceptsSize = /* $replace TERMINAL_ACCEPTS_SIZE */,
+ TerminalAcceptsOffsetsSize = TerminalStateCount + 1,
  ClauseCount = /* $replace CLAUSE_COUNT */,
  ClauseChildIdsSize = /* $replace CLAUSE_CHILD_IDS_SIZE */,
  ClauseChildIdsOffsetsSize = ClauseCount + 1,
  ClauseSeedParentIdsSize = /* $replace CLAUSE_SEED_PARENT_IDS_SIZE */,
  ClauseSeedParentIdsOffsetsSize = ClauseCount + 1,
- ClauseCanMatchZeroSize = ChunksNeeded<ClauseCount>::Value,
+ ClauseCanMatchZeroSize = ChunksNeeded<BitsetChunkType, ClauseCount>::Value,
  RuleParameterCount = /* $replace RULE_PARAMETER_COUNT */,
  RuleParameterMergeOffset = 0,
  RuleParameterUnpackOffset = 1,
  RuleParameterHideOffset = 2,
- RuleParameterBooleansSize = ChunksNeeded<RuleParameterCount>::Value * 3, // merge, unpack, hide
+ RuleParameterBooleansSize = ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value * 3, // merge, unpack, hide
+ RuleParameterIdTableSize = /* $replace RULE_PARAMETER_ID_TABLE_SIZE */
 };
 
-auto get_bit(Bitset::ChunkSpanConst const& chunks_, size_t idx_) -> bool {
- size_t const chunk_idx = idx_ / Bitset::ChunkBit;
- size_t const bit_idx = idx_ % Bitset::ChunkBit;
+template <std::integral CHUNK_T_>
+auto get_bit(std::span<CHUNK_T_ const> chunks_, size_t idx_) -> bool {
+ size_t const chunk_idx = idx_ / ChunkBit<CHUNK_T_>::Value;
+ size_t const bit_idx = idx_ % ChunkBit<CHUNK_T_>::Value;
  return (chunks_[chunk_idx] >> bit_idx) & 1;
 }
 
-std::array<ClauseBase::Tag, ClauseCount> const CLAUSE_TAGS = {
+std::array<char const* const, StringTableSize> const STRING_TABLE = {
+/* $replace STRING_TABLE */
+};
+
+std::array<ClauseBase::Tag const, ClauseCount> const CLAUSE_TAGS = {
 /* $replace CLAUSE_TAGS */
 };
 
-std::array<ClauseChildIdsType, ClauseChildIdsSize> const CLAUSE_CHILD_IDS = {
+std::array<ClauseChildIdsType const, ClauseChildIdsSize> const CLAUSE_CHILD_IDS = {
 /* $replace CLAUSE_CHILD_IDS */
 };
 
-std::array<ClauseChildIdsOffsetsType, ClauseChildIdsOffsetsSize> const CLAUSE_CHILD_IDS_OFFSETS = {
+std::array<ClauseChildIdsOffsetsType const, ClauseChildIdsOffsetsSize> const CLAUSE_CHILD_IDS_OFFSETS = {
 /* $replace CLAUSE_CHILD_IDS_OFFSETS */
 };
 
-std::array<ClauseSeedParentIdsType, ClauseSeedParentIdsSize> const CLAUSE_SEED_PARENT_IDS = {
+std::array<ClauseSeedParentIdsType const, ClauseSeedParentIdsSize> const CLAUSE_SEED_PARENT_IDS = {
 /* $replace CLAUSE_SEED_PARENT_IDS */
 };
 
-std::array<ClauseSeedParentIdsOffsetsType, ClauseSeedParentIdsOffsetsSize> const CLAUSE_SEED_PARENT_IDS_OFFSETS = {
+std::array<ClauseSeedParentIdsOffsetsType const, ClauseSeedParentIdsOffsetsSize> const CLAUSE_SEED_PARENT_IDS_OFFSETS = {
 /* $replace CLAUSE_SEED_PARENT_IDS_OFFSETS */
 };
 
-std::array<ClauseSpecialIdType, ClauseCount> const CLAUSE_SPECIAL_IDS = {
+std::array<ClauseSpecialIdType const, ClauseCount> const CLAUSE_SPECIAL_IDS = {
 /* $replace CLAUSE_SPECIAL_IDS */
 };
 
-std::array<Bitset::ChunkType const, ClauseCanMatchZeroSize> const CLAUSE_CAN_MATCH_ZERO = {
+std::array<BitsetChunkType const, ClauseCanMatchZeroSize> const CLAUSE_CAN_MATCH_ZERO = {
 /* $replace CLAUSE_CAN_MATCH_ZERO */
 };
 
 class Clause : public ClauseBase {
  // -$ Types / Constants $-
  // -$ Data $-
- ClauseBase::IdType _id = 0;
+ ClauseClassIdType _id = 0;
 
 public:
  // -$ Functions $-
@@ -127,7 +149,8 @@ public:
  }
 
  auto can_match_zero() const -> bool override {
-  return get_bit(CLAUSE_CAN_MATCH_ZERO, _id);
+  std::span<BitsetChunkType const> const chunks(&CLAUSE_CAN_MATCH_ZERO[0], CLAUSE_CAN_MATCH_ZERO.size());
+  return get_bit(chunks, _id);
  }
 
  // --$ Other $--
@@ -136,16 +159,20 @@ public:
  }
 };
 
-std::array<TerminalTransitionsType, TerminalTransitionsSize> const TERMINAL_TRANSITIONS = {
+std::array<TerminalTransitionsType const, TerminalTransitionsSize> const TERMINAL_TRANSITIONS = {
 /* $replace TERMINAL_TRANSITIONS */
 };
 
-std::array<TerminalTransitionsOffsetsType, TerminalTransitionsOffsetsSize> const TERMINAL_TRANSITIONS_OFFSETS = {
+std::array<TerminalTransitionsOffsetsType const, TerminalTransitionsOffsetsSize> const TERMINAL_TRANSITIONS_OFFSETS = {
 /* $replace TERMINAL_TRANSITIONS_OFFSETS */
 };
 
-std::array<Bitset::ChunkType const, TerminalAcceptsSize> const TERMINAL_ACCEPTS = {
+std::array<TerminalAcceptsType const, TerminalAcceptsSize> const TERMINAL_ACCEPTS = {
 /* $replace TERMINAL_ACCEPTS */
+};
+
+std::array<TerminalAcceptsOffsetsType const, TerminalAcceptsOffsetsSize> const TERMINAL_ACCEPTS_OFFSETS = {
+/* $replace TERMINAL_ACCEPTS_OFFSETS */
 };
 
 class TerminalTables : public StateMachineTablesBase {
@@ -187,60 +214,74 @@ public:
   return values[idx];
  }
 
- auto get_state_accepts(StateNrType state_nr_) const -> Bitset::ChunkSpanConst override {
-  return Bitset::ChunkSpanConst(TERMINAL_ACCEPTS.begin() + state_nr_ * TerminalAcceptsChunkCount, TerminalAcceptsChunkCount);
+ auto get_state_accept_count(pmt::sm::StateNrType state_nr_) const -> size_t  override {
+  size_t const start = TERMINAL_ACCEPTS_OFFSETS[state_nr_];
+  size_t const end = TERMINAL_ACCEPTS_OFFSETS[state_nr_ + 1];
+  return end - start;
+ }
+
+ auto get_state_accept_at(pmt::sm::StateNrType state_nr_, size_t index_) const -> pmt::sm::AcceptsIndexType  override {
+  size_t const start = TERMINAL_ACCEPTS_OFFSETS[state_nr_];
+  return TERMINAL_ACCEPTS[start + index_];
  }
 };
 
-std::array<char const* const, RuleParameterCount> const RULE_PARAMETER_DISPLAY_NAMES = {
-/* $replace RULE_PARAMETER_DISPLAY_NAMES */
+std::array<RuleParameterDisplayNameIndirectType const, RuleParameterCount> const RULE_PARAMETER_DISPLAY_NAMES_INDIRECT = {
+/* $replace RULE_PARAMETER_DISPLAY_NAMES_INDIRECT */
 };
 
-std::array<char const* const, RuleParameterCount> const RULE_PARAMETER_ID_STRINGS = {
-/* $replace RULE_PARAMETER_ID_STRINGS */
+std::array<RuleParameterIdStringIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_STRINGS_INDIRECT = {
+/* $replace RULE_PARAMETER_ID_STRINGS_INDIRECT */
 };
 
-std::array<GenericId::IdType, RuleParameterCount> const RULE_PARAMETER_ID_VALUES = {
-/* $replace RULE_PARAMETER_ID_VALUES */
+std::array<RuleParameterIdTableType const, RuleParameterIdTableSize> const RULE_PARAMETER_ID_TABLE = {
+/* $replace RULE_PARAMETER_ID_TABLE */
 };
 
-std::array<Bitset::ChunkType const, RuleParameterBooleansSize> const RULE_PARAMETER_BOOLEANS = {
+std::array<RuleParameterIdIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_TABLE_INDIRECT = {
+/* $replace RULE_PARAMETER_ID_INDIRECT */
+};
+
+std::array<BitsetChunkType const, RuleParameterBooleansSize> const RULE_PARAMETER_BOOLEANS = {
 /* $replace RULE_PARAMETER_BOOLEANS */
 };
 
 class RuleParameters : public RuleParametersBase {
  // -$ Data $-
- size_t _rule_id;
+ RuleParameterClassIdType _rule_id;
 
 public:
  // -$ Functions $-
  // --$ Inherited: pmt::parser::rt::RuleParametersBase $--
  auto get_display_name() const -> std::string_view override {
-  return RULE_PARAMETER_DISPLAY_NAMES[_rule_id];
+  return STRING_TABLE[RULE_PARAMETER_DISPLAY_NAMES_INDIRECT[_rule_id]];
  }
 
  auto get_id_string() const -> std::string_view override {
-  return RULE_PARAMETER_ID_STRINGS[_rule_id];
+  return STRING_TABLE[RULE_PARAMETER_ID_STRINGS_INDIRECT[_rule_id]];
  }
 
  auto get_id_value() const -> GenericId::IdType override {
-  return RULE_PARAMETER_ID_VALUES[_rule_id];
+  return RULE_PARAMETER_ID_TABLE[RULE_PARAMETER_ID_TABLE_INDIRECT[_rule_id]];
  } 
 
  auto get_merge() const -> bool override {
-  return get_bit(Bitset::ChunkSpanConst(&RULE_PARAMETER_BOOLEANS[RuleParameterMergeOffset * ChunksNeeded<RuleParameterCount>::Value], ChunksNeeded<RuleParameterCount>::Value), _rule_id);
+  std::span<BitsetChunkType const> const chunks(&RULE_PARAMETER_BOOLEANS[RuleParameterMergeOffset * ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value], ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value);
+  return get_bit(chunks, _rule_id);
  }
 
  auto get_unpack() const -> bool override {
-  return get_bit(Bitset::ChunkSpanConst(&RULE_PARAMETER_BOOLEANS[RuleParameterUnpackOffset * ChunksNeeded<RuleParameterCount>::Value], ChunksNeeded<RuleParameterCount>::Value), _rule_id);
+  std::span<BitsetChunkType const> const chunks(&RULE_PARAMETER_BOOLEANS[RuleParameterUnpackOffset * ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value], ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value);
+  return get_bit(chunks, _rule_id);
  }
 
  auto get_hide() const -> bool override {
-  return get_bit(Bitset::ChunkSpanConst(&RULE_PARAMETER_BOOLEANS[RuleParameterHideOffset * ChunksNeeded<RuleParameterCount>::Value], ChunksNeeded<RuleParameterCount>::Value), _rule_id);
+  std::span<BitsetChunkType const> const chunks(&RULE_PARAMETER_BOOLEANS[RuleParameterHideOffset * ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value], ChunksNeeded<BitsetChunkType, RuleParameterCount>::Value);
+  return get_bit(chunks, _rule_id);
  }
 
  // --$ Other $--
- void set_rule_id(size_t rule_id_) {
+ void set_rule_id(RuleParameterClassIdType rule_id_) {
   _rule_id = rule_id_;
  }
 };

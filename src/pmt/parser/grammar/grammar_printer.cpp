@@ -79,7 +79,7 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
  auto const C = child_->get_tag();
  auto const child_arity = child_->get_children_size();
  auto const is_unary = [&](ClauseBase::Tag t_) {
-  return t_ == ClauseBase::Tag::Hidden || t_ == ClauseBase::Tag::NotFollowedBy || t_ == ClauseBase::Tag::OneOrMore;
+  return t_ == ClauseBase::Tag::Hidden || t_ == ClauseBase::Tag::NegativeLookahead || t_ == ClauseBase::Tag::OneOrMore;
  };
 
  switch (C) {
@@ -130,7 +130,7 @@ void expand_once(GrammarPrinter::Args& args_, Locals& locals_, RuleExpression co
    push(locals_, "+");
    push(locals_, ExpressionWithParent{._parent = node_});
    break;
-  case Tag::NotFollowedBy:
+  case Tag::NegativeLookahead:
    push(locals_, "!");
    push(locals_, ExpressionWithParent{._parent = node_});
    break;
@@ -223,7 +223,7 @@ void write_rule_as_tree(GrammarPrinter::Args& args_, std::string const& rule_nam
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::Hidden:
-   case ClauseBase::Tag::NotFollowedBy:
+   case ClauseBase::Tag::NegativeLookahead:
     args_._out << ": ";
     for (size_t i = expr_cur->get_children_size(); i--;) {
      push(expr_cur->get_child_at(i), depth_cur + 1);

@@ -189,12 +189,12 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
      }
      break;
     case ClauseBase::Tag::OneOrMore:
-    case ClauseBase::Tag::NotFollowedBy:
+    case ClauseBase::Tag::NegativeLookahead:
      pending.emplace_back(child, 0, in_regular);
      break;
     case ClauseBase::Tag::Hidden: {
      switch (child->get_child_at_front()->get_tag()) {
-      case ClauseBase::Tag::NotFollowedBy:
+      case ClauseBase::Tag::NegativeLookahead:
       case ClauseBase::Tag::OneOrMore:
       case ClauseBase::Tag::Sequence:
       case ClauseBase::Tag::Choice: {

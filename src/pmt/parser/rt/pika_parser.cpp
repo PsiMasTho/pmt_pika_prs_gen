@@ -7,7 +7,6 @@
 #include "pmt/parser/rt/pika_program_base.hpp"
 #include "pmt/parser/rt/state_machine_tables_base.hpp"
 
-#include <concepts>
 #include <iostream>
 
 namespace pmt::parser::rt {
@@ -20,18 +19,6 @@ auto check_parse_success(MemoTable const& memo_table_) -> bool {
  MemoTable::Key start_key{._clause = &start_clause, ._position = 0};
  MemoTable::IndexType const start_match_index = memo_table_.find(start_key);
  return start_match_index != MemoTable::MemoIndexMatchNotFound && memo_table_.get_match_length_by_index(start_match_index) == memo_table_.get_input().size();
-}
-
-void for_each_bit(std::span<Bitset::ChunkType const> bits_, std::invocable<size_t> auto&& f_) {
- uint64_t base = 0;
- for (Bitset::ChunkType chunk : bits_) {
-  while (chunk != pmt::base::Bitset::ALL_SET_MASKS[false]) {
-   size_t const b = std::countr_zero(chunk);
-   std::forward<decltype(f_)>(f_)(base + b);
-   chunk &= (chunk - 1);
-  }
-  base += pmt::base::Bitset::ChunkBit;
- }
 }
 
 void debug_print_memo_table(MemoTable const& memo_table_) {
@@ -77,15 +64,28 @@ void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_
  StateNrType state_nr_cur = StateNrStart;
 
  for (; cursor_ < memo_table_.get_input().size() + 1 && state_nr_cur != StateNrInvalid; ++cursor_) {
-  for_each_bit(terminal_state_machine_tables_.get_state_accepts(state_nr_cur), [&](size_t accept_) {
-   MemoTable::Match match{
-    ._key = {._clause = &memo_table_.get_pika_program().fetch_clause(accept_), ._position = cursor_start},
-    ._length = cursor_ - cursor_start,
-    ._matching_subclauses = {},
-   };
+  // for_each_bit(terminal_state_machine_tables_.get_state_accepts(state_nr_cur), [&](size_t accept_) {
+  //  MemoTable::Match match{
+  //   ._key = {._clause = &memo_table_.get_pika_program().fetch_clause(accept_), ._position = cursor_start},
+  //   ._length = cursor_ - cursor_start,
+  //   ._matching_subclauses = {},
+  //  };
+  //
+  //  memo_table_.insert(match._key, match, clause_queue_);
+  // });
 
-   memo_table_.insert(match._key, match, clause_queue_);
-  });
+  if (size_t const accept_count = terminal_state_machine_tables_.get_state_accept_count(state_nr_cur); accept_count > 0) {
+   for (size_t i = 0; i < accept_count; ++i) {
+    pmt::sm::AcceptsIndexType const accept_ = terminal_state_machine_tables_.get_state_accept_at(state_nr_cur, i);
+    MemoTable::Match match{
+     ._key = {._clause = &memo_table_.get_pika_program().fetch_clause(accept_), ._position = cursor_start},
+     ._length = cursor_ - cursor_start,
+     ._matching_subclauses = {},
+    };
+
+    memo_table_.insert(match._key, match, clause_queue_);
+   }
+  }
 
   if (cursor_ == memo_table_.get_input().size()) {
    break;
@@ -115,7 +115,7 @@ auto populate_memo_table(PikaProgramBase const& pika_program_, std::string_view 
  return memo_table;
 }
 
-auto memo_table_to_ast(MemoTable& memo_table_) -> GenericAst::UniqueHandle {
+auto memo_table_to_ast(MemoTable const& memo_table_) -> GenericAst::UniqueHandle {
  if (!check_parse_success(memo_table_)) {
   return nullptr;
  }
@@ -152,7 +152,8 @@ auto memo_table_to_ast(MemoTable& memo_table_) -> GenericAst::UniqueHandle {
      parent_.unpack(parent_.get_children_size() - 1);
     }
    } break;
-   case ClauseBase::Tag::NotFollowedBy:
+   case ClauseBase::Tag::NegativeLookahead:
+    break;
    case ClauseBase::Tag::Epsilon:
    case ClauseBase::Tag::Hidden:
     break;
@@ -180,7 +181,7 @@ auto memo_table_to_ast(MemoTable& memo_table_) -> GenericAst::UniqueHandle {
     ast_node = GenericAst::construct(GenericAst::Tag::String, GenericId::IdDefault);
     ast_node->set_string(memo_table_.get_input().substr(match_._key._position, match_._length));
     break;
-   case ClauseBase::Tag::NotFollowedBy:
+   case ClauseBase::Tag::NegativeLookahead:
    case ClauseBase::Tag::Epsilon:
    case ClauseBase::Tag::Hidden:
     // No AST node
@@ -207,7 +208,7 @@ auto PikaParser::parse(PikaProgramBase const& pika_program_, std::string_view in
 
  debug_print_memo_table(memo_table);
 
- return memo_table_to_ast(const_cast<MemoTable&>(memo_table));
+ return memo_table_to_ast(memo_table);
 }
 
 }  // namespace pmt::parser::rt

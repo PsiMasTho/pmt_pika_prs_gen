@@ -60,7 +60,7 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
 
   switch (src->get_tag()) {
    case ClauseBase::Tag::OneOrMore:
-   case ClauseBase::Tag::NotFollowedBy:
+   case ClauseBase::Tag::NegativeLookahead:
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::Hidden: {
@@ -98,8 +98,8 @@ auto RuleExpression::get_children_size() const -> size_t {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
-  case ClauseBase::Tag::NotFollowedBy:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data) == nullptr ? 0 : 1;
+  case ClauseBase::Tag::NegativeLookahead:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data) == nullptr ? 0 : 1;
   default:
    return 0;  // Cannot have children
  }
@@ -119,8 +119,8 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
-  case ClauseBase::Tag::NotFollowedBy:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data);
+  case ClauseBase::Tag::NegativeLookahead:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data);
   default:
    pmt::unreachable();
  }
@@ -140,8 +140,8 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
    return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
-  case ClauseBase::Tag::NotFollowedBy:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data);
+  case ClauseBase::Tag::NegativeLookahead:
+   return std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data);
   default:
    pmt::unreachable();
  }
@@ -181,8 +181,8 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = nullptr;
    break;
-  case ClauseBase::Tag::NotFollowedBy:
-   std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data) = nullptr;
+  case ClauseBase::Tag::NegativeLookahead:
+   std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data) = nullptr;
    break;
   default:
    pmt::unreachable();
@@ -208,8 +208,8 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = child_.release();
    break;
-  case ClauseBase::Tag::NotFollowedBy:
-   std::get<static_cast<size_t>(ClauseBase::Tag::NotFollowedBy)>(_data) = child_.release();
+  case ClauseBase::Tag::NegativeLookahead:
+   std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data) = child_.release();
    break;
   default:
    pmt::unreachable();

@@ -10,8 +10,10 @@
 #include <cstdint>
 #include <filesystem>
 #include <limits>
+#include <map>
 #include <span>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 namespace pmt::parser::builder {
@@ -137,8 +139,8 @@ auto clause_tag_to_string(ClauseBase::Tag tag_) -> std::string {
    return "ClauseBase::Tag::CharsetLiteral";
   case ClauseBase::Tag::OneOrMore:
    return "ClauseBase::Tag::OneOrMore";
-  case ClauseBase::Tag::NotFollowedBy:
-   return "ClauseBase::Tag::NotFollowedBy";
+  case ClauseBase::Tag::NegativeLookahead:
+   return "ClauseBase::Tag::NegativeLookahead";
   case ClauseBase::Tag::Epsilon:
    return "ClauseBase::Tag::Epsilon";
   default:
@@ -247,22 +249,14 @@ void PikaProgramEmitter::emit() {
   }
  }
 
- size_t const terminal_accepts_chunk_count = saw_accepts ? pmt::base::Bitset::get_required_chunk_count(static_cast<size_t>(max_accept + 1)) : 0;
- std::vector<uint64_t> terminal_accepts(terminal_state_count * terminal_accepts_chunk_count, 0);
-
+ std::vector<uint64_t> terminal_accepts;
+ std::vector<uint64_t> terminal_accepts_offsets;
+ terminal_accepts_offsets.push_back(0);
  for (size_t state_nr = 0; state_nr < state_count; ++state_nr) {
-  if (terminal_accepts_chunk_count == 0) {
-   break;
-  }
-  pmt::base::Bitset accepts_bitset(static_cast<size_t>(max_accept + 1), false);
-  auto const* state = state_machine.get_state(state_nr);
-  if (state != nullptr) {
-   state->get_accepts().for_each_key([&](pmt::sm::AcceptsIndexType accept_) { accepts_bitset.set(static_cast<size_t>(accept_), true); });
-  }
-  auto const chunks = accepts_bitset.get_chunks();
-  size_t const offset = state_nr * terminal_accepts_chunk_count;
-  for (size_t i = 0; i < terminal_accepts_chunk_count; ++i) {
-   terminal_accepts[offset + i] = static_cast<uint64_t>(chunks[i]);
+  size_t const accept_count = terminal_tables.get_state_accept_count(state_nr);
+  terminal_accepts_offsets.push_back(accept_count + terminal_accepts_offsets.back());
+  for (size_t i = 0; i < accept_count; ++i) {
+   terminal_accepts.push_back(terminal_tables.get_state_accept_at(state_nr, i));
   }
  }
 
@@ -317,29 +311,73 @@ void PikaProgramEmitter::emit() {
  }
 
  size_t const rule_count = _args._program.get_rule_count();
- std::vector<std::string> rule_display_names;
- std::vector<std::string> rule_id_strings;
- std::vector<uint64_t> rule_id_values;
- std::vector<bool> rule_merge;
+ // std::vector<std::string> rule_display_names;
+ // std::vector<std::string> rule_id_strings;
+ enum : size_t {
+  StringTableDisplayNames = 0,
+  StringTableIdStrings = 1,
+ };
+ std::map<std::string, std::pair<std::unordered_set<ClauseBase::IdType>, std::unordered_set<ClauseBase::IdType>>> string_table_map;
+ std::map<GenericId::IdType, std::unordered_set<ClauseBase::IdType>> rule_id_table_map;
+ std::vector<bool> rule_merge;  // -$ Todo $- pmt::base::Bitset
  std::vector<bool> rule_unpack;
  std::vector<bool> rule_hide;
 
- rule_display_names.reserve(rule_count);
- rule_id_strings.reserve(rule_count);
- rule_id_values.reserve(rule_count);
  rule_merge.reserve(rule_count);
  rule_unpack.reserve(rule_count);
  rule_hide.reserve(rule_count);
 
  for (size_t rule_id = 0; rule_id < rule_count; ++rule_id) {
   pmt::parser::rt::RuleParametersBase const& params = _args._program.fetch_rule_parameters(rule_id);
-  rule_display_names.push_back(std::string("\"") + std::string(params.get_display_name()) + "\"");
-  rule_id_strings.push_back(std::string("\"") + std::string(params.get_id_string()) + "\"");
-  rule_id_values.push_back(static_cast<uint64_t>(params.get_id_value()));
+  std::get<StringTableDisplayNames>(string_table_map[std::string(params.get_display_name())]).insert(rule_id);
+  std::get<StringTableIdStrings>(string_table_map[std::string(params.get_id_string())]).insert(rule_id);
+  rule_id_table_map[params.get_id_value()].insert(rule_id);
   rule_merge.push_back(params.get_merge());
   rule_unpack.push_back(params.get_unpack());
   rule_hide.push_back(params.get_hide());
  }
+
+ std::vector<std::string> string_table;
+ string_table.reserve(string_table_map.size());
+ for (auto const& [str, _] : string_table_map) {
+  string_table.push_back("\"" + str + "\"");
+ }
+
+ std::vector<GenericId::IdType> rule_id_table;
+ rule_id_table.reserve(rule_id_table_map.size());
+ for (auto const& [id_value, _] : rule_id_table_map) {
+  rule_id_table.push_back(id_value);
+ }
+
+ std::vector<uint64_t> rule_id_indirect(rule_count);
+ pmt::base::Bitset rule_ids_done(rule_count, false);
+ for (size_t i = 0; i < rule_id_table.size(); ++i) {
+  auto const& rule_id_set = rule_id_table_map[rule_id_table[i]];
+  for (ClauseBase::IdType const rule_id : rule_id_set) {
+   rule_id_indirect[rule_id] = i;
+   rule_ids_done.set(rule_id, true);
+  }
+ }
+ assert(rule_ids_done.all());
+
+ std::vector<uint64_t> rule_parameter_display_names_indirect(rule_count);
+ pmt::base::Bitset rule_parameters_done(rule_count, false);
+ std::vector<uint64_t> rule_parameter_id_strings_indirect(rule_count);
+ pmt::base::Bitset rule_id_strings_done(rule_count, false);
+ for (size_t i = 0; i < string_table.size(); ++i) {
+  auto const& [display_name_set, id_string_set] = string_table_map[string_table[i].substr(1, string_table[i].size() - 2)];
+  for (ClauseBase::IdType const rule_id : display_name_set) {
+   rule_parameter_display_names_indirect[rule_id] = i;
+   rule_parameters_done.set(rule_id, true);
+  }
+  for (ClauseBase::IdType const rule_id : id_string_set) {
+   rule_parameter_id_strings_indirect[rule_id] = i;
+   rule_id_strings_done.set(rule_id, true);
+  }
+ }
+
+ assert(rule_parameters_done.all());
+ assert(rule_id_strings_done.all());
 
  size_t const rule_chunk_count = pmt::base::Bitset::get_required_chunk_count(rule_count);
  std::vector<uint64_t> rule_parameter_booleans(rule_chunk_count * 3, 0);
@@ -360,26 +398,43 @@ void PikaProgramEmitter::emit() {
 
  auto const terminal_transitions_type = pick_unsigned_type(max_value(terminal_transitions));
  auto const terminal_transitions_offsets_type = pick_unsigned_type(max_value(terminal_offsets));
+ auto const terminal_accepts_type = pick_unsigned_type(max_value(terminal_accepts));
+ auto const terminal_accepts_offsets_type = pick_unsigned_type(max_value(terminal_accepts_offsets));
  auto const clause_child_ids_offsets_type = pick_unsigned_type(max_value(clause_child_offsets));
  auto const clause_child_ids_type = pick_unsigned_type(max_value(clause_child_ids));
  auto const clause_seed_parent_ids_offsets_type = pick_unsigned_type(max_value(clause_seed_parent_offsets));
  auto const clause_seed_parent_ids_type = pick_unsigned_type(max_value(clause_seed_parent_ids));
  auto const clause_special_id_type = pick_unsigned_type(max_value(clause_special_ids));
+ auto const rule_parameter_id_indirect_type = pick_unsigned_type(max_value(rule_id_indirect));
+ auto const clause_class_id_type = pick_unsigned_type(clause_count - 1);
+ auto const rule_parameter_class_id_type = pick_unsigned_type(rule_count - 1);
+ auto const bitset_chunk_type = "uint64_t";
 
  replace_skeleton_label(source, "TERMINAL_TRANSITIONS_TYPE", terminal_transitions_type);
  replace_skeleton_label(source, "TERMINAL_TRANSITIONS_OFFSETS_TYPE", terminal_transitions_offsets_type);
+ replace_skeleton_label(source, "TERMINAL_ACCEPTS_TYPE", terminal_accepts_type);
+ replace_skeleton_label(source, "TERMINAL_ACCEPTS_SIZE", format_hex(terminal_accepts.size(), hex_digits(terminal_accepts.size())));
+ replace_skeleton_label(source, "TERMINAL_ACCEPTS_OFFSETS_TYPE", terminal_accepts_offsets_type);
  replace_skeleton_label(source, "CLAUSE_CHILD_IDS_OFFSETS_TYPE", clause_child_ids_offsets_type);
  replace_skeleton_label(source, "CLAUSE_CHILD_IDS_TYPE", clause_child_ids_type);
  replace_skeleton_label(source, "CLAUSE_SEED_PARENT_IDS_OFFSETS_TYPE", clause_seed_parent_ids_offsets_type);
  replace_skeleton_label(source, "CLAUSE_SEED_PARENT_IDS_TYPE", clause_seed_parent_ids_type);
  replace_skeleton_label(source, "CLAUSE_SPECIAL_ID_TYPE", clause_special_id_type);
+ replace_skeleton_label(source, "RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE", pick_unsigned_type(max_value(rule_parameter_display_names_indirect)));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_STRING_INDIRECT_TYPE", pick_unsigned_type(max_value(rule_parameter_id_strings_indirect)));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_INDIRECT_TYPE", rule_parameter_id_indirect_type);
+ replace_skeleton_label(source, "CLAUSE_CLASS_ID_TYPE", clause_class_id_type);
+ replace_skeleton_label(source, "RULE_PARAMETER_CLASS_ID_TYPE", rule_parameter_class_id_type);
+ replace_skeleton_label(source, "BITSET_CHUNK_TYPE", bitset_chunk_type);
 
  replace_skeleton_label(source, "TERMINAL_STATE_COUNT", format_hex(terminal_state_count, hex_digits(terminal_state_count)));
- replace_skeleton_label(source, "TERMINAL_ACCEPTS_CHUNK_COUNT", format_hex(terminal_accepts_chunk_count, hex_digits(terminal_accepts_chunk_count)));
  replace_skeleton_label(source, "CLAUSE_COUNT", format_hex(clause_count, hex_digits(clause_count)));
  replace_skeleton_label(source, "CLAUSE_CHILD_IDS_SIZE", format_hex(clause_child_ids.size(), hex_digits(clause_child_ids.size())));
  replace_skeleton_label(source, "CLAUSE_SEED_PARENT_IDS_SIZE", format_hex(clause_seed_parent_ids.size(), hex_digits(clause_seed_parent_ids.size())));
  replace_skeleton_label(source, "RULE_PARAMETER_COUNT", format_hex(rule_count, hex_digits(rule_count)));
+
+ replace_skeleton_label(source, "STRING_TABLE_SIZE", format_hex(string_table.size(), hex_digits(string_table.size())));
+ replace_skeleton_label(source, "STRING_TABLE", format_list(string_table, 6));
 
  replace_skeleton_label(source, "CLAUSE_TAGS", format_list(clause_tags, 6));
 
@@ -395,10 +450,14 @@ void PikaProgramEmitter::emit() {
  replace_skeleton_label(source, "TERMINAL_TRANSITIONS", format_hex_list(terminal_transitions, hex_digits(max_value(terminal_transitions)), 20));
  replace_skeleton_label(source, "TERMINAL_TRANSITIONS_OFFSETS", format_hex_list(terminal_offsets, hex_digits(max_value(terminal_offsets)), 20));
  replace_skeleton_label(source, "TERMINAL_ACCEPTS", format_hex_list(terminal_accepts, hex_digits(max_value(terminal_accepts)), 20));
+ replace_skeleton_label(source, "TERMINAL_ACCEPTS_OFFSETS", format_hex_list(terminal_accepts_offsets, hex_digits(max_value(terminal_accepts_offsets)), 20));
 
- replace_skeleton_label(source, "RULE_PARAMETER_DISPLAY_NAMES", format_list(rule_display_names, 6));
- replace_skeleton_label(source, "RULE_PARAMETER_ID_STRINGS", format_list(rule_id_strings, 6));
- replace_skeleton_label(source, "RULE_PARAMETER_ID_VALUES", format_hex_list(rule_id_values, hex_digits(max_value(rule_id_values)), 10));
+ replace_skeleton_label(source, "RULE_PARAMETER_DISPLAY_NAMES_INDIRECT", format_hex_list(rule_parameter_display_names_indirect, hex_digits(max_value(rule_parameter_display_names_indirect)), 10));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_STRINGS_INDIRECT", format_hex_list(rule_parameter_id_strings_indirect, hex_digits(max_value(rule_parameter_id_strings_indirect)), 10));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_VALUES", format_hex_list(rule_id_indirect, hex_digits(max_value(rule_id_indirect)), 10));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_TABLE_SIZE", format_hex(rule_id_table.size(), hex_digits(rule_id_table.size())));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_TABLE", format_hex_list(rule_id_table, hex_digits(max_value(rule_id_table)), 20));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_INDIRECT", format_hex_list(rule_id_indirect, hex_digits(max_value(rule_id_indirect)), 20));
  replace_skeleton_label(source, "RULE_PARAMETER_BOOLEANS", format_hex_list(rule_parameter_booleans, hex_digits(max_value(rule_parameter_booleans)), 20));
 
  _args._output_header << header;

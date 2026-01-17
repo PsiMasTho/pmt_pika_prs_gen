@@ -24,7 +24,7 @@ MemoTable::MemoTable(PikaProgramBase const& pika_program_, std::string_view inpu
 auto MemoTable::find(Key const& key_) const -> IndexType {
  if (auto const itr = _table.find(key_); itr != _table.end()) {
   return itr->second;
- } else if (key_._clause->get_tag() == ClauseBase::Tag::NotFollowedBy) {
+ } else if (key_._clause->get_tag() == ClauseBase::Tag::NegativeLookahead) {
   return ClauseMatcher::match(*this, key_, _input).has_value() ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
  } else if (key_._clause->can_match_zero()) {
   return MemoIndexMatchZeroLength;

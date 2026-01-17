@@ -64,7 +64,13 @@ auto match_one_or_more(MemoTable const& memo_table_, MemoTable::Key key_, std::s
 }
 
 auto match_not_followed_by(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_) -> std::optional<MemoTable::Match> {
- pmt::unreachable();  // To be implemented
+ ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
+ MemoTable::Key child_key{._clause = &memo_table_.get_pika_program().fetch_clause(child_id), ._position = key_._position};
+ MemoTable::IndexType const child_match_index = memo_table_.find(child_key);
+ if (child_match_index != MemoTable::MemoIndexMatchNotFound) {
+  return std::nullopt;
+ }
+ return MemoTable::Match{._key = key_, ._length = 0};
 }
 
 auto match_epsilon(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_) -> std::optional<MemoTable::Match> {
@@ -93,7 +99,7 @@ auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std
    return match_hidden(memo_table_, key_, input_);
   case ClauseBase::Tag::OneOrMore:
    return match_one_or_more(memo_table_, key_, input_);
-  case ClauseBase::Tag::NotFollowedBy:
+  case ClauseBase::Tag::NegativeLookahead:
    return match_not_followed_by(memo_table_, key_, input_);
   case ClauseBase::Tag::Epsilon:
    return match_epsilon(memo_table_, key_, input_);
