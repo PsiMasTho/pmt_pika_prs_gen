@@ -3,7 +3,7 @@
 #include <string_view>
 #include <vector>
 
-namespace pmt {
+namespace pmt::util {
 
 class Levenshtein {
 public:
@@ -13,4 +13,4 @@ private:
  std::vector<size_t> _matrix;
 };
 
-}  // namespace pmt
+}  // namespace pmt::util

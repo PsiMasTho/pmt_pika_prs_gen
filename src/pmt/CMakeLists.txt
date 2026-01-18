@@ -1,7 +1,5 @@
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE .)
-
-add_subdirectory(base)
-add_subdirectory(parser)
+add_subdirectory(builder)
+add_subdirectory(container)
+add_subdirectory(meta)
+add_subdirectory(rt)
 add_subdirectory(util)
-add_subdirectory(sm)

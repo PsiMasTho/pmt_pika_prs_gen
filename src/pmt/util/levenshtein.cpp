@@ -5,7 +5,7 @@
 
 using namespace std;
 
-namespace pmt {
+namespace pmt::util {
 
 auto Levenshtein::distance(string_view lhs_, string_view rhs_) -> size_t {
  if (lhs_.size() > rhs_.size())
@@ -35,4 +35,4 @@ auto Levenshtein::distance(string_view lhs_, string_view rhs_) -> size_t {
  return _matrix[min_size];
 }
 
-}  // namespace pmt
+}  // namespace pmt::util
