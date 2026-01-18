@@ -2,7 +2,6 @@
 
 #include "pmt/builder/state_machine.hpp"
 #include "pmt/builder/state_machine_determinizer.hpp"
-#include "pmt/builder/terminal_dotfile_writer.hpp"
 #include "pmt/container/bitset.hpp"
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/rule_expression.hpp"
@@ -207,6 +206,10 @@ auto PikaProgram::get_id_table() const -> pmt::meta::IdTable const& {
  return _id_table;
 }
 
+auto PikaProgram::get_literal_state_machine_tables() const -> StateMachineTables const& {
+ return _literal_state_machine_tables;
+}
+
 void PikaProgram::initialize(Grammar const& grammar_) {
  std::vector<ClauseBase::IdType> charset_literal_clause_ids;
  CharsetLiteralsCached charset_literals_cached(_literals);
@@ -318,9 +321,6 @@ void PikaProgram::initialize(Grammar const& grammar_) {
 
  // Build the terminal state machine from the charset literals
  _literal_state_machine_tables = StateMachineTables(charset_literals_to_state_machine(_literals, charset_literal_clause_ids));
-
- // write dotfile
- TerminalDotfileWriter(_literal_state_machine_tables.get_state_machine(), "terminal_graph.dot", [&](FinalIdType idx_) { return std::to_string(idx_); }).write_dot();
 }
 
 void PikaProgram::determine_can_match_zero() {

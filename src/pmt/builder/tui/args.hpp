@@ -27,6 +27,9 @@ public:
  std::ofstream _id_constants_output_file;
  std::ifstream _id_constants_skel_file;
 
+ std::ofstream _terminal_graph_output_file;
+ std::ifstream _terminal_graph_skel_file;
+
  bool _write_dotfiles = true;
 };
 

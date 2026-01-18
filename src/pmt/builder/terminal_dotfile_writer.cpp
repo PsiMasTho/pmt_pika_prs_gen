@@ -18,7 +18,6 @@ using namespace pmt::rt;
 
 namespace {
 
-constexpr std::string_view SKELETON_PATH = "/home/pmt/repos/pika_parser_generator/skel/pmt/builder/state_machine-skel.dot";
 constexpr std::string_view GRAPH_TITLE = "State Machine";
 
 auto rgb_to_string(uint8_t r_, uint8_t g_, uint8_t b_) -> std::string {
@@ -92,9 +91,10 @@ auto build_final_id_table(StateMachine const& state_machine_, TerminalDotfileWri
 
 }  // namespace
 
-TerminalDotfileWriter::TerminalDotfileWriter(StateMachine const& state_machine_, std::string const& output_filename_, FinalIdToStringFn final_id_to_string_fn_)
+TerminalDotfileWriter::TerminalDotfileWriter(StateMachine const& state_machine_, std::ostream& os_graph_, std::ifstream& skel_file_, FinalIdToStringFn final_id_to_string_fn_)
  : _state_machine(state_machine_)
- , _os_graph(output_filename_)
+ , _os_graph(os_graph_)
+ , _skel_file(skel_file_)
  , _final_id_to_string_fn(std::move(final_id_to_string_fn_)) {
  if (!_final_id_to_string_fn) {
   _final_id_to_string_fn = [](FinalIdType final_id_) {
@@ -104,8 +104,7 @@ TerminalDotfileWriter::TerminalDotfileWriter(StateMachine const& state_machine_,
 }
 
 void TerminalDotfileWriter::write_dot() {
- std::ifstream is_graph_skel{std::string(SKELETON_PATH)};
- std::string graph = read_stream(is_graph_skel, SKELETON_PATH);
+ std::string graph = read_stream(_skel_file, "terminal dotfile skeleton");
 
  std::string accepting_nodes_replacement;
  {

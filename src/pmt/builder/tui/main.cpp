@@ -2,6 +2,7 @@
 #include "pmt/builder/pika_program.hpp"
 #include "pmt/builder/pika_program_emitter.hpp"
 #include "pmt/builder/pika_program_printer.hpp"
+#include "pmt/builder/terminal_dotfile_writer.hpp"
 #include "pmt/builder/tui/args.hpp"
 #include "pmt/meta/grammar_from_ast.hpp"
 #include "pmt/meta/grammar_printer.hpp"
@@ -118,6 +119,11 @@ auto main(int argc_, char const* const* argv_) -> int try {
   ._constants_skel_file = args._id_constants_skel_file,
  });
  id_emitter.emit();
+
+ if (args._write_dotfiles) {
+  pmt::builder::TerminalDotfileWriter dot_writer(program.get_literal_state_machine_tables().get_state_machine(), args._terminal_graph_output_file, args._terminal_graph_skel_file, [&](FinalIdType idx_) { return std::to_string(idx_); });
+  dot_writer.write_dot();
+ }
 
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';

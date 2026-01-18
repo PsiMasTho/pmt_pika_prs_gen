@@ -69,6 +69,7 @@ public:
  auto fetch_literal(pmt::rt::ClauseBase::IdType literal_id_) const -> pmt::meta::CharsetLiteral const&;
 
  auto get_id_table() const -> pmt::meta::IdTable const&;
+ auto get_literal_state_machine_tables() const -> StateMachineTables const&;
 
 private:
  void initialize(pmt::meta::Grammar const& grammar_);

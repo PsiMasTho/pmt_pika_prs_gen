@@ -1,4 +1,4 @@
-/* Generated on: 2026-01-17 01:03:12 */
+/* Generated on: 2026-01-18 13:29:21 */
 // clang-format off
 #pragma once
 
@@ -19,5 +19,5 @@ class PikaProgram : public pmt::rt::PikaProgramBase {
  auto get_terminal_state_machine_tables() const -> pmt::rt::StateMachineTablesBase const& override;
 };
 
-} // namespace pmt::parser::grammar
+} // namespace pmt::meta
 // clang-format on

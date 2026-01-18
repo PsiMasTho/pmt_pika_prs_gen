@@ -1,4 +1,4 @@
-/* Generated on: 2026-01-17 01:03:12 */
+/* Generated on: 2026-01-18 13:29:21 */
 // clang-format off
 #include "pmt/meta/pika_program.hpp"
 
@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <span>
 #include <climits>
+#include <span>
 
 namespace pmt::meta {
 using namespace pmt::rt;
@@ -560,5 +560,5 @@ auto PikaProgram::get_terminal_state_machine_tables() const -> StateMachineTable
  return tables;
 }
 
-} // namespace pmt::parser::grammar
+} // namespace pmt::meta
 // clang-format on
