@@ -9,7 +9,6 @@
 #include "pmt/unreachable.hpp"
 
 #include <functional>
-#include <iostream>
 
 namespace pmt::rt {
 namespace {
@@ -19,42 +18,6 @@ auto check_parse_success(MemoTable const& memo_table_) -> bool {
  MemoTable::Key start_key{._clause = &start_clause, ._position = 0};
  MemoTable::IndexType const start_match_index = memo_table_.find(start_key);
  return start_match_index != MemoTable::MemoIndexMatchNotFound && memo_table_.get_match_length_by_index(start_match_index) == memo_table_.get_input().size();
-}
-
-void debug_print_memo_table(MemoTable const& memo_table_) {
- if (check_parse_success(memo_table_)) {
-  std::cout << "!PARSING SUCCESS!\n";
- } else {
-  std::cout << "!PARSING FAILED!.\n";
- }
-
- for (size_t i = 0; i < memo_table_.get_match_count(); ++i) {
-  MemoTable::Match const& match = memo_table_.get_match_by_index(i);
-  std::cout << "Match " << i << ": Clause ID " << match._key._clause->get_id() << ", Tag " << ClauseBase::tag_to_string(match._key._clause->get_tag());
-
-  if (match._key._clause->get_tag() == ClauseBase::Tag::Identifier) {
-   std::cout << " (" << memo_table_.get_pika_program().fetch_rule_parameters(match._key._clause->get_rule_id()).get_display_name() << ") ";
-  }
-
-  std::cout << ", Position " << match._key._position << ", Length " << match._length << ", Text: '";
-
-  // Cut text to max 32 chars, adding "..." if longer
-  if (match._length > 32) {
-   std::cout << memo_table_.get_input().substr(match._key._position, 32) << "...";
-  } else {
-   std::cout << memo_table_.get_input().substr(match._key._position, match._length);
-  }
-  std::cout << "'";
-
-  std::cout << ", Children: [";
-  for (size_t j = 0; j < match._matching_subclauses.size(); ++j) {
-   if (j > 0) {
-    std::cout << ", ";
-   }
-   std::cout << match._matching_subclauses[j];
-  }
-  std::cout << "]" << std::endl;
- }
 }
 
 void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_, size_t cursor_, MemoTable& memo_table_, ClauseQueue& clause_queue_) {
@@ -83,7 +46,9 @@ void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_
  }
 }
 
-auto populate_memo_table(PikaProgramBase const& pika_program_, std::string_view input_) -> MemoTable {
+}  // namespace
+
+auto PikaParser::populate_memo_table(PikaProgramBase const& pika_program_, std::string_view input_) -> MemoTable {
  MemoTable memo_table(pika_program_, input_);
  ClauseQueue clause_queue;
 
@@ -103,7 +68,7 @@ auto populate_memo_table(PikaProgramBase const& pika_program_, std::string_view 
  return memo_table;
 }
 
-auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
+auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
  if (!check_parse_success(memo_table_)) {
   return nullptr;
  }
@@ -185,13 +150,6 @@ auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
  }
 
  return ast_root;
-}
-
-}  // namespace
-
-auto PikaParser::parse(PikaProgramBase const& pika_program_, std::string_view input_) -> Ast::UniqueHandle {
- MemoTable const memo_table = populate_memo_table(pika_program_, input_);
- return memo_table_to_ast(memo_table);
 }
 
 }  // namespace pmt::rt

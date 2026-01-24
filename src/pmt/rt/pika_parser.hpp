@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pmt/rt/ast.hpp"
+#include "pmt/rt/memo_table.hpp"
 
 #include <string_view>
 
@@ -12,7 +13,8 @@ public:
  // -$ Types / Constants $-
  // -$ Functions $-
  // --$ Other $--
- static auto parse(PikaProgramBase const& pika_program_, std::string_view input_) -> Ast::UniqueHandle;
+ static auto populate_memo_table(PikaProgramBase const& pika_program_, std::string_view input_) -> MemoTable;
+ static auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle;
 };
 
 }  // namespace pmt::rt

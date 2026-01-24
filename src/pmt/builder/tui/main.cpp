@@ -49,7 +49,7 @@ auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
  pmt::meta::PikaProgram const pika_program;
 
  auto now = std::chrono::high_resolution_clock::now();
- Ast::UniqueHandle ast = PikaParser::parse(pika_program, input_grammar_);
+ Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(pika_program, input_grammar_));
  if (!ast) {
   throw std::runtime_error("Failed to parse grammar input.");
  }
@@ -77,7 +77,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
 
  if (args._input_test_file.has_value()) {
   std::string const input_test((std::istreambuf_iterator<char>(*args._input_test_file)), std::istreambuf_iterator<char>());
-  Ast::UniqueHandle ast_testfile = PikaParser::parse(program, input_test);
+  Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(program, input_test));
   if (ast_testfile != nullptr) {
    TestAstPrinter const printer([&](AstId::IdType id_) { return program.get_id_table().id_to_string(id_); });
    printer.print(*ast_testfile, std::cout);

@@ -7,10 +7,12 @@
 #include "pmt/meta/repetition_range.hpp"
 #include "pmt/meta/rule.hpp"
 #include "pmt/unreachable.hpp"
+#include "pmt/util/levenshtein.hpp"
 #include "pmt/util/overloaded.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
-#include <sstream>
+#include <map>
+#include <set>
 
 namespace pmt::meta {
 using namespace pmt::container;
@@ -161,6 +163,36 @@ void caching_traversal(Locals& locals_, Ast const& ast_) {
  }
 }
 
+void check_start_rule_exists(Locals& locals_) {  // -$ Todo $- need to factor out the lev distance stuff
+ if (!locals_._rules.contains(locals_._ret.get_start_rule_name())) {
+  static constexpr size_t const max_lev_distance_to_report = 3;
+  std::map<size_t, std::set<std::string>> lev_distances;
+  pmt::util::Levenshtein lev;
+  for (auto const& [rule_name, _] : locals_._rules) {
+   lev_distances[lev.distance(locals_._ret.get_start_rule_name(), rule_name)].insert(rule_name);
+  }
+
+  std::string error_msg = "Start rule not found: \"$" + locals_._ret.get_start_rule_name() + "\"";
+  if (!lev_distances.empty() && lev_distances.begin()->first <= max_lev_distance_to_report) {
+   static constexpr size_t const max_closest_to_report = 3;
+
+   std::string delim;
+   error_msg += ", did you mean: ";
+   for (size_t i = 0; std::string const& rule_name : lev_distances.begin()->second) {
+    if (i >= max_closest_to_report) {
+     error_msg += ", ...";
+     break;
+    } else {
+     error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
+    }
+    ++i;
+   }
+  }
+
+  throw std::runtime_error(error_msg);
+ }
+}
+
 auto count_hidden_productions_needed(Ast& ast_) -> size_t {
  std::vector<Ast const*> pending{&ast_};
  size_t ret = 0;
@@ -238,11 +270,10 @@ void construct_hidden_productions(Locals& locals_, Ast& ast_) {
  };
 
  auto construct_hidden_prouction = [&, hidden_production_counter = 0ull, padding = pmt::util::digits_needed(count_hidden_productions_needed(ast_), 16)](Ast::UniqueHandle expr_) mutable -> std::string {
-  std::stringstream rule_name;
-  rule_name << "_hidden_" << pmt::util::uint_to_string(hidden_production_counter++, padding, pmt::util::hex_alphabet_uppercase);
+  std::string const rule_name = "_hidden_" + pmt::util::uint_to_string(hidden_production_counter++, padding, pmt::util::hex_alphabet_uppercase);
   Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Language::Production);
   Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Language::Identifier);
-  identifier->set_string(rule_name.str());
+  identifier->set_string(rule_name);
   Ast::UniqueHandle parameter_hide = Ast::construct(Ast::Tag::String, Language::ParameterHide);
   parameter_hide->set_string("true");
   Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Language::Definition);
@@ -254,9 +285,9 @@ void construct_hidden_productions(Locals& locals_, Ast& ast_) {
 
   size_t const index = ast_.get_children_size();
   ast_.give_child_at_back(std::move(production));
-  production_positions[rule_name.str()] = std::make_pair(AstPosition{._parent = &ast_, ._child_idx = index}, false);
+  production_positions[rule_name] = std::make_pair(AstPosition{._parent = &ast_, ._child_idx = index}, false);
 
-  return rule_name.str();
+  return rule_name;
  };
 
  // Push all topmost productions, index their positions
@@ -498,8 +529,39 @@ void process_frame_00(Locals& locals_, CharsetFrame& frame_) {
 }
 
 void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {
+ std::string const& identifier = frame_._cur_expr->get_string();
+
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Identifier);
- locals_._ret_part->set_identifier(frame_._cur_expr->get_string());
+ locals_._ret_part->set_identifier(identifier);
+
+ // Check against rule names to see if it exists
+ if (!locals_._rules.contains(identifier)) {
+  static constexpr size_t const max_lev_distance_to_report = 3;
+  std::map<size_t, std::set<std::string>> lev_distances;
+  pmt::util::Levenshtein lev;
+  for (auto const& [rule_name, _] : locals_._rules) {
+   lev_distances[lev.distance(identifier, rule_name)].insert(rule_name);
+  }
+
+  std::string error_msg = "Rule not found: \"$" + identifier + "\"";
+  if (!lev_distances.empty() && lev_distances.begin()->first <= max_lev_distance_to_report) {
+   static constexpr size_t const max_closest_to_report = 3;
+
+   std::string delim;
+   error_msg += ", did you mean: ";
+   for (size_t i = 0; std::string const& rule_name : lev_distances.begin()->second) {
+    if (i >= max_closest_to_report) {
+     error_msg += ", ...";
+     break;
+    } else {
+     error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
+    }
+    ++i;
+   }
+  }
+
+  throw std::runtime_error(error_msg);
+ }
 }
 
 void process_frame_00(Locals& locals_, NegativeLookaheadFrame& frame_) {
@@ -603,6 +665,7 @@ auto GrammarFromAst::make(Ast::UniqueHandle ast_) -> Grammar {
  Locals locals;
  construct_hidden_productions(locals, *ast_);
  caching_traversal(locals, *ast_);
+ check_start_rule_exists(locals);
  construct_definitions(locals);
  return std::move(locals._ret);
 }

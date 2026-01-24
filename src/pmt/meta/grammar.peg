@@ -138,5 +138,3 @@ $charset_item<unpack = true> = $charset_range |
 $charset_range<id = "CharsetRange"> = $charset_literal $blank ".."~ $blank $charset_literal;
 $charset_literal<unpack = true> = $character_literal |
                                   $integer_literal;
-
-
