@@ -62,8 +62,7 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
    case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::NegativeLookahead:
    case ClauseBase::Tag::Sequence:
-   case ClauseBase::Tag::Choice:
-   case ClauseBase::Tag::Hidden: {
+   case ClauseBase::Tag::Choice: {
     for (size_t i = 0; i < src->get_children_size(); ++i) {
      UniqueHandle child = construct(src->get_child_at(i)->get_tag());
      dst->give_child_at(i, std::move(child));
@@ -84,6 +83,10 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
  return result;
 }
 
+void RuleExpression::swap(RuleExpression& lhs_, RuleExpression& rhs_) {
+ std::swap(lhs_._data, rhs_._data);
+}
+
 auto RuleExpression::get_tag() const -> ClauseBase::Tag {
  return static_cast<ClauseBase::Tag>(_data.index());
 }
@@ -94,8 +97,6 @@ auto RuleExpression::get_children_size() const -> size_t {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data).size();
   case ClauseBase::Tag::Choice:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data).size();
-  case ClauseBase::Tag::Hidden:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::NegativeLookahead:
@@ -115,8 +116,6 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data)[index_];
   case ClauseBase::Tag::Choice:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
-  case ClauseBase::Tag::Hidden:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NegativeLookahead:
@@ -136,8 +135,6 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
    return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data)[index_];
   case ClauseBase::Tag::Choice:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
-  case ClauseBase::Tag::Hidden:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data);
   case ClauseBase::Tag::OneOrMore:
    return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NegativeLookahead:
@@ -175,8 +172,6 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
    SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data);
    container.erase(std::next(container.begin(), index_));
   } break;
-  case ClauseBase::Tag::Hidden:
-   std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = nullptr;
    break;
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = nullptr;
@@ -202,8 +197,6 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
    SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data);
    container.insert(std::next(container.begin(), index_), child_.release());
   } break;
-  case ClauseBase::Tag::Hidden:
-   std::get<static_cast<size_t>(ClauseBase::Tag::Hidden)>(_data) = child_.release();
    break;
   case ClauseBase::Tag::OneOrMore:
    std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = child_.release();

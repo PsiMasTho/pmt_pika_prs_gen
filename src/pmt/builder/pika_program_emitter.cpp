@@ -4,6 +4,7 @@
 #include "pmt/builder/state_machine_tables.hpp"
 #include "pmt/container/bitset.hpp"
 #include "pmt/util/timestamp.hpp"
+#include "pmt/util/uint_to_str.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -102,7 +103,7 @@ auto format_hex_list(std::vector<uint64_t> const& values_, size_t width_, size_t
    }
    out += " ";
   }
-  out += format_hex(values_[i], width_);
+  out += "0x" + pmt::util::uint_to_string(values_[i], width_, pmt::util::hex_alphabet_uppercase);
   if (i + 1 != values_.size()) {
    out += ", ";
   }
@@ -133,8 +134,6 @@ auto clause_tag_to_string(ClauseBase::Tag tag_) -> std::string {
    return "ClauseBase::Tag::Sequence";
   case ClauseBase::Tag::Choice:
    return "ClauseBase::Tag::Choice";
-  case ClauseBase::Tag::Hidden:
-   return "ClauseBase::Tag::Hidden";
   case ClauseBase::Tag::Identifier:
    return "ClauseBase::Tag::Identifier";
   case ClauseBase::Tag::CharsetLiteral:
@@ -415,7 +414,7 @@ void PikaProgramEmitter::emit() {
  replace_skeleton_label(source, "TERMINAL_TRANSITIONS_TYPE", terminal_transitions_type);
  replace_skeleton_label(source, "TERMINAL_TRANSITIONS_OFFSETS_TYPE", terminal_transitions_offsets_type);
  replace_skeleton_label(source, "TERMINAL_ACCEPTS_TYPE", terminal_final_ids_type);
- replace_skeleton_label(source, "TERMINAL_ACCEPTS_SIZE", format_hex(terminal_final_ids.size(), hex_digits(terminal_final_ids.size())));
+ replace_skeleton_label(source, "TERMINAL_ACCEPTS_SIZE", "0x" + pmt::util::uint_to_string(terminal_final_ids.size(), hex_digits(terminal_final_ids.size()), pmt::util::hex_alphabet_uppercase));
  replace_skeleton_label(source, "TERMINAL_ACCEPTS_OFFSETS_TYPE", terminal_final_ids_offsets_type);
  replace_skeleton_label(source, "CLAUSE_CHILD_IDS_OFFSETS_TYPE", clause_child_ids_offsets_type);
  replace_skeleton_label(source, "CLAUSE_CHILD_IDS_TYPE", clause_child_ids_type);
@@ -429,13 +428,13 @@ void PikaProgramEmitter::emit() {
  replace_skeleton_label(source, "RULE_PARAMETER_CLASS_ID_TYPE", rule_parameter_class_id_type);
  replace_skeleton_label(source, "BITSET_CHUNK_TYPE", bitset_chunk_type);
 
- replace_skeleton_label(source, "TERMINAL_STATE_COUNT", format_hex(terminal_state_count, hex_digits(terminal_state_count)));
- replace_skeleton_label(source, "CLAUSE_COUNT", format_hex(clause_count, hex_digits(clause_count)));
- replace_skeleton_label(source, "CLAUSE_CHILD_IDS_SIZE", format_hex(clause_child_ids.size(), hex_digits(clause_child_ids.size())));
- replace_skeleton_label(source, "CLAUSE_SEED_PARENT_IDS_SIZE", format_hex(clause_seed_parent_ids.size(), hex_digits(clause_seed_parent_ids.size())));
- replace_skeleton_label(source, "RULE_PARAMETER_COUNT", format_hex(rule_count, hex_digits(rule_count)));
+ replace_skeleton_label(source, "TERMINAL_STATE_COUNT", "0x" + pmt::util::uint_to_string(terminal_state_count, hex_digits(terminal_state_count), pmt::util::hex_alphabet_uppercase));
+ replace_skeleton_label(source, "CLAUSE_COUNT", "0x" + pmt::util::uint_to_string(clause_count, hex_digits(clause_count), pmt::util::hex_alphabet_uppercase));
+ replace_skeleton_label(source, "CLAUSE_CHILD_IDS_SIZE", "0x" + pmt::util::uint_to_string(clause_child_ids.size(), hex_digits(clause_child_ids.size()), pmt::util::hex_alphabet_uppercase));
+ replace_skeleton_label(source, "CLAUSE_SEED_PARENT_IDS_SIZE", "0x" + pmt::util::uint_to_string(clause_seed_parent_ids.size(), hex_digits(clause_seed_parent_ids.size()), pmt::util::hex_alphabet_uppercase));
+ replace_skeleton_label(source, "RULE_PARAMETER_COUNT", "0x" + pmt::util::uint_to_string(rule_count, hex_digits(rule_count), pmt::util::hex_alphabet_uppercase));
 
- replace_skeleton_label(source, "STRING_TABLE_SIZE", format_hex(string_table.size(), hex_digits(string_table.size())));
+ replace_skeleton_label(source, "STRING_TABLE_SIZE", "0x" + pmt::util::uint_to_string(string_table.size(), hex_digits(string_table.size()), pmt::util::hex_alphabet_uppercase));
  replace_skeleton_label(source, "STRING_TABLE", format_list(string_table, 6));
 
  replace_skeleton_label(source, "CLAUSE_TAGS", format_list(clause_tags, 6));
@@ -457,7 +456,7 @@ void PikaProgramEmitter::emit() {
  replace_skeleton_label(source, "RULE_PARAMETER_DISPLAY_NAMES_INDIRECT", format_hex_list(rule_parameter_display_names_indirect, hex_digits(max_value(rule_parameter_display_names_indirect)), 10));
  replace_skeleton_label(source, "RULE_PARAMETER_ID_STRINGS_INDIRECT", format_hex_list(rule_parameter_id_strings_indirect, hex_digits(max_value(rule_parameter_id_strings_indirect)), 10));
  replace_skeleton_label(source, "RULE_PARAMETER_ID_VALUES", format_hex_list(rule_id_indirect, hex_digits(max_value(rule_id_indirect)), 10));
- replace_skeleton_label(source, "RULE_PARAMETER_ID_TABLE_SIZE", format_hex(rule_id_table.size(), hex_digits(rule_id_table.size())));
+ replace_skeleton_label(source, "RULE_PARAMETER_ID_TABLE_SIZE", "0x" + pmt::util::uint_to_string(rule_id_table.size(), hex_digits(rule_id_table.size()), pmt::util::hex_alphabet_uppercase));
  replace_skeleton_label(source, "RULE_PARAMETER_ID_TABLE", format_hex_list(rule_id_table, hex_digits(max_value(rule_id_table)), 20));
  replace_skeleton_label(source, "RULE_PARAMETER_ID_INDIRECT", format_hex_list(rule_id_indirect, hex_digits(max_value(rule_id_indirect)), 20));
  replace_skeleton_label(source, "RULE_PARAMETER_BOOLEANS", format_hex_list(rule_parameter_booleans, hex_digits(max_value(rule_parameter_booleans)), 20));

@@ -35,16 +35,6 @@ auto match_choice(MemoTable const& memo_table_, MemoTable::Key key_, std::string
  return std::nullopt;
 }
 
-auto match_hidden(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_) -> std::optional<MemoTable::Match> {
- ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
- MemoTable::Key child_key{._clause = &memo_table_.get_pika_program().fetch_clause(child_id), ._position = key_._position};
- MemoTable::IndexType const child_match_index = memo_table_.find(child_key);
- if (child_match_index == MemoTable::MemoIndexMatchNotFound) {
-  return std::nullopt;
- }
- return MemoTable::Match{._key = key_, ._length = memo_table_.get_match_length_by_index(child_match_index), ._matching_subclauses = {child_match_index}};
-}
-
 auto match_one_or_more(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_) -> std::optional<MemoTable::Match> {
  ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
  MemoTable::Key child_key{._clause = &memo_table_.get_pika_program().fetch_clause(child_id), ._position = key_._position};
@@ -95,8 +85,6 @@ auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std
    return match_sequence(memo_table_, key_, input_);
   case ClauseBase::Tag::Choice:
    return match_choice(memo_table_, key_, input_);
-  case ClauseBase::Tag::Hidden:
-   return match_hidden(memo_table_, key_, input_);
   case ClauseBase::Tag::OneOrMore:
    return match_one_or_more(memo_table_, key_, input_);
   case ClauseBase::Tag::NegativeLookahead:

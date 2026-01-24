@@ -14,7 +14,6 @@ public:
   // Child IDs
   Sequence,           // >= 1 clause ids
   Choice,             // >= 1 clause ids
-  Hidden,             // 1 clause id
   Identifier,         // 1 clause id + 1 rule id
   CharsetLiteral,     // 1 literal id
   OneOrMore,          // 1 clause id

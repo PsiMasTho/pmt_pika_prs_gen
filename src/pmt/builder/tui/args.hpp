@@ -27,10 +27,10 @@ public:
  std::ofstream _id_constants_output_file;
  std::ifstream _id_constants_skel_file;
 
- std::ofstream _terminal_graph_output_file;
- std::ifstream _terminal_graph_skel_file;
-
- bool _write_dotfiles = true;
+ std::optional<std::ofstream> _output_grammar_file;
+ std::optional<std::ofstream> _output_clauses_file;
+ std::optional<std::ofstream> _terminal_graph_output_file;
+ std::optional<std::ifstream> _terminal_graph_skel_file;
 };
 
 }  // namespace pmt::builder::tui

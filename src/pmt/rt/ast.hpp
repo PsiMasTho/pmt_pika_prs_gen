@@ -17,7 +17,7 @@ public:
 
  enum class Tag {
   String,
-  Children,
+  Parent,
  };
 
  class UniqueHandleDeleter {
@@ -28,10 +28,10 @@ public:
  using UniqueHandle = std::unique_ptr<Ast, UniqueHandleDeleter>;
 
 private:
- using ChildrenType = std::deque<Ast*>;
+ using ParentType = std::deque<Ast*>;
 
  // -$ Data $-
- std::variant<StringType, ChildrenType> _data;
+ std::variant<StringType, ParentType> _data;
  AstId::IdType _id;
 
  // -$ Functions $-
@@ -42,7 +42,7 @@ public:
  static void destruct(Ast* self_);
  static auto construct(Tag tag_, AstId::IdType id_ = AstId::IdUninitialized) -> UniqueHandle;
 
- static auto clone(Ast const& other_) -> UniqueHandle;
+ static auto clone(Ast const& self_) -> UniqueHandle;
 
  // --$ Other $--
  static void swap(Ast& lhs_, Ast& rhs_);
@@ -54,7 +54,6 @@ public:
 
  auto get_string() -> StringType&;
  auto get_string() const -> StringType const&;
- void set_string(StringType string_);
  void set_string(StringViewType string_view_);
 
  auto get_children_size() const -> size_t;

@@ -34,7 +34,6 @@ using ClauseClassIdType = /* $replace CLAUSE_CLASS_ID_TYPE */;
 using RuleParameterClassIdType = /* $replace RULE_PARAMETER_CLASS_ID_TYPE */;
 using BitsetChunkType = /* $replace BITSET_CHUNK_TYPE */;
 
-
 template <std::integral CHUNK_T_>
 class ChunkBit {
  public:

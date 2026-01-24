@@ -53,24 +53,8 @@ auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
  if (!ast) {
   throw std::runtime_error("Failed to parse grammar input.");
  }
- auto later = std::chrono::high_resolution_clock::now();
- std::chrono::duration<double, std::milli> diff = later - now;
- std::cout << "Pika parsing took " << diff.count() << " ms\n";
-
- MetaAstPrinter printer;
- printer.print(*ast, std::cout);
 
  return ast;
-}
-
-void write_typed_grammar(pmt::meta::Grammar const& grammar_) {
- std::ofstream of("output.grm");
- pmt::meta::GrammarPrinter::print_as_tree(grammar_, of);
-}
-
-void write_program_to_file(pmt::builder::PikaProgram const& program_) {
- std::ofstream of("output.asm");
- pmt::builder::PikaProgramPrinter::print(program_, of);
 }
 
 }  // namespace
@@ -80,13 +64,16 @@ auto main(int argc_, char const* const* argv_) -> int try {
 
  std::string const input_grammar((std::istreambuf_iterator<char>(args._input_grammar_file)), std::istreambuf_iterator<char>());
 
- Ast::UniqueHandle ast_grammar = get_grammar_ast(input_grammar);
- pmt::meta::Grammar grammar = pmt::meta::GrammarFromAst::make(*ast_grammar);
+ pmt::meta::Grammar grammar = pmt::meta::GrammarFromAst::make(get_grammar_ast(input_grammar));
  pmt::meta::GrammarSimplifier::simplify(grammar);
- write_typed_grammar(grammar);
+ if (args._output_grammar_file.has_value()) {
+  pmt::meta::GrammarPrinter::print_as_tree(grammar, *args._output_grammar_file);
+ }
 
  pmt::builder::PikaProgram const program(grammar);
- write_program_to_file(program);
+ if (args._output_clauses_file.has_value()) {
+  pmt::builder::PikaProgramPrinter::print(program, *args._output_clauses_file);
+ }
 
  if (args._input_test_file.has_value()) {
   std::string const input_test((std::istreambuf_iterator<char>(*args._input_test_file)), std::istreambuf_iterator<char>());
@@ -120,8 +107,8 @@ auto main(int argc_, char const* const* argv_) -> int try {
  });
  id_emitter.emit();
 
- if (args._write_dotfiles) {
-  pmt::builder::TerminalDotfileWriter dot_writer(program.get_literal_state_machine_tables().get_state_machine(), args._terminal_graph_output_file, args._terminal_graph_skel_file, [&](FinalIdType idx_) { return std::to_string(idx_); });
+ if (args._terminal_graph_output_file.has_value() && args._terminal_graph_skel_file.has_value()) {
+  pmt::builder::TerminalDotfileWriter dot_writer(program.get_literal_state_machine_tables().get_state_machine(), *args._terminal_graph_output_file, *args._terminal_graph_skel_file, [&](FinalIdType idx_) { return std::to_string(idx_); });
   dot_writer.write_dot();
  }
 

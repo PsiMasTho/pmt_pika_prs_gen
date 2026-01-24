@@ -263,10 +263,6 @@ void PikaProgram::initialize(Grammar const& grammar_) {
      _clauses[clause_id]._child_ids.push_back(child_id);
     }
    } break;
-   case ClauseBase::Tag::Hidden: {
-    ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
-    _clauses[clause_id]._child_ids.push_back(child_id);
-   } break;
    case ClauseBase::Tag::OneOrMore: {
     ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
     _clauses[clause_id]._child_ids.push_back(child_id);
@@ -375,7 +371,6 @@ void PikaProgram::determine_can_match_zero() {
      mark(i, false);
     } break;
     case ClauseBase::Tag::Identifier:
-    case ClauseBase::Tag::Hidden:
     case ClauseBase::Tag::OneOrMore: {
      if (solved.get(_clauses[i].get_child_id_at(0))) {
       mark(i, _clauses[_clauses[i].get_child_id_at(0)].can_match_zero());
@@ -425,7 +420,6 @@ void PikaProgram::determine_seed_parents() {
 
    } break;
    case ClauseBase::Tag::Identifier:
-   case ClauseBase::Tag::Hidden:
    case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::NegativeLookahead: {

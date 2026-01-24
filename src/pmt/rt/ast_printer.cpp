@@ -54,7 +54,7 @@ void AstPrinter::print(Ast const& ast_, std::ostream& out_) const {
    case Ast::Tag::String:
     out_ << ": " << node->get_string();
     break;
-   case Ast::Tag::Children:
+   case Ast::Tag::Parent:
     for (size_t i = node->get_children_size(); i--;) {
      push(Item{._node = node->get_child_at(i), ._depth = depth + 1});
     }

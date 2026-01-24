@@ -13,12 +13,12 @@ void Ast::UniqueHandleDeleter::operator()(Ast* self_) const {
 }
 
 Ast::Ast(Tag tag_, AstId::IdType id_)
- : _data{[tag_]() -> std::variant<StringType, ChildrenType> {
+ : _data{[tag_]() -> std::variant<StringType, ParentType> {
   switch (tag_) {
    case Tag::String:
     return StringType{};
-   case Tag::Children:
-    return ChildrenType{};
+   case Tag::Parent:
+    return ParentType{};
    default:
     pmt::unreachable();
   }
@@ -34,7 +34,7 @@ void Ast::destruct(Ast* self_) {
   std::unique_ptr<Ast> node{pending.back()};
   pending.pop_back();
 
-  if (node->get_tag() == Tag::Children) {
+  if (node->get_tag() == Tag::Parent) {
    for (size_t i = 0; i < node->get_children_size(); ++i) {
     pending.push_back(node->get_child_at(i));
    }
@@ -46,11 +46,11 @@ auto Ast::construct(Tag tag_, AstId::IdType id_) -> UniqueHandle {
  return UniqueHandle{new Ast{tag_, id_}};
 }
 
-auto Ast::clone(Ast const& other_) -> UniqueHandle {
- UniqueHandle result = construct(other_.get_tag());
+auto Ast::clone(Ast const& self_) -> UniqueHandle {
+ UniqueHandle result = construct(self_.get_tag());
 
  std::vector<std::pair<Ast const*, Ast*>> pending;
- pending.push_back({&other_, result.get()});
+ pending.push_back({&self_, result.get()});
 
  while (!pending.empty()) {
   auto [src, dst] = pending.back();
@@ -88,8 +88,8 @@ void Ast::set_id(AstId::IdType id_) {
 auto Ast::get_tag() const -> Tag {
  if (std::holds_alternative<StringType>(_data))
   return Tag::String;
- else if (std::holds_alternative<ChildrenType>(_data))
-  return Tag::Children;
+ else if (std::holds_alternative<ParentType>(_data))
+  return Tag::Parent;
  else
   pmt::unreachable();
 }
@@ -104,29 +104,24 @@ auto Ast::get_string() const -> StringType const& {
  return *std::get_if<StringType>(&_data);
 }
 
-void Ast::set_string(StringType string_) {
- assert(get_tag() == Tag::String);
- _data = std::move(string_);
-}
-
 void Ast::set_string(StringViewType string_view_) {
  assert(get_tag() == Tag::String);
  _data = StringType{string_view_};
 }
 
 auto Ast::get_children_size() const -> size_t {
- assert(get_tag() == Tag::Children);
- return std::get_if<ChildrenType>(&_data)->size();
+ assert(get_tag() == Tag::Parent);
+ return std::get_if<ParentType>(&_data)->size();
 }
 
 auto Ast::get_child_at(size_t index_) -> Ast* {
- assert(get_tag() == Tag::Children);
- return (index_ >= get_children_size()) ? nullptr : (*std::get_if<ChildrenType>(&_data))[index_];
+ assert(get_tag() == Tag::Parent);
+ return (index_ >= get_children_size()) ? nullptr : (*std::get_if<ParentType>(&_data))[index_];
 }
 
 auto Ast::get_child_at(size_t index_) const -> Ast const* {
- assert(get_tag() == Tag::Children);
- return (index_ >= get_children_size()) ? nullptr : (*std::get_if<ChildrenType>(&_data))[index_];
+ assert(get_tag() == Tag::Parent);
+ return (index_ >= get_children_size()) ? nullptr : (*std::get_if<ParentType>(&_data))[index_];
 }
 
 auto Ast::get_child_at_front() -> Ast* {
@@ -146,18 +141,18 @@ auto Ast::get_child_at_back() const -> Ast const* {
 }
 
 auto Ast::take_child_at(size_t index_) -> UniqueHandle {
- assert(get_tag() == Tag::Children);
+ assert(get_tag() == Tag::Parent);
  assert(index_ < get_children_size());
- ChildrenType& children = *std::get_if<ChildrenType>(&_data);
+ ParentType& children = *std::get_if<ParentType>(&_data);
  UniqueHandle result{children[index_]};
  children.erase(std::next(children.begin(), index_));
  return result;
 }
 
 void Ast::give_child_at(size_t index_, UniqueHandle child_) {
- assert(get_tag() == Tag::Children);
+ assert(get_tag() == Tag::Parent);
  assert(index_ <= get_children_size());
- ChildrenType& children = *std::get_if<ChildrenType>(&_data);
+ ParentType& children = *std::get_if<ParentType>(&_data);
  children.insert(std::next(children.begin(), index_), child_.release());
 }
 
@@ -198,13 +193,13 @@ void Ast::merge() {
 }
 
 void Ast::unpack(size_t index_) {
- if (get_tag() != Tag::Children) {
+ if (get_tag() != Tag::Parent) {
   return;
  }
 
- ChildrenType& children = *std::get_if<ChildrenType>(&_data);
+ ParentType& children = *std::get_if<ParentType>(&_data);
 
- if (children[index_]->get_tag() != Tag::Children) {
+ if (children[index_]->get_tag() != Tag::Parent) {
   return;
  }
 

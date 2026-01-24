@@ -73,41 +73,27 @@ Args::Args(int argc_, char const* const* argv_) {
  try_fetch_required_arg(cmdl, "pika-program-header-include-filename", _pika_program_header_include_filename);
  try_open_file_from_arg(cmdl, "pika-program-output-header-file", _pika_program_output_header_file);
  try_open_file_from_arg(cmdl, "pika-program-output-source-file", _pika_program_output_source_file);
- try_open_required_file_from_optional_arg(
-  cmdl,
-  "pika-program-header-skel-file",
-  _pika_program_header_skel_file,
-  pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_program-skel.hpp"));
- try_open_required_file_from_optional_arg(
-  cmdl,
-  "pika-program-source-skel-file",
-  _pika_program_source_skel_file,
-  pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_program-skel.cpp"));
+ try_open_required_file_from_optional_arg(cmdl, "pika-program-header-skel-file", _pika_program_header_skel_file, pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_program-skel.hpp"));
+ try_open_required_file_from_optional_arg(cmdl, "pika-program-source-skel-file", _pika_program_source_skel_file, pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_program-skel.cpp"));
  try_fetch_optional_arg(cmdl, "pika-program-class-name", _pika_program_class_name, std::string());
  try_fetch_optional_arg(cmdl, "pika-program-namespace-name", _pika_program_namespace_name, std::string());
 
  try_open_file_from_arg(cmdl, "id-strings-output-file", _id_strings_output_file);
- try_open_required_file_from_optional_arg(
-  cmdl,
-  "id-strings-skel-file",
-  _id_strings_skel_file,
-  pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_strings-skel.hpp"));
+ try_open_required_file_from_optional_arg(cmdl, "id-strings-skel-file", _id_strings_skel_file, pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_strings-skel.hpp"));
  try_open_file_from_arg(cmdl, "id-constants-output-file", _id_constants_output_file);
- try_open_required_file_from_optional_arg(
-  cmdl,
-  "id-constants-skel-file",
-  _id_constants_skel_file,
-  pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_constants-skel.hpp"));
+ try_open_required_file_from_optional_arg(cmdl, "id-constants-skel-file", _id_constants_skel_file, pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_constants-skel.hpp"));
 
- _write_dotfiles = !cmdl["no-dotfiles"];
+ try_open_optional_file_from_arg(cmdl, "output-grammar", _output_grammar_file);
+ try_open_optional_file_from_arg(cmdl, "output-clauses", _output_clauses_file);
+ try_open_optional_file_from_arg(cmdl, "output-dotfile", _terminal_graph_output_file);
 
- if (_write_dotfiles) {
-  try_open_required_file_from_optional_arg(cmdl, "terminal-graph-output-file", _terminal_graph_output_file, "terminal_graph.dot");
-  try_open_required_file_from_optional_arg(
-   cmdl,
-   "terminal-graph-skel-file",
-   _terminal_graph_skel_file,
-   pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/state_machine-skel.dot"));
+ if (_terminal_graph_output_file.has_value()) {
+  std::string skel_path;
+  try_fetch_optional_arg(cmdl, "terminal-graph-skel-file", skel_path, pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/state_machine-skel.dot"));
+  _terminal_graph_skel_file.emplace(skel_path);
+  if (!_terminal_graph_skel_file->is_open()) {
+   throw std::runtime_error("Failed to open file: " + skel_path);
+  }
  }
 }
 

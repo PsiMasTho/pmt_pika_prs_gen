@@ -76,7 +76,7 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
  auto const C = child_->get_tag();
  auto const child_arity = child_->get_children_size();
  auto const is_unary = [&](ClauseBase::Tag t_) {
-  return t_ == ClauseBase::Tag::Hidden || t_ == ClauseBase::Tag::NegativeLookahead || t_ == ClauseBase::Tag::OneOrMore;
+  return t_ == ClauseBase::Tag::NegativeLookahead || t_ == ClauseBase::Tag::OneOrMore;
  };
 
  switch (C) {
@@ -119,9 +119,6 @@ void expand_once(std::ostream& out_, Locals& locals_, RuleExpression const* node
    if (paren)
     push(locals_, "(");
   } break;
-  case Tag::Hidden:
-   push(locals_, "~");
-   push(locals_, ExpressionWithParent{._parent = node_});
    break;
   case Tag::OneOrMore:
    push(locals_, "+");
@@ -219,7 +216,6 @@ void write_rule_as_tree(Grammar const& grammar_, std::ostream& out_, std::string
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::OneOrMore:
-   case ClauseBase::Tag::Hidden:
    case ClauseBase::Tag::NegativeLookahead:
     out_ << ": ";
     for (size_t i = expr_cur->get_children_size(); i--;) {

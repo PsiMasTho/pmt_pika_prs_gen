@@ -18,8 +18,6 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "Sequence";
   case Tag::Choice:
    return "Choice";
-  case Tag::Hidden:
-   return "Hidden";
   case Tag::Identifier:
    return "Identifier";
   case Tag::CharsetLiteral:

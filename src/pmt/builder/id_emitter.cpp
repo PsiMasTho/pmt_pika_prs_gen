@@ -2,6 +2,7 @@
 
 #include "pmt/builder/emitter_utils.hpp"
 #include "pmt/util/timestamp.hpp"
+#include "pmt/util/uint_to_str.hpp"
 
 #include <fstream>
 
@@ -31,7 +32,7 @@ void IdEmitter::emit() {
   }
   id_constants += id_string_;
   id_constants += " = ";
-  id_constants += format_hex(id_);
+  id_constants += "0x" + pmt::util::uint_to_string(id_, 0, pmt::util::hex_alphabet_uppercase);
   id_constants += ",";
 
   if (!id_strings.empty()) {

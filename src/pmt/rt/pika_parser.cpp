@@ -28,8 +28,6 @@ void debug_print_memo_table(MemoTable const& memo_table_) {
   std::cout << "!PARSING FAILED!.\n";
  }
 
- return;
-
  for (size_t i = 0; i < memo_table_.get_match_count(); ++i) {
   MemoTable::Match const& match = memo_table_.get_match_by_index(i);
   std::cout << "Match " << i << ": Clause ID " << match._key._clause->get_id() << ", Tag " << ClauseBase::tag_to_string(match._key._clause->get_tag());
@@ -110,7 +108,7 @@ auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
   return nullptr;
  }
 
- Ast::UniqueHandle ast_root = Ast::construct(Ast::Tag::Children, AstId::IdRoot);
+ Ast::UniqueHandle ast_root = Ast::construct(Ast::Tag::Parent, AstId::IdRoot);
 
  auto const process_and_add_child = [&](Ast& parent_, Ast::UniqueHandle child_, MemoTable::Match const& child_match_) {
   if (!child_) {
@@ -145,7 +143,6 @@ auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
    case ClauseBase::Tag::NegativeLookahead:
     break;
    case ClauseBase::Tag::Epsilon:
-   case ClauseBase::Tag::Hidden:
     break;
   }
  };
@@ -158,7 +155,7 @@ auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::Identifier:
-    ast_node = Ast::construct(Ast::Tag::Children, AstId::IdUninitialized);
+    ast_node = Ast::construct(Ast::Tag::Parent, AstId::IdUninitialized);
     for (MemoTable::IndexType const child_match_index : match_._matching_subclauses) {
      if (child_match_index == MemoTable::MemoIndexMatchNotFound || child_match_index == MemoTable::MemoIndexMatchZeroLength) {
       continue;
@@ -173,7 +170,6 @@ auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
     break;
    case ClauseBase::Tag::NegativeLookahead:
    case ClauseBase::Tag::Epsilon:
-   case ClauseBase::Tag::Hidden:
     // No AST node
     break;
    default:
@@ -195,9 +191,6 @@ auto memo_table_to_ast(MemoTable const& memo_table_) -> Ast::UniqueHandle {
 
 auto PikaParser::parse(PikaProgramBase const& pika_program_, std::string_view input_) -> Ast::UniqueHandle {
  MemoTable const memo_table = populate_memo_table(pika_program_, input_);
-
- debug_print_memo_table(memo_table);
-
  return memo_table_to_ast(memo_table);
 }
 
