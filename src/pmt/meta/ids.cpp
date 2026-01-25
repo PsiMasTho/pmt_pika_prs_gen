@@ -1,4 +1,4 @@
-#include "pmt/meta/language.hpp"
+#include "pmt/meta/ids.hpp"
 
 #include <stdexcept>
 
@@ -9,7 +9,7 @@ char const* const ID_STRINGS[] = {
 };
 }  // namespace
 
-auto Language::id_to_string(pmt::rt::AstId::IdType id_) -> std::string {
+auto Ids::id_to_string(pmt::rt::AstId::IdType id_) -> std::string {
  if (id_ < std::size(ID_STRINGS)) {
   return ID_STRINGS[id_];
  }

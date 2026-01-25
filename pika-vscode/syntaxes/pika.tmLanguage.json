@@ -1,0 +1,93 @@
+{
+  "scopeName": "source.pika",
+  "name": "Pika",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#grammarProps" },
+    { "include": "#ruleDefinition" },
+    { "include": "#identifiers" },
+    { "include": "#operators" },
+    { "include": "#charsets" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.pika", "match": "//.*$" },
+        { "name": "comment.block.pika", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.pika",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "match": "\\\\.", "name": "constant.character.escape.pika" }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        { "name": "constant.numeric.pika", "match": "\\b\\d+#\\w+\\b" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        { "name": "keyword.control.pika", "match": "\\b(epsilon|unpack|hide|merge|id|display_name)\\b" },
+        { "name": "constant.language.boolean.pika", "match": "\\b(true|false)\\b" }
+      ]
+    },
+    "grammarProps": {
+      "patterns": [
+        { "name": "keyword.other.directive.pika", "match": "@start\\b" }
+      ]
+    },
+    "ruleDefinition": {
+      "patterns": [
+        {
+          "name": "meta.definition.rule.pika",
+          "match": "^\\s*(\\$[A-Za-z_][A-Za-z0-9_]*)\\s*(?:(<)|=)",
+          "captures": {
+            "1": { "name": "entity.name.function.pika" },
+            "2": { "name": "punctuation.definition.parameters.begin.pika" }
+          }
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        { "name": "variable.other.pika", "match": "\\$[A-Za-z_][A-Za-z0-9_]*" }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.pika", "match": "[=|*+?~!&]" },
+        { "name": "punctuation.separator.comma.pika", "match": "," },
+        { "name": "punctuation.terminator.statement.pika", "match": ";" },
+        { "name": "punctuation.section.group.begin.pika", "match": "[({\\[]" },
+        { "name": "punctuation.section.group.end.pika", "match": "[)\\}\\]]" },
+        { "name": "punctuation.separator.range.pika", "match": "\\.\\." }
+      ]
+    },
+    "charsets": {
+      "patterns": [
+        {
+          "name": "meta.charset.pika",
+          "begin": "\\[",
+          "end": "\\]",
+          "patterns": [
+            { "include": "#strings" },
+            { "include": "#numbers" },
+            { "name": "punctuation.separator.range.pika", "match": "\\.\\." },
+            { "name": "punctuation.separator.comma.pika", "match": "," }
+          ]
+        }
+      ]
+    }
+  }
+}

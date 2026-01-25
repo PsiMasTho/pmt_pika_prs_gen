@@ -1,11 +1,11 @@
-#include "pmt/builder/tui/args.hpp"
+#include "pmt/builder/cli/args.hpp"
 
 #include <stdexcept>
 
 #include "argh/argh.h"
 #include "pmt/util/skeleton_paths.hpp"
 
-namespace pmt::builder::tui {
+namespace pmt::builder::cli {
 
 namespace {
 void try_fetch_required_arg(argh::parser& cmdl_, std::string const& arg_name_, auto& out_value_) {
@@ -97,4 +97,4 @@ Args::Args(int argc_, char const* const* argv_) {
  }
 }
 
-}  // namespace pmt::builder::tui
+}  // namespace pmt::builder::cli

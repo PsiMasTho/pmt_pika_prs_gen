@@ -1,0 +1,30 @@
+{
+  "name": "pika-lang",
+  "displayName": "Pika Language",
+  "description": "Syntax highlighting for .pika grammar files.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "pika",
+        "aliases": ["Pika", "pika"],
+        "extensions": [".pika"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pika",
+        "scopeName": "source.pika",
+        "path": "./syntaxes/pika.tmLanguage.json"
+      }
+    ]
+  }
+}

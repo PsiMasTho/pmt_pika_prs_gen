@@ -1,4 +1,4 @@
-#include "pmt/meta/grammar_simplifier.hpp"
+#include "pmt/meta/grammar_normalizer.hpp"
 
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/rule.hpp"
@@ -328,7 +328,7 @@ void flatten(Grammar& grammar_) {
 }
 }  // namespace
 
-void GrammarSimplifier::simplify(Grammar& grammar_) {
+void GrammarNormalizer::normalize(Grammar& grammar_) {
  unpack(grammar_);
  prune(grammar_);
  flatten(grammar_);

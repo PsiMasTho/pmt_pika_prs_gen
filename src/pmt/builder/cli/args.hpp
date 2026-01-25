@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-namespace pmt::builder::tui {
+namespace pmt::builder::cli {
 
 class Args {
 public:
@@ -33,4 +33,4 @@ public:
  std::optional<std::ifstream> _terminal_graph_skel_file;
 };
 
-}  // namespace pmt::builder::tui
+}  // namespace pmt::builder::cli

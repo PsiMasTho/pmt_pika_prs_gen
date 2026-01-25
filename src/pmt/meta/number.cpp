@@ -1,6 +1,6 @@
 #include "pmt/meta/number.hpp"
 
-#include "pmt/meta/language.hpp"
+#include "pmt/meta/ids.hpp"
 #include "pmt/rt/ast.hpp"
 
 #include <cassert>
@@ -63,10 +63,10 @@ auto number_convert(std::string_view num_, Number::NumberType base_) -> Number::
 
 auto single_char_as_value(Ast const& ast_) -> Number::NumberType {
  switch (ast_.get_id()) {
-  case Language::CharacterLiteral: {
+  case Ids::CharacterLiteral: {
    return ast_.get_string().front();
   } break;
-  case Language::IntegerLiteral: {
+  case Ids::IntegerLiteral: {
    auto const [base_str, number_str] = split_number(ast_.get_string());
    Number::NumberType const base = number_convert(base_str, 10);
    Number::NumberType const number = number_convert(number_str, base);

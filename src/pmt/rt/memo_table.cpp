@@ -18,16 +18,11 @@ auto MemoTable::KeyEq::operator()(Key const& lhs_, Key const& rhs_) const -> boo
  return lhs_._clause == rhs_._clause && lhs_._position == rhs_._position;
 }
 
-MemoTable::MemoTable(PikaProgramBase const& pika_program_, std::string_view input_)
- : _input(input_)
- , _pika_program(pika_program_) {
-}
-
-auto MemoTable::find(Key const& key_) const -> IndexType {
+auto MemoTable::find(Key const& key_, std::string_view input_, PikaProgramBase const& pika_program_) const -> IndexType {
  if (auto const itr = _table.find(key_); itr != _table.end()) {
   return itr->second;
  } else if (key_._clause->get_tag() == ClauseBase::Tag::NegativeLookahead) {
-  return ClauseMatcher::match(*this, key_, _input).has_value() ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
+  return ClauseMatcher::match(*this, key_, input_, pika_program_).has_value() ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
  } else if (key_._clause->can_match_zero()) {
   return MemoIndexMatchZeroLength;
  }
@@ -35,7 +30,7 @@ auto MemoTable::find(Key const& key_) const -> IndexType {
  return MemoIndexMatchNotFound;
 }
 
-void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_) {
+void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaProgramBase const& pika_program_) {
  bool match_updated = false;
  if (new_match_.has_value()) {
   auto const itr_old_match = _table.find(key_);
@@ -48,7 +43,7 @@ void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_
  }
  for (int i = 0, ii = key_._clause->get_seed_parent_count(); i < ii; i++) {
   ClauseBase::IdType const seed_parent_id = key_._clause->get_seed_parent_id_at(i);
-  ClauseBase const& seed_parent_clause = _pika_program.fetch_clause(seed_parent_id);
+  ClauseBase const& seed_parent_clause = pika_program_.fetch_clause(seed_parent_id);
   if (match_updated || seed_parent_clause.can_match_zero()) {
    ClauseQueueItem::PriorityType const priority = seed_parent_id;
    parse_queue_.push(ClauseQueueItem{._clause = &seed_parent_clause, ._priority = priority});
@@ -69,14 +64,6 @@ auto MemoTable::get_match_length_by_index(IndexType index_) const -> size_t {
 
 auto MemoTable::get_match_count() const -> size_t {
  return _matches.size();
-}
-
-auto MemoTable::get_pika_program() const -> PikaProgramBase const& {
- return _pika_program;
-}
-
-auto MemoTable::get_input() const -> std::string_view {
- return _input;
 }
 
 }  // namespace pmt::rt

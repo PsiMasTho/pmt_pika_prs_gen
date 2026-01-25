@@ -4,8 +4,8 @@
 scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Generate the parsing code
-pika_parser_generator_tui                                                                       \
- --input-grammar-file "${scriptdir}/grammar.peg"                                                \
+pika_parser_generator_cli                                                                       \
+ --input-grammar-file "${scriptdir}/grammar.pika"                                               \
  --pika-program-header-include-filename "pmt/meta/pika_program.hpp"                             \
  --pika-program-output-header-file "${scriptdir}/pika_program.hpp"                              \
  --pika-program-header-skel-file "${scriptdir}/../../../skel/pmt/builder/pika_program-skel.hpp" \

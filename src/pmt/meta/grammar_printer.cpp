@@ -1,9 +1,9 @@
 #include "pmt/meta/grammar_printer.hpp"
 
 #include "pmt/meta/grammar.hpp"
+#include "pmt/meta/literal_to_str.hpp"
 #include "pmt/meta/rule.hpp"
 #include "pmt/rt/clause_base.hpp"
-#include "pmt/unreachable.hpp"
 #include "pmt/util/overloaded.hpp"
 
 #include <cassert>
@@ -41,11 +41,11 @@ auto push(Locals& locals_, StackItem item_) {
  locals_._pending.push_back(std::move(item_));
 }
 
-void write_rule_lhs_as_grammar(std::ostream& out_, Locals& locals_, std::string const& rule_name_, Rule const& rule_) {
+void write_rule_lhs(std::ostream& out_, Locals& locals_, std::string const& rule_name_, Rule const& rule_) {
  std::string delim;
  std::string parameter_str;
 
- if (!rule_._parameters._id_string.empty()) {
+ if (rule_._parameters._id_string != AstId::id_to_string(AstId::IdDefault)) {
   parameter_str += std::exchange(delim, ", ") + "id = \"" + rule_._parameters._id_string + "\"";
  }
 
@@ -61,11 +61,15 @@ void write_rule_lhs_as_grammar(std::ostream& out_, Locals& locals_, std::string 
   parameter_str += std::exchange(delim, ", ") + "unpack = " + BOOLALPHA[rule_._parameters._unpack];
  }
 
+ if (rule_._parameters._hide != RuleParametersBase::HIDE_DEFAULT) {
+  parameter_str += std::exchange(delim, ", ") + "hide = " + BOOLALPHA[rule_._parameters._hide];
+ }
+
  if (!parameter_str.empty()) {
   parameter_str = "<" + parameter_str + ">";
  }
 
- out_ << rule_name_ << parameter_str << " = ";
+ out_ << "$" << rule_name_ << parameter_str << " = ";
 }
 
 auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -> bool {
@@ -129,10 +133,10 @@ void expand_once(std::ostream& out_, Locals& locals_, RuleExpression const* node
    push(locals_, ExpressionWithParent{._parent = node_});
    break;
   case Tag::Identifier:
-   out_ << node_->get_identifier();
+   out_ << "$" << node_->get_identifier();
    break;
   case Tag::CharsetLiteral: {
-   out_ << node_->get_charset_literal().to_string();
+   out_ << charset_literal_to_grammar_string(node_->get_charset_literal());
   } break;
   case Tag::Epsilon:
    push(locals_, "epsilon");
@@ -140,7 +144,7 @@ void expand_once(std::ostream& out_, Locals& locals_, RuleExpression const* node
  }
 }
 
-void write_rule_rhs_as_grammar(std::ostream& out_, Locals& locals_, Rule const& rule_) {
+void write_rule_rhs(std::ostream& out_, Locals& locals_, Rule const& rule_) {
  push(locals_, ";");
  push(locals_, rule_._definition.get());
 
@@ -169,69 +173,19 @@ void write_rule_rhs_as_grammar(std::ostream& out_, Locals& locals_, Rule const& 
 }
 
 void write_start_rule(std::ostream& out_, std::string const& rule_name_) {
- out_ << "@start = " << (rule_name_.empty() ? "/* missing identifier */" : rule_name_) << ";\n";
+ out_ << "@start = " << (rule_name_.empty() ? "/* missing identifier */" : "$" + rule_name_) << ";\n";
 }
 
-void write_rule_as_grammar(Grammar const& grammar_, std::ostream& out_, Locals& locals_, std::string const& rule_name_) {
+void write_rule(Grammar const& grammar_, std::ostream& out_, Locals& locals_, std::string const& rule_name_) {
  Rule const* rule = grammar_.get_rule(rule_name_);
  assert(rule != nullptr);
- write_rule_lhs_as_grammar(out_, locals_, rule_name_, *rule);
- write_rule_rhs_as_grammar(out_, locals_, *rule);
-}
-
-void write_rule_as_tree(Grammar const& grammar_, std::ostream& out_, std::string const& rule_name_) {
- out_ << "Definition: " << rule_name_ << std::endl;
-
- std::vector<std::pair<RuleExpression const*, size_t>> pending;
-
- auto const push = [&](RuleExpression const* node_, size_t depth_) {
-  pending.emplace_back(node_, depth_);
- };
-
- auto const take = [&]() {
-  auto const ret = pending.back();
-  pending.pop_back();
-  return ret;
- };
-
- auto const get_indent = [&](size_t depth_) {
-  return std::string(depth_ * 2, ' ');
- };
-
- push(grammar_.get_rule(rule_name_)->_definition.get(), 2);
-
- while (!pending.empty()) {
-  auto const [expr_cur, depth_cur] = take();
-  out_ << get_indent(depth_cur) << ClauseBase::tag_to_string(expr_cur->get_tag());
-
-  switch (expr_cur->get_tag()) {
-   case ClauseBase::Tag::CharsetLiteral:
-    out_ << ": " << expr_cur->get_charset_literal().to_string();
-    break;
-   case ClauseBase::Tag::Identifier:
-    out_ << ": " << expr_cur->get_identifier();
-    break;
-   case ClauseBase::Tag::Epsilon:
-    break;
-   case ClauseBase::Tag::Choice:
-   case ClauseBase::Tag::Sequence:
-   case ClauseBase::Tag::OneOrMore:
-   case ClauseBase::Tag::NegativeLookahead:
-    out_ << ": ";
-    for (size_t i = expr_cur->get_children_size(); i--;) {
-     push(expr_cur->get_child_at(i), depth_cur + 1);
-    }
-    break;
-   default:
-    pmt::unreachable();
-  }
-  out_ << std::endl;
- }
+ write_rule_lhs(out_, locals_, rule_name_, *rule);
+ write_rule_rhs(out_, locals_, *rule);
 }
 
 }  // namespace
 
-void GrammarPrinter::print_as_grammar(Grammar const& grammar_, std::ostream& out_) {
+void GrammarPrinter::print(Grammar const& grammar_, std::ostream& out_) {
  Locals locals;
 
  std::set<std::string> const rule_names = [&] {
@@ -244,15 +198,7 @@ void GrammarPrinter::print_as_grammar(Grammar const& grammar_, std::ostream& out
  std::string delim;
  for (auto const& rule_name : rule_names) {
   out_ << std::exchange(delim, "\n");
-  write_rule_as_grammar(grammar_, out_, locals, rule_name);
- }
-}
-
-void GrammarPrinter::print_as_tree(Grammar const& grammar_, std::ostream& out_) {
- std::string delim;
- for (std::string const& rule_name : grammar_.get_rule_names()) {
-  out_ << std::exchange(delim, "\n");
-  write_rule_as_tree(grammar_, out_, rule_name);
+  write_rule(grammar_, out_, locals, rule_name);
  }
 }
 

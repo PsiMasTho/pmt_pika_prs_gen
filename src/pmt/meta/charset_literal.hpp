@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/container/interval_set.hpp"
+#include "pmt/meta/charset.hpp"
 #include "pmt/rt/primitives.hpp"
 
 namespace pmt::meta {
@@ -8,11 +8,9 @@ namespace pmt::meta {
 class CharsetLiteral {
 public:
  // -$ Types / Constants $-
- using SymbolSet = pmt::container::IntervalSet<pmt::rt::SymbolType>;
-
 private:
  // -$ Data $-
- std::vector<SymbolSet> _literal;
+ std::vector<Charset::SetType> _literal;
 
 public:
  // -$ Functions $-
@@ -23,18 +21,16 @@ public:
  // --$ Other $--
  auto hash() const -> size_t;
 
- auto get_symbol_set_at(size_t idx_) const -> SymbolSet const&;
- auto get_symbol_set_at(size_t idx_) -> SymbolSet&;
+ auto get_symbol_set_at(size_t idx_) const -> Charset::SetType const&;
+ auto get_symbol_set_at(size_t idx_) -> Charset::SetType&;
 
- void push_back(SymbolSet symbol_set_);
+ void push_back(Charset::SetType symbol_set_);
  void push_back(pmt::container::Interval<pmt::rt::SymbolType> symbol_interval_);
  void push_back(pmt::rt::SymbolType symbol_);
 
  void pop_back();
 
  auto size() const -> size_t;
-
- auto to_string() const -> std::string;
 };
 
 }  // namespace pmt::meta

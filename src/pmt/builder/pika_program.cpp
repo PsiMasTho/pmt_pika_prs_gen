@@ -216,90 +216,144 @@ void PikaProgram::initialize(Grammar const& grammar_) {
 
  IntervalSet<ClauseBase::IdType> clauses_with_epsilon_children;
  std::unordered_map<RuleExpression const*, ClauseBase::IdType> visited;
- std::function<ClauseBase::IdType(RuleExpression const*)> recursive_worker = [&](RuleExpression const* expr_) -> ClauseBase::IdType {
-  if (auto const itr = visited.find(expr_); itr != visited.end()) {
-   return itr->second;
-  }
-
-  if (expr_->get_tag() == ClauseBase::Tag::CharsetLiteral) {
-   auto const [literal_id, is_new] = charset_literals_cached.add_or_get_id(expr_->get_charset_literal());
-   ClauseBase::IdType const clause_id = is_new ? _clauses.size() : charset_literal_clause_ids[literal_id];
-   if (is_new) {
-    charset_literal_clause_ids.push_back(clause_id);
-    _clauses.emplace_back(expr_->get_tag(), clause_id);
-   }
-
-   _clauses[clause_id]._literal_id = literal_id;
-   visited[expr_] = clause_id;
-   return clause_id;
-  } else if (expr_->get_tag() == ClauseBase::Tag::Epsilon) {
-   ClauseBase::IdType const clause_id = IdTmpEpsilon;
-   visited[expr_] = clause_id;
-   return clause_id;
-  }
-
-  ClauseBase::IdType const clause_id = _clauses.size();
-  visited[expr_] = clause_id;
-  _clauses.emplace_back(expr_->get_tag(), clause_id);
-
-  auto const recurse = [&](RuleExpression const* expr_) {
-   ClauseBase::IdType const child_id = recursive_worker(expr_);
-   if (child_id == IdTmpEpsilon) {
-    clauses_with_epsilon_children.insert(Interval(clause_id));
-   }
-   return child_id;
-  };
-
-  switch (expr_->get_tag()) {
-   case ClauseBase::Tag::Sequence: {
-    for (size_t i = 0; i < expr_->get_children_size(); ++i) {
-     ClauseBase::IdType const child_id = recurse(expr_->get_child_at(i));
-     _clauses[clause_id]._child_ids.push_back(child_id);
-    }
-   } break;
-   case ClauseBase::Tag::Choice: {
-    for (size_t i = 0; i < expr_->get_children_size(); ++i) {
-     ClauseBase::IdType const child_id = recurse(expr_->get_child_at(i));
-     _clauses[clause_id]._child_ids.push_back(child_id);
-    }
-   } break;
-   case ClauseBase::Tag::OneOrMore: {
-    ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
-    _clauses[clause_id]._child_ids.push_back(child_id);
-   } break;
-   case ClauseBase::Tag::NegativeLookahead: {
-    ClauseBase::IdType const child_id = recurse(expr_->get_child_at_front());
-    _clauses[clause_id]._child_ids.push_back(child_id);
-   } break;
-   case ClauseBase::Tag::CharsetLiteral:
-    break;
-   case ClauseBase::Tag::Identifier: {
-    Rule const* rule = grammar_.get_rule(expr_->get_identifier());
-    if (rule == nullptr) {
-     throw std::runtime_error("Unknown rule identifier '" + expr_->get_identifier() + "'");  // -$ Todo $- better error reporting
-    }
-    ClauseBase::IdType const child_id = recurse(rule->_definition.get());
-    _clauses[clause_id]._child_ids.push_back(child_id);
-    _clauses[clause_id]._rule_id = _rule_parameters.size();
-
-    _rule_parameters.emplace_back();
-    _rule_parameters.back()._display_name = rule->_parameters._display_name;
-    _rule_parameters.back()._id_string = rule->_parameters._id_string;
-    _rule_parameters.back()._id_value = _id_table.string_to_id(rule->_parameters._id_string);
-    _rule_parameters.back()._merge = rule->_parameters._merge;
-    _rule_parameters.back()._unpack = rule->_parameters._unpack;
-    _rule_parameters.back()._hide = rule->_parameters._hide;
-   } break;
-   case ClauseBase::Tag::Epsilon:
-   default:
-    pmt::unreachable();
-  }
-
-  return clause_id;
+ struct Frame {
+  RuleExpression const* _expr;
+  ClauseBase::IdType _clause_id;
+  size_t _next_child_idx;
+  Rule const* _rule;
+  enum class Stage {
+   Enter,
+   ProcessChildren,
+   WaitChild
+  } _stage;
  };
 
+ std::vector<Frame> stack;
  RuleExpression::UniqueHandle const start_expr = grammar_.get_start_expression();
- recursive_worker(start_expr.get());
+ stack.push_back(Frame{start_expr.get(), 0, 0, nullptr, Frame::Stage::Enter});
+
+ ClauseBase::IdType last_result = IdTmpEpsilon;
+ bool has_result = false;
+
+ while (!stack.empty()) {
+  Frame& frame = stack.back();
+
+  switch (frame._stage) {
+   case Frame::Stage::Enter: {
+    if (auto const itr = visited.find(frame._expr); itr != visited.end()) {
+     last_result = itr->second;
+     has_result = true;
+     stack.pop_back();
+     break;
+    }
+
+    ClauseBase::Tag const tag = frame._expr->get_tag();
+    if (tag == ClauseBase::Tag::CharsetLiteral) {
+     auto const [literal_id, is_new] = charset_literals_cached.add_or_get_id(frame._expr->get_charset_literal());
+     ClauseBase::IdType const clause_id = is_new ? _clauses.size() : charset_literal_clause_ids[literal_id];
+     if (is_new) {
+      charset_literal_clause_ids.push_back(clause_id);
+      _clauses.emplace_back(tag, clause_id);
+     }
+     _clauses[clause_id]._literal_id = literal_id;
+     visited[frame._expr] = clause_id;
+     last_result = clause_id;
+     has_result = true;
+     stack.pop_back();
+     break;
+    }
+
+    if (tag == ClauseBase::Tag::Epsilon) {
+     ClauseBase::IdType const clause_id = IdTmpEpsilon;
+     visited[frame._expr] = clause_id;
+     last_result = clause_id;
+     has_result = true;
+     stack.pop_back();
+     break;
+    }
+
+    ClauseBase::IdType const clause_id = _clauses.size();
+    visited[frame._expr] = clause_id;
+    _clauses.emplace_back(tag, clause_id);
+    frame._clause_id = clause_id;
+    frame._next_child_idx = 0;
+    frame._rule = nullptr;
+    if (tag == ClauseBase::Tag::Identifier) {
+     frame._rule = grammar_.get_rule(frame._expr->get_identifier());
+     if (frame._rule == nullptr) {
+      throw std::runtime_error("Unknown rule identifier '" + frame._expr->get_identifier() + "'");  // -$ Todo $- better error reporting
+     }
+    }
+    frame._stage = Frame::Stage::ProcessChildren;
+   } break;
+   case Frame::Stage::ProcessChildren: {
+    ClauseBase::Tag const tag = frame._expr->get_tag();
+    RuleExpression const* child_expr = nullptr;
+    size_t child_count = 0;
+
+    switch (tag) {
+     case ClauseBase::Tag::Sequence:
+     case ClauseBase::Tag::Choice:
+      child_count = frame._expr->get_children_size();
+      if (frame._next_child_idx < child_count) {
+       child_expr = frame._expr->get_child_at(frame._next_child_idx);
+      }
+      break;
+     case ClauseBase::Tag::OneOrMore:
+     case ClauseBase::Tag::NegativeLookahead:
+      child_count = 1;
+      if (frame._next_child_idx == 0) {
+       child_expr = frame._expr->get_child_at_front();
+      }
+      break;
+     case ClauseBase::Tag::Identifier:
+      child_count = 1;
+      if (frame._next_child_idx == 0) {
+       child_expr = frame._rule->_definition.get();
+      }
+      break;
+     case ClauseBase::Tag::CharsetLiteral:
+     case ClauseBase::Tag::Epsilon:
+      pmt::unreachable();
+      break;
+     default:
+      pmt::unreachable();
+    }
+
+    if (frame._next_child_idx >= child_count) {
+     if (tag == ClauseBase::Tag::Identifier) {
+      _clauses[frame._clause_id]._rule_id = _rule_parameters.size();
+      _rule_parameters.emplace_back();
+      _rule_parameters.back()._display_name = frame._rule->_parameters._display_name;
+      _rule_parameters.back()._id_string = frame._rule->_parameters._id_string;
+      _rule_parameters.back()._id_value = _id_table.string_to_id(frame._rule->_parameters._id_string);
+      _rule_parameters.back()._merge = frame._rule->_parameters._merge;
+      _rule_parameters.back()._unpack = frame._rule->_parameters._unpack;
+      _rule_parameters.back()._hide = frame._rule->_parameters._hide;
+     }
+
+     last_result = frame._clause_id;
+     has_result = true;
+     stack.pop_back();
+     break;
+    }
+
+    frame._stage = Frame::Stage::WaitChild;
+    stack.push_back(Frame{child_expr, 0, 0, nullptr, Frame::Stage::Enter});
+   } break;
+   case Frame::Stage::WaitChild: {
+    assert(has_result);
+    ClauseBase::IdType const child_id = last_result;
+    has_result = false;
+    if (child_id == IdTmpEpsilon) {
+     clauses_with_epsilon_children.insert(Interval(frame._clause_id));
+    }
+    _clauses[frame._clause_id]._child_ids.push_back(child_id);
+    ++frame._next_child_idx;
+    frame._stage = Frame::Stage::ProcessChildren;
+   } break;
+  }
+ }
 
  // Replace temporary epsilon children with a single shared epsilon clause
  if (!clauses_with_epsilon_children.empty()) {

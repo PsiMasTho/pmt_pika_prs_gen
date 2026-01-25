@@ -1,6 +1,7 @@
 #include "pmt/builder/pika_program_printer.hpp"
 
 #include "pmt/builder/pika_program.hpp"
+#include "pmt/meta/literal_to_str.hpp"
 #include "pmt/rt/clause_base.hpp"
 
 #include <string>
@@ -23,7 +24,7 @@ static void print_clause_block(PikaProgram const& program_, std::ostream& out_, 
 
  // children: ascending list of child clause IDs or the literal
  if (clause.get_tag() == ClauseBase::Tag::CharsetLiteral) {
-  out_ << "  literal: " << program_.fetch_literal(clause.get_literal_id()).to_string() << ";\n";
+  out_ << "  literal: " << charset_literal_to_grammar_string(program_.fetch_literal(clause.get_literal_id())) << ";\n";
  } else {
   std::string delim;
   out_ << "  children: [";

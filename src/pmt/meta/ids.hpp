@@ -4,7 +4,7 @@
 
 namespace pmt::meta {
 
-class Language {
+class Ids {
 public:
  enum : pmt::rt::AstId::IdType {
 #include "pmt/meta/id_constants-inl.hpp"

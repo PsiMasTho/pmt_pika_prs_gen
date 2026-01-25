@@ -1,6 +1,6 @@
 #include "pmt/meta/repetition_range.hpp"
 
-#include "pmt/meta/language.hpp"
+#include "pmt/meta/ids.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/unreachable.hpp"
 
@@ -11,7 +11,7 @@ using namespace pmt::rt;
 
 namespace {
 auto get_repetition_number(Ast const& token_) -> std::optional<Number::NumberType> {
- if (token_.get_id() != Language::IntegerLiteral) {
+ if (token_.get_id() != Ids::IntegerLiteral) {
   return std::nullopt;
  }
 
@@ -22,18 +22,18 @@ auto get_repetition_number(Ast const& token_) -> std::optional<Number::NumberTyp
 
 RepetitionRange::RepetitionRange(pmt::rt::Ast const& ast_) {
  switch (ast_.get_id()) {
-  case Language::Plus: {
+  case Ids::Plus: {
    _lower = 1;
   } break;
-  case Language::Star: {
+  case Ids::Star: {
    _lower = 0;
    _upper = std::nullopt;
   } break;
-  case Language::Question: {
+  case Ids::Question: {
    _lower = 0;
    _upper = 1;
   } break;
-  case Language::RepetitionRange: {
+  case Ids::RepetitionRange: {
    switch (ast_.get_children_size()) {
     case 1: {
      std::optional<Number::NumberType> num = get_repetition_number(*ast_.get_child_at(0));

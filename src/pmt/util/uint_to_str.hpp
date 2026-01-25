@@ -7,6 +7,7 @@
 namespace pmt::util {
 
 static inline char const hex_alphabet_uppercase[] = "0123456789ABCDEF";
+static inline size_t const min_value_base = 2;
 
 // if width is less than required, no padding is added.
 // if padding is added, it uses the character at alphabet_[0]

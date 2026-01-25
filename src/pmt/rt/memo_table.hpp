@@ -49,24 +49,17 @@ private:
  // -$ Data $-
  std::unordered_map<Key, IndexType, KeyHash, KeyEq> _table;
  std::vector<Match> _matches;
- std::string_view _input;
- PikaProgramBase const& _pika_program;
 
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- MemoTable(PikaProgramBase const& pika_program_, std::string_view input_);
-
  // --$ Other $--
- auto find(Key const& key_) const -> IndexType;
- void insert(Key key_, std::optional<Match> new_match_, ClauseQueue& parse_queue_);
+ auto find(Key const& key_, std::string_view input_, PikaProgramBase const& pika_program_) const -> IndexType;
+ void insert(Key key_, std::optional<Match> new_match_, ClauseQueue& parse_queue_, PikaProgramBase const& pika_program_);
 
  auto get_match_by_index(IndexType index_) const -> Match const&;
  auto get_match_length_by_index(IndexType index_) const -> size_t;
  auto get_match_count() const -> size_t;
-
- auto get_pika_program() const -> PikaProgramBase const&;
- auto get_input() const -> std::string_view;
 };
 
 }  // namespace pmt::rt

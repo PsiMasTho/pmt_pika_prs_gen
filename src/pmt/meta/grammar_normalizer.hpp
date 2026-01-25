@@ -6,11 +6,11 @@ PMT_FW_DECL_NS_CLASS(pmt::meta, Grammar)
 
 namespace pmt::meta {
 
-class GrammarSimplifier {
+class GrammarNormalizer {
 public:
  // -$ Functions $-
  // --$ Other $--
- static void simplify(Grammar& grammar_);
+ static void normalize(Grammar& grammar_);
 };
 
 }  // namespace pmt::meta

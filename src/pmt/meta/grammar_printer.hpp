@@ -11,8 +11,7 @@ namespace pmt::meta {
 class GrammarPrinter {
 public:
  // -$ Types / Constants $-
- static void print_as_grammar(Grammar const& grammar_, std::ostream& out_);
- static void print_as_tree(Grammar const& grammar_, std::ostream& out_);
+ static void print(Grammar const& grammar_, std::ostream& out_);
 };
 
 }  // namespace pmt::meta

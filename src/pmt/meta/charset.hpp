@@ -2,7 +2,7 @@
 
 #include "pmt/container/interval_set.hpp"
 #include "pmt/fw_decl.hpp"
-#include "pmt/rt/state_machine_tables_base.hpp"
+#include "pmt/rt/primitives.hpp"
 
 PMT_FW_DECL_NS_CLASS(pmt::rt, Ast)
 

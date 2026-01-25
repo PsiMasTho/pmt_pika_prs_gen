@@ -1,13 +1,13 @@
+#include "pmt/builder/cli/args.hpp"
 #include "pmt/builder/id_emitter.hpp"
 #include "pmt/builder/pika_program.hpp"
 #include "pmt/builder/pika_program_emitter.hpp"
 #include "pmt/builder/pika_program_printer.hpp"
 #include "pmt/builder/terminal_dotfile_writer.hpp"
-#include "pmt/builder/tui/args.hpp"
 #include "pmt/meta/grammar_from_ast.hpp"
+#include "pmt/meta/grammar_normalizer.hpp"
 #include "pmt/meta/grammar_printer.hpp"
-#include "pmt/meta/grammar_simplifier.hpp"
-#include "pmt/meta/language.hpp"
+#include "pmt/meta/ids.hpp"
 #include "pmt/meta/pika_program.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/rt/ast_printer.hpp"
@@ -23,7 +23,7 @@ namespace {
 class MetaAstPrinter : public AstPrinter {
 public:
  auto id_to_string(AstId::IdType id_) const -> std::string override {
-  return pmt::meta::Language::id_to_string(id_);
+  return pmt::meta::Ids::id_to_string(id_);
  }
 };
 
@@ -49,7 +49,7 @@ auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
  pmt::meta::PikaProgram const pika_program;
 
  auto now = std::chrono::high_resolution_clock::now();
- Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(pika_program, input_grammar_));
+ Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_grammar_, pika_program), input_grammar_, pika_program);
  if (!ast) {
   throw std::runtime_error("Failed to parse grammar input.");
  }
@@ -60,14 +60,14 @@ auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
 }  // namespace
 
 auto main(int argc_, char const* const* argv_) -> int try {
- pmt::builder::tui::Args args(argc_, argv_);
+ pmt::builder::cli::Args args(argc_, argv_);
 
  std::string const input_grammar((std::istreambuf_iterator<char>(args._input_grammar_file)), std::istreambuf_iterator<char>());
 
  pmt::meta::Grammar grammar = pmt::meta::GrammarFromAst::make(get_grammar_ast(input_grammar));
- pmt::meta::GrammarSimplifier::simplify(grammar);
+ pmt::meta::GrammarNormalizer::normalize(grammar);
  if (args._output_grammar_file.has_value()) {
-  pmt::meta::GrammarPrinter::print_as_tree(grammar, *args._output_grammar_file);
+  pmt::meta::GrammarPrinter::print(grammar, *args._output_grammar_file);
  }
 
  pmt::builder::PikaProgram const program(grammar);
@@ -77,7 +77,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
 
  if (args._input_test_file.has_value()) {
   std::string const input_test((std::istreambuf_iterator<char>(*args._input_test_file)), std::istreambuf_iterator<char>());
-  Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(program, input_test));
+  Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_test, program), input_test, program);
   if (ast_testfile != nullptr) {
    TestAstPrinter const printer([&](AstId::IdType id_) { return program.get_id_table().id_to_string(id_); });
    printer.print(*ast_testfile, std::cout);

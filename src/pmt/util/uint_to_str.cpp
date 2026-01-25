@@ -8,7 +8,7 @@ namespace pmt::util {
 namespace {}
 
 auto uint_to_string(uint64_t value_, size_t width_, std::string_view alphabet_) -> std::string {
- assert(alphabet_.size() > 1);
+ assert(alphabet_.size() >= min_value_base);
 
  std::string ret;
 
@@ -27,7 +27,7 @@ auto uint_to_string(uint64_t value_, size_t width_, std::string_view alphabet_) 
 }
 
 auto digits_needed(uint64_t value_, uint64_t base_) -> size_t {
- assert(base_ > 1);
+ assert(base_ >= min_value_base);
 
  if (value_ == 0) {
   return 1;

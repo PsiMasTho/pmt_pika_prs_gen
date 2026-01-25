@@ -10,4 +10,4 @@ target_compile_definitions(${PROJECT_NAME}_builder PUBLIC
 $<BUILD_INTERFACE:PMT_SKEL_ROOT="${PROJECT_SOURCE_DIR}/skel">
 $<INSTALL_INTERFACE:PMT_SKEL_ROOT="${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/skel">)
 
-add_subdirectory(tui)
+add_subdirectory(cli)

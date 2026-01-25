@@ -2,7 +2,7 @@
 
 #include "pmt/meta/charset.hpp"
 #include "pmt/meta/charset_literal.hpp"
-#include "pmt/meta/language.hpp"
+#include "pmt/meta/ids.hpp"
 #include "pmt/meta/number.hpp"
 #include "pmt/meta/repetition_range.hpp"
 #include "pmt/meta/rule.hpp"
@@ -87,7 +87,7 @@ public:
 };
 
 void caching_traversal_handle_grammar_property_start(Locals& locals_, Ast const& ast_) {
- assert(ast_.get_id() == Language::Identifier);
+ assert(ast_.get_id() == Ids::Identifier);
  locals_._ret.set_start_rule_name(ast_.get_string());
 }
 
@@ -96,7 +96,7 @@ void caching_traversal_handle_grammar_property(Locals& locals_, Ast const& ast_)
  Ast const& property_value = *ast_.get_child_at(1);
 
  switch (property_name.get_id()) {
-  case Language::GrammarPropertyStart:
+  case Ids::GrammarPropertyStart:
    caching_traversal_handle_grammar_property_start(locals_, property_value);
    break;
    break;
@@ -119,22 +119,22 @@ void caching_traversal_handle_production(Locals& locals_, Ast const& ast_) {
  for (size_t i = 1; i < ast_.get_children_size(); ++i) {
   Ast const& child = *ast_.get_child_at(i);
   switch (child.get_id()) {
-   case Language::ParameterId: {
+   case Ids::ParameterId: {
     rule_id_string = child.get_string();
    } break;
-   case Language::ParameterDisplayName: {
+   case Ids::ParameterDisplayName: {
     rule_display_name = child.get_string();
    } break;
-   case Language::ParameterMerge: {
+   case Ids::ParameterMerge: {
     rule_merge = child.get_string() == "true";
    } break;
-   case Language::ParameterUnpack: {
+   case Ids::ParameterUnpack: {
     rule_unpack = child.get_string() == "true";
    } break;
-   case Language::ParameterHide: {
+   case Ids::ParameterHide: {
     rule_hide = child.get_string() == "true";
    } break;
-   case Language::Definition: {
+   case Ids::Definition: {
     rule_definition = child.get_child_at(0);
    } break;
   }
@@ -153,10 +153,10 @@ void caching_traversal(Locals& locals_, Ast const& ast_) {
  for (size_t i = 0; i < ast_.get_children_size(); ++i) {
   Ast const& child = *ast_.get_child_at(i);
   switch (child.get_id()) {
-   case Language::GrammarProperty:
+   case Ids::GrammarProperty:
     caching_traversal_handle_grammar_property(locals_, *ast_.get_child_at(i));
     break;
-   case Language::Production:
+   case Ids::Production:
     caching_traversal_handle_production(locals_, *ast_.get_child_at(i));
     break;
   }
@@ -201,33 +201,33 @@ auto count_hidden_productions_needed(Ast& ast_) -> size_t {
   pending.pop_back();
 
   switch (cur->get_id()) {
-   case Language::Production: {
+   case Ids::Production: {
     pending.push_back(cur->get_child_at(cur->get_children_size() - 1));
    } break;
    case pmt::rt::AstId::IdRoot:
-   case Language::Definition:
-   case Language::Choices:
-   case Language::Sequence:
-   case Language::NegativeLookahead:
-   case Language::PositiveLookahead: {
+   case Ids::Definition:
+   case Ids::Choices:
+   case Ids::Sequence:
+   case Ids::NegativeLookahead:
+   case Ids::PositiveLookahead: {
     for (size_t i = 0; i < cur->get_children_size(); ++i) {
      pending.push_back(cur->get_child_at(i));
     }
    } break;
-   case Language::Repetition: {
+   case Ids::Repetition: {
     pending.push_back(cur->get_child_at_front());
    } break;
-   case Language::Identifier: {
+   case Ids::Identifier: {
    } break;
-   case Language::Hidden: {
+   case Ids::Hidden: {
     pending.push_back(cur->get_child_at_front());
     ++ret;
    } break;
-   case Language::StringLiteral:
-   case Language::GrammarProperty:
-   case Language::IntegerLiteral:
-   case Language::Charset:
-   case Language::Epsilon:
+   case Ids::StringLiteral:
+   case Ids::GrammarProperty:
+   case Ids::IntegerLiteral:
+   case Ids::Charset:
+   case Ids::Epsilon:
     break;
    default:
     pmt::unreachable();
@@ -270,13 +270,13 @@ void construct_hidden_productions(Locals& locals_, Ast& ast_) {
  };
 
  auto construct_hidden_prouction = [&, hidden_production_counter = 0ull, padding = pmt::util::digits_needed(count_hidden_productions_needed(ast_), 16)](Ast::UniqueHandle expr_) mutable -> std::string {
-  std::string const rule_name = "_hidden_" + pmt::util::uint_to_string(hidden_production_counter++, padding, pmt::util::hex_alphabet_uppercase);
-  Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Language::Production);
-  Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Language::Identifier);
+  std::string const rule_name = "__hidden_" + pmt::util::uint_to_string(hidden_production_counter++, padding, pmt::util::hex_alphabet_uppercase);
+  Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
+  Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
   identifier->set_string(rule_name);
-  Ast::UniqueHandle parameter_hide = Ast::construct(Ast::Tag::String, Language::ParameterHide);
+  Ast::UniqueHandle parameter_hide = Ast::construct(Ast::Tag::String, Ids::ParameterHide);
   parameter_hide->set_string("true");
-  Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Language::Definition);
+  Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
   definition->give_child_at_back(std::move(expr_));
 
   production->give_child_at_back(std::move(identifier));
@@ -292,7 +292,7 @@ void construct_hidden_productions(Locals& locals_, Ast& ast_) {
 
  // Push all topmost productions, index their positions
  for (size_t i = 0; i < ast_.get_children_size(); ++i) {
-  if (ast_.get_child_at(i)->get_id() != Language::Production) {
+  if (ast_.get_child_at(i)->get_id() != Ids::Production) {
    continue;
   }
 
@@ -312,35 +312,35 @@ void construct_hidden_productions(Locals& locals_, Ast& ast_) {
   }
 
   switch (child->get_id()) {
-   case Language::Production: {
+   case Ids::Production: {
     push_and_visit(child, child->get_children_size() - 1);
    } break;
-   case Language::Definition:
-   case Language::Choices:
-   case Language::Sequence:
-   case Language::NegativeLookahead:
-   case Language::PositiveLookahead: {
+   case Ids::Definition:
+   case Ids::Choices:
+   case Ids::Sequence:
+   case Ids::NegativeLookahead:
+   case Ids::PositiveLookahead: {
     for (size_t i = 0; i < child->get_children_size(); ++i) {
      push_and_visit(child, i);
     }
    } break;
-   case Language::Repetition: {
+   case Ids::Repetition: {
     push_and_visit(child, 0);
    } break;
-   case Language::Identifier: {
+   case Ids::Identifier: {
     push_and_visit(child->get_string());
    } break;
-   case Language::Hidden: {
+   case Ids::Hidden: {
     std::string const constructed_name = construct_hidden_prouction(child->take_child_at_front());
     parent->take_child_at(child_idx);
-    parent->give_child_at(child_idx, Ast::construct(Ast::Tag::String, Language::Identifier));
+    parent->give_child_at(child_idx, Ast::construct(Ast::Tag::String, Ids::Identifier));
     parent->get_child_at(child_idx)->set_string(constructed_name);
     push_and_visit(constructed_name);
    } break;
-   case Language::StringLiteral:
-   case Language::IntegerLiteral:
-   case Language::Charset:
-   case Language::Epsilon:
+   case Ids::StringLiteral:
+   case Ids::IntegerLiteral:
+   case Ids::Charset:
+   case Ids::Epsilon:
     break;
    default:
     pmt::unreachable();
@@ -356,37 +356,37 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
  FrameBase frame_base{._cur_expr = ast_cur_, ._stage = 0};
 
  switch (ast_cur_->get_id()) {
-  case Language::Definition: {
+  case Ids::Definition: {
    return ExpressionFrame{frame_base};
   } break;
-  case Language::Choices: {
+  case Ids::Choices: {
    return ChoicesFrame{frame_base};
   } break;
-  case Language::Repetition: {
+  case Ids::Repetition: {
    return RepetitionFrame{frame_base};
   } break;
-  case Language::Sequence: {
+  case Ids::Sequence: {
    return SequenceFrame{frame_base};
   } break;
-  case Language::Identifier: {
+  case Ids::Identifier: {
    return IdentifierFrame{frame_base};
   } break;
-  case Language::StringLiteral: {
+  case Ids::StringLiteral: {
    return StringLiteralFrame{frame_base};
   } break;
-  case Language::IntegerLiteral: {
+  case Ids::IntegerLiteral: {
    return IntegerLiteralFrame{frame_base};
   } break;
-  case Language::Charset: {
+  case Ids::Charset: {
    return CharsetFrame{frame_base};
   } break;
-  case Language::NegativeLookahead: {
+  case Ids::NegativeLookahead: {
    return NegativeLookaheadFrame{frame_base};
   } break;
-  case Language::PositiveLookahead: {
+  case Ids::PositiveLookahead: {
    return PositiveLookaheadFrame{frame_base};
   } break;
-  case Language::Epsilon: {
+  case Ids::Epsilon: {
    return EpsilonFrame{frame_base};
   } break;
   default:
