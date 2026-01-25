@@ -1,4 +1,4 @@
-#include "pmt/rt/ast_printer.hpp"
+#include "pmt/rt/ast_printer_base.hpp"
 
 #include "pmt/rt/ast.hpp"
 #include "pmt/unreachable.hpp"
@@ -18,11 +18,11 @@ public:
 
 }  // namespace
 
-AstPrinter::AstPrinter(IndentWidthType indent_width_)
+AstPrinterBase::AstPrinterBase(IndentWidthType indent_width_)
  : _indent_width(indent_width_) {
 }
 
-void AstPrinter::print(Ast const& ast_, std::ostream& out_) const {
+void AstPrinterBase::print(Ast const& ast_, std::ostream& out_) const {
  std::vector<Item> pending;
  std::string indent_str;
 
@@ -67,15 +67,15 @@ void AstPrinter::print(Ast const& ast_, std::ostream& out_) const {
  }
 }
 
-void AstPrinter::set_indent_width(IndentWidthType indent_width_) {
+void AstPrinterBase::set_indent_width(IndentWidthType indent_width_) {
  _indent_width = indent_width_;
 }
 
-auto AstPrinter::get_indent_width() const -> IndentWidthType {
+auto AstPrinterBase::get_indent_width() const -> IndentWidthType {
  return _indent_width;
 }
 
-auto AstPrinter::id_to_string_internal(AstId::IdType id_) const -> std::string {
+auto AstPrinterBase::id_to_string_internal(AstId::IdType id_) const -> std::string {
  return AstId::is_generic_id(id_) ? AstId::id_to_string(id_) : id_to_string(id_);
 }
 

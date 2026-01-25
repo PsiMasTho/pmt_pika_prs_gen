@@ -10,7 +10,7 @@
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/pika_program.hpp"
 #include "pmt/rt/ast.hpp"
-#include "pmt/rt/ast_printer.hpp"
+#include "pmt/rt/ast_printer_base.hpp"
 #include "pmt/rt/pika_parser.hpp"
 
 #include <chrono>
@@ -20,14 +20,14 @@ using namespace pmt::rt;
 
 namespace {
 
-class MetaAstPrinter : public AstPrinter {
+class MetaAstPrinter : public AstPrinterBase {
 public:
  auto id_to_string(AstId::IdType id_) const -> std::string override {
   return pmt::meta::Ids::id_to_string(id_);
  }
 };
 
-class TestAstPrinter : public AstPrinter {
+class TestAstPrinter : public AstPrinterBase {
 public:
  using IdToStringFnType = std::function<std::string(AstId::IdType)>;
 
@@ -36,7 +36,7 @@ private:
 
 public:
  TestAstPrinter(IdToStringFnType id_to_string_fn_)
-  : AstPrinter()
+  : AstPrinterBase()
   , _id_to_string_fn(std::move(id_to_string_fn_)) {
  }
 

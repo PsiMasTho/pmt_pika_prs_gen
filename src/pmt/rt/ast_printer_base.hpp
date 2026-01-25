@@ -7,7 +7,7 @@
 namespace pmt::rt {
 class Ast;
 
-class AstPrinter {
+class AstPrinterBase {
 public:
  // -$ Types / Constants $-
  using IndentWidthType = uint32_t;
@@ -23,7 +23,7 @@ private:
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- AstPrinter(IndentWidthType indent_width_ = IndentWidthDefault);
+ AstPrinterBase(IndentWidthType indent_width_ = IndentWidthDefault);
 
  // --$ Virtual $--
  [[nodiscard]] virtual auto id_to_string(AstId::IdType id_) const -> std::string = 0;
