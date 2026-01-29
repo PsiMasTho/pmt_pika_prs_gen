@@ -280,9 +280,7 @@ void PikaProgram::initialize(Grammar const& grammar_) {
     frame._rule = nullptr;
     if (tag == ClauseBase::Tag::Identifier) {
      frame._rule = grammar_.get_rule(frame._expr->get_identifier());
-     if (frame._rule == nullptr) {
-      throw std::runtime_error("Unknown rule identifier '" + frame._expr->get_identifier() + "'");  // -$ Todo $- better error reporting
-     }
+     assert(frame._rule != nullptr);
     }
     frame._stage = Frame::Stage::ProcessChildren;
    } break;

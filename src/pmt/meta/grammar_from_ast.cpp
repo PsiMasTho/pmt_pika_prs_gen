@@ -79,7 +79,8 @@ using Frame = std::variant<ExpressionFrame, SequenceFrame, ChoicesFrame, Repetit
 class Locals {
 public:
  std::unordered_map<std::string, std::pair<RuleParameters, Ast const*>> _rules;  // rule name -> <parameters, definition ast>
- std::unordered_map<std::string, AstId::IdType> _id_string_to_id_map;            // Only non-generic ids
+ std::set<std::string> _duplicate_rules;
+ std::unordered_map<std::string, AstId::IdType> _id_string_to_id_map;  // Only non-generic ids
  Grammar _ret;
  RuleExpression::UniqueHandle _ret_part;
  std::deque<Frame> _callstack;
@@ -146,6 +147,11 @@ void caching_traversal_handle_production(Locals& locals_, Ast const& ast_) {
  rule_parameters._merge = rule_merge;
  rule_parameters._unpack = rule_unpack;
  rule_parameters._hide = rule_hide;
+
+ if (locals_._rules.contains(rule_name)) {
+  locals_._duplicate_rules.insert(rule_name);
+ }
+
  locals_._rules[rule_name] = std::make_pair(std::move(rule_parameters), rule_definition);
 }
 
@@ -163,6 +169,28 @@ void caching_traversal(Locals& locals_, Ast const& ast_) {
  }
 }
 
+void report_duplicate_rules(std::set<std::string> const& duplicate_rules_) {
+ if (duplicate_rules_.empty()) {
+  return;
+ }
+
+ static constexpr size_t const max_names_to_report = 8;
+
+ std::string msg = "Duplicate rule name";
+ msg += (duplicate_rules_.size() > 1 ? "s: " : ": ");
+
+ std::string delim;
+ for (size_t i = 0; std::string const& rule_name : duplicate_rules_) {
+  if (i++ == max_names_to_report) {
+   msg += ", ...";
+   break;
+  }
+  msg += std::exchange(delim, ", ") + "\"$" + rule_name + "\"";
+ }
+
+ throw std::runtime_error(msg);
+}
+
 void check_start_rule_exists(Locals& locals_) {  // -$ Todo $- need to factor out the lev distance stuff
  if (!locals_._rules.contains(locals_._ret.get_start_rule_name())) {
   static constexpr size_t const max_lev_distance_to_report = 3;
@@ -174,12 +202,12 @@ void check_start_rule_exists(Locals& locals_) {  // -$ Todo $- need to factor ou
 
   std::string error_msg = "Start rule not found: \"$" + locals_._ret.get_start_rule_name() + "\"";
   if (!lev_distances.empty() && lev_distances.begin()->first <= max_lev_distance_to_report) {
-   static constexpr size_t const max_closest_to_report = 3;
+   static constexpr size_t const max_names_to_report = 3;
 
    std::string delim;
    error_msg += ", did you mean: ";
    for (size_t i = 0; std::string const& rule_name : lev_distances.begin()->second) {
-    if (i >= max_closest_to_report) {
+    if (i >= max_names_to_report) {
      error_msg += ", ...";
      break;
     } else {
@@ -665,6 +693,7 @@ auto GrammarFromAst::make(Ast::UniqueHandle ast_) -> Grammar {
  Locals locals;
  construct_hidden_productions(locals, *ast_);
  caching_traversal(locals, *ast_);
+ report_duplicate_rules(locals._duplicate_rules);
  check_start_rule_exists(locals);
  construct_definitions(locals);
  return std::move(locals._ret);
