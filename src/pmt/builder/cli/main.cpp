@@ -81,6 +81,8 @@ auto main(int argc_, char const* const* argv_) -> int try {
   if (ast_testfile != nullptr) {
    TestAstPrinter const printer([&](AstId::IdType id_) { return program.get_id_table().id_to_string(id_); });
    printer.print(*ast_testfile, std::cout);
+  } else {
+   std::cout << "Failed to parse test input.\n";
   }
  }
 

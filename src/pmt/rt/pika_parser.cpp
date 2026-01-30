@@ -92,9 +92,7 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
   node->set_string(input_.substr(root_match_._key._position, root_match_._length));
   return node;
  }
- if (root_tag != ClauseBase::Tag::Sequence && root_tag != ClauseBase::Tag::Choice && root_tag != ClauseBase::Tag::OneOrMore && root_tag != ClauseBase::Tag::Identifier) {
-  pmt::unreachable();
- }
+ assert(root_tag == ClauseBase::Tag::Sequence || root_tag == ClauseBase::Tag::Choice || root_tag == ClauseBase::Tag::OneOrMore || root_tag == ClauseBase::Tag::Identifier);
 
  struct Frame {
   MemoTable::Match const* _match;

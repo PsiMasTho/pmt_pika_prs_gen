@@ -7,10 +7,10 @@
 #include "pmt/meta/rule_expression.hpp"
 #include "pmt/rt/pika_program_base.hpp"
 #include "pmt/unreachable.hpp"
-#include "pmt/util/overloaded.hpp"
+#include "pmt/util/unique_rac_builder.hpp"
 
 #include <cassert>
-#include <unordered_set>
+#include <unordered_map>
 
 namespace pmt::builder {
 using namespace pmt::meta;
@@ -48,71 +48,6 @@ auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_l
 
  return StateMachineDeterminizer::determinize(ret, StateNrStart);
 }
-
-using CharsetLiteralFetch = decltype(pmt::util::Overloaded{[](std::vector<CharsetLiteral> const& charset_literals_, size_t index_) { return index_ < charset_literals_.size() ? &charset_literals_[index_] : nullptr; },
-                                                           [](std::vector<CharsetLiteral> const&, CharsetLiteral const& item_) {
-                                                            return &item_;
-                                                           }});
-
-class CharsetLiteralIndirectHash {
- std::vector<CharsetLiteral> const& _charset_literals;
-
-public:
- using is_transparent = void;  // NOLINT
-
- explicit CharsetLiteralIndirectHash(std::vector<CharsetLiteral> const& charset_literals_)
-  : _charset_literals(charset_literals_) {
- }
-
- auto operator()(auto const& item_) const -> size_t {
-  return CharsetLiteralFetch{}(_charset_literals, item_)->hash();
- }
-};
-
-class CharsetLiteralIndirectEq {
- std::vector<CharsetLiteral> const& _charset_literals;
-
-public:
- using is_transparent = void;  // NOLINT
-
- explicit CharsetLiteralIndirectEq(std::vector<CharsetLiteral> const& charset_literals_)
-  : _charset_literals(charset_literals_) {
- }
-
- auto operator()(auto const& lhs_, auto const& rhs_) const -> bool {
-  CharsetLiteral const* lhs = CharsetLiteralFetch{}(_charset_literals, lhs_);
-  CharsetLiteral const* rhs = CharsetLiteralFetch{}(_charset_literals, rhs_);
-  if (lhs == nullptr || rhs == nullptr) {
-   return false;
-  }
-  return *lhs == *rhs;
- }
-};
-
-class CharsetLiteralsCached {
- std::vector<CharsetLiteral>& _charset_literals;
- std::unordered_set<size_t, CharsetLiteralIndirectHash, CharsetLiteralIndirectEq> _index_cache;
-
-public:
- explicit CharsetLiteralsCached(std::vector<CharsetLiteral>& charset_literals_)
-  : _charset_literals(charset_literals_)
-  , _index_cache(0, CharsetLiteralIndirectHash(_charset_literals), CharsetLiteralIndirectEq(_charset_literals)) {
- }
-
- // Returns <id, is_new>
- auto add_or_get_id(CharsetLiteral const& charset_literal_) -> std::pair<ClauseBase::IdType, bool> {
-  auto const itr = _index_cache.find(charset_literal_);
-  if (itr != _index_cache.end()) {
-   return {*itr, false};
-  }
-
-  ClauseBase::IdType const idx = _charset_literals.size();
-
-  _charset_literals.push_back(charset_literal_);
-  _index_cache.insert(idx);
-  return {idx, true};
- }
-};
 
 void renumber_clause_ids(std::vector<ExtendedClause>& clauses_, std::unordered_map<ClauseBase::IdType, ClauseBase::IdType> const& id_mapping_) {
  for (ExtendedClause& clause : clauses_) {
@@ -212,7 +147,7 @@ auto PikaProgram::get_literal_state_machine_tables() const -> StateMachineTables
 
 void PikaProgram::initialize(Grammar const& grammar_) {
  std::vector<ClauseBase::IdType> charset_literal_clause_ids;
- CharsetLiteralsCached charset_literals_cached(_literals);
+ pmt::util::UniqueRacBuilder<std::vector<CharsetLiteral>> charset_literals_cached(_literals);
 
  IntervalSet<ClauseBase::IdType> clauses_with_epsilon_children;
  std::unordered_map<RuleExpression const*, ClauseBase::IdType> visited;
@@ -249,13 +184,13 @@ void PikaProgram::initialize(Grammar const& grammar_) {
 
     ClauseBase::Tag const tag = frame._expr->get_tag();
     if (tag == ClauseBase::Tag::CharsetLiteral) {
-     auto const [literal_id, is_new] = charset_literals_cached.add_or_get_id(frame._expr->get_charset_literal());
+     auto const [literal_id, is_new] = charset_literals_cached.insert_and_get_index(frame._expr->get_charset_literal());
      ClauseBase::IdType const clause_id = is_new ? _clauses.size() : charset_literal_clause_ids[literal_id];
      if (is_new) {
       charset_literal_clause_ids.push_back(clause_id);
       _clauses.emplace_back(tag, clause_id);
      }
-     _clauses[clause_id]._literal_id = literal_id;
+     _clauses[clause_id]._literal_id = static_cast<ClauseBase::IdType>(literal_id);
      visited[frame._expr] = clause_id;
      last_result = clause_id;
      has_result = true;

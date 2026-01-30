@@ -19,8 +19,6 @@ public:
  auto operator!=(CharsetLiteral const& other_) const -> bool = default;
 
  // --$ Other $--
- auto hash() const -> size_t;
-
  auto get_symbol_set_at(size_t idx_) const -> Charset::SetType const&;
  auto get_symbol_set_at(size_t idx_) -> Charset::SetType&;
 
@@ -34,3 +32,10 @@ public:
 };
 
 }  // namespace pmt::meta
+
+namespace std {
+template <>
+struct hash<pmt::meta::CharsetLiteral> {
+ auto operator()(pmt::meta::CharsetLiteral const& literal_) const -> size_t;
+};
+}  // namespace std

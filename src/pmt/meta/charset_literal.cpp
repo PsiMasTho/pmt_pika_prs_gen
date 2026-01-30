@@ -10,17 +10,6 @@ using namespace pmt::rt;
 
 namespace {}  // namespace
 
-auto CharsetLiteral::hash() const -> size_t {
- size_t seed = Hash::Phi64;
-
- for (size_t i = 0; i < size(); ++i) {
-  Hash::combine(get_symbol_set_at(i), seed);
-  Hash::combine(get_symbol_set_at(i), seed);
- }
-
- return seed;
-}
-
 auto CharsetLiteral::get_symbol_set_at(size_t idx_) const -> Charset::SetType const& {
  assert(idx_ < size());
  return _literal[idx_];
@@ -53,3 +42,16 @@ auto CharsetLiteral::size() const -> size_t {
 }
 
 }  // namespace pmt::meta
+
+namespace std {
+auto hash<pmt::meta::CharsetLiteral>::operator()(pmt::meta::CharsetLiteral const& literal_) const -> size_t {
+ size_t seed = pmt::Hash::Phi64;
+
+ for (size_t i = 0; i < literal_.size(); ++i) {
+  pmt::Hash::combine(literal_.get_symbol_set_at(i), seed);
+  pmt::Hash::combine(literal_.get_symbol_set_at(i), seed);
+ }
+
+ return seed;
+}
+}  // namespace std
