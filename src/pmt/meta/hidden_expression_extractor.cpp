@@ -85,6 +85,16 @@ struct AstPositionEq {
  }
 };
 
+auto is_production_hidden(Ast const& production_) -> bool {
+ for (size_t i = 0; i < production_.get_children_size(); ++i) {
+  Ast const* const child = production_.get_child_at(i);
+  if (child->get_id() == Ids::ParameterHide && child->get_string() == "true") {
+   return true;
+  }
+ }
+ return false;
+}
+
 auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
  std::vector<AstPosition> ret;
 
@@ -102,7 +112,9 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
    pending.push_back({pos, true});
    switch (cur->get_id()) {
     case Ids::Production: {
-     pending.push_back({AstPosition{cur, cur->get_children_size() - 1}, false});
+     if (!is_production_hidden(*cur)) {
+      pending.push_back({AstPosition{cur, cur->get_children_size() - 1}, false});
+     }
     } break;
     case pmt::rt::AstId::IdRoot:
     case Ids::Definition:
