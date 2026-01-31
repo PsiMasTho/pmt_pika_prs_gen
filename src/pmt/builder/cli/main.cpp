@@ -4,14 +4,14 @@
 #include "pmt/builder/pika_program_emitter.hpp"
 #include "pmt/builder/pika_program_printer.hpp"
 #include "pmt/builder/terminal_dotfile_writer.hpp"
-#include "pmt/meta/hidden_expression_extractor.hpp"
-#include "pmt/meta/grammar_from_ast.hpp"
 #include "pmt/meta/grammar_flattener.hpp"
-#include "pmt/meta/grammar_pruner.hpp"
-#include "pmt/meta/rule_inliner.hpp"
+#include "pmt/meta/grammar_from_ast.hpp"
 #include "pmt/meta/grammar_printer.hpp"
+#include "pmt/meta/grammar_pruner.hpp"
+#include "pmt/meta/hidden_expression_extractor.hpp"
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/pika_program.hpp"
+#include "pmt/meta/rule_inliner.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/rt/ast_printer_base.hpp"
 #include "pmt/rt/pika_parser.hpp"
@@ -51,13 +51,13 @@ public:
 auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
  pmt::meta::PikaProgram const pika_program;
 
- //auto now = std::chrono::high_resolution_clock::now();
+ // auto now = std::chrono::high_resolution_clock::now();
  Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_grammar_, pika_program), input_grammar_, pika_program);
  if (!ast) {
   throw std::runtime_error("Failed to parse grammar input.");
  }
- //auto elapsed = std::chrono::high_resolution_clock::now() - now;
- //std::cerr << "Parsed grammar in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() << " ms.\n";
+ // auto elapsed = std::chrono::high_resolution_clock::now() - now;
+ // std::cerr << "Parsed grammar in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() << " ms.\n";
 
  return ast;
 }

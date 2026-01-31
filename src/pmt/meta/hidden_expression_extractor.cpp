@@ -7,10 +7,10 @@
 #include "pmt/util/uint_to_str.hpp"
 
 #include <span>
-#include <utility>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace pmt::meta {
 using namespace pmt::rt;
@@ -60,7 +60,7 @@ struct AstPositionEq {
    pending.pop_back();
 
    if (left->get_id() != right->get_id() || left->get_tag() != right->get_tag()) {
-    fprintf(stderr, "Mismatched IDs or tags: left id %zu tag %d, right id %zu tag %d\n", left->get_id(), static_cast<int>(left->get_tag()), right->get_id(), static_cast<int>(right->get_tag())); // --- IGNORE ---
+    fprintf(stderr, "Mismatched IDs or tags: left id %zu tag %d, right id %zu tag %d\n", left->get_id(), static_cast<int>(left->get_tag()), right->get_id(), static_cast<int>(right->get_tag()));  // --- IGNORE ---
     return false;
    }
 
@@ -183,7 +183,7 @@ void HiddenExpressionExtractor::extract_hidden_expressions(pmt::rt::Ast& ast_) {
  size_t const digits_needed = pmt::util::digits_needed(count_unique_hidden_expressions(hidden_expressions), 16);
 
  for (size_t i = 0; AstPosition const& pos : hidden_expressions) {
-   AstPosition const pos_deep = {hidden_expressions_orig[i].get(), 0}; 
+  AstPosition const pos_deep = {hidden_expressions_orig[i].get(), 0};
 
   if (!hidden_expression_to_rule_name.contains(pos_deep)) {
    size_t const unique_idx = hidden_expression_to_rule_name.size();

@@ -77,32 +77,32 @@ void handle_sequence(Locals& locals_, ExpressionPosition position_) {
   locals_._pending.emplace_back(position_._parent, position_._idx);
   locals_._repeat = true;
  } else {
-  //bool had_choices = false;
-  //for (size_t j = 0; j < child->get_children_size(); ++j) {
-  // if (child->get_child_at(j)->get_tag() != ClauseBase::Tag::Choice) {
-  //  continue;
-  // }
-  // had_choices = true;
-//
+  // bool had_choices = false;
+  // for (size_t j = 0; j < child->get_children_size(); ++j) {
+  //  if (child->get_child_at(j)->get_tag() != ClauseBase::Tag::Choice) {
+  //   continue;
+  //  }
+  //  had_choices = true;
+  //
   // RuleExpression::UniqueHandle grandchild = child->take_child_at(j);
   // RuleExpression::UniqueHandle new_choice = RuleExpression::construct(ClauseBase::Tag::Choice);
-//
+  //
   // for (size_t k = 0; k < grandchild->get_children_size(); ++k) {
   //  RuleExpression::UniqueHandle cloned = RuleExpression::clone(*child);
   //  cloned->give_child_at(j, RuleExpression::clone(*grandchild->get_child_at(k)));
   //  new_choice->give_child_at(k, std::move(cloned));
   // }
-//
+  //
   // position_._parent->take_child_at(position_._idx);
   // position_._parent->give_child_at(position_._idx, std::move(new_choice));
   // locals_._pending.emplace_back(position_._parent, position_._idx);
   // locals_._repeat = true;
   // break;
   //}
-  //if (!had_choices) {
-   for (size_t j = 0; j < child->get_children_size(); ++j) {
-    locals_._pending.emplace_back(child, j);
-   }
+  // if (!had_choices) {
+  for (size_t j = 0; j < child->get_children_size(); ++j) {
+   locals_._pending.emplace_back(child, j);
+  }
   //}
  }
 }

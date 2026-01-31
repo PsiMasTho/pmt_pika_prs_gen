@@ -43,7 +43,7 @@ template <typename CONTAINER_T_, typename HASH_T_, typename EQ_T_>
 UniqueRacBuilder<CONTAINER_T_, HASH_T_, EQ_T_>::UniqueRacBuilder(CONTAINER_T_& container_)
  : _index_cache(0, UniqueRacBuilderHasher<CONTAINER_T_, HASH_T_>(container_), UniqueRacBuilderEq<CONTAINER_T_, EQ_T_>(container_))
  , _container(container_) {
-  assert(container_.empty());
+ assert(container_.empty());
 }
 
 template <typename CONTAINER_T_, typename HASH_T_, typename EQ_T_>

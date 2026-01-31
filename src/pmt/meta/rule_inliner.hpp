@@ -12,4 +12,4 @@ public:
  // --$ Other $--
  static void inline_rules(Grammar& grammar_);
 };
-}
+}  // namespace pmt::meta

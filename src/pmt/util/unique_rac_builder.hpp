@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstddef>
-#include <unordered_set>
 #include <type_traits>
+#include <unordered_set>
 
 namespace pmt::util {
 
@@ -16,24 +16,24 @@ template <typename CONTAINER_T_, typename HASH_T_>
 class UniqueRacBuilderHasher {
  CONTAINER_T_ const& _container;
 
- public:
-  using is_transparent = void;  // NOLINT
+public:
+ using is_transparent = void;  // NOLINT
 
-  explicit UniqueRacBuilderHasher(CONTAINER_T_ const& container_);
+ explicit UniqueRacBuilderHasher(CONTAINER_T_ const& container_);
 
-  auto operator()(auto const& item_) const -> size_t;
+ auto operator()(auto const& item_) const -> size_t;
 };
 
 template <typename CONTAINER_T_, typename EQ_T_>
 class UniqueRacBuilderEq {
  CONTAINER_T_ const& _container;
- 
- public:
-  using is_transparent = void;  // NOLINT
 
-  explicit UniqueRacBuilderEq(CONTAINER_T_ const& container_);
+public:
+ using is_transparent = void;  // NOLINT
 
-  auto operator()(auto const& lhs_, auto const& rhs_) const -> bool;
+ explicit UniqueRacBuilderEq(CONTAINER_T_ const& container_);
+
+ auto operator()(auto const& lhs_, auto const& rhs_) const -> bool;
 };
 
 // Unique Random Access Container Builder
