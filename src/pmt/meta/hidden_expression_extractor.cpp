@@ -109,8 +109,7 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
     case Ids::Choices:
     case Ids::Sequence:
     case Ids::NegativeLookahead:
-    case Ids::PositiveLookahead:
-    case Ids::Hidden: {
+    case Ids::PositiveLookahead: {
      // push in reverse so child 0 is processed first
      for (size_t i = cur->get_children_size(); i-- > 0;) {
       pending.push_back({AstPosition{cur, i}, false});
@@ -125,6 +124,7 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
     case Ids::IntegerLiteral:
     case Ids::Charset:
     case Ids::Epsilon:
+    case Ids::Hidden:  // We only care about the topmost Hidden, so don't expand further
      break;
     default:
      pmt::unreachable();

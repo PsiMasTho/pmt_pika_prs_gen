@@ -23,7 +23,7 @@ public:
  size_t _stage = 0;
 };
 
-class ExpressionFrame : public FrameBase {
+class PassthroughFrame : public FrameBase {
 public:
 };
 
@@ -72,7 +72,7 @@ class EpsilonFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<ExpressionFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame>;
+using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame>;
 
 class Locals {
 public:
@@ -227,8 +227,9 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
  FrameBase frame_base{._cur_expr = ast_cur_, ._stage = 0};
 
  switch (ast_cur_->get_id()) {
-  case Ids::Definition: {
-   return ExpressionFrame{frame_base};
+  case Ids::Definition:
+  case Ids::Hidden: {
+   return PassthroughFrame{frame_base};
   } break;
   case Ids::Choices: {
    return ChoicesFrame{frame_base};
@@ -265,7 +266,7 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
  }
 }
 
-void process_frame_00(Locals& locals_, ExpressionFrame& frame_) {
+void process_frame_00(Locals& locals_, PassthroughFrame& frame_) {
  locals_._callstack.emplace_back(construct_frame(frame_._cur_expr->get_child_at_front()));
 }
 

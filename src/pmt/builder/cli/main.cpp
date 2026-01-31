@@ -4,7 +4,6 @@
 #include "pmt/builder/pika_program_emitter.hpp"
 #include "pmt/builder/pika_program_printer.hpp"
 #include "pmt/builder/terminal_dotfile_writer.hpp"
-#include "pmt/meta/grammar_flattener.hpp"
 #include "pmt/meta/grammar_from_ast.hpp"
 #include "pmt/meta/grammar_printer.hpp"
 #include "pmt/meta/grammar_pruner.hpp"
@@ -12,11 +11,12 @@
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/pika_program.hpp"
 #include "pmt/meta/rule_inliner.hpp"
+#include "pmt/meta/shrink_grammar.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/rt/ast_printer_base.hpp"
 #include "pmt/rt/pika_parser.hpp"
 
-#include <chrono>
+// #include <chrono>
 #include <iostream>
 
 using namespace pmt::rt;
@@ -74,7 +74,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
  pmt::meta::Grammar grammar = pmt::meta::grammar_from_ast(ast_grammar);
  pmt::meta::GrammarPruner::prune_grammar(grammar);
  pmt::meta::RuleInliner::inline_rules(grammar);
- pmt::meta::GrammarFlattener::flatten_grammar(grammar);
+ pmt::meta::shrink_grammar(grammar);
  if (args._output_grammar_file.has_value()) {
   pmt::meta::GrammarPrinter::print(grammar, *args._output_grammar_file);
  }
