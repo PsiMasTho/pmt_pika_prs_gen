@@ -4,7 +4,7 @@
 #endif
 // clang-format on
 
-#include <utility>
+#include <functional>
 
 namespace pmt {
 

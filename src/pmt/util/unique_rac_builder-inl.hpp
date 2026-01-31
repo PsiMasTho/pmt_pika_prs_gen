@@ -43,6 +43,7 @@ template <typename CONTAINER_T_, typename HASH_T_, typename EQ_T_>
 UniqueRacBuilder<CONTAINER_T_, HASH_T_, EQ_T_>::UniqueRacBuilder(CONTAINER_T_& container_)
  : _index_cache(0, UniqueRacBuilderHasher<CONTAINER_T_, HASH_T_>(container_), UniqueRacBuilderEq<CONTAINER_T_, EQ_T_>(container_))
  , _container(container_) {
+  assert(container_.empty());
 }
 
 template <typename CONTAINER_T_, typename HASH_T_, typename EQ_T_>
@@ -55,6 +56,17 @@ auto UniqueRacBuilder<CONTAINER_T_, HASH_T_, EQ_T_>::insert_and_get_index(typena
  _index_cache.insert(_container.size() - 1);
 
  return {_container.size() - 1, true};
+}
+
+template <typename CONTAINER_T_, typename HASH_T_, typename EQ_T_>
+auto UniqueRacBuilder<CONTAINER_T_, HASH_T_, EQ_T_>::insert(typename CONTAINER_T_::value_type item_) -> bool {
+ if (auto const itr = _index_cache.find(item_); itr != _index_cache.end()) {
+  return false;
+ }
+
+ _container.push_back(std::move(item_));
+ _index_cache.insert(_container.size() - 1);
+ return true;
 }
 
 template <typename CONTAINER_T_, typename HASH_T_, typename EQ_T_>

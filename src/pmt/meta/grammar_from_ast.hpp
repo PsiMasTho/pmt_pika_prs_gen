@@ -5,10 +5,6 @@
 
 namespace pmt::meta {
 
-class GrammarFromAst {
-public:
- // --$ Other $--
- static auto make(pmt::rt::Ast::UniqueHandle ast_) -> Grammar;
-};
+auto grammar_from_ast(pmt::rt::Ast::UniqueHandle const& ast_) -> Grammar;
 
 }  // namespace pmt::meta

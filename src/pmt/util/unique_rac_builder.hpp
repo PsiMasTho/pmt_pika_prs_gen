@@ -52,6 +52,7 @@ public:
 
  // --$ Other $--
  auto insert_and_get_index(typename CONTAINER_T_::value_type item_) -> std::pair<size_t, bool>;
+ auto insert(typename CONTAINER_T_::value_type item_) -> bool;
 
  auto get_container() -> CONTAINER_T_&;
 };

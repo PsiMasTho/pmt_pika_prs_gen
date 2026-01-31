@@ -8,8 +8,6 @@
 #include "pmt/meta/rule.hpp"
 #include "pmt/unreachable.hpp"
 #include "pmt/util/levenshtein.hpp"
-#include "pmt/util/overloaded.hpp"
-#include "pmt/util/uint_to_str.hpp"
 
 #include <map>
 #include <set>
@@ -218,161 +216,6 @@ void check_start_rule_exists(Locals& locals_) {  // -$ Todo $- need to factor ou
   }
 
   throw std::runtime_error(error_msg);
- }
-}
-
-auto count_hidden_productions_needed(Ast& ast_) -> size_t {
- std::vector<Ast const*> pending{&ast_};
- size_t ret = 0;
- while (!pending.empty()) {
-  Ast const* cur = pending.back();
-  pending.pop_back();
-
-  switch (cur->get_id()) {
-   case Ids::Production: {
-    pending.push_back(cur->get_child_at(cur->get_children_size() - 1));
-   } break;
-   case pmt::rt::AstId::IdRoot:
-   case Ids::Definition:
-   case Ids::Choices:
-   case Ids::Sequence:
-   case Ids::NegativeLookahead:
-   case Ids::PositiveLookahead: {
-    for (size_t i = 0; i < cur->get_children_size(); ++i) {
-     pending.push_back(cur->get_child_at(i));
-    }
-   } break;
-   case Ids::Repetition: {
-    pending.push_back(cur->get_child_at_front());
-   } break;
-   case Ids::Identifier: {
-   } break;
-   case Ids::Hidden: {
-    pending.push_back(cur->get_child_at_front());
-    ++ret;
-   } break;
-   case Ids::StringLiteral:
-   case Ids::GrammarProperty:
-   case Ids::IntegerLiteral:
-   case Ids::Charset:
-   case Ids::Epsilon:
-    break;
-   default:
-    pmt::unreachable();
-  }
- }
-
- return ret;
-}
-
-void construct_hidden_productions(Locals& locals_, Ast& ast_) {
- class AstPosition {
- public:
-  Ast* _parent;
-  size_t _child_idx;
- };
-
- std::vector<AstPosition> pending;
- std::unordered_map<std::string, std::pair<AstPosition, bool>> production_positions;  // <rule_name, <position, visited>>
-
- // clang-format off
- auto const push_and_visit = pmt::util::Overloaded{
-  [&](Ast* parent_, size_t child_idx_){
-   pending.emplace_back(parent_, child_idx_);
-  },
-  [&](std::string const& rule_name_) {
-   auto const itr = production_positions.find(rule_name_);
-   if (itr == production_positions.end() || std::exchange(itr->second.second, true)) { // not found or is visited
-    return;
-   }
-
-   pending.emplace_back(itr->second.first._parent, itr->second.first._child_idx);
-  }
- };
- // clang-format on
-
- auto const take = [&]() {
-  auto tmp = pending.back();
-  pending.pop_back();
-  return tmp;
- };
-
- auto construct_hidden_prouction = [&, hidden_production_counter = 0ull, padding = pmt::util::digits_needed(count_hidden_productions_needed(ast_), 16)](Ast::UniqueHandle expr_) mutable -> std::string {
-  std::string const rule_name = "__hidden_" + pmt::util::uint_to_string(hidden_production_counter++, padding, pmt::util::hex_alphabet_uppercase);
-  Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
-  Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
-  identifier->set_string(rule_name);
-  Ast::UniqueHandle parameter_hide = Ast::construct(Ast::Tag::String, Ids::ParameterHide);
-  parameter_hide->set_string("true");
-  Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
-  definition->give_child_at_back(std::move(expr_));
-
-  production->give_child_at_back(std::move(identifier));
-  production->give_child_at_back(std::move(parameter_hide));
-  production->give_child_at_back(std::move(definition));
-
-  size_t const index = ast_.get_children_size();
-  ast_.give_child_at_back(std::move(production));
-  production_positions[rule_name] = std::make_pair(AstPosition{._parent = &ast_, ._child_idx = index}, false);
-
-  return rule_name;
- };
-
- // Push all topmost productions, index their positions
- for (size_t i = 0; i < ast_.get_children_size(); ++i) {
-  if (ast_.get_child_at(i)->get_id() != Ids::Production) {
-   continue;
-  }
-
-  push_and_visit(&ast_, i);
-
-  production_positions[ast_.get_child_at(i)->get_child_at_front()->get_string()] = std::make_pair(AstPosition{._parent = &ast_, ._child_idx = i}, false);
- }
-
- while (!pending.empty()) {
-  auto const [parent, child_idx] = take();
-  if (parent == nullptr) {
-   continue;
-  }
-  Ast* child = parent->get_child_at(child_idx);
-  if (child == nullptr) {
-   continue;
-  }
-
-  switch (child->get_id()) {
-   case Ids::Production: {
-    push_and_visit(child, child->get_children_size() - 1);
-   } break;
-   case Ids::Definition:
-   case Ids::Choices:
-   case Ids::Sequence:
-   case Ids::NegativeLookahead:
-   case Ids::PositiveLookahead: {
-    for (size_t i = 0; i < child->get_children_size(); ++i) {
-     push_and_visit(child, i);
-    }
-   } break;
-   case Ids::Repetition: {
-    push_and_visit(child, 0);
-   } break;
-   case Ids::Identifier: {
-    push_and_visit(child->get_string());
-   } break;
-   case Ids::Hidden: {
-    std::string const constructed_name = construct_hidden_prouction(child->take_child_at_front());
-    parent->take_child_at(child_idx);
-    parent->give_child_at(child_idx, Ast::construct(Ast::Tag::String, Ids::Identifier));
-    parent->get_child_at(child_idx)->set_string(constructed_name);
-    push_and_visit(constructed_name);
-   } break;
-   case Ids::StringLiteral:
-   case Ids::IntegerLiteral:
-   case Ids::Charset:
-   case Ids::Epsilon:
-    break;
-   default:
-    pmt::unreachable();
-  }
  }
 }
 
@@ -689,9 +532,8 @@ void construct_definitions(Locals& locals_) {
 
 }  // namespace
 
-auto GrammarFromAst::make(Ast::UniqueHandle ast_) -> Grammar {
+auto grammar_from_ast(Ast::UniqueHandle const& ast_) -> Grammar {
  Locals locals;
- construct_hidden_productions(locals, *ast_);
  caching_traversal(locals, *ast_);
  report_duplicate_rules(locals._duplicate_rules);
  check_start_rule_exists(locals);

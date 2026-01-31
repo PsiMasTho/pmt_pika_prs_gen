@@ -4,8 +4,11 @@
 #include "pmt/builder/pika_program_emitter.hpp"
 #include "pmt/builder/pika_program_printer.hpp"
 #include "pmt/builder/terminal_dotfile_writer.hpp"
+#include "pmt/meta/hidden_expression_extractor.hpp"
 #include "pmt/meta/grammar_from_ast.hpp"
-#include "pmt/meta/grammar_normalizer.hpp"
+#include "pmt/meta/grammar_flattener.hpp"
+#include "pmt/meta/grammar_pruner.hpp"
+#include "pmt/meta/rule_inliner.hpp"
 #include "pmt/meta/grammar_printer.hpp"
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/pika_program.hpp"
@@ -48,11 +51,13 @@ public:
 auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
  pmt::meta::PikaProgram const pika_program;
 
- auto now = std::chrono::high_resolution_clock::now();
+ //auto now = std::chrono::high_resolution_clock::now();
  Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_grammar_, pika_program), input_grammar_, pika_program);
  if (!ast) {
   throw std::runtime_error("Failed to parse grammar input.");
  }
+ //auto elapsed = std::chrono::high_resolution_clock::now() - now;
+ //std::cerr << "Parsed grammar in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() << " ms.\n";
 
  return ast;
 }
@@ -64,8 +69,12 @@ auto main(int argc_, char const* const* argv_) -> int try {
 
  std::string const input_grammar((std::istreambuf_iterator<char>(args._input_grammar_file)), std::istreambuf_iterator<char>());
 
- pmt::meta::Grammar grammar = pmt::meta::GrammarFromAst::make(get_grammar_ast(input_grammar));
- pmt::meta::GrammarNormalizer::normalize(grammar);
+ pmt::rt::Ast::UniqueHandle ast_grammar = get_grammar_ast(input_grammar);
+ pmt::meta::HiddenExpressionExtractor::extract_hidden_expressions(*ast_grammar);
+ pmt::meta::Grammar grammar = pmt::meta::grammar_from_ast(ast_grammar);
+ pmt::meta::GrammarPruner::prune_grammar(grammar);
+ pmt::meta::RuleInliner::inline_rules(grammar);
+ pmt::meta::GrammarFlattener::flatten_grammar(grammar);
  if (args._output_grammar_file.has_value()) {
   pmt::meta::GrammarPrinter::print(grammar, *args._output_grammar_file);
  }

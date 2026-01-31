@@ -1,0 +1,139 @@
+#include "pmt/meta/rule_inliner.hpp"
+
+#include "pmt/meta/grammar.hpp"
+#include "pmt/meta/rule_expression.hpp"
+#include "pmt/unreachable.hpp"
+#include "pmt/util/overloaded.hpp"
+
+namespace pmt::meta {
+using namespace pmt::rt;
+namespace {
+struct ExpressionPosition {
+ RuleExpression* _parent;
+ size_t _child_idx;
+};
+
+auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> {
+ std::unordered_set<std::string> ret = grammar_.get_rule_names();
+
+ std::string const& start_rule_name = grammar_.get_start_rule_name();
+ std::vector<std::pair<RuleExpression const*, std::unordered_set<std::string>>> pending{{grammar_.get_rule(start_rule_name)->_definition.get(), {start_rule_name}}};
+ std::unordered_set<std::string> visited{grammar_.get_start_rule_name()};
+
+ while (!pending.empty()) {
+  auto [expr_cur, visited_cur] = pending.back();
+  pending.pop_back();
+
+  switch (expr_cur->get_tag()) {
+   case ClauseBase::Tag::Sequence:
+   case ClauseBase::Tag::Choice:
+   case ClauseBase::Tag::CharsetLiteral:
+   case ClauseBase::Tag::OneOrMore:
+   case ClauseBase::Tag::NegativeLookahead: {
+    for (size_t i = 0; i < expr_cur->get_children_size(); ++i) {
+     pending.emplace_back(expr_cur->get_child_at(i), visited_cur);
+    }
+   } break;
+   case ClauseBase::Tag::Identifier: {
+    std::string const rule_name_cur = expr_cur->get_identifier();
+    Rule const* rule = grammar_.get_rule(rule_name_cur);
+    if (rule == nullptr || !rule->_parameters.get_unpack() || rule->_parameters.get_merge() || rule->_parameters.get_hide()) {
+     ret.erase(rule_name_cur);
+    }
+
+    if (visited_cur.contains(rule_name_cur)) {
+     ret.erase(rule_name_cur);
+    } else if (visited.insert(rule_name_cur).second) {
+     visited_cur.insert(rule_name_cur);
+     pending.emplace_back(rule->_definition.get(), visited_cur);
+    }
+   } break;
+   case ClauseBase::Tag::Epsilon:
+    break;
+   default:
+    pmt::unreachable();
+  }
+ }
+
+ return ret;
+}
+}  // namespace
+
+void RuleInliner::inline_rules(Grammar& grammar_) {
+ using Expression = std::variant<RuleExpression::UniqueHandle*, ExpressionPosition>;
+
+ std::unordered_set<std::string> const unpackable_rule_names = get_inlineable_rules(grammar_);
+ std::string const& start_rule_name = grammar_.get_start_rule_name();
+ std::vector<std::pair<Expression, std::unordered_set<std::string>>> pending{{&grammar_.get_rule(start_rule_name)->_definition, {start_rule_name}}};
+
+ while (!pending.empty()) {
+  auto [expr_cur_variant, visited_cur] = pending.back();
+  pending.pop_back();
+
+  // clang-format off
+  std::visit(pmt::util::Overloaded{[&](RuleExpression::UniqueHandle* expr_cur_) {
+    switch (expr_cur_->get()->get_tag()) {
+     case ClauseBase::Tag::Identifier: {
+      std::string rule_name = expr_cur_->get()->get_identifier();
+      Rule* const rule_next = grammar_.get_rule(rule_name);
+      if (unpackable_rule_names.contains(rule_name)) {
+       *expr_cur_ = RuleExpression::clone(*rule_next->_definition);
+       if (visited_cur.insert(rule_name).second) {
+        pending.emplace_back(expr_cur_, visited_cur);
+       }
+      } else {
+       if (visited_cur.insert(rule_name).second) {
+        pending.emplace_back(&rule_next->_definition, visited_cur);
+       }
+      }
+     } break;
+     case ClauseBase::Tag::Sequence:
+     case ClauseBase::Tag::Choice:
+     case ClauseBase::Tag::NegativeLookahead:
+     case ClauseBase::Tag::OneOrMore: {
+      for (size_t i = 0; i < expr_cur_->get()->get_children_size(); ++i) {
+       pending.emplace_back(ExpressionPosition{._parent = expr_cur_->get(), ._child_idx = i}, visited_cur);
+      }
+     } break;
+     case ClauseBase::Tag::CharsetLiteral:
+     case ClauseBase::Tag::Epsilon:
+      break;
+    }
+   },
+   [&](ExpressionPosition expr_position_cur_) {
+    RuleExpression& expr_cur = *expr_position_cur_._parent->get_child_at(expr_position_cur_._child_idx);
+    switch (expr_cur.get_tag()) {
+     case ClauseBase::Tag::Identifier: {
+      std::string rule_name = expr_cur.get_identifier();
+      Rule* const rule_next = grammar_.get_rule(rule_name);
+      if (unpackable_rule_names.contains(rule_name)) {
+       expr_position_cur_._parent->take_child_at(expr_position_cur_._child_idx);
+       expr_position_cur_._parent->give_child_at(expr_position_cur_._child_idx, RuleExpression::clone(*rule_next->_definition));
+       if (visited_cur.insert(rule_name).second) {
+        pending.emplace_back(expr_position_cur_, visited_cur);
+       }
+      } else {
+       if (visited_cur.insert(rule_name).second) {
+        pending.emplace_back(&rule_next->_definition, visited_cur);
+       }
+      }
+     } break;
+     case ClauseBase::Tag::Sequence:
+     case ClauseBase::Tag::Choice:
+     case ClauseBase::Tag::NegativeLookahead:
+     case ClauseBase::Tag::OneOrMore: {
+      for (size_t i = 0; i < expr_cur.get_children_size(); ++i) {
+       pending.emplace_back(ExpressionPosition{._parent = &expr_cur, ._child_idx = i}, visited_cur);
+      }
+     } break;
+     case ClauseBase::Tag::CharsetLiteral:
+     case ClauseBase::Tag::Epsilon:
+      break;
+    }
+   }},
+   expr_cur_variant);
+  // clang-format on
+ }
+}
+
+}  // namespace pmt::meta
