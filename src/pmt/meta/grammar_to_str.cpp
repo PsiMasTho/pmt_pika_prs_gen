@@ -73,8 +73,9 @@ auto rule_lhs_to_str(Locals& locals_, std::string const& rule_name_, Rule const&
 }
 
 auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -> bool {
- if (!parent_)
+ if (!parent_) {
   return false;
+ }
 
  ClauseBase::Tag const tag_parent = parent_->get_tag();
  ClauseBase::Tag const tag_child = child_->get_tag();
@@ -90,55 +91,62 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
    return arity_child > 1 && is_unary(tag_parent);
   case ClauseBase::Tag::Choice:
    // Choice needs parens when it's NEXT to other items in a Sequence.
-   if (tag_parent == ClauseBase::Tag::Sequence)
+   if (tag_parent == ClauseBase::Tag::Sequence) {
     return parent_->get_children_size() > 1;
+   }
    // Also needs parens under unary operators if it has multiple alts.
-   if (is_unary(tag_parent))
+   if (is_unary(tag_parent)) {
     return arity_child > 1;
+   }
    // Otherwise (Choice inside Choice, etc.) no parens.
    return false;
+  case ClauseBase::Tag::NegativeLookahead:
+  case ClauseBase::Tag::OneOrMore:
+  case ClauseBase::Tag::Epsilon: {
+   if (is_unary(tag_parent)) {
+    return true;
+   }
+  }
   default:
    return false;
  }
 }
 
 auto expand_once(Locals& locals_, RuleExpression const* node_, RuleExpression const* parent_) -> std::string {
+ bool const paren = needs_parens(parent_, node_);
+ paren ? push(locals_, ")") : void();
+
  std::string ret;
  switch (node_->get_tag()) {
   case ClauseBase::Tag::Sequence:
   case ClauseBase::Tag::Choice: {
    std::string const sep = (node_->get_tag() == ClauseBase::Tag::Sequence) ? " " : " | ";
-   bool const paren = needs_parens(parent_, node_);
-
-   if (paren)
-    push(locals_, ")");  // push close first (stack is LIFO)
    std::string delim;
    for (size_t i = node_->get_children_size(); i--;) {
     push(locals_, std::exchange(delim, sep));
     push(locals_, ExpressionWithParent{._parent = node_, ._index = i});
    }
-   if (paren)
-    push(locals_, "(");
   } break;
-   break;
-  case ClauseBase::Tag::OneOrMore:
+  case ClauseBase::Tag::OneOrMore: {
    push(locals_, "+");
    push(locals_, ExpressionWithParent{._parent = node_});
-   break;
-  case ClauseBase::Tag::NegativeLookahead:
+  } break;
+  case ClauseBase::Tag::NegativeLookahead: {
    push(locals_, "!");
    push(locals_, ExpressionWithParent{._parent = node_});
-   break;
-  case ClauseBase::Tag::Identifier:
+  } break;
+  case ClauseBase::Tag::Identifier: {
    ret += "$" + node_->get_identifier();
-   break;
+  } break;
   case ClauseBase::Tag::CharsetLiteral: {
    ret += charset_literal_to_grammar_string(node_->get_charset_literal());
   } break;
-  case ClauseBase::Tag::Epsilon:
+  case ClauseBase::Tag::Epsilon: {
    push(locals_, "epsilon");
-   break;
+  } break;
  }
+
+ paren ? push(locals_, "(") : void();
 
  return ret;
 }

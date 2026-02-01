@@ -86,12 +86,13 @@ void Ast::set_id(AstId::IdType id_) {
 }
 
 auto Ast::get_tag() const -> Tag {
- if (std::holds_alternative<StringType>(_data))
+ if (std::holds_alternative<StringType>(_data)) {
   return Tag::String;
- else if (std::holds_alternative<ParentType>(_data))
+ } else if (std::holds_alternative<ParentType>(_data)) {
   return Tag::Parent;
- else
+ } else {
   pmt::unreachable();
+ }
 }
 
 auto Ast::get_string() -> StringType& {
