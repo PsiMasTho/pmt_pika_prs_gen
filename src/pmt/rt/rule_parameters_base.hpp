@@ -13,7 +13,8 @@ public:
  static inline bool const UNPACK_DEFAULT = false;
  static inline bool const HIDE_DEFAULT = false;
 
- // --$ Other $--
+ // -$ Functions $-
+ // --$ Virtual $--
  [[nodiscard]] virtual auto get_display_name() const -> std::string_view = 0;
  [[nodiscard]] virtual auto get_id_string() const -> std::string_view = 0;
  [[nodiscard]] virtual auto get_id_value() const -> AstId::IdType = 0;

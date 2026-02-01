@@ -11,6 +11,7 @@ class RuleParametersBase;
 class PikaProgramBase {
 public:
  // -$ Functions $-
+ // --$ Virtual $--
  [[nodiscard]] virtual auto fetch_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& = 0;
  [[nodiscard]] virtual auto get_clause_count() const -> size_t = 0;
 

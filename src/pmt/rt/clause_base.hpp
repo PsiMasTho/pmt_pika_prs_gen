@@ -8,6 +8,7 @@ namespace pmt::rt {
 
 class ClauseBase {
 public:
+ // -$ Types / Constants $-
  using IdType = uint32_t;
 
  enum class Tag : uint8_t {
@@ -21,6 +22,8 @@ public:
   Epsilon,            // not stored in memo table
  };
 
+ // -$ Functions $-
+ // --$ Virtual $--
  [[nodiscard]] virtual auto get_tag() const -> Tag = 0;
  [[nodiscard]] virtual auto get_id() const -> IdType = 0;
 
@@ -38,6 +41,7 @@ public:
 
  [[nodiscard]] virtual auto can_match_zero() const -> bool = 0;
 
+ // --$ Other $--
  [[nodiscard]] static auto tag_to_string(Tag tag_) -> std::string;
 };
 

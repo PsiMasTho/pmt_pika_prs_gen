@@ -55,7 +55,7 @@ public:
 
  class Match {
  public:
-  IndexType _key_index;  // This gets set on MemoTable::insert(), when you construct it you can set it to MemoIndexKeyUninitialized
+  IndexType _key_index;  // This gets set on MemoTable::insert()
   size_t _length;
   std::vector<IndexType> _matching_subclauses;
  };

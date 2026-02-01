@@ -69,7 +69,7 @@ void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_
    match_updated = true;
   }
  }
- for (int i = 0, ii = key_._clause->get_seed_parent_count(); i < ii; i++) {
+ for (size_t i = 0, ii = key_._clause->get_seed_parent_count(); i < ii; i++) {
   ClauseBase::IdType const seed_parent_id = key_._clause->get_seed_parent_id_at(i);
   ClauseBase const& seed_parent_clause = pika_program_.fetch_clause(seed_parent_id);
   if (match_updated || seed_parent_clause.can_match_zero()) {
