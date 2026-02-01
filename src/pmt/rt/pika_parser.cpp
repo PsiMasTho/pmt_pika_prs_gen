@@ -8,8 +8,6 @@
 #include "pmt/rt/state_machine_tables_base.hpp"
 #include "pmt/unreachable.hpp"
 
-#include <vector>
-
 namespace pmt::rt {
 namespace {
 
@@ -29,12 +27,12 @@ void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_
    for (size_t i = 0; i < accept_count; ++i) {
     FinalIdType const accept_ = terminal_state_machine_tables_.get_state_final_id(state_nr_cur, i);
     MemoTable::Match match{
-     ._key = {._clause = &pika_program_.fetch_clause(accept_), ._position = cursor_start},
+     ._key_index = MemoTable::MemoIndexKeyUninitialized,
      ._length = cursor_ - cursor_start,
      ._matching_subclauses = {},
     };
 
-    memo_table_.insert(match._key, match, clause_queue_, pika_program_);
+    memo_table_.insert(MemoTable::Key{._clause = &pika_program_.fetch_clause(accept_), ._position = cursor_start}, match, clause_queue_, pika_program_);
    }
   }
 
@@ -46,12 +44,13 @@ void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_
  }
 }
 
-void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Match const& child_match_, PikaProgramBase const& pika_program_) {
+void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Match const& child_match_, MemoTable const& memo_table_, PikaProgramBase const& pika_program_) {
  if (!child_) {
   return;
  }
 
- switch (child_match_._key._clause->get_tag()) {
+ MemoTable::Key const& child_key = memo_table_.get_key_by_index(child_match_._key_index);
+ switch (child_key._clause->get_tag()) {
   case ClauseBase::Tag::Sequence:
   case ClauseBase::Tag::Choice:
   case ClauseBase::Tag::OneOrMore:
@@ -62,7 +61,7 @@ void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Ma
    parent_.give_child_at_back(std::move(child_));
    break;
   case ClauseBase::Tag::Identifier: {
-   RuleParametersBase const& rule_parameters = pika_program_.fetch_rule_parameters(child_match_._key._clause->get_rule_id());
+   RuleParametersBase const& rule_parameters = pika_program_.fetch_rule_parameters(child_key._clause->get_rule_id());
    if (rule_parameters.get_hide()) {
     break;
    }
@@ -83,13 +82,14 @@ void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Ma
 }
 
 auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_, std::string_view input_, PikaProgramBase const& pika_program_) -> Ast::UniqueHandle {
- ClauseBase::Tag const root_tag = root_match_._key._clause->get_tag();
+ MemoTable::Key const& root_key = memo_table_.get_key_by_index(root_match_._key_index);
+ ClauseBase::Tag const root_tag = root_key._clause->get_tag();
  if (root_tag == ClauseBase::Tag::NegativeLookahead || root_tag == ClauseBase::Tag::Epsilon) {
   return nullptr;
  }
  if (root_tag == ClauseBase::Tag::CharsetLiteral) {
   Ast::UniqueHandle node = Ast::construct(Ast::Tag::String, AstId::IdDefault);
-  node->set_string(input_.substr(root_match_._key._position, root_match_._length));
+  node->set_string(input_.substr(root_key._position, root_match_._length));
   return node;
  }
  assert(root_tag == ClauseBase::Tag::Sequence || root_tag == ClauseBase::Tag::Choice || root_tag == ClauseBase::Tag::OneOrMore || root_tag == ClauseBase::Tag::Identifier);
@@ -117,7 +117,7 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
     break;
    }
    Frame& parent = stack.back();
-   process_and_add_child(*parent._ast_node, std::move(completed), match, pika_program_);
+   process_and_add_child(*parent._ast_node, std::move(completed), match, memo_table_, pika_program_);
    continue;
   }
 
@@ -127,7 +127,8 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
   }
 
   MemoTable::Match const& child_match = memo_table_.get_match_by_index(child_match_index);
-  switch (child_match._key._clause->get_tag()) {
+  MemoTable::Key const& child_key = memo_table_.get_key_by_index(child_match._key_index);
+  switch (child_key._clause->get_tag()) {
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::OneOrMore:
@@ -136,8 +137,8 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
     break;
    case ClauseBase::Tag::CharsetLiteral: {
     Ast::UniqueHandle node = Ast::construct(Ast::Tag::String, AstId::IdDefault);
-    node->set_string(input_.substr(child_match._key._position, child_match._length));
-    process_and_add_child(*frame._ast_node, std::move(node), child_match, pika_program_);
+    node->set_string(input_.substr(child_key._position, child_match._length));
+    process_and_add_child(*frame._ast_node, std::move(node), child_match, memo_table_, pika_program_);
    } break;
    case ClauseBase::Tag::NegativeLookahead:
    case ClauseBase::Tag::Epsilon:
@@ -181,7 +182,7 @@ auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_, std::string_vie
 
  if (MemoTable::IndexType const start_match_index = memo_table_.find(MemoTable::Key{._clause = &pika_program_.fetch_clause(0), ._position = 0}, input_, pika_program_); start_match_index != MemoTable::MemoIndexMatchNotFound && start_match_index != MemoTable::MemoIndexMatchZeroLength) {
   MemoTable::Match const& start_match = memo_table_.get_match_by_index(start_match_index);
-  process_and_add_child(*ast_root, build_ast(start_match, memo_table_, input_, pika_program_), start_match, pika_program_);
+  process_and_add_child(*ast_root, build_ast(start_match, memo_table_, input_, pika_program_), start_match, memo_table_, pika_program_);
  }
 
  return ast_root;

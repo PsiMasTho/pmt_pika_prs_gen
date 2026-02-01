@@ -7,15 +7,38 @@
 #include <cassert>
 
 namespace pmt::rt {
-auto MemoTable::KeyHash::operator()(Key const& key_) const -> size_t {
+
+MemoTable::KeyHashIndirect::KeyHashIndirect(std::vector<MemoTable::Key> const& keys_)
+ : _keys(keys_) {
+}
+
+auto MemoTable::KeyHashIndirect::operator()(Key const& key_) const -> size_t {
  size_t seed = Hash::Phi64;
  Hash::combine(key_._clause, seed);
  Hash::combine(key_._position, seed);
  return seed;
 }
 
-auto MemoTable::KeyEq::operator()(Key const& lhs_, Key const& rhs_) const -> bool {
- return lhs_._clause == rhs_._clause && lhs_._position == rhs_._position;
+auto MemoTable::KeyHashIndirect::operator()(IndexType index_) const -> size_t {
+ assert(index_ < _keys.size());
+ return operator()(_keys[index_]);
+}
+
+MemoTable::KeyEqIndirect::KeyEqIndirect(std::vector<MemoTable::Key> const& keys_)
+ : _keys(keys_) {
+}
+
+auto MemoTable::KeyEqIndirect::fetch_key(Key const& key_) -> Key const& {
+ return key_;
+}
+
+auto MemoTable::KeyEqIndirect::fetch_key(IndexType index_) const -> Key const& {
+ assert(index_ < _keys.size());
+ return _keys[index_];
+}
+
+MemoTable::MemoTable()
+ : _table(0, KeyHashIndirect(_keys), KeyEqIndirect(_keys)) {
 }
 
 auto MemoTable::find(Key const& key_, std::string_view input_, PikaProgramBase const& pika_program_) const -> IndexType {
@@ -34,10 +57,15 @@ void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_
  bool match_updated = false;
  if (new_match_.has_value()) {
   auto const itr_old_match = _table.find(key_);
-
-  if ((itr_old_match == _table.end() || new_match_->_length > get_match_by_index(itr_old_match->second)._length)) {
-   _matches.push_back(std::move(new_match_.value()));
-   _table.insert_or_assign(key_, _matches.size() - 1);
+  if (itr_old_match == _table.end()) {
+   _keys.push_back(key_);
+   _table.emplace(_keys.size() - 1, _matches.size());
+   new_match_->_key_index = _keys.size() - 1;
+   _matches.push_back(std::move(*new_match_));
+   match_updated = true;
+  } else if (new_match_->_length > get_match_by_index(itr_old_match->second)._length) {
+   new_match_->_key_index = itr_old_match->first;
+   _matches[itr_old_match->second] = std::move(*new_match_);
    match_updated = true;
   }
  }
@@ -49,6 +77,11 @@ void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_
    parse_queue_.push(ClauseQueueItem{._clause = &seed_parent_clause, ._priority = priority});
   }
  }
+}
+
+auto MemoTable::get_key_by_index(IndexType index_) const -> Key const& {
+ assert(index_ < _keys.size());
+ return _keys[index_];
 }
 
 auto MemoTable::get_match_by_index(IndexType index_) const -> Match const& {

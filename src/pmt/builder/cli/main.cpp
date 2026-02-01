@@ -5,7 +5,6 @@
 #include "pmt/builder/pika_program_to_str.hpp"
 #include "pmt/builder/terminal_dotfile_emitter.hpp"
 #include "pmt/meta/grammar_to_str.hpp"
-#include "pmt/meta/ids.hpp"
 #include "pmt/meta/load_grammar.hpp"
 #include "pmt/util/read_file.hpp"
 
@@ -13,7 +12,6 @@
 #include "pmt/rt/ast_to_str.hpp"
 #include "pmt/rt/pika_parser.hpp"
 
-// #include <chrono>
 #include <fstream>
 #include <iostream>
 
@@ -42,7 +40,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
   std::string const input_test = pmt::util::read_file(*args._input_test_file);
   Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_test, program), input_test, program);
   if (ast_testfile != nullptr) {
-   pmt::rt::AstToString const ast_to_string([&](AstId::IdType id_) { return pmt::meta::Ids::id_to_string(id_); }, 2);
+   pmt::rt::AstToString const ast_to_string([&](AstId::IdType id_) { return program.get_id_table().id_to_string(id_); }, 2);
    std::cout << ast_to_string.to_string(*ast_testfile);
   } else {
    std::cout << "Failed to parse test input.\n";

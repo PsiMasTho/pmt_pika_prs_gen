@@ -8,6 +8,8 @@
 #include "pmt/meta/shrink_grammar.hpp"
 #include "pmt/rt/pika_parser.hpp"
 
+#include <chrono>
+
 namespace pmt::meta {
 using namespace pmt::rt;
 namespace {}
@@ -15,7 +17,11 @@ namespace {}
 auto load_grammar(std::string_view input_grammar_) -> Grammar {
  pmt::meta::PikaProgram const pika_program;
 
+ auto const start_time = std::chrono::high_resolution_clock::now();
  MemoTable const memo_table = PikaParser::populate_memo_table(input_grammar_, pika_program);
+ auto const end_time = std::chrono::high_resolution_clock::now();
+ size_t const duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+ fprintf(stderr, "Parsing completed in %zu ms\n", duration);
 
  Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(memo_table, input_grammar_, pika_program);
  if (!ast) {
