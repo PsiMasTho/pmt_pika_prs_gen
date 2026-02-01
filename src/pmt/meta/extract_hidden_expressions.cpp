@@ -1,4 +1,4 @@
-#include "pmt/meta/hidden_expression_extractor.hpp"
+#include "pmt/meta/extract_hidden_expressions.hpp"
 
 #include "pmt/hash.hpp"
 #include "pmt/meta/ids.hpp"
@@ -181,7 +181,7 @@ auto count_unique_hidden_expressions(std::span<AstPosition const> hidden_express
 
 }  // namespace
 
-void HiddenExpressionExtractor::extract_hidden_expressions(pmt::rt::Ast& ast_) {
+void extract_hidden_expressions(pmt::rt::Ast& ast_) {
  std::vector<AstPosition> hidden_expressions = gather_hidden_expressions(ast_);
  std::vector<Ast::UniqueHandle> hidden_expressions_orig;
 

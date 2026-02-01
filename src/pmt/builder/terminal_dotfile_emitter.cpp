@@ -1,6 +1,5 @@
-#include "pmt/builder/terminal_dotfile_writer.hpp"
+#include "pmt/builder/terminal_dotfile_emitter.hpp"
 
-#include "pmt/builder/emitter_utils.hpp"
 #include "pmt/util/timestamp.hpp"
 
 #include <algorithm>
@@ -69,7 +68,7 @@ auto build_symbol_label(IntervalSet<SymbolType> const& symbol_intervals_) -> std
  return label;
 }
 
-auto build_final_id_table(StateMachine const& state_machine_, TerminalDotfileWriter::FinalIdToStringFn const& final_id_to_string_fn_) -> std::string {
+auto build_final_id_table(StateMachine const& state_machine_, TerminalDotfileEmitter::FinalIdToStringFn const& final_id_to_string_fn_) -> std::string {
  std::unordered_map<FinalIdType, std::set<StateNrType>> final_ids;
  for (StateNrType const state_nr : state_machine_.get_state_nrs()) {
   State const& state = *state_machine_.get_state(state_nr);
@@ -91,26 +90,21 @@ auto build_final_id_table(StateMachine const& state_machine_, TerminalDotfileWri
 
 }  // namespace
 
-TerminalDotfileWriter::TerminalDotfileWriter(StateMachine const& state_machine_, std::ostream& os_graph_, std::ifstream& skel_file_, FinalIdToStringFn final_id_to_string_fn_)
- : _state_machine(state_machine_)
- , _os_graph(os_graph_)
- , _skel_file(skel_file_)
- , _final_id_to_string_fn(std::move(final_id_to_string_fn_)) {
- if (!_final_id_to_string_fn) {
-  _final_id_to_string_fn = [](FinalIdType final_id_) {
+TerminalDotfileEmitter::TerminalDotfileEmitter(Args args_)
+ : _args(std::move(args_)) {
+ if (!_args._final_id_to_string_fn) {
+  _args._final_id_to_string_fn = [](FinalIdType final_id_) {
    return std::to_string(final_id_);
   };
  }
 }
 
-void TerminalDotfileWriter::write_dot() {
- std::string graph = read_stream(_skel_file, "terminal dotfile skeleton");
-
+void TerminalDotfileEmitter::write_dot() {
  std::string accepting_nodes_replacement;
  {
   std::string delim;
-  for (StateNrType const state_nr : _state_machine.get_state_nrs()) {
-   if (_state_machine.get_state(state_nr)->get_final_ids().popcnt() != 0) {
+  for (StateNrType const state_nr : _args._state_machine.get_state_nrs()) {
+   if (_args._state_machine.get_state(state_nr)->get_final_ids().popcnt() != 0) {
     accepting_nodes_replacement += std::exchange(delim, " ") + std::to_string(state_nr);
    }
   }
@@ -119,8 +113,8 @@ void TerminalDotfileWriter::write_dot() {
  std::string epsilon_edges_replacement;
  {
   std::string space;
-  for (StateNrType const state_nr : _state_machine.get_state_nrs()) {
-   _state_machine.get_state(state_nr)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { epsilon_edges_replacement += std::exchange(space, " ") + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next_) + "\n"; });
+  for (StateNrType const state_nr : _args._state_machine.get_state_nrs()) {
+   _args._state_machine.get_state(state_nr)->get_epsilon_transitions().for_each_key([&](StateNrType state_nr_next_) { epsilon_edges_replacement += std::exchange(space, " ") + std::to_string(state_nr) + " -> " + std::to_string(state_nr_next_) + "\n"; });
   }
  }
 
@@ -128,8 +122,8 @@ void TerminalDotfileWriter::write_dot() {
  {
   std::string space;
   symbol_edges_replacement += std::exchange(space, " ") + "edge [color=" + rgb_to_string(0, 0, 0) + ", style=solid]\n";
-  for (StateNrType const state_nr : _state_machine.get_state_nrs()) {
-   State const& state = *_state_machine.get_state(state_nr);
+  for (StateNrType const state_nr : _args._state_machine.get_state_nrs()) {
+   State const& state = *_args._state_machine.get_state(state_nr);
    std::unordered_map<StateNrType, IntervalSet<SymbolType>> symbol_intervals_per_state_nr_next;
    state.get_symbols().for_each_key([&](SymbolType symbol_) { symbol_intervals_per_state_nr_next[state.get_symbol_transition(symbol_)].insert(Interval(symbol_)); });
 
@@ -140,20 +134,20 @@ void TerminalDotfileWriter::write_dot() {
   }
  }
 
- _replacer.replace_skeleton_label(graph, "FINAL_ID_TABLE", build_final_id_table(_state_machine, _final_id_to_string_fn));
- _replacer.replace_skeleton_label(graph, "TIMESTAMP", pmt::util::get_timestamp());
- _replacer.replace_skeleton_label(graph, "LAYOUT_DIRECTION", "LR");
- _replacer.replace_skeleton_label(graph, "ACCEPTING_NODE_SHAPE", "doublecircle");
- _replacer.replace_skeleton_label(graph, "ACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 255));
- _replacer.replace_skeleton_label(graph, "ACCEPTING_NODES", accepting_nodes_replacement);
- _replacer.replace_skeleton_label(graph, "NONACCEPTING_NODE_SHAPE", "circle");
- _replacer.replace_skeleton_label(graph, "NONACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 0));
- _replacer.replace_skeleton_label(graph, "EPSILON_EDGE_COLOR", rgb_to_string(0, 255, 0));
- _replacer.replace_skeleton_label(graph, "EPSILON_EDGES", epsilon_edges_replacement);
- _replacer.replace_skeleton_label(graph, "SYMBOL_EDGES", symbol_edges_replacement);
- _replacer.replace_skeleton_label(graph, "GRAPH_TITLE", std::string(GRAPH_TITLE));
+ replace_skeleton_label(_args._skel, "FINAL_ID_TABLE", build_final_id_table(_args._state_machine, _args._final_id_to_string_fn));
+ replace_skeleton_label(_args._skel, "TIMESTAMP", pmt::util::get_timestamp());
+ replace_skeleton_label(_args._skel, "LAYOUT_DIRECTION", "LR");
+ replace_skeleton_label(_args._skel, "ACCEPTING_NODE_SHAPE", "doublecircle");
+ replace_skeleton_label(_args._skel, "ACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 255));
+ replace_skeleton_label(_args._skel, "ACCEPTING_NODES", accepting_nodes_replacement);
+ replace_skeleton_label(_args._skel, "NONACCEPTING_NODE_SHAPE", "circle");
+ replace_skeleton_label(_args._skel, "NONACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 0));
+ replace_skeleton_label(_args._skel, "EPSILON_EDGE_COLOR", rgb_to_string(0, 255, 0));
+ replace_skeleton_label(_args._skel, "EPSILON_EDGES", epsilon_edges_replacement);
+ replace_skeleton_label(_args._skel, "SYMBOL_EDGES", symbol_edges_replacement);
+ replace_skeleton_label(_args._skel, "GRAPH_TITLE", std::string(GRAPH_TITLE));
 
- _os_graph << graph;
+ _args._os_graph << _args._skel;
 }
 
 }  // namespace pmt::builder

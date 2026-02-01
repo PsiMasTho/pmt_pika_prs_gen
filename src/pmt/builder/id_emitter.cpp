@@ -1,6 +1,5 @@
 #include "pmt/builder/id_emitter.hpp"
 
-#include "pmt/builder/emitter_utils.hpp"
 #include "pmt/util/timestamp.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
@@ -15,13 +14,10 @@ IdEmitter::IdEmitter(Args args_)
 }
 
 void IdEmitter::emit() {
- std::string output_constants = read_stream(_args._constants_skel_file, "ID constants skeleton");
- std::string output_strings = read_stream(_args._strings_skel_file, "ID strings skeleton");
-
  std::string const timestamp = pmt::util::get_timestamp();
 
- replace_skeleton_label(output_constants, "TIMESTAMP", timestamp);
- replace_skeleton_label(output_strings, "TIMESTAMP", timestamp);
+ replace_skeleton_label(_args._constants_skel, "TIMESTAMP", timestamp);
+ replace_skeleton_label(_args._strings_skel, "TIMESTAMP", timestamp);
 
  std::string id_constants;
  std::string id_strings;
@@ -43,11 +39,11 @@ void IdEmitter::emit() {
   id_strings += "\",";
  });
 
- replace_skeleton_label(output_constants, "ID_CONSTANTS", id_constants);
- replace_skeleton_label(output_strings, "ID_STRINGS", id_strings);
+ replace_skeleton_label(_args._constants_skel, "ID_CONSTANTS", id_constants);
+ replace_skeleton_label(_args._strings_skel, "ID_STRINGS", id_strings);
 
- _args._strings_output_file << output_strings;
- _args._constants_output_file << output_constants;
+ _args._strings_output_file << _args._strings_skel;
+ _args._constants_output_file << _args._constants_skel;
 }
 
 }  // namespace pmt::builder

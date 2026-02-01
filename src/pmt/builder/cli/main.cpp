@@ -2,124 +2,90 @@
 #include "pmt/builder/id_emitter.hpp"
 #include "pmt/builder/pika_program.hpp"
 #include "pmt/builder/pika_program_emitter.hpp"
-#include "pmt/builder/pika_program_printer.hpp"
-#include "pmt/builder/terminal_dotfile_writer.hpp"
-#include "pmt/meta/grammar_from_ast.hpp"
-#include "pmt/meta/grammar_printer.hpp"
-#include "pmt/meta/grammar_pruner.hpp"
-#include "pmt/meta/hidden_expression_extractor.hpp"
+#include "pmt/builder/pika_program_to_str.hpp"
+#include "pmt/builder/terminal_dotfile_emitter.hpp"
+#include "pmt/meta/grammar_to_str.hpp"
 #include "pmt/meta/ids.hpp"
-#include "pmt/meta/pika_program.hpp"
-#include "pmt/meta/rule_inliner.hpp"
-#include "pmt/meta/shrink_grammar.hpp"
+#include "pmt/meta/load_grammar.hpp"
+#include "pmt/util/read_file.hpp"
+
 #include "pmt/rt/ast.hpp"
-#include "pmt/rt/ast_printer_base.hpp"
+#include "pmt/rt/ast_to_str.hpp"
 #include "pmt/rt/pika_parser.hpp"
 
 // #include <chrono>
+#include <fstream>
 #include <iostream>
 
 using namespace pmt::rt;
 
-namespace {
-
-class MetaAstPrinter : public AstPrinterBase {
-public:
- auto id_to_string(AstId::IdType id_) const -> std::string override {
-  return pmt::meta::Ids::id_to_string(id_);
- }
-};
-
-class TestAstPrinter : public AstPrinterBase {
-public:
- using IdToStringFnType = std::function<std::string(AstId::IdType)>;
-
-private:
- IdToStringFnType _id_to_string_fn;
-
-public:
- TestAstPrinter(IdToStringFnType id_to_string_fn_)
-  : AstPrinterBase()
-  , _id_to_string_fn(std::move(id_to_string_fn_)) {
- }
-
- auto id_to_string(AstId::IdType id_) const -> std::string override {
-  return _id_to_string_fn(id_);
- }
-};
-
-auto get_grammar_ast(std::string const& input_grammar_) -> Ast::UniqueHandle {
- pmt::meta::PikaProgram const pika_program;
-
- // auto now = std::chrono::high_resolution_clock::now();
- Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_grammar_, pika_program), input_grammar_, pika_program);
- if (!ast) {
-  throw std::runtime_error("Failed to parse grammar input.");
- }
- // auto elapsed = std::chrono::high_resolution_clock::now() - now;
- // std::cerr << "Parsed grammar in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() << " ms.\n";
-
- return ast;
-}
-
-}  // namespace
+namespace {}  // namespace
 
 auto main(int argc_, char const* const* argv_) -> int try {
  pmt::builder::cli::Args args(argc_, argv_);
 
- std::string const input_grammar((std::istreambuf_iterator<char>(args._input_grammar_file)), std::istreambuf_iterator<char>());
+ std::string const input_grammar = pmt::util::read_file(args._input_grammar_file);
+ pmt::meta::Grammar const grammar = pmt::meta::load_grammar(input_grammar);
 
- pmt::rt::Ast::UniqueHandle ast_grammar = get_grammar_ast(input_grammar);
- pmt::meta::HiddenExpressionExtractor::extract_hidden_expressions(*ast_grammar);
- pmt::meta::Grammar grammar = pmt::meta::grammar_from_ast(ast_grammar);
- pmt::meta::GrammarPruner::prune_grammar(grammar);
- pmt::meta::RuleInliner::inline_rules(grammar);
- pmt::meta::shrink_grammar(grammar);
  if (args._output_grammar_file.has_value()) {
-  pmt::meta::GrammarPrinter::print(grammar, *args._output_grammar_file);
+  std::ofstream os(*args._output_grammar_file);
+  os << pmt::meta::grammar_to_string(grammar);
  }
 
  pmt::builder::PikaProgram const program(grammar);
  if (args._output_clauses_file.has_value()) {
-  pmt::builder::PikaProgramPrinter::print(program, *args._output_clauses_file);
+  std::ofstream os(*args._output_clauses_file);
+  os << pmt::builder::pika_program_to_string(program);
  }
 
  if (args._input_test_file.has_value()) {
-  std::string const input_test((std::istreambuf_iterator<char>(*args._input_test_file)), std::istreambuf_iterator<char>());
+  std::string const input_test = pmt::util::read_file(*args._input_test_file);
   Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_test, program), input_test, program);
   if (ast_testfile != nullptr) {
-   TestAstPrinter const printer([&](AstId::IdType id_) { return program.get_id_table().id_to_string(id_); });
-   printer.print(*ast_testfile, std::cout);
+   pmt::rt::AstToString const ast_to_string([&](AstId::IdType id_) { return pmt::meta::Ids::id_to_string(id_); }, 2);
+   std::cout << ast_to_string.to_string(*ast_testfile);
   } else {
    std::cout << "Failed to parse test input.\n";
   }
  }
 
- // emit generated program
- pmt::builder::PikaProgramEmitter emitter(pmt::builder::PikaProgramEmitter::Args{
-  ._program = program,
-  ._header_include_path = args._pika_program_header_include_filename,
-  ._output_header = args._pika_program_output_header_file,
-  ._output_source = args._pika_program_output_source_file,
-  ._header_skel_file = args._pika_program_header_skel_file,
-  ._source_skel_file = args._pika_program_source_skel_file,
-  ._class_name = args._pika_program_class_name,
-  ._namespace_name = args._pika_program_namespace_name,
- });
- emitter.emit();
+ {
+  std::ofstream output_header(args._pika_program_output_header_file);
+  std::ofstream output_source(args._pika_program_output_source_file);
+  pmt::builder::PikaProgramEmitter pika_program_emitter(pmt::builder::PikaProgramEmitter::Args{
+   ._program = program,
+   ._header_include_path = args._pika_program_header_include_filename,
+   ._output_header = output_header,
+   ._output_source = output_source,
+   ._header_skel = pmt::util::read_file(args._pika_program_header_skel_file),
+   ._source_skel = pmt::util::read_file(args._pika_program_source_skel_file),
+   ._class_name = args._pika_program_class_name,
+   ._namespace_name = args._pika_program_namespace_name,
+  });
+  pika_program_emitter.emit();
+ }
 
- // emit ID tables
- pmt::builder::IdEmitter id_emitter(pmt::builder::IdEmitter::Args{
-  ._id_table = program.get_id_table(),
-  ._strings_output_file = args._id_strings_output_file,
-  ._strings_skel_file = args._id_strings_skel_file,
-  ._constants_output_file = args._id_constants_output_file,
-  ._constants_skel_file = args._id_constants_skel_file,
- });
- id_emitter.emit();
+ {
+  std::ofstream output_id_strings(args._id_strings_output_file);
+  std::ofstream output_id_constants(args._id_constants_output_file);
+  pmt::builder::IdEmitter id_emitter(pmt::builder::IdEmitter::Args{
+   ._id_table = program.get_id_table(),
+   ._strings_output_file = output_id_strings,
+   ._strings_skel = pmt::util::read_file(args._id_strings_skel_file),
+   ._constants_output_file = output_id_constants,
+   ._constants_skel = pmt::util::read_file(args._id_constants_skel_file),
+  });
+  id_emitter.emit();
+ }
 
  if (args._terminal_graph_output_file.has_value() && args._terminal_graph_skel_file.has_value()) {
-  pmt::builder::TerminalDotfileWriter dot_writer(program.get_literal_state_machine_tables().get_state_machine(), *args._terminal_graph_output_file, *args._terminal_graph_skel_file, [&](FinalIdType idx_) { return std::to_string(idx_); });
+  std::ofstream output_graph(*args._terminal_graph_output_file);
+  pmt::builder::TerminalDotfileEmitter dot_writer(pmt::builder::TerminalDotfileEmitter::Args{
+   ._final_id_to_string_fn = [&](FinalIdType idx_) { return std::to_string(idx_); },
+   ._skel = pmt::util::read_file(*args._terminal_graph_skel_file),
+   ._state_machine = program.get_literal_state_machine_tables().get_state_machine(),
+   ._os_graph = output_graph,
+  });
   dot_writer.write_dot();
  }
 

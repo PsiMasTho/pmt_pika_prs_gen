@@ -1,4 +1,4 @@
-#include "pmt/meta/grammar_pruner.hpp"
+#include "pmt/meta/prune_grammar.hpp"
 
 #include "pmt/meta/grammar.hpp"
 
@@ -36,7 +36,7 @@ auto get_referenced_rules(RuleExpression const* rule_expression_) -> std::unorde
 }
 }  // namespace
 
-void GrammarPruner::prune_grammar(Grammar& grammar_) {
+void prune_grammar(Grammar& grammar_) {
  std::unordered_set<std::string> all_rule_names = grammar_.get_rule_names();
 
  std::vector<std::string> pending;

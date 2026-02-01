@@ -2,15 +2,17 @@
 
 #include "pmt/rt/ast_id.hpp"
 
-#include <iosfwd>
+#include <functional>
+#include <string>
 
 namespace pmt::rt {
 class Ast;
 
-class AstPrinterBase {
+class AstToString {
 public:
  // -$ Types / Constants $-
  using IndentWidthType = uint32_t;
+ using IdToStringFnType = std::function<std::string(AstId::IdType)>;
 
  enum : IndentWidthType {
   IndentWidthDefault = 2,
@@ -18,18 +20,19 @@ public:
 
 private:
  // -$ Data $-
+ IdToStringFnType _id_to_string_fn;
  IndentWidthType _indent_width;
 
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- AstPrinterBase(IndentWidthType indent_width_ = IndentWidthDefault);
-
- // --$ Virtual $--
- [[nodiscard]] virtual auto id_to_string(AstId::IdType id_) const -> std::string = 0;
+ AstToString(IdToStringFnType id_to_string_fn_, IndentWidthType indent_width_ = IndentWidthDefault);
 
  // --$ Other $--
- void print(Ast const& ast_, std::ostream& out_) const;
+ auto to_string(Ast const& ast_) const -> std::string;
+
+ void set_id_to_string_fn(IdToStringFnType id_to_string_fn_);
+ auto get_id_to_string_fn() const -> IdToStringFnType;
 
  void set_indent_width(IndentWidthType indent_width_);
  auto get_indent_width() const -> IndentWidthType;

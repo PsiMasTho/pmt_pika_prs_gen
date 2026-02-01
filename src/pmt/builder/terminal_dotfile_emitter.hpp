@@ -4,29 +4,32 @@
 #include "pmt/rt/primitives.hpp"
 #include "pmt/util/skeleton_replacer_base.hpp"
 
-#include <fstream>
 #include <functional>
+#include <iosfwd>
 #include <string>
 
 namespace pmt::builder {
 
-class TerminalDotfileWriter {
+class TerminalDotfileEmitter : public pmt::util::SkeletonReplacerBase {
  // -$ Types / Constants $-
 public:
  using FinalIdToStringFn = std::function<std::string(pmt::rt::FinalIdType)>;
+ class Args {
+ public:
+  FinalIdToStringFn _final_id_to_string_fn;
+  std::string _skel;
+  StateMachine const& _state_machine;
+  std::ostream& _os_graph;
+ };
 
 private:
  // -$ Data $-
- StateMachine const& _state_machine;
- std::ostream& _os_graph;
- std::ifstream& _skel_file;
- pmt::util::SkeletonReplacerBase _replacer;
- FinalIdToStringFn _final_id_to_string_fn;
+ Args _args;
 
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- TerminalDotfileWriter(StateMachine const& state_machine_, std::ostream& os_graph_, std::ifstream& skel_file_, FinalIdToStringFn final_id_to_string_fn_);
+ TerminalDotfileEmitter(Args args_);
 
  // -$ Other $-
  void write_dot();

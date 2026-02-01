@@ -17,8 +17,8 @@ public:
   std::string _header_include_path;
   std::ofstream& _output_header;
   std::ofstream& _output_source;
-  std::ifstream& _header_skel_file;
-  std::ifstream& _source_skel_file;
+  std::string _header_skel;
+  std::string _source_skel;
   std::string _class_name;
   std::string _namespace_name;
  };

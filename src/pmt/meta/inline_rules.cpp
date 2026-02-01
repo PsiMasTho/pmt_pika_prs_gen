@@ -1,4 +1,4 @@
-#include "pmt/meta/rule_inliner.hpp"
+#include "pmt/meta/inline_rules.hpp"
 
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/rule_expression.hpp"
@@ -59,7 +59,7 @@ auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> 
 }
 }  // namespace
 
-void RuleInliner::inline_rules(Grammar& grammar_) {
+void inline_rules(Grammar& grammar_) {
  using Expression = std::variant<RuleExpression::UniqueHandle*, ExpressionPosition>;
 
  std::unordered_set<std::string> const unpackable_rule_names = get_inlineable_rules(grammar_);

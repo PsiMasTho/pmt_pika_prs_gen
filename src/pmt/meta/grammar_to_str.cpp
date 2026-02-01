@@ -1,4 +1,4 @@
-#include "pmt/meta/grammar_printer.hpp"
+#include "pmt/meta/grammar_to_str.hpp"
 
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/literal_to_str.hpp"
@@ -41,7 +41,7 @@ auto push(Locals& locals_, StackItem item_) {
  locals_._pending.push_back(std::move(item_));
 }
 
-void write_rule_lhs(std::ostream& out_, Locals& locals_, std::string const& rule_name_, Rule const& rule_) {
+auto rule_lhs_to_str(Locals& locals_, std::string const& rule_name_, Rule const& rule_) -> std::string {
  std::string delim;
  std::string parameter_str;
 
@@ -69,48 +69,45 @@ void write_rule_lhs(std::ostream& out_, Locals& locals_, std::string const& rule
   parameter_str = "<" + parameter_str + ">";
  }
 
- out_ << "$" << rule_name_ << parameter_str << " = ";
+ return "$" + rule_name_ + parameter_str + " = ";
 }
 
 auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -> bool {
  if (!parent_)
   return false;
 
- auto const P = parent_->get_tag();
- auto const C = child_->get_tag();
- auto const child_arity = child_->get_children_size();
- auto const is_unary = [&](ClauseBase::Tag t_) {
-  return t_ == ClauseBase::Tag::NegativeLookahead || t_ == ClauseBase::Tag::OneOrMore;
+ ClauseBase::Tag const tag_parent = parent_->get_tag();
+ ClauseBase::Tag const tag_child = child_->get_tag();
+ size_t const arity_child = child_->get_children_size();
+ auto const is_unary = [&](ClauseBase::Tag tag_) {
+  return tag_ == ClauseBase::Tag::NegativeLookahead || tag_ == ClauseBase::Tag::OneOrMore;
  };
 
- switch (C) {
+ switch (tag_child) {
   case ClauseBase::Tag::Sequence:
    // Sequence never needs parens inside Choice or Sequence.
    // It DOES need parens under unary operators if it has multiple items.
-   return child_arity > 1 && is_unary(P);
-
+   return arity_child > 1 && is_unary(tag_parent);
   case ClauseBase::Tag::Choice:
    // Choice needs parens when it's NEXT to other items in a Sequence.
-   if (P == ClauseBase::Tag::Sequence)
+   if (tag_parent == ClauseBase::Tag::Sequence)
     return parent_->get_children_size() > 1;
    // Also needs parens under unary operators if it has multiple alts.
-   if (is_unary(P))
-    return child_arity > 1;
+   if (is_unary(tag_parent))
+    return arity_child > 1;
    // Otherwise (Choice inside Choice, etc.) no parens.
    return false;
-
   default:
    return false;
  }
 }
 
-void expand_once(std::ostream& out_, Locals& locals_, RuleExpression const* node_, RuleExpression const* parent_) {
- using Tag = ClauseBase::Tag;
-
+auto expand_once(Locals& locals_, RuleExpression const* node_, RuleExpression const* parent_) -> std::string {
+ std::string ret;
  switch (node_->get_tag()) {
-  case Tag::Sequence:
-  case Tag::Choice: {
-   char const* sep = (node_->get_tag() == Tag::Sequence) ? " " : " | ";
+  case ClauseBase::Tag::Sequence:
+  case ClauseBase::Tag::Choice: {
+   std::string const sep = (node_->get_tag() == ClauseBase::Tag::Sequence) ? " " : " | ";
    bool const paren = needs_parens(parent_, node_);
 
    if (paren)
@@ -124,41 +121,43 @@ void expand_once(std::ostream& out_, Locals& locals_, RuleExpression const* node
     push(locals_, "(");
   } break;
    break;
-  case Tag::OneOrMore:
+  case ClauseBase::Tag::OneOrMore:
    push(locals_, "+");
    push(locals_, ExpressionWithParent{._parent = node_});
    break;
-  case Tag::NegativeLookahead:
+  case ClauseBase::Tag::NegativeLookahead:
    push(locals_, "!");
    push(locals_, ExpressionWithParent{._parent = node_});
    break;
-  case Tag::Identifier:
-   out_ << "$" << node_->get_identifier();
+  case ClauseBase::Tag::Identifier:
+   ret += "$" + node_->get_identifier();
    break;
-  case Tag::CharsetLiteral: {
-   out_ << charset_literal_to_grammar_string(node_->get_charset_literal());
+  case ClauseBase::Tag::CharsetLiteral: {
+   ret += charset_literal_to_grammar_string(node_->get_charset_literal());
   } break;
-  case Tag::Epsilon:
+  case ClauseBase::Tag::Epsilon:
    push(locals_, "epsilon");
    break;
  }
+
+ return ret;
 }
 
-void write_rule_rhs(std::ostream& out_, Locals& locals_, Rule const& rule_) {
+auto rule_rhs_to_str(Locals& locals_, Rule const& rule_) -> std::string {
  push(locals_, ";");
  push(locals_, rule_._definition.get());
 
+ std::string ret;
  while (!locals_._pending.empty()) {
   StackItem const cur = take(locals_);
-  std::visit(pmt::util::Overloaded{[&](std::string const& s_) { out_ << s_; },
-
+  std::visit(pmt::util::Overloaded{[&](std::string const& s_) { ret += s_; },
                                    [&](ExpressionWithParent expr_) {
                                     if (expr_._parent == nullptr || expr_._parent->get_children_size() <= expr_._index) {
                                      push(locals_, "/* missing expression */");
                                      return;
                                     }
                                     RuleExpression const* child = expr_._parent->get_child_at(expr_._index);
-                                    expand_once(out_, locals_, child, expr_._parent);
+                                    ret += expand_once(locals_, child, expr_._parent);
                                    },
 
                                    [&](ExpressionWithoutParent expr_) {
@@ -166,26 +165,27 @@ void write_rule_rhs(std::ostream& out_, Locals& locals_, Rule const& rule_) {
                                      push(locals_, "/* missing expression */");
                                      return;
                                     }
-                                    expand_once(out_, locals_, expr_, nullptr);
+                                    ret += expand_once(locals_, expr_, nullptr);
                                    }},
              cur);
  }
+
+ return ret;
 }
 
-void write_start_rule(std::ostream& out_, std::string const& rule_name_) {
- out_ << "@start = " << (rule_name_.empty() ? "/* missing identifier */" : "$" + rule_name_) << ";\n";
+auto start_rule_to_str(std::string const& rule_name_) -> std::string {
+ return "@start = " + (rule_name_.empty() ? "/* missing identifier */" : "$" + rule_name_) + ";\n";
 }
 
-void write_rule(Grammar const& grammar_, std::ostream& out_, Locals& locals_, std::string const& rule_name_) {
+auto rule_to_str(Grammar const& grammar_, Locals& locals_, std::string const& rule_name_) -> std::string {
  Rule const* rule = grammar_.get_rule(rule_name_);
  assert(rule != nullptr);
- write_rule_lhs(out_, locals_, rule_name_, *rule);
- write_rule_rhs(out_, locals_, *rule);
+ return rule_lhs_to_str(locals_, rule_name_, *rule) + rule_rhs_to_str(locals_, *rule);
 }
 
 }  // namespace
 
-void GrammarPrinter::print(Grammar const& grammar_, std::ostream& out_) {
+auto grammar_to_string(Grammar const& grammar_) -> std::string {
  Locals locals;
 
  std::set<std::string> const rule_names = [&] {
@@ -193,13 +193,14 @@ void GrammarPrinter::print(Grammar const& grammar_, std::ostream& out_) {
   return std::set<std::string>(unsorted.begin(), unsorted.end());
  }();
 
- write_start_rule(out_, grammar_.get_start_rule_name());
+ std::string ret = start_rule_to_str(grammar_.get_start_rule_name());
 
  std::string delim;
  for (auto const& rule_name : rule_names) {
-  out_ << std::exchange(delim, "\n");
-  write_rule(grammar_, out_, locals, rule_name);
+  ret += std::exchange(delim, "\n") + rule_to_str(grammar_, locals, rule_name);
  }
+
+ return ret;
 }
 
 }  // namespace pmt::meta

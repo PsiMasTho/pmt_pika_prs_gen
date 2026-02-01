@@ -1,9 +1,8 @@
-#include "pmt/rt/ast_printer_base.hpp"
+#include "pmt/rt/ast_to_str.hpp"
 
 #include "pmt/rt/ast.hpp"
 #include "pmt/unreachable.hpp"
 
-#include <ostream>
 #include <vector>
 
 namespace pmt::rt {
@@ -18,11 +17,12 @@ public:
 
 }  // namespace
 
-AstPrinterBase::AstPrinterBase(IndentWidthType indent_width_)
- : _indent_width(indent_width_) {
+AstToString::AstToString(IdToStringFnType id_to_string_fn_, IndentWidthType indent_width_)
+ : _id_to_string_fn(std::move(id_to_string_fn_))
+ , _indent_width(indent_width_) {
 }
 
-void AstPrinterBase::print(Ast const& ast_, std::ostream& out_) const {
+auto AstToString::to_string(Ast const& ast_) const -> std::string {
  std::vector<Item> pending;
  std::string indent_str;
 
@@ -45,14 +45,18 @@ void AstPrinterBase::print(Ast const& ast_, std::ostream& out_) const {
 
  push(Item{._node = &ast_, ._depth = 0});
 
+ std::string ret;
+
  while (!pending.empty()) {
   auto const [node, depth] = take();
   std::string_view const indent = get_indent(depth);
-  out_ << indent << id_to_string_internal(node->get_id());
+  ret += indent;
+  ret += id_to_string_internal(node->get_id());
 
   switch (node->get_tag()) {
    case Ast::Tag::String:
-    out_ << ": " << node->get_string();
+    ret += ": ";
+    ret += node->get_string();
     break;
    case Ast::Tag::Parent:
     for (size_t i = node->get_children_size(); i--;) {
@@ -63,20 +67,21 @@ void AstPrinterBase::print(Ast const& ast_, std::ostream& out_) const {
     pmt::unreachable();
   }
 
-  out_ << '\n';
+  ret += '\n';
  }
+ return ret;
 }
 
-void AstPrinterBase::set_indent_width(IndentWidthType indent_width_) {
+void AstToString::set_indent_width(IndentWidthType indent_width_) {
  _indent_width = indent_width_;
 }
 
-auto AstPrinterBase::get_indent_width() const -> IndentWidthType {
+auto AstToString::get_indent_width() const -> IndentWidthType {
  return _indent_width;
 }
 
-auto AstPrinterBase::id_to_string_internal(AstId::IdType id_) const -> std::string {
- return AstId::is_generic_id(id_) ? AstId::id_to_string(id_) : id_to_string(id_);
+auto AstToString::id_to_string_internal(AstId::IdType id_) const -> std::string {
+ return AstId::is_generic_id(id_) ? AstId::id_to_string(id_) : _id_to_string_fn(id_);
 }
 
 }  // namespace pmt::rt
