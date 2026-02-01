@@ -60,7 +60,6 @@ struct AstPositionEq {
    pending.pop_back();
 
    if (left->get_id() != right->get_id() || left->get_tag() != right->get_tag()) {
-    fprintf(stderr, "Mismatched IDs or tags: left id %zu tag %d, right id %zu tag %d\n", left->get_id(), static_cast<int>(left->get_tag()), right->get_id(), static_cast<int>(right->get_tag()));  // --- IGNORE ---
     return false;
    }
 
