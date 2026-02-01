@@ -152,7 +152,6 @@ void MultiVector<TS_...>::reserve(size_t new_capacity_) {
   return;
  }
 
- size_t const old_capacity = capacity();
  new_capacity_ = AmortizedGrowth::idx_to_size(new_capacity_idx);
  _capacity_idx = new_capacity_idx;
 

@@ -165,7 +165,6 @@ void construct_hidden_production(pmt::rt::Ast& ast_root_, Ast const* expr_, std:
  production->give_child_at_back(std::move(parameter_hide));
  production->give_child_at_back(std::move(definition));
 
- size_t const index = ast_root_.get_children_size();
  ast_root_.give_child_at_back(std::move(production));
 }
 

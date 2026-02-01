@@ -237,11 +237,9 @@ void PikaProgramEmitter::emit() {
  terminal_transitions.insert(terminal_transitions.end(), terminal_values.begin(), terminal_values.end());
 
  FinalIdType max_final_id = 0;
- bool saw_final_ids = false;
  for (size_t state_nr = 0; state_nr < state_count; ++state_nr) {
   auto const* state = state_machine.get_state(state_nr);
   if (state != nullptr && !state->get_final_ids().empty()) {
-   saw_final_ids = true;
    max_final_id = std::max(max_final_id, state->get_final_ids().highest());
   }
  }
