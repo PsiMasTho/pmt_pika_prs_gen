@@ -15,7 +15,7 @@ class PikaTablesBase;
 class MemoTable {
 public:
  // -$ Types / Constants $-
- using IndexType = size_t;
+ using IndexType = uint32_t;
 
  enum : IndexType {
   MemoIndexKeyUninitialized = std::numeric_limits<IndexType>::max(),
@@ -55,7 +55,6 @@ public:
 
  class Match {
  public:
-  IndexType _key_index;  // This gets set on MemoTable::insert()
   size_t _length;
   std::vector<IndexType> _matching_subclauses;
  };
@@ -75,7 +74,6 @@ public:
  void insert(Key key_, std::optional<Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_tables_);
 
  auto get_key_by_index(IndexType index_) const -> Key const&;
-
  auto get_match_by_index(IndexType index_) const -> Match const&;
  auto get_match_length_by_index(IndexType index_) const -> size_t;
 
