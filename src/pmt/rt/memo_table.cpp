@@ -41,11 +41,11 @@ MemoTable::MemoTable()
  : _table(0, KeyHashIndirect(_keys), KeyEqIndirect(_keys)) {
 }
 
-auto MemoTable::find(Key const& key_, std::string_view input_, PikaTablesBase const& pika_program_) const -> IndexType {
+auto MemoTable::find(Key const& key_, std::string_view input_, PikaTablesBase const& pika_tables_) const -> IndexType {
  if (auto const itr = _table.find(key_); itr != _table.end()) {
   return itr->second;
  } else if (key_._clause->get_tag() == ClauseBase::Tag::NegativeLookahead) {
-  return ClauseMatcher::match(*this, key_, input_, pika_program_).has_value() ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
+  return ClauseMatcher::match(*this, key_, input_, pika_tables_).has_value() ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
  } else if (key_._clause->can_match_zero()) {
   return MemoIndexMatchZeroLength;
  }
@@ -53,25 +53,27 @@ auto MemoTable::find(Key const& key_, std::string_view input_, PikaTablesBase co
  return MemoIndexMatchNotFound;
 }
 
-void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_program_) {
+void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_tables_) {
  bool match_updated = false;
  if (new_match_.has_value()) {
   auto const itr_old_match = _table.find(key_);
   if (itr_old_match == _table.end()) {
    _keys.push_back(key_);
-   _table.emplace(_keys.size() - 1, _matches.size());
-   new_match_->_key_index = _keys.size() - 1;
    _matches.push_back(std::move(*new_match_));
+   _matches.back()._key_index = _keys.size() - 1;
+   _table.emplace(_keys.size() - 1, _matches.size() - 1);
    match_updated = true;
-  } else if (new_match_->_length > get_match_by_index(itr_old_match->second)._length) {
-   new_match_->_key_index = itr_old_match->first;
-   _matches[itr_old_match->second] = std::move(*new_match_);
+  } else if (new_match_->_length > get_match_length_by_index(itr_old_match->second)) {
+   _matches.push_back(std::move(*new_match_));
+   _matches.back()._key_index = itr_old_match->first;
+   _table.insert_or_assign(_matches.back()._key_index, _matches.size() - 1);
    match_updated = true;
   }
  }
- for (size_t i = 0, ii = key_._clause->get_seed_parent_count(); i < ii; i++) {
+
+ for (size_t i = 0; i < key_._clause->get_seed_parent_count(); i++) {
   ClauseBase::IdType const seed_parent_id = key_._clause->get_seed_parent_id_at(i);
-  ClauseBase const& seed_parent_clause = pika_program_.fetch_clause(seed_parent_id);
+  ClauseBase const& seed_parent_clause = pika_tables_.fetch_clause(seed_parent_id);
   if (match_updated || seed_parent_clause.can_match_zero()) {
    ClauseQueueItem::PriorityType const priority = seed_parent_id;
    parse_queue_.push(ClauseQueueItem{._clause = &seed_parent_clause, ._priority = priority});
