@@ -18,48 +18,6 @@
 using namespace pmt::rt;
 
 namespace {
-void debug_print_memo_table(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_program_) {
- std::cerr << "MemoTable matches: " << memo_table_.get_match_count() << '\n';
- for (MemoTable::IndexType match_index = 0; match_index < memo_table_.get_match_count(); ++match_index) {
-  MemoTable::Match const& match = memo_table_.get_match_by_index(match_index);
-  MemoTable::Key const& key = memo_table_.get_key_by_index(match._key_index);
-  ClauseBase const* clause = key._clause;
-  ClauseBase::Tag const tag = clause->get_tag();
-
-  std::cerr << "match[" << match_index << "] key=" << match._key_index << " clause_id=" << clause->get_id() << " tag=" << ClauseBase::tag_to_string(tag) << " pos=" << key._position << " len=" << match._length;
-
-  if (clause->has_rule_id()) {
-   RuleParametersBase const& rule_parameters = pika_program_.fetch_rule_parameters(clause->get_rule_id());
-   std::cerr << " rule=" << rule_parameters.get_display_name() << " id=" << rule_parameters.get_id_string();
-  } else if (clause->has_literal_id()) {
-   std::cerr << " literal_id=" << clause->get_literal_id();
-  }
-
-  if (!match._matching_subclauses.empty()) {
-   std::cerr << " sub=[";
-   for (size_t i = 0; i < match._matching_subclauses.size(); ++i) {
-    if (i != 0) {
-     std::cerr << ", ";
-    }
-    MemoTable::IndexType const sub_index = match._matching_subclauses[i];
-    if (sub_index == MemoTable::MemoIndexMatchNotFound) {
-     std::cerr << "NotFound";
-    } else if (sub_index == MemoTable::MemoIndexMatchZeroLength) {
-     std::cerr << "ZeroLength";
-    } else {
-     std::cerr << sub_index;
-    }
-   }
-   std::cerr << "]";
-  }
-
-  if (key._position <= input_.size() && key._position + match._length <= input_.size()) {
-   std::cerr << " text=\"" << input_.substr(key._position, match._length) << '"';
-  }
-
-  std::cerr << '\n';
- }
-}
 }  // namespace
 
 auto main(int argc_, char const* const* argv_) -> int try {
@@ -82,7 +40,6 @@ auto main(int argc_, char const* const* argv_) -> int try {
  if (args._input_test_file.has_value()) {
   std::string const input_test = pmt::util::read_file(*args._input_test_file);
   pmt::rt::MemoTable const memo_table = PikaParser::populate_memo_table(input_test, pika_tables);
-  // debug_print_memo_table(memo_table, input_test, pika_tables);
   Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(memo_table, input_test, pika_tables);
   if (ast_testfile != nullptr) {
    pmt::rt::AstToString const ast_to_string([&](AstId::IdType id_) { return pika_tables.get_id_table().id_to_string(id_); }, 2);
