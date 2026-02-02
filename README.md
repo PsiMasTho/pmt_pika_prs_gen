@@ -35,7 +35,7 @@ CLI arguments
 
 Skeletons
 - `make install-skel` installs only the `skel/` files.
-- By default, the CLI uses the installed skeleton root (`${CMAKE_INSTALL_PREFIX}/share/pika_parser_generator/skel`).
+- By default, the CLI uses the installed skeleton root (`${CMAKE_INSTALL_PREFIX}/share/pmt_pika_prs_gen/skel`).
 - Override skeleton location at runtime with `--skel-dir /path/to/skel`.
 - Skeletons are templates that control the structure of the generated sources. You can edit the defaults in `skel/` or point the CLI at custom templates via the `--*-skel-file` arguments.
 
