@@ -17,8 +17,7 @@
 
 using namespace pmt::rt;
 
-namespace {
-}  // namespace
+namespace {}  // namespace
 
 auto main(int argc_, char const* const* argv_) -> int try {
  pmt::builder::cli::Args args(argc_, argv_);

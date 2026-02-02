@@ -15,9 +15,7 @@ namespace {}
 auto load_grammar(std::string_view input_grammar_) -> Grammar {
  pmt::meta::PikaTables const pika_tables;
 
- MemoTable const memo_table = PikaParser::populate_memo_table(input_grammar_, pika_tables);
-
- Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(memo_table, input_grammar_, pika_tables);
+ Ast::UniqueHandle ast = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_grammar_, pika_tables), input_grammar_, pika_tables);
  if (!ast) {
   throw std::runtime_error("Failed to parse grammar input.");
  }
