@@ -1,4 +1,4 @@
-#include "pmt/builder/pika_program.hpp"
+#include "pmt/builder/pika_tables.hpp"
 
 #include "pmt/builder/state_machine.hpp"
 #include "pmt/builder/state_machine_determinizer.hpp"
@@ -45,7 +45,7 @@ auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_l
 
 }  // namespace
 
-void PikaProgram::initialize(Grammar const& grammar_) {
+void PikaTables::initialize(Grammar const& grammar_) {
  std::vector<ClauseBase::IdType> charset_literal_clause_ids;
  pmt::util::UniqueRacBuilder<std::vector<CharsetLiteral>> charset_literals_cached(_literals);
 

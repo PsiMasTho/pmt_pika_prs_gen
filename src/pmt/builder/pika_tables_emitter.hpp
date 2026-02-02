@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/builder/pika_program.hpp"
+#include "pmt/builder/pika_tables.hpp"
 #include "pmt/util/skeleton_replacer_base.hpp"
 
 #include <iosfwd>
@@ -8,12 +8,12 @@
 
 namespace pmt::builder {
 
-class PikaProgramEmitter : public pmt::util::SkeletonReplacerBase {
+class PikaTablesEmitter : public pmt::util::SkeletonReplacerBase {
 public:
  // -$ Types / Constants $-
  class Args {
  public:
-  PikaProgram const& _program;
+  PikaTables const& _program;
   std::string _header_include_path;
   std::ofstream& _output_header;
   std::ofstream& _output_source;
@@ -30,7 +30,7 @@ private:
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- explicit PikaProgramEmitter(Args args_);
+ explicit PikaTablesEmitter(Args args_);
 
  // --$ Other $--
  void emit();

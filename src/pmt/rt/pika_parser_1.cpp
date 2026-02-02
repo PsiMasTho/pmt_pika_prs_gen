@@ -3,13 +3,13 @@
 #include "pmt/rt/clause_matcher.hpp"
 #include "pmt/rt/clause_queue.hpp"
 #include "pmt/rt/memo_table.hpp"
-#include "pmt/rt/pika_program_base.hpp"
+#include "pmt/rt/pika_tables_base.hpp"
 #include "pmt/rt/state_machine_tables_base.hpp"
 
 namespace pmt::rt {
 namespace {
 
-void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_, size_t cursor_, MemoTable& memo_table_, ClauseQueue& clause_queue_, std::string_view input_, PikaProgramBase const& pika_program_) {
+void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_, size_t cursor_, MemoTable& memo_table_, ClauseQueue& clause_queue_, std::string_view input_, PikaTablesBase const& pika_program_) {
  size_t const cursor_start = cursor_;
  StateNrType state_nr_cur = StateNrStart;
 
@@ -37,7 +37,7 @@ void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_
 
 }  // namespace
 
-auto PikaParser::populate_memo_table(std::string_view input_, PikaProgramBase const& pika_program_) -> MemoTable {
+auto PikaParser::populate_memo_table(std::string_view input_, PikaTablesBase const& pika_program_) -> MemoTable {
  MemoTable memo_table;
  ClauseQueue clause_queue;
 

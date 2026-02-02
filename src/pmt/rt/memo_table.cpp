@@ -2,7 +2,7 @@
 
 #include "pmt/hash.hpp"
 #include "pmt/rt/clause_matcher.hpp"
-#include "pmt/rt/pika_program_base.hpp"
+#include "pmt/rt/pika_tables_base.hpp"
 
 #include <cassert>
 
@@ -41,7 +41,7 @@ MemoTable::MemoTable()
  : _table(0, KeyHashIndirect(_keys), KeyEqIndirect(_keys)) {
 }
 
-auto MemoTable::find(Key const& key_, std::string_view input_, PikaProgramBase const& pika_program_) const -> IndexType {
+auto MemoTable::find(Key const& key_, std::string_view input_, PikaTablesBase const& pika_program_) const -> IndexType {
  if (auto const itr = _table.find(key_); itr != _table.end()) {
   return itr->second;
  } else if (key_._clause->get_tag() == ClauseBase::Tag::NegativeLookahead) {
@@ -53,7 +53,7 @@ auto MemoTable::find(Key const& key_, std::string_view input_, PikaProgramBase c
  return MemoIndexMatchNotFound;
 }
 
-void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaProgramBase const& pika_program_) {
+void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_program_) {
  bool match_updated = false;
  if (new_match_.has_value()) {
   auto const itr_old_match = _table.find(key_);

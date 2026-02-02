@@ -1,4 +1,4 @@
-#include "pmt/builder/pika_program_emitter.hpp"
+#include "pmt/builder/pika_tables_emitter.hpp"
 
 #include "pmt/builder/state_machine_tables.hpp"
 #include "pmt/container/bitset.hpp"
@@ -169,7 +169,7 @@ void set_bit(std::vector<uint64_t>& chunks_, size_t index_) {
 
 }  // namespace
 
-PikaProgramEmitter::PikaProgramEmitter(Args args_)
+PikaTablesEmitter::PikaTablesEmitter(Args args_)
  : _args(std::move(args_)) {
  if (_args._namespace_name.empty()) {
   _args._namespace_name = namespace_from_include_path(_args._header_include_path);
@@ -178,11 +178,11 @@ PikaProgramEmitter::PikaProgramEmitter(Args args_)
   _args._class_name = to_camel_case(std::filesystem::path(_args._header_include_path).stem().string());
  }
  if (_args._class_name.empty()) {
-  _args._class_name = "PikaProgram";
+  _args._class_name = "PikaTables";
  }
 }
 
-void PikaProgramEmitter::emit() {
+void PikaTablesEmitter::emit() {
  std::string const timestamp = pmt::util::get_timestamp();
  std::string const ns_open = make_namespace_open(_args._namespace_name);
  std::string const ns_close = make_namespace_close(_args._namespace_name);

@@ -6,7 +6,7 @@
 #include "pmt/meta/id_table.hpp"
 #include "pmt/meta/rule_parameters.hpp"
 #include "pmt/rt/clause_base.hpp"
-#include "pmt/rt/pika_program_base.hpp"
+#include "pmt/rt/pika_tables_base.hpp"
 
 #include <vector>
 
@@ -41,7 +41,7 @@ public:
  [[nodiscard]] auto can_match_zero() const -> bool override;
 };
 
-class PikaProgram : public pmt::rt::PikaProgramBase {
+class PikaTables : public pmt::rt::PikaTablesBase {
  // -$ Types / Constants $-
  // -$ Data $-
  pmt::meta::IdTable _id_table;
@@ -54,9 +54,9 @@ class PikaProgram : public pmt::rt::PikaProgramBase {
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- explicit PikaProgram(pmt::meta::Grammar const& grammar_);
+ explicit PikaTables(pmt::meta::Grammar const& grammar_);
 
- // --$ Inherited: pmt::rt::PikaProgramBase $--
+ // --$ Inherited: pmt::rt::PikaTablesBase $--
  [[nodiscard]] auto fetch_clause(pmt::rt::ClauseBase::IdType clause_id_) const -> pmt::rt::ClauseBase const& override;
  [[nodiscard]] auto get_clause_count() const -> size_t override;
 

@@ -101,8 +101,7 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
    // Otherwise (Choice inside Choice, etc.) no parens.
    return false;
   case ClauseBase::Tag::NegativeLookahead:
-  case ClauseBase::Tag::OneOrMore:
-  case ClauseBase::Tag::Epsilon: {
+  case ClauseBase::Tag::OneOrMore: {
    if (is_unary(tag_parent)) {
     return true;
    }

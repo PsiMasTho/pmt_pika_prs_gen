@@ -88,32 +88,36 @@ $expression<unpack = true> = $hidden             |
                              $plain;
 
 // - HIDDEN -
-$hidden<id = "Hidden"> = $identifier $tilde      |
-                         $string_literal $tilde  |
-                         $integer_literal $tilde |
-                         $charset  $tilde        |
-                         "("~ $blank $choices ")"~ $tilde;
+$hidden<id = "Hidden"> = $identifier $tilde               |
+                         $string_literal $tilde           |
+                         $integer_literal $tilde          |
+                         $charset  $tilde                 |
+                         "("~ $blank $choices ")"~ $tilde |
+                         $kw_epsilon $tilde;
 
 // - NEGATIVE_LOOKAHEAD -
-$negative_lookahead<id = "NegativeLookahead"> = $identifier $exclamation      |
-                                                $string_literal $exclamation  |
-                                                $integer_literal $exclamation |
-                                                $charset  $exclamation        |
-                                                "("~ $blank $choices ")"~ $exclamation;
+$negative_lookahead<id = "NegativeLookahead"> = $identifier $exclamation               |
+                                                $string_literal $exclamation           |
+                                                $integer_literal $exclamation          |
+                                                $charset  $exclamation                 |
+                                                "("~ $blank $choices ")"~ $exclamation |
+                                                $kw_epsilon $exclamation;
 
 // - POSITIVE_LOOKAHEAD -
-$positive_lookahead<id = "PositiveLookahead"> = $identifier $ampersand      |
-                                                $string_literal $ampersand  |
-                                                $integer_literal $ampersand |
-                                                $charset  $ampersand        |
-                                                "("~ $blank $choices ")"~ $ampersand;
+$positive_lookahead<id = "PositiveLookahead"> = $identifier $ampersand               |
+                                                $string_literal $ampersand           |
+                                                $integer_literal $ampersand          |
+                                                $charset  $ampersand                 |
+                                                "("~ $blank $choices ")"~ $ampersand |
+                                                $kw_epsilon $ampersand;
 
 // - REPETITION -
-$repetition<id = "Repetition"> = $identifier $repetition_postfix      |
-                                 $string_literal $repetition_postfix  |
-                                 $integer_literal $repetition_postfix |
-                                 $charset  $repetition_postfix        |
-                                 "("~ $blank $choices ")"~ $repetition_postfix;
+$repetition<id = "Repetition"> = $identifier $repetition_postfix               |
+                                 $string_literal $repetition_postfix           |
+                                 $integer_literal $repetition_postfix          |
+                                 $charset  $repetition_postfix                 |
+                                 "("~ $blank $choices ")"~ $repetition_postfix |
+                                 $kw_epsilon $repetition_postfix;
 
 // - PLAIN -
 $plain<unpack = true > = $identifier               |

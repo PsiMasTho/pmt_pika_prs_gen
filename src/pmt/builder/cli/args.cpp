@@ -6,7 +6,7 @@
 namespace pmt::builder::cli {
 
 Args::Args(int argc_, char const* const* argv_) {
- argparse::ArgumentParser cmdl(argc_ > 0 ? argv_[0] : "pmt-builder");
+ argparse::ArgumentParser cmdl("pika_parser_generator_cli", "1.0", argparse::default_arguments::help);
 
  std::string skel_dir;
  cmdl.add_argument("--skel-dir").store_into(skel_dir);
@@ -14,13 +14,13 @@ Args::Args(int argc_, char const* const* argv_) {
  cmdl.add_argument("--input-grammar-file").required().store_into(_input_grammar_file);
  cmdl.add_argument("--input-test-file");
 
- cmdl.add_argument("--pika-program-header-include-filename").required().store_into(_pika_program_header_include_filename);
- cmdl.add_argument("--pika-program-output-header-file").required().store_into(_pika_program_output_header_file);
- cmdl.add_argument("--pika-program-output-source-file").required().store_into(_pika_program_output_source_file);
- cmdl.add_argument("--pika-program-header-skel-file");
- cmdl.add_argument("--pika-program-source-skel-file");
- cmdl.add_argument("--pika-program-class-name");
- cmdl.add_argument("--pika-program-namespace-name");
+ cmdl.add_argument("--pika-tables-header-include-filename").required().store_into(_pika_program_header_include_filename);
+ cmdl.add_argument("--pika-tables-output-header-file").required().store_into(_pika_program_output_header_file);
+ cmdl.add_argument("--pika-tables-output-source-file").required().store_into(_pika_program_output_source_file);
+ cmdl.add_argument("--pika-tables-header-skel-file");
+ cmdl.add_argument("--pika-tables-source-skel-file");
+ cmdl.add_argument("--pika-tables-class-name");
+ cmdl.add_argument("--pika-tables-namespace-name");
 
  cmdl.add_argument("--id-strings-output-file").required().store_into(_id_strings_output_file);
  cmdl.add_argument("--id-strings-skel-file");
@@ -40,10 +40,10 @@ Args::Args(int argc_, char const* const* argv_) {
 
  _input_test_file = cmdl.present<std::string>("input-test-file");
 
- _pika_program_header_skel_file = cmdl.present<std::string>("pika-program-header-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_program-skel.hpp"));
- _pika_program_source_skel_file = cmdl.present<std::string>("pika-program-source-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_program-skel.cpp"));
- _pika_program_class_name = cmdl.present<std::string>("pika-program-class-name").value_or(std::string());
- _pika_program_namespace_name = cmdl.present<std::string>("pika-program-namespace-name").value_or(std::string());
+ _pika_program_header_skel_file = cmdl.present<std::string>("pika-tables-header-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_tables-skel.hpp"));
+ _pika_program_source_skel_file = cmdl.present<std::string>("pika-tables-source-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_tables-skel.cpp"));
+ _pika_program_class_name = cmdl.present<std::string>("pika-tables-class-name").value_or(std::string());
+ _pika_program_namespace_name = cmdl.present<std::string>("pika-tables-namespace-name").value_or(std::string());
 
  _id_strings_skel_file = cmdl.present<std::string>("id-strings-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_strings-skel.hpp"));
  _id_constants_skel_file = cmdl.present<std::string>("id-constants-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_constants-skel.hpp"));

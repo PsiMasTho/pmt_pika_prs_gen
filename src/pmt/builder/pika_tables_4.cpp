@@ -1,4 +1,4 @@
-#include "pmt/builder/pika_program.hpp"
+#include "pmt/builder/pika_tables.hpp"
 
 #include <vector>
 
@@ -11,7 +11,7 @@ using namespace pmt::meta;
 using namespace pmt::rt;
 using namespace pmt::container;
 
-void PikaProgram::determine_seed_parents() {
+void PikaTables::determine_seed_parents() {
  Bitset visited(_clauses.size());
  if (_clauses.empty()) {
   return;

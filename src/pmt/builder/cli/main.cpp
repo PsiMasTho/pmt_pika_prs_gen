@@ -1,8 +1,8 @@
 #include "pmt/builder/cli/args.hpp"
 #include "pmt/builder/id_emitter.hpp"
-#include "pmt/builder/pika_program.hpp"
-#include "pmt/builder/pika_program_emitter.hpp"
-#include "pmt/builder/pika_program_to_str.hpp"
+#include "pmt/builder/pika_tables.hpp"
+#include "pmt/builder/pika_tables_emitter.hpp"
+#include "pmt/builder/pika_tables_to_str.hpp"
 #include "pmt/builder/terminal_dotfile_emitter.hpp"
 #include "pmt/meta/grammar_to_str.hpp"
 #include "pmt/meta/load_grammar.hpp"
@@ -30,10 +30,10 @@ auto main(int argc_, char const* const* argv_) -> int try {
   os << pmt::meta::grammar_to_string(grammar);
  }
 
- pmt::builder::PikaProgram const program(grammar);
+ pmt::builder::PikaTables const program(grammar);
  if (args._output_clauses_file.has_value()) {
   std::ofstream os(*args._output_clauses_file);
-  os << pmt::builder::pika_program_to_string(program);
+  os << pmt::builder::pika_tables_to_string(program);
  }
 
  if (args._input_test_file.has_value()) {
@@ -50,7 +50,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
  {
   std::ofstream output_header(args._pika_program_output_header_file);
   std::ofstream output_source(args._pika_program_output_source_file);
-  pmt::builder::PikaProgramEmitter pika_program_emitter(pmt::builder::PikaProgramEmitter::Args{
+  pmt::builder::PikaTablesEmitter pika_program_emitter(pmt::builder::PikaTablesEmitter::Args{
    ._program = program,
    ._header_include_path = args._pika_program_header_include_filename,
    ._output_header = output_header,

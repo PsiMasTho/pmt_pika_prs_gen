@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <string>
 
 namespace pmt::rt {
@@ -20,6 +21,10 @@ public:
   OneOrMore,          // 1 clause id
   NegativeLookahead,  // 1 clause id
   Epsilon,            // not stored in memo table
+ };
+
+ enum : IdType {
+  IdInvalid = std::numeric_limits<IdType>::max(),
  };
 
  // -$ Functions $-

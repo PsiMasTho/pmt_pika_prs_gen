@@ -1,11 +1,11 @@
 #include "pmt/rt/clause_matcher.hpp"
 
-#include "pmt/rt/pika_program_base.hpp"
+#include "pmt/rt/pika_tables_base.hpp"
 #include "pmt/unreachable.hpp"
 
 namespace pmt::rt {
 namespace {
-auto match_sequence(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto match_sequence(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  size_t length = 0;
  std::vector<MemoTable::IndexType> matching_subclauses;
  for (size_t i = 0; i < key_._clause->get_child_id_count(); ++i) {
@@ -23,7 +23,7 @@ auto match_sequence(MemoTable const& memo_table_, MemoTable::Key key_, std::stri
  return MemoTable::Match{._key_index = MemoTable::MemoIndexKeyUninitialized, ._length = length, ._matching_subclauses = matching_subclauses};
 }
 
-auto match_choice(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto match_choice(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  for (size_t i = 0; i < key_._clause->get_child_id_count(); ++i) {
   ClauseBase::IdType const child_id = key_._clause->get_child_id_at(i);
   MemoTable::Key child_key_index{._clause = &pika_program_.fetch_clause(child_id), ._position = key_._position};
@@ -35,7 +35,7 @@ auto match_choice(MemoTable const& memo_table_, MemoTable::Key key_, std::string
  return std::nullopt;
 }
 
-auto match_one_or_more(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto match_one_or_more(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
  MemoTable::Key child_key_index{._clause = &pika_program_.fetch_clause(child_id), ._position = key_._position};
  MemoTable::IndexType const child_match_index = memo_table_.find(child_key_index, input_, pika_program_);
@@ -53,7 +53,7 @@ auto match_one_or_more(MemoTable const& memo_table_, MemoTable::Key key_, std::s
  return MemoTable::Match{._key_index = MemoTable::MemoIndexKeyUninitialized, ._length = child_match_length + tail_match_length, ._matching_subclauses = {child_match_index, tail_match_index}};
 }
 
-auto match_not_followed_by(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto match_not_followed_by(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
  MemoTable::Key child_key_index{._clause = &pika_program_.fetch_clause(child_id), ._position = key_._position};
  MemoTable::IndexType const child_match_index = memo_table_.find(child_key_index, input_, pika_program_);
@@ -63,11 +63,11 @@ auto match_not_followed_by(MemoTable const& memo_table_, MemoTable::Key key_, st
  return MemoTable::Match{._key_index = MemoTable::MemoIndexKeyUninitialized, ._length = 0};
 }
 
-auto match_epsilon(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto match_epsilon(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  return MemoTable::Match{._key_index = MemoTable::MemoIndexKeyUninitialized, ._length = 0};
 }
 
-auto match_identifier(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto match_identifier(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
  MemoTable::Key child_key_index{._clause = &pika_program_.fetch_clause(child_id), ._position = key_._position};
  MemoTable::IndexType const child_match_index = memo_table_.find(child_key_index, input_, pika_program_);
@@ -79,7 +79,7 @@ auto match_identifier(MemoTable const& memo_table_, MemoTable::Key key_, std::st
 
 }  // namespace
 
-auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaProgramBase const& pika_program_) -> std::optional<MemoTable::Match> {
+auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_program_) -> std::optional<MemoTable::Match> {
  switch (key_._clause->get_tag()) {
   case ClauseBase::Tag::Sequence:
    return match_sequence(memo_table_, key_, input_, pika_program_);

@@ -1,15 +1,15 @@
-/* Generated on: 2026-02-01 21:38:39 */
+/* Generated on: /* $replace TIMESTAMP */ */
 // clang-format off
 #pragma once
 
-#include <pmt/rt/pika_program_base.hpp>
+#include <pmt/rt/pika_tables_base.hpp>
 
-namespace pmt::meta {
+/* $replace NAMESPACE_OPEN */
 
-class PikaProgram : public pmt::rt::PikaProgramBase {
+class /* $replace CLASS_NAME */ : public pmt::rt::PikaTablesBase {
  public:
   // -$ Functions $-
-  // --$ Inherited: pmt::rt::PikaProgramBase $--
+  // --$ Inherited: pmt::rt::PikaTablesBase $--
  auto fetch_clause(pmt::rt::ClauseBase::IdType clause_id_) const -> pmt::rt::ClauseBase const& override;
  auto get_clause_count() const -> size_t override;
 
@@ -19,5 +19,5 @@ class PikaProgram : public pmt::rt::PikaProgramBase {
  auto get_terminal_state_machine_tables() const -> pmt::rt::StateMachineTablesBase const& override;
 };
 
-} // namespace pmt::meta
+/* $replace NAMESPACE_CLOSE */
 // clang-format on

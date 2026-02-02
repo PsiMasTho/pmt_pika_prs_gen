@@ -1,7 +1,7 @@
 Pika Parser Generator
 
 Overview
-- C++ parser generator for `.pika` grammars. The CLI loads a grammar and emits a `PikaProgram` plus ID string/constant tables.
+- C++ parser generator for `.pika` grammars. The CLI loads a grammar and emits a `PikaTables` plus ID string/constant tables.
 - `src/pmt/builder/` contains the emitters and CLI, `src/pmt/meta/` contains the self-hosted grammar and helpers, and `src/pmt/rt/` is the runtime (AST + parser).
 - Optional outputs include a clauses dump and a terminal graph dotfile for debugging.
 
@@ -14,17 +14,17 @@ Generate the meta grammar
 CLI arguments
 - Required
   - `--input-grammar-file`: Path to the `.pika` grammar to compile.
-  - `--pika-program-header-include-filename`: Header include path embedded in the generated `.cpp` (e.g. `pmt/meta/pika_program.hpp`).
-  - `--pika-program-output-header-file`: Output path for the generated `PikaProgram` header.
-  - `--pika-program-output-source-file`: Output path for the generated `PikaProgram` source.
+  - `--pika-tables-header-include-filename`: Header include path embedded in the generated `.cpp` (e.g. `pmt/meta/pika_tables.hpp`).
+  - `--pika-tables-output-header-file`: Output path for the generated `PikaTables` header.
+  - `--pika-tables-output-source-file`: Output path for the generated `PikaTables` source.
   - `--id-strings-output-file`: Output path for the generated ID string table include.
   - `--id-constants-output-file`: Output path for the generated ID constant table include.
 - Optional
   - `--input-test-file`: Parse this input with the generated program and print the AST.
-  - `--pika-program-header-skel-file`: Template for the generated `PikaProgram` header. Default: `skel/pmt/builder/pika_program-skel.hpp`.
-  - `--pika-program-source-skel-file`: Template for the generated `PikaProgram` source. Default: `skel/pmt/builder/pika_program-skel.cpp`.
-  - `--pika-program-class-name`: Override the generated class name (default is empty for the template to decide).
-  - `--pika-program-namespace-name`: Override the generated namespace (default is empty for the template to decide).
+  - `--pika-tables-header-skel-file`: Template for the generated `PikaTables` header. Default: `skel/pmt/builder/pika_tables-skel.hpp`.
+  - `--pika-tables-source-skel-file`: Template for the generated `PikaTables` source. Default: `skel/pmt/builder/pika_tables-skel.cpp`.
+  - `--pika-tables-class-name`: Override the generated class name (default is empty for the template to decide).
+  - `--pika-tables-namespace-name`: Override the generated namespace (default is empty for the template to decide).
   - `--id-strings-skel-file`: Template for the ID string table include. Default: `skel/pmt/builder/id_strings-skel.hpp`.
   - `--id-constants-skel-file`: Template for the ID constant table include. Default: `skel/pmt/builder/id_constants-skel.hpp`.
   - `--output-grammar`: Write the normalized grammar to this file.

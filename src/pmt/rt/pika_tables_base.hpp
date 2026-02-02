@@ -8,7 +8,7 @@ namespace pmt::rt {
 class StateMachineTablesBase;
 class RuleParametersBase;
 
-class PikaProgramBase {
+class PikaTablesBase {
 public:
  // -$ Functions $-
  // --$ Virtual $--

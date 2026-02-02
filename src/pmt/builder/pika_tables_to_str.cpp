@@ -1,6 +1,6 @@
-#include "pmt/builder/pika_program_to_str.hpp"
+#include "pmt/builder/pika_tables_to_str.hpp"
 
-#include "pmt/builder/pika_program.hpp"
+#include "pmt/builder/pika_tables.hpp"
 #include "pmt/meta/literal_to_str.hpp"
 #include "pmt/rt/clause_base.hpp"
 
@@ -11,7 +11,7 @@ using namespace pmt::container;
 
 namespace {
 
-auto clause_block_to_str(PikaProgram const& program_, ClauseBase::IdType clause_id_) -> std::string {
+auto clause_block_to_str(PikaTables const& program_, ClauseBase::IdType clause_id_) -> std::string {
  std::string ret;
 
  ClauseBase const& clause = program_.fetch_clause(clause_id_);
@@ -47,14 +47,14 @@ auto clause_block_to_str(PikaProgram const& program_, ClauseBase::IdType clause_
  }
 
  // canMatchZeroChars:
- ret += std::string("  canMatchZeroChars: ") + (clause.can_match_zero() ? "true" : "false") + "\n";
+ ret += std::string("  can_match_zero: ") + (clause.can_match_zero() ? "true" : "false") + "\n";
 
  return ret + "}\n";
 }
 
 }  // namespace
 
-auto pika_program_to_string(PikaProgram const& program_) -> std::string {
+auto pika_tables_to_string(PikaTables const& program_) -> std::string {
  std::string ret;
  for (size_t i = 0; i < program_.get_clause_count(); ++i) {
   ret += clause_block_to_str(program_, i);

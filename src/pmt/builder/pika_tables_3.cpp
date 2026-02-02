@@ -1,9 +1,9 @@
-#include "pmt/builder/pika_program.hpp"
+#include "pmt/builder/pika_tables.hpp"
 
 #include "pmt/container/bitset.hpp"
 #include "pmt/unreachable.hpp"
 
-#include <cassert>
+#include <set>
 #include <span>
 
 namespace pmt::builder {
@@ -12,9 +12,13 @@ using namespace pmt::rt;
 using namespace pmt::container;
 namespace {
 
+constexpr size_t MaxClosestRuleNamesReported = 8;
+
 struct Locals {
  Bitset _solved;
  std::span<ExtendedClause> _clauses;
+ std::span<RuleParameters> _rule_parameters;
+ std::vector<ClauseBase::IdType> _closest_rule_ids;
  bool _changed;
 };
 
@@ -63,7 +67,12 @@ void handle_choice(Locals& locals_, ClauseBase::IdType clause_id_) {
    continue;
   }
   if (locals_._clauses[child_id].can_match_zero() && j + 1 < locals_._clauses[clause_id_].get_child_id_count()) {
-   throw std::runtime_error("Invalid grammar: Choice has alternative that can match zero in non-final position");
+   std::string msg = "Invalid grammar: Choice has a non final alternative that can match zero input";
+   ClauseBase::IdType const closest_rule_id = locals_._closest_rule_ids[clause_id_];
+   if (closest_rule_id != ClauseBase::IdInvalid) {
+    msg += " in rule $" + locals_._rule_parameters[closest_rule_id]._display_name;
+   }
+   throw std::runtime_error(msg);
   }
   if (locals_._clauses[child_id].can_match_zero() == true) {
    mark(locals_, clause_id_, true);
@@ -88,18 +97,57 @@ void handle_identifier(Locals& locals_, ClauseBase::IdType clause_id_) {
 void handle_one_or_more(Locals& locals_, ClauseBase::IdType clause_id_) {
  if (locals_._solved.get(locals_._clauses[clause_id_].get_child_id_at(0))) {
   if (locals_._clauses[locals_._clauses[clause_id_].get_child_id_at(0)].can_match_zero()) {
-   throw std::runtime_error("Invalid grammar: OneOrMore can match zero");
+   std::string msg = "Invalid grammar: OneOrMore can match zero input";
+   ClauseBase::IdType const closest_rule_id = locals_._closest_rule_ids[clause_id_];
+   if (closest_rule_id != ClauseBase::IdInvalid) {
+    msg += " in rule $" + locals_._rule_parameters[closest_rule_id]._display_name;
+   }
+   throw std::runtime_error(msg);
   }
   mark(locals_, clause_id_, false);
  }
 }
 
+auto determine_closest_rule_ids(std::span<ExtendedClause const> clauses_) -> std::vector<ClauseBase::IdType> {
+ struct PendingItem {
+  ClauseBase::IdType _cur_clause_id;
+  ClauseBase::IdType _closest_rule_id;
+ };
+
+ std::vector<ClauseBase::IdType> ret(clauses_.size(), ClauseBase::IdInvalid);
+ Bitset visited(clauses_.size(), false);
+
+ std::vector<PendingItem> pending{PendingItem{._cur_clause_id = 0, ._closest_rule_id = ClauseBase::IdInvalid}};
+
+ while (!pending.empty()) {
+  auto [cur_clause_id, closest_rule_id] = pending.back();
+  pending.pop_back();
+
+  ClauseBase const& cur_clause = clauses_[cur_clause_id];
+
+  closest_rule_id = (cur_clause.get_tag() == ClauseBase::Tag::Identifier) ? cur_clause.get_rule_id() : closest_rule_id;
+  ret[cur_clause_id] = closest_rule_id;
+  visited.set(cur_clause_id, true);
+
+  for (size_t i = 0; i < cur_clause.get_child_id_count(); ++i) {
+   ClauseBase::IdType const child_id = cur_clause.get_child_id_at(i);
+   if (!visited.get(child_id)) {
+    pending.emplace_back(child_id, closest_rule_id);
+   }
+  }
+ }
+
+ return ret;
+}
+
 }  // namespace
 
-void PikaProgram::determine_can_match_zero() {
+void PikaTables::determine_can_match_zero() {
  Locals locals{
   ._solved = Bitset(_clauses.size(), false),
   ._clauses = _clauses,
+  ._rule_parameters = _rule_parameters,
+  ._closest_rule_ids = determine_closest_rule_ids(_clauses),
   ._changed = true,
  };
 
@@ -133,7 +181,46 @@ void PikaProgram::determine_can_match_zero() {
   }
  }
 
- assert(locals._solved.all() && "FAILED TO DETERMINE CAN_MATCH_ZERO");
+ if (!locals._solved.all()) {
+  locals._solved.inplace_not();
+  std::set<std::string> unsolved_rules;
+  bool truncated = false;
+
+  while (locals._solved.any()) {
+   size_t const clause_id = locals._solved.countl(false);
+   locals._solved.set(clause_id, false);
+   ClauseBase::IdType const closest_rule_id = locals._closest_rule_ids[clause_id];
+   if (closest_rule_id == ClauseBase::IdInvalid) {
+    continue;
+   }
+   std::string const& rule_name = _rule_parameters[closest_rule_id]._display_name;
+   if (unsolved_rules.contains(rule_name)) {
+    continue;
+   }
+   if (unsolved_rules.size() < MaxClosestRuleNamesReported) {
+    unsolved_rules.insert(rule_name);
+   } else {
+    truncated = true;
+   }
+  }
+
+  std::string msg = "Invalid grammar: Failed to determine can_match_zero";
+  if (!unsolved_rules.empty()) {
+   msg += " in rule";
+   msg += (unsolved_rules.size() > 1) ? "s: " : ": ";
+   for (size_t i = 0; std::string const& rule_name : unsolved_rules) {
+    if (i > 0) {
+     msg += ", ";
+    }
+    msg += "$" + rule_name;
+    ++i;
+   }
+   if (truncated) {
+    msg += ", ...";
+   }
+  }
+  throw std::runtime_error(msg);
+ }
 }
 
 }  // namespace pmt::builder

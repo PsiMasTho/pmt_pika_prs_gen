@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace pmt::rt {
-class PikaProgramBase;
+class PikaTablesBase;
 
 class MemoTable {
 public:
@@ -71,8 +71,8 @@ public:
  // --$ Lifetime $--
  MemoTable();
  // --$ Other $--
- auto find(Key const& key_, std::string_view input_, PikaProgramBase const& pika_program_) const -> IndexType;  // -> MatchIndex (which may be MemoIndexMatchNotFound / MemoIndexMatchZeroLength)
- void insert(Key key_, std::optional<Match> new_match_, ClauseQueue& parse_queue_, PikaProgramBase const& pika_program_);
+ auto find(Key const& key_, std::string_view input_, PikaTablesBase const& pika_program_) const -> IndexType;  // -> MatchIndex (which may be MemoIndexMatchNotFound / MemoIndexMatchZeroLength)
+ void insert(Key key_, std::optional<Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_program_);
 
  auto get_key_by_index(IndexType index_) const -> Key const&;
 

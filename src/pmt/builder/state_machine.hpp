@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pmt/builder/state.hpp"
-#include "pmt/container/multi_vector.hpp"
 #include "pmt/rt/primitives.hpp"
 
 namespace pmt::builder {
@@ -9,7 +8,8 @@ namespace pmt::builder {
 class StateMachine {
 private:
  // -$ Data $-
- pmt::container::MultiVector<pmt::rt::StateNrType, State> _states;
+ std::vector<pmt::rt::StateNrType> _state_nrs;
+ std::vector<State> _states;
 
 public:
  // -$ Functions $-
