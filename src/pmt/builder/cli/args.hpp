@@ -12,13 +12,13 @@ public:
  std::string _input_grammar_file;
  std::optional<std::string> _input_test_file;
 
- std::string _pika_program_header_include_filename;
- std::string _pika_program_output_header_file;
- std::string _pika_program_output_source_file;
- std::string _pika_program_header_skel_file;
- std::string _pika_program_source_skel_file;
- std::string _pika_program_class_name;
- std::string _pika_program_namespace_name;
+ std::string _pika_tables_header_include_filename;
+ std::string _pika_tables_output_header_file;
+ std::string _pika_tables_output_source_file;
+ std::string _pika_tables_header_skel_file;
+ std::string _pika_tables_source_skel_file;
+ std::string _pika_tables_class_name;
+ std::string _pika_tables_namespace_name;
 
  std::string _id_strings_output_file;
  std::string _id_strings_skel_file;

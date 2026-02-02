@@ -13,8 +13,8 @@ public:
  // -$ Types / Constants $-
  // -$ Functions $-
  // --$ Other $--
- static auto populate_memo_table(std::string_view input_, PikaTablesBase const& pika_program_) -> MemoTable;
- static auto memo_table_to_ast(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_program_) -> Ast::UniqueHandle;
+ static auto populate_memo_table(std::string_view input_, PikaTablesBase const& pika_tables_) -> MemoTable;
+ static auto memo_table_to_ast(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> Ast::UniqueHandle;
 };
 
 }  // namespace pmt::rt

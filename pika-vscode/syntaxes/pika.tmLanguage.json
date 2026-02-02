@@ -38,7 +38,7 @@
     },
     "keywords": {
       "patterns": [
-        { "name": "keyword.control.pika", "match": "\\b(epsilon|unpack|hide|merge|id|display_name)\\b" },
+        { "name": "keyword.control.pika", "match": "\\b(eof|epsilon|unpack|hide|merge|id|display_name)\\b" },
         { "name": "constant.language.boolean.pika", "match": "\\b(true|false)\\b" }
       ]
     },

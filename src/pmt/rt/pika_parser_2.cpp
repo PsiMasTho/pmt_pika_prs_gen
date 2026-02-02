@@ -8,7 +8,7 @@ namespace pmt::rt {
 
 namespace {
 constexpr auto is_ignored_tag(ClauseBase::Tag tag_) -> bool {
- return tag_ == ClauseBase::Tag::NegativeLookahead || tag_ == ClauseBase::Tag::Epsilon;
+ return tag_ == ClauseBase::Tag::NegativeLookahead || tag_ == ClauseBase::Tag::Eof || tag_ == ClauseBase::Tag::Epsilon;
 }
 
 constexpr auto is_parent_tag(ClauseBase::Tag tag_) -> bool {
@@ -19,6 +19,7 @@ constexpr auto is_parent_tag(ClauseBase::Tag tag_) -> bool {
   case ClauseBase::Tag::Identifier:
    return true;
   case ClauseBase::Tag::NegativeLookahead:
+  case ClauseBase::Tag::Eof:
   case ClauseBase::Tag::Epsilon:
   case ClauseBase::Tag::CharsetLiteral:
    return false;
@@ -32,9 +33,9 @@ auto make_string_node(std::string_view input_, MemoTable::Key const& key_, MemoT
  return node;
 }
 
-auto find_start_match_index_if_success(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_program_) -> MemoTable::IndexType {
- ClauseBase const& start_clause = pika_program_.fetch_clause(0);
- MemoTable::IndexType const start_match_index = memo_table_.find(MemoTable::Key{._clause = &start_clause, ._position = 0}, input_, pika_program_);
+auto find_start_match_index_if_success(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> MemoTable::IndexType {
+ ClauseBase const& start_clause = pika_tables_.fetch_clause(0);
+ MemoTable::IndexType const start_match_index = memo_table_.find(MemoTable::Key{._clause = &start_clause, ._position = 0}, input_, pika_tables_);
  if (start_match_index == MemoTable::MemoIndexMatchNotFound) {
   return MemoTable::MemoIndexMatchNotFound;
  }
@@ -44,7 +45,7 @@ auto find_start_match_index_if_success(MemoTable const& memo_table_, std::string
  return start_match_index;
 }
 
-void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Match const& child_match_, MemoTable const& memo_table_, PikaTablesBase const& pika_program_) {
+void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Match const& child_match_, MemoTable const& memo_table_, PikaTablesBase const& pika_tables_) {
  if (!child_) {
   return;
  }
@@ -62,7 +63,7 @@ void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Ma
    parent_.give_child_at_back(std::move(child_));
    break;
   case ClauseBase::Tag::Identifier: {
-   RuleParametersBase const& rule_parameters = pika_program_.fetch_rule_parameters(child_key._clause->get_rule_id());
+   RuleParametersBase const& rule_parameters = pika_tables_.fetch_rule_parameters(child_key._clause->get_rule_id());
    if (rule_parameters.get_hide()) {
     break;
    }
@@ -76,7 +77,7 @@ void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Ma
    }
   } break;
   case ClauseBase::Tag::NegativeLookahead:
-   break;
+  case ClauseBase::Tag::Eof:
   case ClauseBase::Tag::Epsilon:
    break;
   default:
@@ -84,7 +85,7 @@ void process_and_add_child(Ast& parent_, Ast::UniqueHandle child_, MemoTable::Ma
  }
 }
 
-auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_program_) -> Ast::UniqueHandle {
+auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> Ast::UniqueHandle {
  MemoTable::Key const& root_key = memo_table_.get_key_by_index(root_match_._key_index);
  ClauseBase::Tag const root_tag = root_key._clause->get_tag();
  if (is_ignored_tag(root_tag)) {
@@ -118,7 +119,7 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
     break;
    }
    Frame& parent = stack.back();
-   process_and_add_child(*parent._ast_node, std::move(completed), match, memo_table_, pika_program_);
+   process_and_add_child(*parent._ast_node, std::move(completed), match, memo_table_, pika_tables_);
    continue;
   }
 
@@ -133,7 +134,7 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
   if (is_parent_tag(child_tag)) {
    stack.push_back(Frame{&child_match, 0, Ast::construct(Ast::Tag::Parent, AstId::IdUninitialized)});
   } else if (child_tag == ClauseBase::Tag::CharsetLiteral) {
-   process_and_add_child(*frame._ast_node, make_string_node(input_, child_key, child_match), child_match, memo_table_, pika_program_);
+   process_and_add_child(*frame._ast_node, make_string_node(input_, child_key, child_match), child_match, memo_table_, pika_tables_);
   } else if (!is_ignored_tag(child_tag)) {
    pmt::unreachable();
   }
@@ -144,8 +145,8 @@ auto build_ast(MemoTable::Match const& root_match_, MemoTable const& memo_table_
 
 }  // namespace
 
-auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_program_) -> Ast::UniqueHandle {
- MemoTable::IndexType const start_match_index = find_start_match_index_if_success(memo_table_, input_, pika_program_);
+auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> Ast::UniqueHandle {
+ MemoTable::IndexType const start_match_index = find_start_match_index_if_success(memo_table_, input_, pika_tables_);
  if (start_match_index == MemoTable::MemoIndexMatchNotFound) {
   return nullptr;
  }
@@ -154,7 +155,7 @@ auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_, std::string_vie
 
  if (start_match_index != MemoTable::MemoIndexMatchZeroLength) {
   MemoTable::Match const& start_match = memo_table_.get_match_by_index(start_match_index);
-  process_and_add_child(*ast_root, build_ast(start_match, memo_table_, input_, pika_program_), start_match, memo_table_, pika_program_);
+  process_and_add_child(*ast_root, build_ast(start_match, memo_table_, input_, pika_tables_), start_match, memo_table_, pika_tables_);
  }
 
  return ast_root;

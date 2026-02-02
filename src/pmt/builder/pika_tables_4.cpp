@@ -57,6 +57,7 @@ void PikaTables::determine_seed_parents() {
    } break;
    default:
     pmt::unreachable();
+   case ClauseBase::Tag::Eof:
    case ClauseBase::Tag::Epsilon:
    case ClauseBase::Tag::CharsetLiteral:
     break;

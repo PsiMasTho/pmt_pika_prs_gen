@@ -12,8 +12,6 @@ using namespace pmt::rt;
 using namespace pmt::container;
 namespace {
 
-constexpr size_t MaxClosestRuleNamesReported = 8;
-
 struct Locals {
  Bitset _solved;
  std::span<ExtendedClause> _clauses;
@@ -140,6 +138,52 @@ auto determine_closest_rule_ids(std::span<ExtendedClause const> clauses_) -> std
  return ret;
 }
 
+auto generate_unsolved_error_msg(Locals const& locals_) -> std::string {
+ static constexpr size_t const MaxUnsolvedRulesToReport = 4;
+
+ Bitset unsolved = locals_._solved.clone_not();
+ std::set<std::string> unsolved_rules;
+ bool truncated = false;
+
+ while (unsolved.any()) {
+  size_t const clause_id = (unsolved.size() - unsolved.countr(false) - 1);
+  unsolved.resize(clause_id);
+  ClauseBase::IdType const closest_rule_id = locals_._closest_rule_ids[clause_id];
+  if (closest_rule_id == ClauseBase::IdInvalid) {
+   continue;
+  }
+  std::string const& rule_name = locals_._rule_parameters[closest_rule_id]._display_name;
+  if (unsolved_rules.contains(rule_name)) {
+   continue;
+  }
+  if (unsolved_rules.size() < MaxUnsolvedRulesToReport) {
+   unsolved_rules.insert(rule_name);
+  } else {
+   truncated = true;
+  }
+ }
+
+ size_t const items_reported = unsolved_rules.size() + (truncated ? 1 : 0);
+
+ std::string msg = "Invalid grammar: Failed to determine can_match_zero";
+ if (!unsolved_rules.empty()) {
+  msg += " in rule";
+  msg += (items_reported > 1) ? "s: " : ": ";
+  for (size_t i = 0; std::string const& rule_name : unsolved_rules) {
+   if (i > 0) {
+    msg += ", ";
+   }
+   msg += "$" + rule_name;
+   ++i;
+  }
+  if (truncated) {
+   msg += ", ...";
+  }
+ }
+
+ return msg;
+}
+
 }  // namespace
 
 void PikaTables::determine_can_match_zero() {
@@ -172,6 +216,7 @@ void PikaTables::determine_can_match_zero() {
      handle_one_or_more(locals, i);
     } break;
     case ClauseBase::Tag::NegativeLookahead:
+    case ClauseBase::Tag::Eof:
     case ClauseBase::Tag::Epsilon:
      mark(locals, i, true);
      break;
@@ -182,44 +227,7 @@ void PikaTables::determine_can_match_zero() {
  }
 
  if (!locals._solved.all()) {
-  locals._solved.inplace_not();
-  std::set<std::string> unsolved_rules;
-  bool truncated = false;
-
-  while (locals._solved.any()) {
-   size_t const clause_id = locals._solved.countl(false);
-   locals._solved.set(clause_id, false);
-   ClauseBase::IdType const closest_rule_id = locals._closest_rule_ids[clause_id];
-   if (closest_rule_id == ClauseBase::IdInvalid) {
-    continue;
-   }
-   std::string const& rule_name = _rule_parameters[closest_rule_id]._display_name;
-   if (unsolved_rules.contains(rule_name)) {
-    continue;
-   }
-   if (unsolved_rules.size() < MaxClosestRuleNamesReported) {
-    unsolved_rules.insert(rule_name);
-   } else {
-    truncated = true;
-   }
-  }
-
-  std::string msg = "Invalid grammar: Failed to determine can_match_zero";
-  if (!unsolved_rules.empty()) {
-   msg += " in rule";
-   msg += (unsolved_rules.size() > 1) ? "s: " : ": ";
-   for (size_t i = 0; std::string const& rule_name : unsolved_rules) {
-    if (i > 0) {
-     msg += ", ";
-    }
-    msg += "$" + rule_name;
-    ++i;
-   }
-   if (truncated) {
-    msg += ", ...";
-   }
-  }
-  throw std::runtime_error(msg);
+  throw std::runtime_error(generate_unsolved_error_msg(locals));
  }
 }
 

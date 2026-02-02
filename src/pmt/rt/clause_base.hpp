@@ -20,7 +20,8 @@ public:
   CharsetLiteral,     // 1 literal id
   OneOrMore,          // 1 clause id
   NegativeLookahead,  // 1 clause id
-  Epsilon,            // not stored in memo table
+  Eof,                // not stored in memo table
+  Epsilon,            // not stored
  };
 
  enum : IdType {

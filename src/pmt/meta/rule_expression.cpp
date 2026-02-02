@@ -75,6 +75,7 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
    case ClauseBase::Tag::CharsetLiteral: {
     dst->set_charset_literal(src->get_charset_literal());
    } break;
+   case ClauseBase::Tag::Eof:
    case ClauseBase::Tag::Epsilon: {
    } break;
   }

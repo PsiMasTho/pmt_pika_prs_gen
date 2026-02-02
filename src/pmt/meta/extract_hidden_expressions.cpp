@@ -134,6 +134,7 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
     case Ids::GrammarProperty:
     case Ids::IntegerLiteral:
     case Ids::Charset:
+    case Ids::Eof:
     case Ids::Epsilon:
     case Ids::Hidden:  // We only care about the topmost Hidden, so don't expand further
      break;

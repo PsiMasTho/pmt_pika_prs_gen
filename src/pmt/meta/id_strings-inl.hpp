@@ -1,4 +1,4 @@
-/* Generated on: 2026-02-02 00:02:58 */
+/* Generated on: 2026-02-02 15:07:07 */
 // clang-format off
 "IntegerLiteral",
 "ParameterHide",
@@ -8,6 +8,7 @@
 "Question",
 "ParameterId",
 "GrammarPropertyStart",
+"CharsetRange",
 "Repetition",
 "Star",
 "Comma",
@@ -15,8 +16,9 @@
 "StringLiteral",
 "ParameterUnpack",
 "ParameterMerge",
-"RepetitionRange",
 "Production",
+"RepetitionRange",
+"Eof",
 "Epsilon",
 "IdStringLiteral",
 "ParameterDisplayName",
@@ -28,5 +30,4 @@
 "NegativeLookahead",
 "PositiveLookahead",
 "Charset",
-"CharsetRange",
 // clang-format on 

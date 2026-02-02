@@ -68,11 +68,15 @@ class PositiveLookaheadFrame : public FrameBase {
 public:
 };
 
+class EofFrame : public FrameBase {
+public:
+};
+
 class EpsilonFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame>;
+using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EofFrame, EpsilonFrame>;
 
 class Locals {
 public:
@@ -219,10 +223,6 @@ void check_start_rule_exists(Locals& locals_) {  // -$ Todo $- need to factor ou
  }
 }
 
-auto build_epsilon() -> RuleExpression::UniqueHandle {
- return RuleExpression::construct(ClauseBase::Tag::Sequence);
-}
-
 auto construct_frame(Ast const* ast_cur_) -> Frame {
  FrameBase frame_base{._cur_expr = ast_cur_, ._stage = 0};
 
@@ -257,6 +257,9 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
   } break;
   case Ids::PositiveLookahead: {
    return PositiveLookaheadFrame{frame_base};
+  } break;
+  case Ids::Eof: {
+   return EofFrame{frame_base};
   } break;
   case Ids::Epsilon: {
    return EpsilonFrame{frame_base};
@@ -461,6 +464,10 @@ void process_frame_01(Locals& locals_, PositiveLookaheadFrame& frame_) {
  outer->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::NegativeLookahead));
  outer->get_child_at_back()->give_child_at_back(std::move(locals_._ret_part));
  locals_._ret_part = std::move(outer);
+}
+
+void process_frame_00(Locals& locals_, EofFrame& frame_) {
+ locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Eof);
 }
 
 void process_frame_00(Locals& locals_, EpsilonFrame& frame_) {

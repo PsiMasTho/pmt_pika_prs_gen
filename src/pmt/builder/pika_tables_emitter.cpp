@@ -2,6 +2,7 @@
 
 #include "pmt/builder/state_machine_tables.hpp"
 #include "pmt/container/bitset.hpp"
+#include "pmt/unreachable.hpp"
 #include "pmt/util/timestamp.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
@@ -141,10 +142,12 @@ auto clause_tag_to_string(ClauseBase::Tag tag_) -> std::string {
    return "ClauseBase::Tag::OneOrMore";
   case ClauseBase::Tag::NegativeLookahead:
    return "ClauseBase::Tag::NegativeLookahead";
+  case ClauseBase::Tag::Eof:
+   return "ClauseBase::Tag::Eof";
   case ClauseBase::Tag::Epsilon:
    return "ClauseBase::Tag::Epsilon";
   default:
-   return "ClauseBase::Tag::Epsilon";
+   pmt::unreachable();
  }
 }
 

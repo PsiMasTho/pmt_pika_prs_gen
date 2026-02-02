@@ -26,6 +26,8 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "OneOrMore";
   case Tag::NegativeLookahead:
    return "NegativeLookahead";
+  case Tag::Eof:
+   return "Eof";
   case Tag::Epsilon:
    return "Epsilon";
   default:

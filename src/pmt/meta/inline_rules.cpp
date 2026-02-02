@@ -48,6 +48,7 @@ auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> 
      pending.emplace_back(rule->_definition.get(), visited_cur);
     }
    } break;
+   case ClauseBase::Tag::Eof:
    case ClauseBase::Tag::Epsilon:
     break;
    default:
@@ -96,6 +97,7 @@ void inline_rules(Grammar& grammar_) {
       }
      } break;
      case ClauseBase::Tag::CharsetLiteral:
+     case ClauseBase::Tag::Eof:
      case ClauseBase::Tag::Epsilon:
       break;
     }
@@ -127,6 +129,7 @@ void inline_rules(Grammar& grammar_) {
       }
      } break;
      case ClauseBase::Tag::CharsetLiteral:
+     case ClauseBase::Tag::Eof:
      case ClauseBase::Tag::Epsilon:
       break;
     }

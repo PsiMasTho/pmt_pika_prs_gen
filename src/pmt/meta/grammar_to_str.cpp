@@ -140,6 +140,9 @@ auto expand_once(Locals& locals_, RuleExpression const* node_, RuleExpression co
   case ClauseBase::Tag::CharsetLiteral: {
    ret += charset_literal_to_grammar_string(node_->get_charset_literal());
   } break;
+  case ClauseBase::Tag::Eof: {
+   push(locals_, "eof");
+  } break;
   case ClauseBase::Tag::Epsilon: {
    push(locals_, "epsilon");
   } break;

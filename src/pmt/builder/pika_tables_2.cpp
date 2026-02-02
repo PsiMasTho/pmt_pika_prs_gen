@@ -14,7 +14,8 @@ using namespace pmt::container;
 
 namespace {
 enum : ClauseBase::IdType {
- IdTmpEpsilon = std::numeric_limits<ClauseBase::IdType>::max(),
+ IdTmpEof = std::numeric_limits<ClauseBase::IdType>::max(),
+ IdTmpEpsilon = IdTmpEof - 1,
 };
 
 auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_literals_, std::span<ClauseBase::IdType const> charset_literal_clause_unique_ids_) -> StateMachine {
@@ -49,7 +50,7 @@ void PikaTables::initialize(Grammar const& grammar_) {
  std::vector<ClauseBase::IdType> charset_literal_clause_ids;
  pmt::util::UniqueRacBuilder<std::vector<CharsetLiteral>> charset_literals_cached(_literals);
 
- IntervalSet<ClauseBase::IdType> clauses_with_epsilon_children;
+ IntervalSet<ClauseBase::IdType> clauses_with_tmp_children;
  std::unordered_map<RuleExpression const*, ClauseBase::IdType> visited;
  struct Frame {
   RuleExpression const* _expr;
@@ -91,6 +92,15 @@ void PikaTables::initialize(Grammar const& grammar_) {
       _clauses.emplace_back(tag, clause_id);
      }
      _clauses[clause_id]._literal_id = static_cast<ClauseBase::IdType>(literal_id);
+     visited[frame._expr] = clause_id;
+     last_result = clause_id;
+     has_result = true;
+     stack.pop_back();
+     break;
+    }
+
+    if (tag == ClauseBase::Tag::Eof) {
+     ClauseBase::IdType const clause_id = IdTmpEof;
      visited[frame._expr] = clause_id;
      last_result = clause_id;
      has_result = true;
@@ -146,6 +156,7 @@ void PikaTables::initialize(Grammar const& grammar_) {
       }
       break;
      case ClauseBase::Tag::CharsetLiteral:
+     case ClauseBase::Tag::Eof:
      case ClauseBase::Tag::Epsilon:
       pmt::unreachable();
       break;
@@ -178,8 +189,8 @@ void PikaTables::initialize(Grammar const& grammar_) {
     assert(has_result);
     ClauseBase::IdType const child_id = last_result;
     has_result = false;
-    if (child_id == IdTmpEpsilon) {
-     clauses_with_epsilon_children.insert(Interval(frame._clause_id));
+    if (child_id == IdTmpEof || child_id == IdTmpEpsilon) {
+     clauses_with_tmp_children.insert(Interval(frame._clause_id));
     }
     _clauses[frame._clause_id]._child_ids.push_back(child_id);
     ++frame._next_child_idx;
@@ -188,14 +199,24 @@ void PikaTables::initialize(Grammar const& grammar_) {
   }
  }
 
- // Replace temporary epsilon children with a single shared epsilon clause
- if (!clauses_with_epsilon_children.empty()) {
-  ClauseBase::IdType const epsilon_clause_id = _clauses.size();
-  _clauses.emplace_back(ClauseBase::Tag::Epsilon, epsilon_clause_id);
-  clauses_with_epsilon_children.for_each_key([&](ClauseBase::IdType clause_id_) {
+ // Replace temporary eof children with shared clauses
+ {
+  ClauseBase::IdType eof_clause_id = IdTmpEof;
+  ClauseBase::IdType epsilon_clause_id = IdTmpEpsilon;
+  clauses_with_tmp_children.for_each_key([&](ClauseBase::IdType clause_id_) {
    ExtendedClause& clause = _clauses[clause_id_];
    for (ClauseBase::IdType& child_id : clause._child_ids) {
-    if (child_id == IdTmpEpsilon) {
+    if (child_id == IdTmpEof) {
+     if (eof_clause_id == IdTmpEof) {
+      eof_clause_id = _clauses.size();
+      _clauses.emplace_back(ClauseBase::Tag::Eof, eof_clause_id);
+     }
+     child_id = eof_clause_id;
+    } else if (child_id == IdTmpEpsilon) {
+     if (epsilon_clause_id == IdTmpEpsilon) {
+      epsilon_clause_id = _clauses.size();
+      _clauses.emplace_back(ClauseBase::Tag::Epsilon, epsilon_clause_id);
+     }
      child_id = epsilon_clause_id;
     }
    }
