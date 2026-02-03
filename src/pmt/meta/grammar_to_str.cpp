@@ -45,7 +45,7 @@ auto rule_lhs_to_str(Locals& locals_, std::string const& rule_name_, Rule const&
  std::string delim;
  std::string parameter_str;
 
- if (rule_._parameters._id_string != AstId::id_to_string(AstId::IdDefault)) {
+ if (rule_._parameters._id_string != pmt::ast::ReservedIds::id_to_string(pmt::ast::ReservedIds::IdDefault)) {
   parameter_str += std::exchange(delim, ", ") + "id = \"" + rule_._parameters._id_string + "\"";
  }
 

@@ -2,7 +2,7 @@
 // clang-format off
 #include "/* $replace HEADER_INCLUDE_PATH */"
 
-#include <pmt/rt/ast_id.hpp>
+#include <pmt/ast/id.hpp>
 #include <pmt/rt/rule_parameters_base.hpp>
 #include <pmt/rt/state_machine_tables_base.hpp>
 
@@ -28,7 +28,7 @@ using ClauseSeedParentIdsType = /* $replace CLAUSE_SEED_PARENT_IDS_TYPE */;
 using ClauseSpecialIdType = /* $replace CLAUSE_SPECIAL_ID_TYPE */;
 using RuleParameterDisplayNameIndirectType = /* $replace RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE */;
 using RuleParameterIdStringIndirectType = /* $replace RULE_PARAMETER_ID_STRING_INDIRECT_TYPE */;
-using RuleParameterIdTableType = AstId::IdType;
+using RuleParameterIdTableType = pmt::ast::IdType;
 using RuleParameterIdIndirectType = /* $replace RULE_PARAMETER_ID_INDIRECT_TYPE */;
 using ClauseClassIdType = /* $replace CLAUSE_CLASS_ID_TYPE */;
 using RuleParameterClassIdType = /* $replace RULE_PARAMETER_CLASS_ID_TYPE */;
@@ -261,7 +261,7 @@ public:
   return STRING_TABLE[RULE_PARAMETER_ID_STRINGS_INDIRECT[_rule_id]];
  }
 
- auto get_id_value() const -> AstId::IdType override {
+ auto get_id_value() const -> pmt::ast::IdType override {
   return RULE_PARAMETER_ID_TABLE[RULE_PARAMETER_ID_TABLE_INDIRECT[_rule_id]];
  } 
 

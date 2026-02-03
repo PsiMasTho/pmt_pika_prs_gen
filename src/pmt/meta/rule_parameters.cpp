@@ -11,7 +11,7 @@ auto RuleParameters::get_id_string() const -> std::string_view {
  return _id_string;
 }
 
-auto RuleParameters::get_id_value() const -> AstId::IdType {
+auto RuleParameters::get_id_value() const -> pmt::ast::IdType {
  return _id_value;
 }
 

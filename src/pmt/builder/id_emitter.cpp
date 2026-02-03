@@ -6,7 +6,6 @@
 #include <fstream>
 
 namespace pmt::builder {
-using namespace pmt::rt;
 namespace {}  // namespace
 
 IdEmitter::IdEmitter(Args args_)
@@ -22,7 +21,7 @@ void IdEmitter::emit() {
  std::string id_constants;
  std::string id_strings;
 
- _args._id_table.for_each_id([&](std::string const& id_string_, AstId::IdType id_) {
+ _args._id_table.for_each_id([&](std::string const& id_string_, pmt::ast::IdType id_) {
   if (!id_constants.empty()) {
    id_constants += "\n";
   }

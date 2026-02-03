@@ -1,13 +1,13 @@
 #include "pmt/meta/repetition_range.hpp"
 
+#include "pmt/ast/ast.hpp"
 #include "pmt/meta/ids.hpp"
-#include "pmt/rt/ast.hpp"
 #include "pmt/unreachable.hpp"
 
 #include <cassert>
 
 namespace pmt::meta {
-using namespace pmt::rt;
+using namespace pmt::ast;
 
 namespace {
 auto get_repetition_number(Ast const& token_) -> std::optional<Number::NumberType> {
@@ -20,7 +20,7 @@ auto get_repetition_number(Ast const& token_) -> std::optional<Number::NumberTyp
 
 }  // namespace
 
-RepetitionRange::RepetitionRange(pmt::rt::Ast const& ast_) {
+RepetitionRange::RepetitionRange(pmt::ast::Ast const& ast_) {
  switch (ast_.get_id()) {
   case Ids::Plus: {
    _lower = 1;

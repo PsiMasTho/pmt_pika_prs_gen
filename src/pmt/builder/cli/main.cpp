@@ -1,3 +1,5 @@
+#include "pmt/ast/ast.hpp"
+#include "pmt/ast/to_str.hpp"
 #include "pmt/builder/cli/args.hpp"
 #include "pmt/builder/id_emitter.hpp"
 #include "pmt/builder/pika_tables.hpp"
@@ -6,16 +8,11 @@
 #include "pmt/builder/terminal_dotfile_emitter.hpp"
 #include "pmt/meta/grammar_to_str.hpp"
 #include "pmt/meta/load_grammar.hpp"
-#include "pmt/util/read_file.hpp"
-
-#include "pmt/rt/ast.hpp"
-#include "pmt/rt/ast_to_str.hpp"
 #include "pmt/rt/pika_parser.hpp"
+#include "pmt/util/read_file.hpp"
 
 #include <fstream>
 #include <iostream>
-
-using namespace pmt::rt;
 
 namespace {}  // namespace
 
@@ -38,10 +35,10 @@ auto main(int argc_, char const* const* argv_) -> int try {
 
  if (args._input_test_file.has_value()) {
   std::string const input_test = pmt::util::read_file(*args._input_test_file);
-  pmt::rt::MemoTable const memo_table = PikaParser::populate_memo_table(input_test, pika_tables);
-  Ast::UniqueHandle ast_testfile = PikaParser::memo_table_to_ast(memo_table, input_test, pika_tables);
+  pmt::rt::MemoTable const memo_table = pmt::rt::PikaParser::populate_memo_table(input_test, pika_tables);
+  pmt::ast::Ast::UniqueHandle ast_testfile = pmt::rt::PikaParser::memo_table_to_ast(memo_table, input_test, pika_tables);
   if (ast_testfile != nullptr) {
-   pmt::rt::AstToString const ast_to_string([&](AstId::IdType id_) { return pika_tables.get_id_table().id_to_string(id_); }, 2);
+   pmt::ast::ToString const ast_to_string([&](pmt::ast::IdType id_) { return pika_tables.get_id_table().id_to_string(id_); }, 2);
    std::cout << ast_to_string.to_string(*ast_testfile);
   } else {
    std::cout << "Failed to parse test input.\n";
@@ -80,7 +77,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
  if (args._terminal_graph_output_file.has_value() && args._terminal_graph_skel_file.has_value()) {
   std::ofstream output_graph(*args._terminal_graph_output_file);
   pmt::builder::TerminalDotfileEmitter dot_writer(pmt::builder::TerminalDotfileEmitter::Args{
-   ._final_id_to_string_fn = [&](FinalIdType idx_) { return std::to_string(idx_); },
+   ._final_id_to_string_fn = [&](pmt::rt::FinalIdType idx_) { return std::to_string(idx_); },
    ._skel = pmt::util::read_file(*args._terminal_graph_skel_file),
    ._state_machine = pika_tables.get_literal_state_machine_tables().get_state_machine(),
    ._os_graph = output_graph,

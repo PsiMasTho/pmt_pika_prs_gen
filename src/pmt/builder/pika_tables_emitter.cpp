@@ -314,7 +314,7 @@ void PikaTablesEmitter::emit() {
   StringTableIdStrings = 1,
  };
  std::map<std::string, std::pair<std::unordered_set<ClauseBase::IdType>, std::unordered_set<ClauseBase::IdType>>> string_table_map;
- std::map<AstId::IdType, std::unordered_set<ClauseBase::IdType>> rule_id_table_map;
+ std::map<pmt::ast::IdType, std::unordered_set<ClauseBase::IdType>> rule_id_table_map;
  std::vector<bool> rule_merge;  // -$ Todo $- Bitset
  std::vector<bool> rule_unpack;
  std::vector<bool> rule_hide;
@@ -339,7 +339,7 @@ void PikaTablesEmitter::emit() {
   string_table.push_back("\"" + str + "\"");
  }
 
- std::vector<AstId::IdType> rule_id_table;
+ std::vector<pmt::ast::IdType> rule_id_table;
  rule_id_table.reserve(rule_id_table_map.size());
  for (auto const& [id_value, _] : rule_id_table_map) {
   rule_id_table.push_back(id_value);

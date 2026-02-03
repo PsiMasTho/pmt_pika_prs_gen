@@ -5,6 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(pmt_pika_prs_gen VERSION 1.0.0 LANGUAGES CXX)
 
+find_package(pmt_ast CONFIG REQUIRED)
+
 include(GNUInstallDirs)
 
 add_subdirectory(src)

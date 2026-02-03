@@ -6,7 +6,7 @@
 namespace pmt::builder::cli {
 
 Args::Args(int argc_, char const* const* argv_) {
- argparse::ArgumentParser cmdl("pika_parser_generator_cli", "1.0", argparse::default_arguments::help);
+ argparse::ArgumentParser cmdl("pmt_pika_prs_gen_cli", "1.0", argparse::default_arguments::help);
 
  std::string skel_dir;
  cmdl.add_argument("--skel-dir").store_into(skel_dir);

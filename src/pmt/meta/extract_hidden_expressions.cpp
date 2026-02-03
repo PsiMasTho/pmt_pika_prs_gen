@@ -1,8 +1,8 @@
 #include "pmt/meta/extract_hidden_expressions.hpp"
 
+#include "pmt/ast/ast.hpp"
 #include "pmt/hash.hpp"
 #include "pmt/meta/ids.hpp"
-#include "pmt/rt/ast.hpp"
 #include "pmt/unreachable.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace pmt::meta {
-using namespace pmt::rt;
+using namespace pmt::ast;
 namespace {
 struct AstPosition {
  Ast* _parent;
@@ -115,7 +115,7 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
       pending.push_back({AstPosition{cur, cur->get_children_size() - 1}, false});
      }
     } break;
-    case pmt::rt::AstId::IdRoot:
+    case pmt::ast::ReservedIds::IdRoot:
     case Ids::Definition:
     case Ids::Choices:
     case Ids::Sequence:
@@ -153,7 +153,7 @@ auto make_hidden_rule_name(size_t number_, size_t digits_needed_) -> std::string
  return "__hidden_" + pmt::util::uint_to_string(number_, digits_needed_, pmt::util::hex_alphabet_uppercase);
 }
 
-void construct_hidden_production(pmt::rt::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
+void construct_hidden_production(pmt::ast::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
  Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
  Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
  identifier->set_string(rule_name_);
@@ -180,7 +180,7 @@ auto count_unique_hidden_expressions(std::span<AstPosition const> hidden_express
 
 }  // namespace
 
-void extract_hidden_expressions(pmt::rt::Ast& ast_) {
+void extract_hidden_expressions(pmt::ast::Ast& ast_) {
  std::vector<AstPosition> hidden_expressions = gather_hidden_expressions(ast_);
  std::vector<Ast::UniqueHandle> hidden_expressions_orig;
 

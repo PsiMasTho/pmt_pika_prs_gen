@@ -8,7 +8,7 @@ Overview
 Generate the meta grammar
 - Run `scripts/gen_meta.py` to regenerate the meta parser sources in `src/pmt/meta/`.
 - The script embeds all arguments and resolves paths relative to the repo root, so it works from any CWD.
-- It expects `pika_parser_generator_cli` to be available in your `PATH` (build/install the CLI first).
+- It expects `pmt_pika_prs_gen_cli` to be available in your `PATH` (build/install the CLI first).
 - This doesn't need to be run unless `pmt/meta/grammar.pika` is modified as the repo already includes generated sources.
 
 CLI arguments

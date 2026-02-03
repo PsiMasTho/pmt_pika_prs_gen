@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-PMT_FW_DECL_NS_CLASS(pmt::rt, Ast)
+PMT_FW_DECL_NS_CLASS(pmt::ast, Ast)
 
 namespace pmt::meta {
 
@@ -20,7 +20,7 @@ private:
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- explicit Number(pmt::rt::Ast const &ast_);
+ explicit Number(pmt::ast::Ast const &ast_);
 
  // --$ Other $--
  [[nodiscard]] auto get_value() const -> NumberType;

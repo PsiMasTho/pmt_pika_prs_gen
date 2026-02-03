@@ -10,7 +10,7 @@ def main() -> None:
     meta_dir = repo_root / "src" / "pmt" / "meta"
 
     cmd = [
-        "pika_parser_generator_cli",
+        "pmt_pika_prs_gen_cli",
         "--input-grammar-file",
         str(meta_dir / "grammar.pika"),
         "--pika-tables-header-include-filename",

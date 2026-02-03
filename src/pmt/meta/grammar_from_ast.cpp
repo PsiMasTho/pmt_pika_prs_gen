@@ -14,6 +14,7 @@
 
 namespace pmt::meta {
 using namespace pmt::container;
+using namespace pmt::ast;
 using namespace pmt::rt;
 
 namespace {
@@ -82,7 +83,7 @@ class Locals {
 public:
  std::unordered_map<std::string, std::pair<RuleParameters, Ast const*>> _rules;  // rule name -> <parameters, definition ast>
  std::set<std::string> _duplicate_rules;
- std::unordered_map<std::string, AstId::IdType> _id_string_to_id_map;  // Only non-generic ids
+ std::unordered_map<std::string, pmt::ast::IdType> _id_string_to_id_map;  // Only non-generic ids
  Grammar _ret;
  RuleExpression::UniqueHandle _ret_part;
  std::deque<Frame> _callstack;
@@ -112,7 +113,7 @@ void caching_traversal_handle_production(Locals& locals_, Ast const& ast_) {
  std::string rule_name = ast_.get_child_at(0)->get_string();
  std::string rule_display_name = rule_name;
 
- std::string rule_id_string = AstId::id_to_string(AstId::IdDefault);
+ std::string rule_id_string = pmt::ast::ReservedIds::id_to_string(pmt::ast::ReservedIds::IdDefault);
  bool rule_merge = RuleParametersBase::MERGE_DEFAULT;
  bool rule_unpack = RuleParametersBase::UNPACK_DEFAULT;
  bool rule_hide = RuleParametersBase::HIDE_DEFAULT;

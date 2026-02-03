@@ -9,7 +9,7 @@ char const* const ID_STRINGS[] = {
 };
 }  // namespace
 
-auto Ids::id_to_string(pmt::rt::AstId::IdType id_) -> std::string {
+auto Ids::id_to_string(pmt::ast::IdType id_) -> std::string {
  if (id_ < std::size(ID_STRINGS)) {
   return ID_STRINGS[id_];
  }

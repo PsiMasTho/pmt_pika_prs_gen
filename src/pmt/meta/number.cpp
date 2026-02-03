@@ -1,7 +1,7 @@
 #include "pmt/meta/number.hpp"
 
+#include "pmt/ast/ast.hpp"
 #include "pmt/meta/ids.hpp"
-#include "pmt/rt/ast.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 namespace pmt::meta {
-using namespace pmt::rt;
+using namespace pmt::ast;
 
 namespace {
 auto split_number(std::string_view str_) -> std::pair<std::string_view, std::string_view> {
@@ -79,7 +79,7 @@ auto single_char_as_value(Ast const& ast_) -> Number::NumberType {
 }
 }  // namespace
 
-Number::Number(pmt::rt::Ast const& ast_)
+Number::Number(pmt::ast::Ast const& ast_)
  : _value(single_char_as_value(ast_)) {
 }
 

@@ -4,7 +4,7 @@
 #include "pmt/fw_decl.hpp"
 #include "pmt/rt/primitives.hpp"
 
-PMT_FW_DECL_NS_CLASS(pmt::rt, Ast)
+PMT_FW_DECL_NS_CLASS(pmt::ast, Ast)
 
 namespace pmt::meta {
 
@@ -21,7 +21,7 @@ public:
  // -$ Functions $-
  // --$ Lifetime $--
  Charset() = default;
- explicit Charset(pmt::rt::Ast const &ast_);
+ explicit Charset(pmt::ast::Ast const &ast_);
 
  // --$ Other $--
  [[nodiscard]] auto get_values() const -> SetType const &;
