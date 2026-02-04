@@ -5,24 +5,6 @@ A **C++20 parser generator** implementing the **Pika parsing algorithm** describ
 
 ---
 
-## What this repository contains
-- **Parser generator**  
-  `pmt_pika_prs_gen_cli` sources in `src/pmt`
-
-- **Runtime library** used by generated parsers and `pmt_pika_prs_gen_cli` itself  
-  `pmt_pika_prs_gen_rt` sources and headers in `src/pmt/rt/`
-
-- **Skeleton templates** controlling emitted C++
-  `skel/`
-
-- **Vscode Syntax Highlighting Extension**
-- `pika-vscode/`
-
-- **Example using a generated parser**
-- `example/`
-
----
-
 ## Dependencies
 ### This repository:
 - C++20 compiler
@@ -39,6 +21,31 @@ find_package(pmt_ast CONFIG REQUIRED)
 - C++20 compiler
 - `pmt_pika_prs_gen_rt` (library + headers)
 - `pmt_ast` (library + headers)
+
+## Building
+This project is built with CMake.
+
+To configure, build, and install (assuming Makefiles as the generator):
+```bash
+mkdir -p build
+cd build
+
+# Configure (use the default install prefix)
+cmake ..
+
+# Or set the install prefix explicitly
+# cmake .. -DCMAKE_INSTALL_PREFIX=/your/prefix
+
+make -j
+
+# Install CLI + runtime library/headers
+make install
+
+# Other useful targets
+make example       # build the runnable example in ../example
+make install-skel  # install only the skeleton templates from ../skel
+```
+
 
 ## CLI (pmt_pika_prs_gen_cli)
 ### Arguments
@@ -61,7 +68,7 @@ Optional:
 * `--output-grammar`
 * `--output-clauses`
 * `--output-dotfile`
-* `--terminal-graph-skel-file`
+* `--terminal-graph-skel-file` (only used when `--output-dotfile` is set)
 * `--skel-dir`
 
 ### Generated files:
@@ -84,7 +91,7 @@ Optional debug outputs:
 - `--output-clauses`: write a dump of the internal clause graph.
 - `--output-dotfile`: write a Graphviz `.dot` file of the terminal state machine.
 
-## Runtime usage (parsing)
+## Usage
 To parse with your generated tables:
 1. Compile the generated tables `.cpp` and include the generated headers where needed.
 2. Link against `pmt_pika_prs_gen_rt` and `pmt_ast`.
@@ -98,15 +105,6 @@ See `example/` for a small self contained project that:
 
 `example/grammar.pika` is the source grammar. The repo already includes all the generated files, but you can regenerate them with `scripts/gen_example.py`
 This requires `pmt_pika_prs_gen_cli` to be available in your `PATH` (build/install the CLI first).
-
-Build it from the repo root:
-```bash
-cmake --build build/debug --target example
-```
-Or from the build directory:
-```bash
-make example
-```
 
 ## Grammar description
 #### Statements
@@ -171,6 +169,18 @@ The meta-grammar (the grammar that defines this syntax) is in `src/pmt/meta/gram
 ## Implementation notes
 - Parsing and AST construction are iterative (no recursion), so very deep ASTs/expressions are supported (subject to available memory).
 - As an optimization, a DFA is constructed from all terminals and emitted as compact transition tables (see `--output-dotfile`).
+
+## Skeleton files
+- `pmt_pika_prs_gen_cli` uses skeleton templates to generate the emitted C++ (and optional debug outputs).
+- The default skeletons live under `skel/` in this repo
+- You can point the CLI at a different skeleton root with `--skel-dir /path/to/skel`.
+- You can override individual templates with:
+  - `--pika-tables-header-skel-file`
+  - `--pika-tables-source-skel-file`
+  - `--id-strings-skel-file`
+  - `--id-constants-skel-file`
+  - `--terminal-graph-skel-file` 
+- To install only the skeleton templates, build the `install-skel` target (see the Build section above).
 
 ## Vscode Extension
 - A minimal vscode extension that provides syntax hilighting for `.pika` files is in `pika-vscode/`
