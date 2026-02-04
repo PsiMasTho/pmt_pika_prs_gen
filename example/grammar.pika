@@ -1,0 +1,11 @@
+@start = $S;
+
+$S<unpack = true> = $A_Flat $B_L_Recursive $C_R_Recursive;
+
+$A_Flat<id = "Holder"> = $A*;
+$B_L_Recursive<id = "Holder"> = $B_L_Recursive $B | epsilon;
+$C_R_Recursive<id = "Holder"> = $C $C_R_Recursive | epsilon;
+
+$A<id = "A", merge = true> = ["a", "A"];
+$B<id = "B", merge = true> = ["b", "B"];
+$C<id = "C", merge = true> = ["c", "C"];

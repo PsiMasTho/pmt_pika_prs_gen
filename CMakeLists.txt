@@ -11,6 +11,11 @@ include(GNUInstallDirs)
 
 add_subdirectory(src)
 
+add_subdirectory(example EXCLUDE_FROM_ALL)
+add_custom_target(make-example
+ DEPENDS pmt_pika_prs_gen_runtime_example
+ COMMENT "Building runtime example")
+
 install(DIRECTORY skel/
         DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/skel
         COMPONENT skel)
