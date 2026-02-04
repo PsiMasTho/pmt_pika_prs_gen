@@ -392,7 +392,7 @@ void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
 
 void process_frame_00(Locals& locals_, IntegerLiteralFrame& frame_) {
  CharsetLiteral literal;
- literal.push_back(Interval<SymbolType>(Number(*frame_._cur_expr).get_value()));
+ literal.push_back(Interval<SymbolType>(Number(*frame_._cur_expr, std::numeric_limits<SymbolType>::max()).get_value()));
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
  locals_._ret_part->set_charset_literal(std::move(literal));
 }

@@ -3,6 +3,7 @@
 #include "pmt/fw_decl.hpp"
 
 #include <cstdint>
+#include <limits>
 
 PMT_FW_DECL_NS_CLASS(pmt::ast, Ast)
 
@@ -10,7 +11,6 @@ namespace pmt::meta {
 
 class Number {
 public:
- // -$ Types / Constants $-
  using NumberType = uint64_t;
 
  // -$ Data $-
@@ -20,7 +20,7 @@ private:
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- explicit Number(pmt::ast::Ast const &ast_);
+ explicit Number(pmt::ast::Ast const &ast_, uintmax_t max_value_ = std::numeric_limits<NumberType>::max());
 
  // --$ Other $--
  [[nodiscard]] auto get_value() const -> NumberType;

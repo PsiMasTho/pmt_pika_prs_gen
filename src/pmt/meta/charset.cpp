@@ -18,7 +18,7 @@ auto get_interval(pmt::ast::Ast const &ast_) -> IntervalType {
   return IntervalType(Number(*ast_.get_child_at(0)).get_value(), Number(*ast_.get_child_at(1)).get_value());
  }
 
- return IntervalType(Number(ast_).get_value());
+ return IntervalType(Number(ast_, std::numeric_limits<SymbolType>::max()).get_value());
 }
 
 auto get_set(pmt::ast::Ast const &ast_) -> Charset::SetType {

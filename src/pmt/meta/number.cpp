@@ -21,7 +21,7 @@ auto split_number(std::string_view str_) -> std::pair<std::string_view, std::str
  return {str_.substr(0, pos), str_.substr(pos + 1)};
 }
 
-auto number_convert(std::string_view num_, Number::NumberType base_) -> Number::NumberType {
+auto number_convert(std::string_view num_, Number::NumberType base_, uintmax_t max_value_) -> Number::NumberType {
  // clang-format off
   static std::unordered_map<char, Number::NumberType> const CHAR_TO_NUM{
    {'0',  0}, {'1',  1}, {'2',  2}, {'3',  3}, {'4',  4}, {'5',  5},
@@ -33,7 +33,7 @@ auto number_convert(std::string_view num_, Number::NumberType base_) -> Number::
  // clang-format on
 
  if (base_ < 2 || base_ > CHAR_TO_NUM.size()) {
-  throw std::runtime_error("Invalid base: " + std::to_string(base_));
+  throw std::runtime_error("Invalid integer literal base: " + std::to_string(base_));
  }
 
  // Skip leading zeros
@@ -45,14 +45,14 @@ auto number_convert(std::string_view num_, Number::NumberType base_) -> Number::
  for (Number::NumberType i = num_.size(); i-- > 0;) {
   auto const itr = CHAR_TO_NUM.find(std::tolower(num_[i]));
   if (itr == CHAR_TO_NUM.end() || itr->second >= base_) {
-   throw std::runtime_error("Invalid number: " + std::string(num_));
+   throw std::runtime_error("Invalid integer literal: " + std::to_string(base_) + "#" + std::string(num_));
   }
 
-  Number::NumberType const step = itr->second * std::pow(base_, num_.size() - i - 1);
+  uintmax_t const step = itr->second * std::pow(base_, num_.size() - i - 1);
 
   // Check for overflow
-  if (std::numeric_limits<Number::NumberType>::max() - step < ret) {
-   throw std::runtime_error("Number too large: " + std::string(num_));
+  if (step > max_value_ || max_value_ - step < ret) {
+   throw std::runtime_error("Integer literal too large: " + std::to_string(base_) + "#" + std::string(num_));
   }
 
   ret += step;
@@ -61,15 +61,15 @@ auto number_convert(std::string_view num_, Number::NumberType base_) -> Number::
  return ret;
 }
 
-auto single_char_as_value(Ast const& ast_) -> Number::NumberType {
+auto single_char_as_value(Ast const& ast_, uintmax_t max_value_) -> Number::NumberType {
  switch (ast_.get_id()) {
   case Ids::CharacterLiteral: {
    return ast_.get_string().front();
   } break;
   case Ids::IntegerLiteral: {
    auto const [base_str, number_str] = split_number(ast_.get_string());
-   Number::NumberType const base = number_convert(base_str, 10);
-   Number::NumberType const number = number_convert(number_str, base);
+   Number::NumberType const base = number_convert(base_str, 10, std::numeric_limits<uintmax_t>::max());
+   Number::NumberType const number = number_convert(number_str, base, max_value_);
    return number;
   } break;
   default: {
@@ -79,8 +79,8 @@ auto single_char_as_value(Ast const& ast_) -> Number::NumberType {
 }
 }  // namespace
 
-Number::Number(pmt::ast::Ast const& ast_)
- : _value(single_char_as_value(ast_)) {
+Number::Number(pmt::ast::Ast const& ast_, uintmax_t max_value_)
+ : _value(single_char_as_value(ast_, max_value_)) {
 }
 
 auto Number::get_value() const -> NumberType {

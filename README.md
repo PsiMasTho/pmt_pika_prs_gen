@@ -72,7 +72,6 @@ Optional:
 * `--skel-dir`
 
 ### Generated files:
-`pmt_pika_prs_gen_cli` emits four primary outputs:
 - **Pika tables header** (`--pika-tables-output-header-file`)
   - Declares a class derived from `pmt::rt::PikaTablesBase`.
   - The class name/namespace can be overridden via `--pika-tables-class-name` and `--pika-tables-namespace-name`.
