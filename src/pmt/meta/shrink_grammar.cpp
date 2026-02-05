@@ -117,7 +117,6 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
     case ClauseBase::Tag::Sequence:
      handle_sequence(locals, position);
      break;
-    case ClauseBase::Tag::OneOrMore:
     case ClauseBase::Tag::NegativeLookahead:
      handle_passthrough(locals, position);
      break;

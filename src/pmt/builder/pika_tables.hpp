@@ -49,7 +49,7 @@ class PikaTables : public pmt::rt::PikaTablesBase {
  std::vector<pmt::meta::CharsetLiteral> _literals;
  std::vector<pmt::meta::RuleParameters> _rule_parameters;
 
- StateMachineTables _literal_state_machine_tables;
+ StateMachineTables _terminal_state_machine_tables;
 
 public:
  // -$ Functions $-
@@ -69,7 +69,7 @@ public:
  auto fetch_literal(pmt::rt::ClauseBase::IdType literal_id_) const -> pmt::meta::CharsetLiteral const&;
 
  auto get_id_table() const -> pmt::meta::IdTable const&;
- auto get_literal_state_machine_tables() const -> StateMachineTables const&;
+ auto get_terminal_state_machine_tables_full() const -> StateMachineTables const&;
 
 private:
  void initialize(pmt::meta::Grammar const& grammar_);

@@ -1,7 +1,6 @@
 #include "pmt/rt/memo_table.hpp"
 
 #include "pmt/hash.hpp"
-#include "pmt/rt/clause_matcher.hpp"
 #include "pmt/rt/pika_tables_base.hpp"
 
 #include <cassert>
@@ -41,16 +40,16 @@ MemoTable::MemoTable()
  : _table(0, KeyHashIndirect(_keys), KeyEqIndirect(_keys)) {
 }
 
-auto MemoTable::find(Key const& key_, std::string_view input_, PikaTablesBase const& pika_tables_) const -> IndexType {
+auto MemoTable::find(Key const& key_, PikaTablesBase const& pika_tables_) const -> IndexType {
  if (auto const itr = _table.find(key_); itr != _table.end()) {
   return itr->second;
- } else if (key_._clause->get_tag() == ClauseBase::Tag::NegativeLookahead) {
-  return ClauseMatcher::match(*this, key_, input_, pika_tables_).has_value() ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
- } else if (key_._clause->can_match_zero()) {
-  return MemoIndexMatchZeroLength;
  }
 
- return MemoIndexMatchNotFound;
+ if (key_._clause->get_tag() == ClauseBase::Tag::NegativeLookahead) {
+  return match_negative_lookahead_topdown(key_, pika_tables_);
+ }
+
+ return (key_._clause->can_match_zero()) ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
 }
 
 void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_tables_) {
@@ -91,6 +90,32 @@ auto MemoTable::get_match_length_by_index(IndexType index_) const -> size_t {
 
 auto MemoTable::get_match_count() const -> size_t {
  return _matches.size();
+}
+
+auto MemoTable::match_negative_lookahead_topdown(Key const& key_, PikaTablesBase const& pika_tables_) const -> IndexType {
+ IndexType result = MemoIndexMatchNotFound;
+ Key cur = key_;
+ size_t depth = 0;
+
+ do {
+  if (auto const itr = _table.find(cur); itr != _table.end()) {
+   result = itr->second;
+   break;
+  }
+  if (cur._clause->get_tag() != ClauseBase::Tag::NegativeLookahead) {
+   if (cur._clause->can_match_zero()) {
+    result = MemoIndexMatchZeroLength;
+   }
+   break;
+  }
+  ++depth;
+  cur = Key{._clause = &pika_tables_.fetch_clause(cur._clause->get_child_id_at(0)), ._position = cur._position};
+ } while (true);
+
+ if (depth & 1ull) {
+  return (result == MemoIndexMatchNotFound) ? MemoIndexMatchZeroLength : MemoIndexMatchNotFound;
+ }
+ return result;
 }
 
 }  // namespace pmt::rt

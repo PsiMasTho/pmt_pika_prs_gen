@@ -8,18 +8,16 @@ namespace pmt::rt {
 
 namespace {
 constexpr auto is_ignored_tag(ClauseBase::Tag tag_) -> bool {
- return tag_ == ClauseBase::Tag::NegativeLookahead || tag_ == ClauseBase::Tag::Eof || tag_ == ClauseBase::Tag::Epsilon;
+ return tag_ == ClauseBase::Tag::NegativeLookahead || tag_ == ClauseBase::Tag::Epsilon;
 }
 
 constexpr auto is_parent_tag(ClauseBase::Tag tag_) -> bool {
  switch (tag_) {
   case ClauseBase::Tag::Sequence:
   case ClauseBase::Tag::Choice:
-  case ClauseBase::Tag::OneOrMore:
   case ClauseBase::Tag::Identifier:
    return true;
   case ClauseBase::Tag::NegativeLookahead:
-  case ClauseBase::Tag::Eof:
   case ClauseBase::Tag::Epsilon:
   case ClauseBase::Tag::CharsetLiteral:
    return false;
@@ -45,7 +43,7 @@ auto make_string_node(std::string_view input_, MemoTable::Key const& key_, MemoT
 
 auto find_start_match_index_if_success(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> MemoTable::IndexType {
  ClauseBase const& start_clause = pika_tables_.fetch_clause(0);
- MemoTable::IndexType const start_match_index = memo_table_.find(MemoTable::Key{._clause = &start_clause, ._position = 0}, input_, pika_tables_);
+ MemoTable::IndexType const start_match_index = memo_table_.find(MemoTable::Key{._clause = &start_clause, ._position = 0}, pika_tables_);
  if (start_match_index == MemoTable::MemoIndexMatchNotFound) {
   return MemoTable::MemoIndexMatchNotFound;
  }
@@ -64,7 +62,6 @@ void process_and_add_child(pmt::ast::Ast& parent_, pmt::ast::Ast::UniqueHandle c
  switch (child_tag) {
   case ClauseBase::Tag::Sequence:
   case ClauseBase::Tag::Choice:
-  case ClauseBase::Tag::OneOrMore:
    parent_.give_child_at_back(std::move(child_));
    parent_.unpack(parent_.get_children_size() - 1);
    break;
@@ -86,7 +83,6 @@ void process_and_add_child(pmt::ast::Ast& parent_, pmt::ast::Ast::UniqueHandle c
    }
   } break;
   case ClauseBase::Tag::NegativeLookahead:
-  case ClauseBase::Tag::Eof:
   case ClauseBase::Tag::Epsilon:
    break;
   default:

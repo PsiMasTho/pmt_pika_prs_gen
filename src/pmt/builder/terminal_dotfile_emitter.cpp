@@ -68,7 +68,7 @@ auto build_symbol_label(IntervalSet<SymbolType> const& symbol_intervals_) -> std
  return label;
 }
 
-auto build_final_id_table(StateMachine const& state_machine_, TerminalDotfileEmitter::FinalIdToStringFn const& final_id_to_string_fn_) -> std::string {
+auto make_final_id_table_string(StateMachine const& state_machine_, TerminalDotfileEmitter::FinalIdToStringFn const& final_id_to_string_fn_) -> std::string {
  std::unordered_map<FinalIdType, std::set<StateNrType>> final_ids;
  for (StateNrType const state_nr : state_machine_.get_state_nrs()) {
   State const& state = *state_machine_.get_state(state_nr);
@@ -134,7 +134,7 @@ void TerminalDotfileEmitter::write_dot() {
   }
  }
 
- replace_skeleton_label(_args._skel, "FINAL_ID_TABLE", build_final_id_table(_args._state_machine, _args._final_id_to_string_fn));
+ replace_skeleton_label(_args._skel, "FINAL_ID_TABLE", make_final_id_table_string(_args._state_machine, _args._final_id_to_string_fn));
  replace_skeleton_label(_args._skel, "TIMESTAMP", pmt::util::get_timestamp());
  replace_skeleton_label(_args._skel, "LAYOUT_DIRECTION", "LR");
  replace_skeleton_label(_args._skel, "ACCEPTING_NODE_SHAPE", "doublecircle");

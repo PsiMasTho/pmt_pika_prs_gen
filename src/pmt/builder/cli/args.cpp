@@ -42,7 +42,7 @@ Args::Args(int argc_, char const* const* argv_) {
 
  _pika_tables_header_skel_file = cmdl.present<std::string>("pika-tables-header-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_tables-skel.hpp"));
  _pika_tables_source_skel_file = cmdl.present<std::string>("pika-tables-source-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/pika_tables-skel.cpp"));
- _pika_tables_class_name = cmdl.present<std::string>("pika-tables-class-name").value_or(std::string());
+ _pika_tables_class_name = cmdl.present<std::string>("pika-tables-class-name").value_or("PikaTables");
  _pika_tables_namespace_name = cmdl.present<std::string>("pika-tables-namespace-name").value_or(std::string());
 
  _id_strings_skel_file = cmdl.present<std::string>("id-strings-skel-file").value_or(pmt::util::SkeletonPathsSingleton::instance()->get_path("pmt/builder/id_strings-skel.hpp"));

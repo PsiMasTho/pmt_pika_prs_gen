@@ -59,7 +59,6 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
   pending.pop_back();
 
   switch (src->get_tag()) {
-   case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::NegativeLookahead:
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::Choice: {
@@ -75,7 +74,6 @@ auto RuleExpression::clone(RuleExpression const& other_) -> UniqueHandle {
    case ClauseBase::Tag::CharsetLiteral: {
     dst->set_charset_literal(src->get_charset_literal());
    } break;
-   case ClauseBase::Tag::Eof:
    case ClauseBase::Tag::Epsilon: {
    } break;
   }
@@ -98,8 +96,6 @@ auto RuleExpression::get_children_size() const -> size_t {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data).size();
   case ClauseBase::Tag::Choice:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data).size();
-  case ClauseBase::Tag::OneOrMore:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) == nullptr ? 0 : 1;
   case ClauseBase::Tag::NegativeLookahead:
    return std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data) == nullptr ? 0 : 1;
   default:
@@ -117,8 +113,6 @@ auto RuleExpression::get_child_at(size_t index_) -> RuleExpression* {
    return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data)[index_];
   case ClauseBase::Tag::Choice:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
-  case ClauseBase::Tag::OneOrMore:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NegativeLookahead:
    return std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data);
   default:
@@ -136,8 +130,6 @@ auto RuleExpression::get_child_at(size_t index_) const -> RuleExpression const* 
    return std::get<static_cast<size_t>(ClauseBase::Tag::Sequence)>(_data)[index_];
   case ClauseBase::Tag::Choice:
    return std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data)[index_];
-  case ClauseBase::Tag::OneOrMore:
-   return std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data);
   case ClauseBase::Tag::NegativeLookahead:
    return std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data);
   default:
@@ -174,9 +166,6 @@ auto RuleExpression::take_child_at(size_t index_) -> UniqueHandle {
    container.erase(std::next(container.begin(), index_));
   } break;
    break;
-  case ClauseBase::Tag::OneOrMore:
-   std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = nullptr;
-   break;
   case ClauseBase::Tag::NegativeLookahead:
    std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data) = nullptr;
    break;
@@ -198,9 +187,6 @@ void RuleExpression::give_child_at(size_t index_, UniqueHandle child_) {
    SequenceType& container = std::get<static_cast<size_t>(ClauseBase::Tag::Choice)>(_data);
    container.insert(std::next(container.begin(), index_), child_.release());
   } break;
-   break;
-  case ClauseBase::Tag::OneOrMore:
-   std::get<static_cast<size_t>(ClauseBase::Tag::OneOrMore)>(_data) = child_.release();
    break;
   case ClauseBase::Tag::NegativeLookahead:
    std::get<static_cast<size_t>(ClauseBase::Tag::NegativeLookahead)>(_data) = child_.release();

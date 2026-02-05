@@ -92,20 +92,6 @@ void handle_identifier(Locals& locals_, ClauseBase::IdType clause_id_) {
  }
 }
 
-void handle_one_or_more(Locals& locals_, ClauseBase::IdType clause_id_) {
- if (locals_._solved.get(locals_._clauses[clause_id_].get_child_id_at(0))) {
-  if (locals_._clauses[locals_._clauses[clause_id_].get_child_id_at(0)].can_match_zero()) {
-   std::string msg = "Invalid grammar: OneOrMore can match zero input";
-   ClauseBase::IdType const closest_rule_id = locals_._closest_rule_ids[clause_id_];
-   if (closest_rule_id != ClauseBase::IdInvalid) {
-    msg += " in rule $" + locals_._rule_parameters[closest_rule_id]._display_name;
-   }
-   throw std::runtime_error(msg);
-  }
-  mark(locals_, clause_id_, false);
- }
-}
-
 auto determine_closest_rule_ids(std::span<ExtendedClause const> clauses_) -> std::vector<ClauseBase::IdType> {
  struct PendingItem {
   ClauseBase::IdType _cur_clause_id;
@@ -212,11 +198,7 @@ void PikaTables::determine_can_match_zero() {
     case ClauseBase::Tag::Identifier: {
      handle_identifier(locals, i);
     } break;
-    case ClauseBase::Tag::OneOrMore: {
-     handle_one_or_more(locals, i);
-    } break;
     case ClauseBase::Tag::NegativeLookahead:
-    case ClauseBase::Tag::Eof:
     case ClauseBase::Tag::Epsilon:
      mark(locals, i, true);
      break;

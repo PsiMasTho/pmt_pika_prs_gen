@@ -1,6 +1,7 @@
 #include "pmt/meta/load_grammar.hpp"
 
 #include "pmt/meta/extract_hidden_expressions.hpp"
+#include "pmt/meta/extract_repetition_expressions.hpp"
 #include "pmt/meta/grammar_from_ast.hpp"
 #include "pmt/meta/inline_rules.hpp"
 #include "pmt/meta/pika_tables.hpp"
@@ -22,6 +23,7 @@ auto load_grammar(std::string_view input_grammar_) -> Grammar {
  }
 
  extract_hidden_expressions(*ast);
+ extract_repetition_expressions(*ast);
  Grammar grammar = grammar_from_ast(ast);
  prune_grammar(grammar);
  inline_rules(grammar);

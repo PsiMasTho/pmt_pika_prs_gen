@@ -63,9 +63,13 @@ auto Interval<T_>::clone_and(Interval const& other_) const -> std::optional<Inte
 template <std::integral T_>
 template <std::invocable<T_> F_>
 void Interval<T_>::for_each_key(F_&& f_) const {
- T_ const size = get_upper() - get_lower() + T_{1};
- for (T_ i = 0; i < size; ++i) {
-  std::invoke(std::forward<F_>(f_), get_lower() + i);
+ T_ key = get_lower();
+ while (true) {
+  std::invoke(std::forward<F_>(f_), key);
+  if (key == get_upper()) {
+   break;
+  }
+  ++key;
  }
 }
 

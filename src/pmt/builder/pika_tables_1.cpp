@@ -80,7 +80,7 @@ auto PikaTables::get_rule_count() const -> size_t {
 }
 
 auto PikaTables::get_terminal_state_machine_tables() const -> StateMachineTablesBase const& {
- return _literal_state_machine_tables;
+ return _terminal_state_machine_tables;
 }
 
 auto PikaTables::fetch_literal(ClauseBase::IdType literal_id_) const -> CharsetLiteral const& {
@@ -92,8 +92,8 @@ auto PikaTables::get_id_table() const -> pmt::meta::IdTable const& {
  return _id_table;
 }
 
-auto PikaTables::get_literal_state_machine_tables() const -> StateMachineTables const& {
- return _literal_state_machine_tables;
+auto PikaTables::get_terminal_state_machine_tables_full() const -> StateMachineTables const& {
+ return _terminal_state_machine_tables;
 }
 
 }  // namespace pmt::builder

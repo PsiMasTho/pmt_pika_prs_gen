@@ -5,6 +5,7 @@
 #include "pmt/unreachable.hpp"
 #include "pmt/util/overloaded.hpp"
 
+#include <string_view>
 namespace pmt::meta {
 using namespace pmt::rt;
 namespace {
@@ -12,6 +13,12 @@ struct ExpressionPosition {
  RuleExpression* _parent;
  size_t _child_idx;
 };
+
+constexpr std::string_view plus_body_prefix = "__plus_body_";
+
+auto is_plus_body_rule(std::string const& rule_name_) -> bool {
+ return rule_name_.starts_with(plus_body_prefix);
+}
 
 auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> {
  std::unordered_set<std::string> ret = grammar_.get_rule_names();
@@ -28,7 +35,6 @@ auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> 
    case ClauseBase::Tag::Sequence:
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::CharsetLiteral:
-   case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::NegativeLookahead: {
     for (size_t i = 0; i < expr_cur->get_children_size(); ++i) {
      pending.emplace_back(expr_cur->get_child_at(i), visited_cur);
@@ -37,7 +43,7 @@ auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> 
    case ClauseBase::Tag::Identifier: {
     std::string const rule_name_cur = expr_cur->get_identifier();
     Rule const* rule = grammar_.get_rule(rule_name_cur);
-    if (rule == nullptr || !rule->_parameters.get_unpack() || rule->_parameters.get_merge() || rule->_parameters.get_hide()) {
+    if (rule == nullptr || is_plus_body_rule(rule_name_cur) || !rule->_parameters.get_unpack() || rule->_parameters.get_merge() || rule->_parameters.get_hide()) {
      ret.erase(rule_name_cur);
     }
 
@@ -48,7 +54,6 @@ auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> 
      pending.emplace_back(rule->_definition.get(), visited_cur);
     }
    } break;
-   case ClauseBase::Tag::Eof:
    case ClauseBase::Tag::Epsilon:
     break;
    default:
@@ -90,14 +95,12 @@ void inline_rules(Grammar& grammar_) {
      } break;
      case ClauseBase::Tag::Sequence:
      case ClauseBase::Tag::Choice:
-     case ClauseBase::Tag::NegativeLookahead:
-     case ClauseBase::Tag::OneOrMore: {
+     case ClauseBase::Tag::NegativeLookahead: {
       for (size_t i = 0; i < expr_cur_->get()->get_children_size(); ++i) {
        pending.emplace_back(ExpressionPosition{._parent = expr_cur_->get(), ._child_idx = i}, visited_cur);
       }
      } break;
      case ClauseBase::Tag::CharsetLiteral:
-     case ClauseBase::Tag::Eof:
      case ClauseBase::Tag::Epsilon:
       break;
     }
@@ -122,14 +125,12 @@ void inline_rules(Grammar& grammar_) {
      } break;
      case ClauseBase::Tag::Sequence:
      case ClauseBase::Tag::Choice:
-     case ClauseBase::Tag::NegativeLookahead:
-     case ClauseBase::Tag::OneOrMore: {
+     case ClauseBase::Tag::NegativeLookahead: {
       for (size_t i = 0; i < expr_cur.get_children_size(); ++i) {
        pending.emplace_back(ExpressionPosition{._parent = &expr_cur, ._child_idx = i}, visited_cur);
       }
      } break;
      case ClauseBase::Tag::CharsetLiteral:
-     case ClauseBase::Tag::Eof:
      case ClauseBase::Tag::Epsilon:
       break;
     }

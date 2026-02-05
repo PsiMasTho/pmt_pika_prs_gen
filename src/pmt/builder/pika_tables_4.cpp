@@ -47,7 +47,6 @@ void PikaTables::determine_seed_parents() {
 
    } break;
    case ClauseBase::Tag::Identifier:
-   case ClauseBase::Tag::OneOrMore:
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::NegativeLookahead: {
     for (size_t i = 0; i < clause.get_child_id_count(); ++i) {
@@ -57,7 +56,6 @@ void PikaTables::determine_seed_parents() {
    } break;
    default:
     pmt::unreachable();
-   case ClauseBase::Tag::Eof:
    case ClauseBase::Tag::Epsilon:
    case ClauseBase::Tag::CharsetLiteral:
     break;

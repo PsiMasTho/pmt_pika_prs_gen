@@ -5,6 +5,7 @@
 #include "pmt/meta/rule.hpp"
 #include "pmt/rt/clause_base.hpp"
 #include "pmt/util/overloaded.hpp"
+#include "pmt/util/timestamp.hpp"
 
 #include <cassert>
 #include <set>
@@ -81,7 +82,7 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
  ClauseBase::Tag const tag_child = child_->get_tag();
  size_t const arity_child = child_->get_children_size();
  auto const is_unary = [&](ClauseBase::Tag tag_) {
-  return tag_ == ClauseBase::Tag::NegativeLookahead || tag_ == ClauseBase::Tag::OneOrMore;
+  return tag_ == ClauseBase::Tag::NegativeLookahead;
  };
 
  switch (tag_child) {
@@ -100,8 +101,7 @@ auto needs_parens(RuleExpression const* parent_, RuleExpression const* child_) -
    }
    // Otherwise (Choice inside Choice, etc.) no parens.
    return false;
-  case ClauseBase::Tag::NegativeLookahead:
-  case ClauseBase::Tag::OneOrMore: {
+  case ClauseBase::Tag::NegativeLookahead: {
    if (is_unary(tag_parent)) {
     return true;
    }
@@ -126,10 +126,6 @@ auto expand_once(Locals& locals_, RuleExpression const* node_, RuleExpression co
     push(locals_, ExpressionWithParent{._parent = node_, ._index = i});
    }
   } break;
-  case ClauseBase::Tag::OneOrMore: {
-   push(locals_, "+");
-   push(locals_, ExpressionWithParent{._parent = node_});
-  } break;
   case ClauseBase::Tag::NegativeLookahead: {
    push(locals_, "!");
    push(locals_, ExpressionWithParent{._parent = node_});
@@ -139,9 +135,6 @@ auto expand_once(Locals& locals_, RuleExpression const* node_, RuleExpression co
   } break;
   case ClauseBase::Tag::CharsetLiteral: {
    ret += charset_literal_to_grammar_string(node_->get_charset_literal());
-  } break;
-  case ClauseBase::Tag::Eof: {
-   push(locals_, "eof");
   } break;
   case ClauseBase::Tag::Epsilon: {
    push(locals_, "epsilon");
@@ -203,7 +196,7 @@ auto grammar_to_string(Grammar const& grammar_) -> std::string {
   return std::set<std::string>(unsorted.begin(), unsorted.end());
  }();
 
- std::string ret = start_rule_to_str(grammar_.get_start_rule_name());
+ std::string ret = "/* Generated on: " + pmt::util::get_timestamp() + " */\n" + start_rule_to_str(grammar_.get_start_rule_name());
 
  std::string delim;
  for (auto const& rule_name : rule_names) {

@@ -1,20 +1,19 @@
 @start = $grammar;
 
 // - ANY -
-$any = [10#0..10#127];
+$any = [10#0..10#255];
 
 // - COMMENTS AND WHITESPACE -
 $newline = 16#A;
 $whitespace = " ";
 $single_line_comment = "//" $single_line_comment_rhs;
-$single_line_comment_rhs = $newline | $any $single_line_comment_rhs | eof;
+$single_line_comment_rhs = $newline | $any $single_line_comment_rhs | $any!;
 $multi_line_comment = "/*" $multi_line_comment_rhs;  
 $multi_line_comment_rhs = "*/" | $any $multi_line_comment_rhs;  
 $comment = $single_line_comment | $multi_line_comment;
 $blank<hide = true> = ($comment | $whitespace | $newline)*;
 
 // - KEYWORDS -
-$kw_eof<id                    = "Eof">                               = "eof";
 $kw_epsilon<id                = "Epsilon">                           = "epsilon";
 $kw_parameter_unpack<id       = "ParameterUnpack", hide = true>      = "unpack";
 $kw_parameter_hide<id         = "ParameterHide", hide = true>        = "hide";
@@ -32,10 +31,7 @@ $exclamation<hide = true>                = "!";
 $ampersand<hide = true>                  = "&";
 
 // - LITERALS -
-$string_middle = ["A".."Z", "a".."z", "0".."9",
-                10#33, 10#35..10#47, 10#58..10#64, 10#91..10#96, 10#123..10#126, // Punctuation, except double quote
-                10#32                                                            // Space
-                ];
+$string_middle = [10#32, 10#33, 10#35..10#126];
 
 $string_literal<id = "StringLiteral", merge = true>       = 10#34~ $string_middle* 10#34~;
 $character_literal<id = "CharacterLiteral", merge = true> = 10#34~ $string_middle 10#34~;
@@ -45,7 +41,7 @@ $integer_literal<id   = "IntegerLiteral", merge = true>   = $integer_literal_lhs
 $id_string_middle                                         = ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*;
 $id_string_literal<id = "IdStringLiteral", merge = true>  = 10#34~ $id_string_middle 10#34~;
 $boolean_literal<id   = "BooleanLiteral", merge = true>   = "true" | "false";
-$identifier_rhs                                           = ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*; 
+$identifier_rhs                                           = "__"! ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*; 
 $identifier<id        = "Identifier", merge = true>       = ("$"~) $identifier_rhs;
 
 // - GRAMMAR PROPERTIES -
@@ -94,8 +90,7 @@ $hidden<id = "Hidden"> = $identifier $tilde               |
                          $integer_literal $tilde          |
                          $charset  $tilde                 |
                          "("~ $blank $choices ")"~ $tilde |
-                         $kw_epsilon $tilde               |
-                         $kw_eof $tilde;
+                         $kw_epsilon $tilde;
 
 // - NEGATIVE_LOOKAHEAD -
 $negative_lookahead<id = "NegativeLookahead"> = $identifier $exclamation               |
@@ -103,8 +98,7 @@ $negative_lookahead<id = "NegativeLookahead"> = $identifier $exclamation        
                                                 $integer_literal $exclamation          |
                                                 $charset  $exclamation                 |
                                                 "("~ $blank $choices ")"~ $exclamation |
-                                                $kw_epsilon $exclamation               |
-                                                $kw_eof $exclamation;
+                                                $kw_epsilon $exclamation;
 
 // - POSITIVE_LOOKAHEAD -
 $positive_lookahead<id = "PositiveLookahead"> = $identifier $ampersand               |
@@ -112,8 +106,7 @@ $positive_lookahead<id = "PositiveLookahead"> = $identifier $ampersand          
                                                 $integer_literal $ampersand          |
                                                 $charset  $ampersand                 |
                                                 "("~ $blank $choices ")"~ $ampersand |
-                                                $kw_epsilon $ampersand               |
-                                                $kw_eof $ampersand;
+                                                $kw_epsilon $ampersand;
 
 // - REPETITION -
 $repetition<id = "Repetition"> = $identifier $repetition_postfix               |
@@ -121,8 +114,7 @@ $repetition<id = "Repetition"> = $identifier $repetition_postfix               |
                                  $integer_literal $repetition_postfix          |
                                  $charset  $repetition_postfix                 |
                                  "("~ $blank $choices ")"~ $repetition_postfix |
-                                 $kw_epsilon $repetition_postfix |
-                                 $kw_eof $repetition_postfix;
+                                 $kw_epsilon $repetition_postfix;
 
 // - PLAIN -
 $plain<unpack = true > = $identifier               |
@@ -130,8 +122,7 @@ $plain<unpack = true > = $identifier               |
                          $integer_literal          |
                          $charset                  |
                          "("~ $blank $choices ")"~ |
-                         $kw_epsilon               |
-                         $kw_eof;
+                         $kw_epsilon;
 
 // - REPETITION_POSTFIX -
 $repetition_postfix<unpack = true> = $question |

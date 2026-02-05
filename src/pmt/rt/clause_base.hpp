@@ -18,9 +18,7 @@ public:
   Choice,             // >= 1 clause ids
   Identifier,         // 1 clause id + 1 rule id
   CharsetLiteral,     // 1 literal id
-  OneOrMore,          // 1 clause id
   NegativeLookahead,  // 1 clause id
-  Eof,                // not stored in memo table
   Epsilon,            // not stored
  };
 

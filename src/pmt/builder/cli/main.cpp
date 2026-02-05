@@ -79,7 +79,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
   pmt::builder::TerminalDotfileEmitter dot_writer(pmt::builder::TerminalDotfileEmitter::Args{
    ._final_id_to_string_fn = [&](pmt::rt::FinalIdType idx_) { return std::to_string(idx_); },
    ._skel = pmt::util::read_file(*args._terminal_graph_skel_file),
-   ._state_machine = pika_tables.get_literal_state_machine_tables().get_state_machine(),
+   ._state_machine = pika_tables.get_terminal_state_machine_tables_full().get_state_machine(),
    ._os_graph = output_graph,
   });
   dot_writer.write_dot();

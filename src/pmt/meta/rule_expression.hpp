@@ -24,11 +24,9 @@ private:
  // recursive types
  using SequenceType = std::deque<RuleExpression*>;
  using ChoiceType = std::deque<RuleExpression*>;
- using OneOrMoreType = RuleExpression*;
  using NotFollowedByType = RuleExpression*;
 
  // non recursive types
- using EofType = std::monostate;
  using EpsilonType = std::monostate;
 
 public:
@@ -36,7 +34,7 @@ public:
 
 private:
  // Note: keep the values of the ClauseBase::Tag constants the same as the indices of their types in the variant
- using VariantType = std::variant<SequenceType, ChoiceType, IdentifierType, CharsetLiteral, OneOrMoreType, NotFollowedByType, EofType, EpsilonType>;
+ using VariantType = std::variant<SequenceType, ChoiceType, IdentifierType, CharsetLiteral, NotFollowedByType, EpsilonType>;
 
  // -$ Data $-
  VariantType _data;

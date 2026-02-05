@@ -8,6 +8,7 @@
 #include "pmt/meta/rule.hpp"
 #include "pmt/unreachable.hpp"
 #include "pmt/util/levenshtein.hpp"
+#include "pmt/util/uint_to_str.hpp"
 
 #include <map>
 #include <set>
@@ -40,11 +41,6 @@ public:
  size_t _idx = 0;
 };
 
-class RepetitionFrame : public FrameBase {
-public:
- RepetitionRange _range;
-};
-
 class StringLiteralFrame : public FrameBase {
 public:
 };
@@ -69,15 +65,11 @@ class PositiveLookaheadFrame : public FrameBase {
 public:
 };
 
-class EofFrame : public FrameBase {
-public:
-};
-
 class EpsilonFrame : public FrameBase {
 public:
 };
 
-using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, RepetitionFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EofFrame, EpsilonFrame>;
+using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame>;
 
 class Locals {
 public:
@@ -87,8 +79,29 @@ public:
  Grammar _ret;
  RuleExpression::UniqueHandle _ret_part;
  std::deque<Frame> _callstack;
+ size_t _generated_plus_rules = 0;
  bool _keep_current_frame;
 };
+
+auto make_plus_rule_name(size_t number_, size_t digits_needed_) -> std::string {
+ return "__plus_" + pmt::util::uint_to_string(number_, digits_needed_, pmt::util::hex_alphabet_uppercase);
+}
+
+void construct_plus_production(pmt::ast::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
+ Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
+ Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
+ identifier->set_string(rule_name_);
+ Ast::UniqueHandle parameter_unpack = Ast::construct(Ast::Tag::String, Ids::ParameterUnpack);
+ parameter_unpack->set_string("true");
+ Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
+ definition->give_child_at_back(Ast::clone(*expr_->get_child_at_front()));
+
+ production->give_child_at_back(std::move(identifier));
+ production->give_child_at_back(std::move(parameter_unpack));
+ production->give_child_at_back(std::move(definition));
+
+ ast_root_.give_child_at_back(std::move(production));
+}
 
 void caching_traversal_handle_grammar_property_start(Locals& locals_, Ast const& ast_) {
  assert(ast_.get_id() == Ids::Identifier);
@@ -235,9 +248,6 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
   case Ids::Choices: {
    return ChoicesFrame{frame_base};
   } break;
-  case Ids::Repetition: {
-   return RepetitionFrame{frame_base};
-  } break;
   case Ids::Sequence: {
    return SequenceFrame{frame_base};
   } break;
@@ -258,9 +268,6 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
   } break;
   case Ids::PositiveLookahead: {
    return PositiveLookaheadFrame{frame_base};
-  } break;
-  case Ids::Eof: {
-   return EofFrame{frame_base};
   } break;
   case Ids::Epsilon: {
    return EpsilonFrame{frame_base};
@@ -324,60 +331,6 @@ void process_frame_01(Locals& locals_, ChoicesFrame& frame_) {
  }
 
  locals_._ret_part = std::move(frame_._sub_part);
-}
-
-void process_frame_00(Locals& locals_, RepetitionFrame& frame_) {
- locals_._keep_current_frame = true;
- ++frame_._stage;
-
- frame_._range = RepetitionRange(*frame_._cur_expr->get_child_at(1));
- locals_._callstack.emplace_back(construct_frame(frame_._cur_expr->get_child_at(0)));
-}
-
-void process_frame_01(Locals& locals_, RepetitionFrame& frame_) {
- RuleExpression::UniqueHandle body = std::move(locals_._ret_part);
-
- if /* x{,} */ (frame_._range.get_lower() == 0 && !frame_._range.get_upper().has_value()) {
-  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Choice);
-  locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::OneOrMore));
-  locals_._ret_part->get_child_at_back()->give_child_at_back(std::move(body));
-  locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Epsilon));
- } else if /* x{a,} */ (frame_._range.get_lower() != 0 && !frame_._range.get_upper().has_value()) {
-  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Sequence);
-  for (size_t i = 1; i < frame_._range.get_lower(); ++i) {
-   locals_._ret_part->give_child_at_back(RuleExpression::clone(*body));
-  }
-  locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::OneOrMore));
-  locals_._ret_part->get_child_at_back()->give_child_at_back(std::move(body));
- } else if /* x{a,b} */ (frame_._range.get_lower() != 0 && frame_._range.get_upper().has_value()) {
-  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Sequence);
-  for (size_t i = 0; i < frame_._range.get_lower(); ++i) {
-   locals_._ret_part->give_child_at_back(RuleExpression::clone(*body));
-  }
-  if (frame_._range.get_lower() != *frame_._range.get_upper()) {
-   locals_._ret_part->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Choice));
-   RuleExpression* const choice = locals_._ret_part->get_child_at_back();
-   for (size_t i = *frame_._range.get_upper() - frame_._range.get_lower(); i != 0; --i) {
-    choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Sequence));
-    RuleExpression* const sequence = choice->get_child_at_back();
-    for (size_t j = 0; j < i; ++j) {
-     sequence->give_child_at_back(RuleExpression::clone(*body));
-    }
-   }
-   choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Epsilon));
-  }
- } else /* x{,b} */ {
-  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Choice);
-  RuleExpression* const choice = locals_._ret_part.get();
-  for (size_t i = *frame_._range.get_upper() - frame_._range.get_lower(); i != 0; --i) {
-   choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Sequence));
-   RuleExpression* const sequence = choice->get_child_at_back();
-   for (size_t j = 0; j < i; ++j) {
-    sequence->give_child_at_back(RuleExpression::clone(*body));
-   }
-  }
-  choice->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::Epsilon));
- }
 }
 
 void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
@@ -465,10 +418,6 @@ void process_frame_01(Locals& locals_, PositiveLookaheadFrame& frame_) {
  outer->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::NegativeLookahead));
  outer->get_child_at_back()->give_child_at_back(std::move(locals_._ret_part));
  locals_._ret_part = std::move(outer);
-}
-
-void process_frame_00(Locals& locals_, EofFrame& frame_) {
- locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Eof);
 }
 
 void process_frame_00(Locals& locals_, EpsilonFrame& frame_) {
