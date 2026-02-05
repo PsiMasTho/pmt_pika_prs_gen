@@ -25,27 +25,23 @@ find_package(pmt_ast CONFIG REQUIRED)
 ## Building
 This project is built with CMake.
 
-To configure, build, and install (assuming Makefiles as the generator):
+To configure, build, and install (generator-agnostic):
 ```bash
-mkdir -p build
-cd build
-
 # Configure (use the default install prefix)
-cmake ..
+cmake -S . -B build
 
 # Or set the install prefix explicitly
-# cmake .. -DCMAKE_INSTALL_PREFIX=/your/prefix
+# cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/your/prefix
 
-make -j
+cmake --build build
 
 # Install CLI + runtime library/headers
-make install
+cmake --build build --target install
 
 # Other useful targets
-make example       # build the runnable example in ../example
-make install-skel  # install only the skeleton templates from ../skel
+cmake --build build --target make-example  # build the runnable example in ./example
+cmake --build build --target install-skel  # install only the skeleton templates from ./skel
 ```
-
 
 ## CLI (pmt_pika_prs_gen_cli)
 ### Arguments
