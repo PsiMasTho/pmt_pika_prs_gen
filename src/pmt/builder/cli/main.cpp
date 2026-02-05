@@ -45,33 +45,35 @@ auto main(int argc_, char const* const* argv_) -> int try {
   }
  }
 
- {
-  std::ofstream output_header(args._pika_tables_output_header_file);
-  std::ofstream output_source(args._pika_tables_output_source_file);
-  pmt::builder::PikaTablesEmitter pika_program_emitter(pmt::builder::PikaTablesEmitter::Args{
-   ._program = pika_tables,
-   ._header_include_path = args._pika_tables_header_include_filename,
-   ._output_header = output_header,
-   ._output_source = output_source,
-   ._header_skel = pmt::util::read_file(args._pika_tables_header_skel_file),
-   ._source_skel = pmt::util::read_file(args._pika_tables_source_skel_file),
-   ._class_name = args._pika_tables_class_name,
-   ._namespace_name = args._pika_tables_namespace_name,
-  });
-  pika_program_emitter.emit();
- }
+ if (!args._test_mode) {
+  {
+   std::ofstream output_header(args._pika_tables_output_header_file);
+   std::ofstream output_source(args._pika_tables_output_source_file);
+   pmt::builder::PikaTablesEmitter pika_program_emitter(pmt::builder::PikaTablesEmitter::Args{
+    ._program = pika_tables,
+    ._header_include_path = args._pika_tables_header_include_filename,
+    ._output_header = output_header,
+    ._output_source = output_source,
+    ._header_skel = pmt::util::read_file(args._pika_tables_header_skel_file),
+    ._source_skel = pmt::util::read_file(args._pika_tables_source_skel_file),
+    ._class_name = args._pika_tables_class_name,
+    ._namespace_name = args._pika_tables_namespace_name,
+   });
+   pika_program_emitter.emit();
+  }
 
- {
-  std::ofstream output_id_strings(args._id_strings_output_file);
-  std::ofstream output_id_constants(args._id_constants_output_file);
-  pmt::builder::IdEmitter id_emitter(pmt::builder::IdEmitter::Args{
-   ._id_table = pika_tables.get_id_table(),
-   ._strings_output_file = output_id_strings,
-   ._strings_skel = pmt::util::read_file(args._id_strings_skel_file),
-   ._constants_output_file = output_id_constants,
-   ._constants_skel = pmt::util::read_file(args._id_constants_skel_file),
-  });
-  id_emitter.emit();
+  {
+   std::ofstream output_id_strings(args._id_strings_output_file);
+   std::ofstream output_id_constants(args._id_constants_output_file);
+   pmt::builder::IdEmitter id_emitter(pmt::builder::IdEmitter::Args{
+    ._id_table = pika_tables.get_id_table(),
+    ._strings_output_file = output_id_strings,
+    ._strings_skel = pmt::util::read_file(args._id_strings_skel_file),
+    ._constants_output_file = output_id_constants,
+    ._constants_skel = pmt::util::read_file(args._id_constants_skel_file),
+   });
+   id_emitter.emit();
+  }
  }
 
  if (args._terminal_graph_output_file.has_value() && args._terminal_graph_skel_file.has_value()) {

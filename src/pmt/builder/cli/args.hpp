@@ -11,6 +11,7 @@ public:
 
  std::string _input_grammar_file;
  std::optional<std::string> _input_test_file;
+ bool _test_mode = false;
 
  std::string _pika_tables_header_include_filename;
  std::string _pika_tables_output_header_file;

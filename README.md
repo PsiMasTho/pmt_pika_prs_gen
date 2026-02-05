@@ -49,7 +49,7 @@ make install-skel  # install only the skeleton templates from ../skel
 
 ## CLI (pmt_pika_prs_gen_cli)
 ### Arguments
-Required:
+Required (normal mode):
 * `--input-grammar-file`
 * `--pika-tables-header-include-filename`
 * `--pika-tables-output-header-file`
@@ -58,7 +58,6 @@ Required:
 * `--id-constants-output-file`
 
 Optional:
-* `--input-test-file`
 * `--pika-tables-header-skel-file`
 * `--pika-tables-source-skel-file`
 * `--pika-tables-class-name`
@@ -70,6 +69,12 @@ Optional:
 * `--output-dotfile`
 * `--terminal-graph-skel-file` (only used when `--output-dotfile` is set)
 * `--skel-dir`
+
+Test mode:
+* Supplying `--input-test-file` runs the CLI in test mode (parse the test input only).
+* Required in test mode: `--input-grammar-file`, `--input-test-file`.
+* Optional in test mode: `--output-grammar`, `--output-clauses`, `--output-dotfile`.
+* All other arguments are disallowed in test mode.
 
 ### Generated files:
 - **Pika tables header** (`--pika-tables-output-header-file`)
