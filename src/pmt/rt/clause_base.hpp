@@ -1,8 +1,9 @@
 #pragma once
 
+#include "pmt/rt/primitives.hpp"
+
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <string>
 
 namespace pmt::rt {
@@ -10,20 +11,13 @@ namespace pmt::rt {
 class ClauseBase {
 public:
  // -$ Types / Constants $-
- using IdType = uint32_t;
-
  enum class Tag : uint8_t {
-  // Child IDs
-  Sequence,           // >= 1 clause ids
-  Choice,             // >= 1 clause ids
-  Identifier,         // 1 clause id + 1 rule id
+  Sequence,           // >= 1 child ids
+  Choice,             // >= 1 child ids
+  Identifier,         // 1 child id + 1 rule id
   CharsetLiteral,     // 1 literal id
-  NegativeLookahead,  // 1 clause id
-  Epsilon,            // not stored
- };
-
- enum : IdType {
-  IdInvalid = std::numeric_limits<IdType>::max(),
+  NegativeLookahead,  // 1 child id
+  Epsilon,
  };
 
  // -$ Functions $-

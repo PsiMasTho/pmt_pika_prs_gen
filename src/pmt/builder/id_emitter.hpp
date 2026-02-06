@@ -14,10 +14,10 @@ public:
  public:
   pmt::meta::IdTable const& _id_table;
 
-  std::ofstream& _strings_output_file;
+  std::ostream* _strings_output_file = nullptr;
   std::string _strings_skel;
 
-  std::ofstream& _constants_output_file;
+  std::ostream* _constants_output_file = nullptr;
   std::string _constants_skel;
  };
 

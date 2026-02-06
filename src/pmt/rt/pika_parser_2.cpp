@@ -1,6 +1,8 @@
 #include "pmt/rt/pika_parser.hpp"
 
+#include "pmt/rt/clause_base.hpp"
 #include "pmt/rt/pika_tables_base.hpp"
+#include "pmt/rt/reserved_ids.hpp"
 #include "pmt/rt/rule_parameters_base.hpp"
 #include "pmt/unreachable.hpp"
 
@@ -35,9 +37,9 @@ auto memo_entry(MemoTable const& memo_table_, MemoTable::IndexType index_) -> Me
  return MemoEntry{index_, &memo_table_.get_key_by_index(index_), &memo_table_.get_match_by_index(index_)};
 }
 
-auto make_string_node(std::string_view input_, MemoTable::Key const& key_, MemoTable::Match const& match_) -> pmt::ast::Ast::UniqueHandle {
- pmt::ast::Ast::UniqueHandle node = pmt::ast::Ast::construct(pmt::ast::Ast::Tag::String, pmt::ast::ReservedIds::IdDefault);
- node->set_string(input_.substr(key_._position, match_._length));
+auto make_string_node(std::string_view input_, MemoTable::Key const& key_, MemoTable::Match const& match_) -> pmt::rt::Ast::UniqueHandle {
+ pmt::rt::Ast::UniqueHandle node = pmt::rt::Ast::construct(pmt::rt::Ast::Tag::String, pmt::rt::ReservedIds::IdDefault);
+ node->set_string(Ast::StringType(input_.substr(key_._position, match_._length)));
  return node;
 }
 
@@ -53,7 +55,7 @@ auto find_start_match_index_if_success(MemoTable const& memo_table_, std::string
  return start_match_index;
 }
 
-void process_and_add_child(pmt::ast::Ast& parent_, pmt::ast::Ast::UniqueHandle child_, MemoTable::Key const& child_key_, PikaTablesBase const& pika_tables_) {
+void process_and_add_child(pmt::rt::Ast& parent_, pmt::rt::Ast::UniqueHandle child_, MemoTable::Key const& child_key_, PikaTablesBase const& pika_tables_) {
  if (!child_) {
   return;
  }
@@ -90,7 +92,7 @@ void process_and_add_child(pmt::ast::Ast& parent_, pmt::ast::Ast::UniqueHandle c
  }
 }
 
-auto build_ast(MemoTable::IndexType const& root_match_index_, MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> pmt::ast::Ast::UniqueHandle {
+auto build_ast(MemoTable::IndexType const& root_match_index_, MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> pmt::rt::Ast::UniqueHandle {
  MemoEntry const root = memo_entry(memo_table_, root_match_index_);
  ClauseBase::Tag const root_tag = root._key->_clause->get_tag();
  if (is_ignored_tag(root_tag)) {
@@ -106,20 +108,20 @@ auto build_ast(MemoTable::IndexType const& root_match_index_, MemoTable const& m
   MemoTable::Key const* _key;
   MemoTable::Match const* _match;
   size_t _next_child_idx;
-  pmt::ast::Ast::UniqueHandle _ast_node;
+  pmt::rt::Ast::UniqueHandle _ast_node;
  };
 
  std::vector<Frame> stack;
- stack.push_back(Frame{root._index, root._key, root._match, 0, pmt::ast::Ast::construct(pmt::ast::Ast::Tag::Parent, pmt::ast::ReservedIds::IdUninitialized)});
+ stack.push_back(Frame{root._index, root._key, root._match, 0, pmt::rt::Ast::construct(pmt::rt::Ast::Tag::Parent, pmt::rt::ReservedIds::IdUninitialized)});
 
- pmt::ast::Ast::UniqueHandle result;
+ pmt::rt::Ast::UniqueHandle result;
 
  while (!stack.empty()) {
   Frame& frame = stack.back();
   MemoTable::Match const& match = *frame._match;
 
   if (frame._next_child_idx >= match._matching_subclauses.size()) {
-   pmt::ast::Ast::UniqueHandle completed = std::move(frame._ast_node);
+   pmt::rt::Ast::UniqueHandle completed = std::move(frame._ast_node);
    MemoTable::Key const* completed_key = frame._key;
    stack.pop_back();
    if (stack.empty()) {
@@ -139,7 +141,7 @@ auto build_ast(MemoTable::IndexType const& root_match_index_, MemoTable const& m
   MemoEntry const child = memo_entry(memo_table_, child_match_index);
   ClauseBase::Tag const child_tag = child._key->_clause->get_tag();
   if (is_parent_tag(child_tag)) {
-   stack.push_back(Frame{child._index, child._key, child._match, 0, pmt::ast::Ast::construct(pmt::ast::Ast::Tag::Parent, pmt::ast::ReservedIds::IdUninitialized)});
+   stack.push_back(Frame{child._index, child._key, child._match, 0, pmt::rt::Ast::construct(pmt::rt::Ast::Tag::Parent, pmt::rt::ReservedIds::IdUninitialized)});
   } else if (child_tag == ClauseBase::Tag::CharsetLiteral) {
    process_and_add_child(*frame._ast_node, make_string_node(input_, *child._key, *child._match), *child._key, pika_tables_);
   } else if (!is_ignored_tag(child_tag)) {
@@ -152,13 +154,13 @@ auto build_ast(MemoTable::IndexType const& root_match_index_, MemoTable const& m
 
 }  // namespace
 
-auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> pmt::ast::Ast::UniqueHandle {
+auto PikaParser::memo_table_to_ast(MemoTable const& memo_table_, std::string_view input_, PikaTablesBase const& pika_tables_) -> pmt::rt::Ast::UniqueHandle {
  MemoTable::IndexType const start_match_index = find_start_match_index_if_success(memo_table_, input_, pika_tables_);
  if (start_match_index == MemoTable::MemoIndexMatchNotFound) {
   return nullptr;
  }
 
- pmt::ast::Ast::UniqueHandle ast_root = pmt::ast::Ast::construct(pmt::ast::Ast::Tag::Parent, pmt::ast::ReservedIds::IdRoot);
+ pmt::rt::Ast::UniqueHandle ast_root = pmt::rt::Ast::construct(pmt::rt::Ast::Tag::Parent, pmt::rt::ReservedIds::IdRoot);
 
  if (start_match_index != MemoTable::MemoIndexMatchZeroLength) {
   MemoTable::Key const& start_key = memo_table_.get_key_by_index(start_match_index);

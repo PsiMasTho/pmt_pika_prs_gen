@@ -1,5 +1,6 @@
 #include "pmt/rt/clause_matcher.hpp"
 
+#include "pmt/rt/clause_base.hpp"
 #include "pmt/rt/pika_tables_base.hpp"
 #include "pmt/unreachable.hpp"
 
@@ -9,7 +10,7 @@ auto match_sequence(MemoTable const& memo_table_, MemoTable::Key key_, std::stri
  size_t length = 0;
  std::vector<MemoTable::IndexType> matching_subclauses;
  for (size_t i = 0; i < key_._clause->get_child_id_count(); ++i) {
-  ClauseBase::IdType const child_id = key_._clause->get_child_id_at(i);
+  IdType const child_id = key_._clause->get_child_id_at(i);
   MemoTable::Key child_key_index{._clause = &pika_tables_.fetch_clause(child_id), ._position = key_._position + length};
   MemoTable::IndexType const child_match_index = memo_table_.find(child_key_index, pika_tables_);
   if (child_match_index == MemoTable::MemoIndexMatchNotFound) {
@@ -25,7 +26,7 @@ auto match_sequence(MemoTable const& memo_table_, MemoTable::Key key_, std::stri
 
 auto match_choice(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_tables_) -> std::optional<MemoTable::Match> {
  for (size_t i = 0; i < key_._clause->get_child_id_count(); ++i) {
-  ClauseBase::IdType const child_id = key_._clause->get_child_id_at(i);
+  IdType const child_id = key_._clause->get_child_id_at(i);
   MemoTable::Key child_key_index{._clause = &pika_tables_.fetch_clause(child_id), ._position = key_._position};
   MemoTable::IndexType const child_match_index = memo_table_.find(child_key_index, pika_tables_);
   if (child_match_index != MemoTable::MemoIndexMatchNotFound) {
@@ -48,7 +49,7 @@ auto match_epsilon(MemoTable const& memo_table_, MemoTable::Key key_, std::strin
 }
 
 auto match_identifier(MemoTable const& memo_table_, MemoTable::Key key_, std::string_view input_, PikaTablesBase const& pika_tables_) -> std::optional<MemoTable::Match> {
- ClauseBase::IdType const child_id = key_._clause->get_child_id_at(0);
+ IdType const child_id = key_._clause->get_child_id_at(0);
  MemoTable::Key child_key_index{._clause = &pika_tables_.fetch_clause(child_id), ._position = key_._position};
  MemoTable::IndexType const child_match_index = memo_table_.find(child_key_index, pika_tables_);
  if (child_match_index == MemoTable::MemoIndexMatchNotFound) {

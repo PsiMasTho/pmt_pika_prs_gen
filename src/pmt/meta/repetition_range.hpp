@@ -5,7 +5,7 @@
 
 #include <optional>
 
-PMT_FW_DECL_NS_CLASS(pmt::ast, Ast)
+PMT_FW_DECL_NS_CLASS(pmt::rt, Ast)
 
 namespace pmt::meta {
 
@@ -18,7 +18,7 @@ public:
  // -$ Functions $-
  // --$ Lifetime $--
  RepetitionRange() = default;
- explicit RepetitionRange(pmt::ast::Ast const &ast_);
+ explicit RepetitionRange(pmt::rt::Ast const &ast_);
 
  // --$ Other $--
  [[nodiscard]] auto get_lower() const -> Number::NumberType;

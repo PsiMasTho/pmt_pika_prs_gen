@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pmt/rt/clause_base.hpp"
 #include "pmt/rt/clause_queue.hpp"
 
 #include <limits>
@@ -10,6 +9,7 @@
 
 namespace pmt::rt {
 class PikaTablesBase;
+class ClauseBase;
 
 class MemoTable {
 public:

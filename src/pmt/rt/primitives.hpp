@@ -7,11 +7,7 @@ namespace pmt::rt {
 
 using SymbolType = uint8_t;
 using StateNrType = uint32_t;
-using FinalIdType = uint64_t;
-
-enum : SymbolType {
- SymbolMax = std::numeric_limits<SymbolType>::max(),
-};
+using IdType = uint64_t;
 
 enum : StateNrType {
  StateNrStart = 0,

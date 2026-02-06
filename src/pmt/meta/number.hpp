@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <limits>
 
-PMT_FW_DECL_NS_CLASS(pmt::ast, Ast)
+PMT_FW_DECL_NS_CLASS(pmt::rt, Ast)
 
 namespace pmt::meta {
 
@@ -20,7 +20,7 @@ private:
 public:
  // -$ Functions $-
  // --$ Lifetime $--
- explicit Number(pmt::ast::Ast const &ast_, uintmax_t max_value_ = std::numeric_limits<NumberType>::max());
+ explicit Number(pmt::rt::Ast const &ast_, uintmax_t max_value_ = std::numeric_limits<NumberType>::max());
 
  // --$ Other $--
  [[nodiscard]] auto get_value() const -> NumberType;

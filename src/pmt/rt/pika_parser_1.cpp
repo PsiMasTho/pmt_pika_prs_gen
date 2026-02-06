@@ -16,7 +16,7 @@ void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_
  for (; cursor_ < input_.size() + 1 && state_nr_cur != StateNrInvalid; ++cursor_) {
   if (size_t const accept_count = terminal_state_machine_tables_.get_state_final_id_count(state_nr_cur); accept_count > 0) {
    for (size_t i = 0; i < accept_count; ++i) {
-    FinalIdType const accept_ = terminal_state_machine_tables_.get_state_final_id(state_nr_cur, i);
+    IdType const accept_ = terminal_state_machine_tables_.get_state_final_id(state_nr_cur, i);
     MemoTable::Match match{
      ._length = cursor_ - cursor_start,
      ._matching_subclauses = {},

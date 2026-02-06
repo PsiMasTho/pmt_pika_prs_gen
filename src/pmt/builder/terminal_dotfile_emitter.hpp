@@ -13,7 +13,7 @@ namespace pmt::builder {
 class TerminalDotfileEmitter : public pmt::util::SkeletonReplacerBase {
  // -$ Types / Constants $-
 public:
- using FinalIdToStringFn = std::function<std::string(pmt::rt::FinalIdType)>;
+ using FinalIdToStringFn = std::function<std::string(pmt::rt::IdType)>;
  class Args {
  public:
   FinalIdToStringFn _final_id_to_string_fn;

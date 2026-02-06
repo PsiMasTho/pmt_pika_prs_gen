@@ -1,6 +1,5 @@
 #include "pmt/meta/grammar_from_ast.hpp"
 
-#include "pmt/meta/charset.hpp"
 #include "pmt/meta/charset_literal.hpp"
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/number.hpp"
@@ -15,7 +14,6 @@
 
 namespace pmt::meta {
 using namespace pmt::container;
-using namespace pmt::ast;
 using namespace pmt::rt;
 
 namespace {
@@ -75,7 +73,7 @@ class Locals {
 public:
  std::unordered_map<std::string, std::pair<RuleParameters, Ast const*>> _rules;  // rule name -> <parameters, definition ast>
  std::set<std::string> _duplicate_rules;
- std::unordered_map<std::string, pmt::ast::IdType> _id_string_to_id_map;  // Only non-generic ids
+ std::unordered_map<std::string, pmt::rt::IdType> _id_string_to_id_map;  // Only non-generic ids
  Grammar _ret;
  RuleExpression::UniqueHandle _ret_part;
  std::deque<Frame> _callstack;
@@ -87,7 +85,7 @@ auto make_plus_rule_name(size_t number_, size_t digits_needed_) -> std::string {
  return "__plus_" + pmt::util::uint_to_string(number_, digits_needed_, pmt::util::hex_alphabet_uppercase);
 }
 
-void construct_plus_production(pmt::ast::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
+void construct_plus_production(pmt::rt::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
  Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
  Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
  identifier->set_string(rule_name_);
@@ -126,7 +124,7 @@ void caching_traversal_handle_production(Locals& locals_, Ast const& ast_) {
  std::string rule_name = ast_.get_child_at(0)->get_string();
  std::string rule_display_name = rule_name;
 
- std::string rule_id_string = pmt::ast::ReservedIds::id_to_string(pmt::ast::ReservedIds::IdDefault);
+ std::string rule_id_string = pmt::rt::ReservedIds::id_to_string(pmt::rt::ReservedIds::IdDefault);
  bool rule_merge = RuleParametersBase::MERGE_DEFAULT;
  bool rule_unpack = RuleParametersBase::UNPACK_DEFAULT;
  bool rule_hide = RuleParametersBase::HIDE_DEFAULT;
@@ -334,27 +332,18 @@ void process_frame_01(Locals& locals_, ChoicesFrame& frame_) {
 }
 
 void process_frame_00(Locals& locals_, StringLiteralFrame& frame_) {
- CharsetLiteral literal;
- std::string const& str_literal = frame_._cur_expr->get_string();
- for (char const ch : str_literal) {
-  literal.push_back(Interval<SymbolType>(ch));
- }
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
- locals_._ret_part->set_charset_literal(std::move(literal));
+ locals_._ret_part->set_charset_literal(std::move(CharsetLiteral(*frame_._cur_expr)));
 }
 
 void process_frame_00(Locals& locals_, IntegerLiteralFrame& frame_) {
- CharsetLiteral literal;
- literal.push_back(Interval<SymbolType>(Number(*frame_._cur_expr, std::numeric_limits<SymbolType>::max()).get_value()));
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
- locals_._ret_part->set_charset_literal(std::move(literal));
+ locals_._ret_part->set_charset_literal(CharsetLiteral(*frame_._cur_expr));
 }
 
 void process_frame_00(Locals& locals_, CharsetFrame& frame_) {
- CharsetLiteral literal;
- literal.push_back(Charset(*frame_._cur_expr).get_values());
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::CharsetLiteral);
- locals_._ret_part->set_charset_literal(std::move(literal));
+ locals_._ret_part->set_charset_literal(CharsetLiteral(*frame_._cur_expr));
 }
 
 void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {

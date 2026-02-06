@@ -1,16 +1,16 @@
 #pragma once
 
-#include "pmt/ast/id.hpp"
+#include "pmt/rt/ast.hpp"
 
 namespace pmt::meta {
 
 class Ids {
 public:
- enum : pmt::ast::IdType {
+ enum : pmt::rt::IdType {
 #include "pmt/meta/id_constants-inl.hpp"
  };
 
- static auto id_to_string(pmt::ast::IdType id_) -> std::string;
+ static auto id_to_string(pmt::rt::IdType id_) -> std::string;
 };
 
 }  // namespace pmt::meta

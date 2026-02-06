@@ -1,8 +1,9 @@
-/* Generated on: 2026-02-04 23:35:28 */
+/* Generated on: 2026-02-06 02:49:42 */
 // clang-format off
 #include "example_tables.hpp"
 
-#include <pmt/ast/id.hpp>
+#include <pmt/rt/primitives.hpp>
+#include <pmt/rt/clause_base.hpp>
 #include <pmt/rt/rule_parameters_base.hpp>
 #include <pmt/rt/state_machine_tables_base.hpp>
 
@@ -10,6 +11,7 @@
 #include <array>
 #include <cassert>
 #include <climits>
+#include <cstdint>
 #include <span>
 
 namespace example {
@@ -119,11 +121,11 @@ public:
   return CLAUSE_TAGS[_id];
  }
 
- auto get_id() const -> ClauseBase::IdType override {
+ auto get_id() const -> IdType override {
   return _id;
  }
 
- auto get_child_id_at(size_t idx_) const -> ClauseBase::IdType override {
+ auto get_child_id_at(size_t idx_) const -> IdType override {
   return CLAUSE_CHILD_IDS[CLAUSE_CHILD_IDS_OFFSETS[_id] + idx_];
  }
 
@@ -131,17 +133,17 @@ public:
   return CLAUSE_CHILD_IDS_OFFSETS[_id + 1] - CLAUSE_CHILD_IDS_OFFSETS[_id];
  }
 
- auto get_literal_id() const -> ClauseBase::IdType override {
+ auto get_literal_id() const -> IdType override {
   assert(has_literal_id());
   return CLAUSE_SPECIAL_IDS[_id];
  }
 
- auto get_rule_id() const -> ClauseBase::IdType override {
+ auto get_rule_id() const -> IdType override {
   assert(has_rule_id());
   return CLAUSE_SPECIAL_IDS[_id];
  }
 
- auto get_seed_parent_id_at(size_t idx_) const -> ClauseBase::IdType override {
+ auto get_seed_parent_id_at(size_t idx_) const -> IdType override {
   return CLAUSE_SEED_PARENT_IDS[CLAUSE_SEED_PARENT_IDS_OFFSETS[_id] + idx_];
  }
 
@@ -154,7 +156,7 @@ public:
  }
 
  // --$ Other $--
- void set_id(ClauseBase::IdType id_) {
+ void set_id(IdType id_) {
   _id = id_;
  }
 };
@@ -220,7 +222,7 @@ public:
   return end - start;
  }
 
- auto get_state_final_id(StateNrType state_nr_, size_t index_) const -> FinalIdType  override {
+ auto get_state_final_id(StateNrType state_nr_, size_t index_) const -> IdType  override {
   size_t const start = TERMINAL_FINAL_IDS_OFFSETS[state_nr_];
   return TERMINAL_FINAL_IDS[start + index_];
  }
@@ -261,7 +263,7 @@ public:
   return STRING_TABLE[RULE_PARAMETER_ID_STRINGS_INDIRECT[_rule_id]];
  }
 
- auto get_id_value() const -> pmt::ast::IdType override {
+ auto get_id_value() const -> IdType override {
   return RULE_PARAMETER_ID_TABLE[RULE_PARAMETER_ID_TABLE_INDIRECT[_rule_id]];
  } 
 
@@ -285,7 +287,7 @@ public:
 
 } // namespace
 
-auto ExampleTables::fetch_clause(ClauseBase::IdType clause_id_) const -> ClauseBase const& {
+auto ExampleTables::fetch_clause(IdType clause_id_) const -> ClauseBase const& {
  static auto const clauses = []() {
   std::array<Clause, ClauseCount> ret{};
   for (size_t i = 0; i < ClauseCount; ++i) {
@@ -301,7 +303,7 @@ auto ExampleTables::get_clause_count() const -> size_t {
  return ClauseCount;
 }
 
-auto ExampleTables::fetch_rule_parameters(ClauseBase::IdType rule_id_) const -> RuleParametersBase const& {
+auto ExampleTables::fetch_rule_parameters(IdType rule_id_) const -> RuleParametersBase const& {
  static auto const rule_parameters = []() {
   std::array<RuleParameters, RuleParameterCount> ret{};
   for (size_t i = 0; i < RuleParameterCount; ++i) {

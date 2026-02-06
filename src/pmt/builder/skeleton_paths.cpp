@@ -1,4 +1,4 @@
-#include "pmt/util/skeleton_paths.hpp"
+#include "pmt/builder/skeleton_paths.hpp"
 
 #include <filesystem>
 #include <stdexcept>
@@ -7,7 +7,7 @@
 #define PMT_SKEL_INSTALL_DIR ""
 #endif
 
-namespace pmt::util {
+namespace pmt::builder {
 
 void SkeletonPaths::set_root_override(std::string root_) {
  _root_override = std::move(root_);
@@ -29,4 +29,4 @@ auto SkeletonPaths::get_path(std::string_view relative_) const -> std::string {
  return (root / relative_).string();
 }
 
-}  // namespace pmt::util
+}  // namespace pmt::builder

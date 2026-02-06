@@ -1,11 +1,9 @@
 #pragma once
 
-#include "pmt/util/singleton.hpp"
-
 #include <string>
 #include <string_view>
 
-namespace pmt::util {
+namespace pmt::builder {
 
 class SkeletonPaths {
  std::string _root_override;
@@ -18,6 +16,4 @@ private:
  auto get_root() const -> std::string;
 };
 
-using SkeletonPathsSingleton = Singleton<SkeletonPaths>;
-
-}  // namespace pmt::util
+}  // namespace pmt::builder

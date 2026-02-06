@@ -1,6 +1,7 @@
 #include "pmt/rt/memo_table.hpp"
 
 #include "pmt/hash.hpp"
+#include "pmt/rt/clause_base.hpp"
 #include "pmt/rt/pika_tables_base.hpp"
 
 #include <cassert>
@@ -64,7 +65,7 @@ void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_
  }
 
  for (size_t i = 0; i < key_._clause->get_seed_parent_count(); ++i) {
-  ClauseBase::IdType const seed_parent_id = key_._clause->get_seed_parent_id_at(i);
+  IdType const seed_parent_id = key_._clause->get_seed_parent_id_at(i);
   ClauseBase const& seed_parent_clause = pika_tables_.fetch_clause(seed_parent_id);
   if (match_updated || seed_parent_clause.can_match_zero()) {
    parse_queue_.push(ClauseQueueItem{._clause = &seed_parent_clause, ._priority = seed_parent_id});

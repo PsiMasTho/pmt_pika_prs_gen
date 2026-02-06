@@ -17,25 +17,24 @@ namespace pmt::builder {
 class ExtendedClause : public pmt::rt::ClauseBase {
 public:
  pmt::rt::ClauseBase::Tag _tag;
- pmt::rt::ClauseBase::IdType _id = 0;
- std::vector<pmt::rt::ClauseBase::IdType> _seed_parent_ids;
- std::vector<pmt::rt::ClauseBase::IdType> _child_ids;
- pmt::rt::ClauseBase::IdType _literal_id = 0;  // -$ Todo $- only _literal_id or _rule_id is used depending on the tag
- pmt::rt::ClauseBase::IdType _rule_id = 0;
+ pmt::rt::IdType _id = 0;
+ std::vector<pmt::rt::IdType> _seed_parent_ids;
+ std::vector<pmt::rt::IdType> _child_ids;
+ pmt::rt::IdType _special_id = 0;
  bool _can_match_zero : 1 = false;
 
- ExtendedClause(Tag tag_, pmt::rt::ClauseBase::IdType id_);
+ ExtendedClause(Tag tag_, pmt::rt::IdType id_);
 
  [[nodiscard]] auto get_tag() const -> Tag override;
- [[nodiscard]] auto get_id() const -> IdType override;
+ [[nodiscard]] auto get_id() const -> pmt::rt::IdType override;
 
- [[nodiscard]] auto get_child_id_at(size_t idx_) const -> pmt::rt::ClauseBase::IdType override;
+ [[nodiscard]] auto get_child_id_at(size_t idx_) const -> pmt::rt::IdType override;
  [[nodiscard]] auto get_child_id_count() const -> size_t override;
 
- [[nodiscard]] auto get_literal_id() const -> IdType override;
- [[nodiscard]] auto get_rule_id() const -> IdType override;
+ [[nodiscard]] auto get_literal_id() const -> pmt::rt::IdType override;
+ [[nodiscard]] auto get_rule_id() const -> pmt::rt::IdType override;
 
- [[nodiscard]] auto get_seed_parent_id_at(size_t idx_) const -> pmt::rt::ClauseBase::IdType override;
+ [[nodiscard]] auto get_seed_parent_id_at(size_t idx_) const -> pmt::rt::IdType override;
  [[nodiscard]] auto get_seed_parent_count() const -> size_t override;
 
  [[nodiscard]] auto can_match_zero() const -> bool override;
@@ -57,16 +56,16 @@ public:
  explicit PikaTables(pmt::meta::Grammar const& grammar_);
 
  // --$ Inherited: pmt::rt::PikaTablesBase $--
- [[nodiscard]] auto fetch_clause(pmt::rt::ClauseBase::IdType clause_id_) const -> pmt::rt::ClauseBase const& override;
+ [[nodiscard]] auto fetch_clause(pmt::rt::IdType clause_id_) const -> pmt::rt::ClauseBase const& override;
  [[nodiscard]] auto get_clause_count() const -> size_t override;
 
- [[nodiscard]] auto fetch_rule_parameters(pmt::rt::ClauseBase::IdType rule_id_) const -> pmt::rt::RuleParametersBase const& override;
+ [[nodiscard]] auto fetch_rule_parameters(pmt::rt::IdType rule_id_) const -> pmt::rt::RuleParametersBase const& override;
  [[nodiscard]] auto get_rule_count() const -> size_t override;
 
  [[nodiscard]] auto get_terminal_state_machine_tables() const -> pmt::rt::StateMachineTablesBase const& override;
 
  // --$ Other $--
- auto fetch_literal(pmt::rt::ClauseBase::IdType literal_id_) const -> pmt::meta::CharsetLiteral const&;
+ auto fetch_literal(pmt::rt::IdType literal_id_) const -> pmt::meta::CharsetLiteral const&;
 
  auto get_id_table() const -> pmt::meta::IdTable const&;
  auto get_terminal_state_machine_tables_full() const -> StateMachineTables const&;

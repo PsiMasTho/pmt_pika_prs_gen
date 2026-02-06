@@ -1,7 +1,7 @@
 #include "pmt/meta/ast_utils.hpp"
 
-#include "pmt/ast/ast.hpp"
 #include "pmt/hash.hpp"
+#include "pmt/rt/ast.hpp"
 
 #include <utility>
 #include <vector>
@@ -9,20 +9,20 @@
 namespace pmt::meta {
 
 auto AstNodeHash::operator()(AstNodeKey const& key_) const -> size_t {
- std::vector<pmt::ast::Ast const*> pending{key_._node};
+ std::vector<pmt::rt::Ast const*> pending{key_._node};
  size_t seed = pmt::Hash::Phi64;
 
  while (!pending.empty()) {
-  pmt::ast::Ast const* cur = pending.back();
+  pmt::rt::Ast const* cur = pending.back();
   pending.pop_back();
 
   pmt::Hash::combine(cur->get_id(), seed);
 
   switch (cur->get_tag()) {
-   case pmt::ast::Ast::Tag::String: {
+   case pmt::rt::Ast::Tag::String: {
     pmt::Hash::combine(cur->get_string(), seed);
    } break;
-   case pmt::ast::Ast::Tag::Parent: {
+   case pmt::rt::Ast::Tag::Parent: {
     for (size_t i = 0; i < cur->get_children_size(); ++i) {
      pending.push_back(cur->get_child_at(i));
     }
@@ -33,7 +33,7 @@ auto AstNodeHash::operator()(AstNodeKey const& key_) const -> size_t {
 }
 
 auto AstNodeEq::operator()(AstNodeKey const& lhs_, AstNodeKey const& rhs_) const -> bool {
- std::vector<std::pair<pmt::ast::Ast const*, pmt::ast::Ast const*>> pending{{lhs_._node, rhs_._node}};
+ std::vector<std::pair<pmt::rt::Ast const*, pmt::rt::Ast const*>> pending{{lhs_._node, rhs_._node}};
 
  while (!pending.empty()) {
   auto [left, right] = pending.back();
@@ -44,12 +44,12 @@ auto AstNodeEq::operator()(AstNodeKey const& lhs_, AstNodeKey const& rhs_) const
   }
 
   switch (left->get_tag()) {
-   case pmt::ast::Ast::Tag::String: {
+   case pmt::rt::Ast::Tag::String: {
     if (left->get_string() != right->get_string()) {
      return false;
     }
    } break;
-   case pmt::ast::Ast::Tag::Parent: {
+   case pmt::rt::Ast::Tag::Parent: {
     if (left->get_children_size() != right->get_children_size()) {
      return false;
     }

@@ -9,18 +9,9 @@ A **C++20 parser generator** implementing the **Pika parsing algorithm** describ
 ### This repository:
 - C++20 compiler
 - CMake ≥ 3.9
-- `pmt_ast` (library + headers)
-
-`pmt_ast` is a separate project and must be installed on your system: https://github.com/PsiMasTho/pmt_ast
-
-Discovered via:
-```cmake
-find_package(pmt_ast CONFIG REQUIRED)
-```
 ### The generated parsers
 - C++20 compiler
-- `pmt_pika_prs_gen_rt` (library + headers)
-- `pmt_ast` (library + headers)
+- `pmt_pika_prs_gen_rt` (library + headers, includes the `pmt::rt` AST runtime)
 
 ## Building
 This project is built with CMake.
@@ -47,17 +38,17 @@ cmake --build build --target install-skel  # install only the skeleton templates
 ### Arguments
 Required (normal mode):
 * `--input-grammar-file`
-* `--pika-tables-header-include-filename`
-* `--pika-tables-output-header-file`
-* `--pika-tables-output-source-file`
+* `--header-include-filename`
+* `--output-header-file`
+* `--output-source-file`
 * `--id-strings-output-file`
 * `--id-constants-output-file`
 
 Optional:
-* `--pika-tables-header-skel-file`
-* `--pika-tables-source-skel-file`
-* `--pika-tables-class-name`
-* `--pika-tables-namespace-name`
+* `--header-skel-file`
+* `--source-skel-file`
+* `--class-name`
+* `--namespace-name`
 * `--id-strings-skel-file`
 * `--id-constants-skel-file`
 * `--output-grammar`
@@ -67,18 +58,20 @@ Optional:
 * `--skel-dir`
 
 Test mode:
-* Supplying `--input-test-file` runs the CLI in test mode (parse the test input only).
+* Supplying `--input-test-file` runs the CLI in test mode (parse the test input and print the AST).
 * Required in test mode: `--input-grammar-file`, `--input-test-file`.
-* Optional in test mode: `--output-grammar`, `--output-clauses`, `--output-dotfile`.
-* All other arguments are disallowed in test mode.
+* Optional in test mode: `--output-grammar`, `--output-clauses`, `--output-dotfile`, and any C++ generation args.
+* C++ outputs are only emitted when their output args are supplied.
+* Pika tables outputs require: `--header-include-filename`, `--output-header-file`, `--output-source-file`.
+* ID outputs require: `--id-strings-output-file`, `--id-constants-output-file`.
 
 ### Generated files:
-- **Pika tables header** (`--pika-tables-output-header-file`)
+- **Pika tables header** (`--output-header-file`)
   - Declares a class derived from `pmt::rt::PikaTablesBase`.
-  - The class name/namespace can be overridden via `--pika-tables-class-name` and `--pika-tables-namespace-name`.
-- **Pika tables source** (`--pika-tables-output-source-file`)
+  - The class name/namespace can be overridden via `--class-name` and `--namespace-name`.
+- **Pika tables source** (`--output-source-file`)
   - Defines the table data and implements the `PikaTablesBase` interface.
-  - Includes the generated header using `--pika-tables-header-include-filename`.
+  - Includes the generated header using `--header-include-filename`.
 - **ID constants include** (`--id-constants-output-file`)
   - A C++ include fragment containing enum entries (not a standalone header).
   - Intended to be included inside an `enum` (see `src/pmt/meta/ids.hpp` for a working pattern).
@@ -94,17 +87,26 @@ Optional debug outputs:
 ## Usage
 To parse with your generated tables:
 1. Compile the generated tables `.cpp` and include the generated headers where needed.
-2. Link against `pmt_pika_prs_gen_rt` and `pmt_ast`.
+2. Link against `pmt_pika_prs_gen_rt`.
 3. Use `pmt::rt::PikaParser` with an instance of your generated `PikaTablesBase` implementation.
 
 See `example/` for a small self contained project that:
 - shows how to use the generated files together (example_tables.{hpp,cpp}, id_constants-inl.hpp, id_strings-inl.hpp)
 - parses a string via `pmt::rt::PikaParser`
-- prints the AST via `pmt::ast::ToString`
+- prints the AST via `pmt::rt::AstToString`
 - shows how to manually traverse the AST
 
 `example/grammar.pika` is the source grammar. The repo already includes all the generated files, but you can regenerate them with `scripts/gen_example.py`
 This requires `pmt_pika_prs_gen_cli` to be available in your `PATH` (build/install the CLI first).
+
+The runtime library also includes am Ast class that supports arbitrarily deep trees.
+
+- `pmt::rt::Ast`: Core tree node type. Construct via `Ast::construct` and manage through `Ast::UniqueHandle` (stack allocation or manual `new`/`delete` is invalid). Use `give_child_at*` / `take_child_at*` to insert or remove nodes from a parent.
+- `Ast::merge`: Replaces the current node with a `String` node whose contents are the depth-first concatenation of all string leaves in its subtree, preserving the original node id.
+- `Ast::unpack`: If the child at a given index is a parent, removes that child and splices its children into the current node at the same position.
+- `pmt::rt::Path`: Index path used with `resolve` to locate nodes in a tree, avoiding raw pointers that may be invalidated by tree edits.
+- `pmt::rt::AstToString`: Pretty-prints a tree with indentation and a customizable id-to-string mapping.
+- `pmt::rt::ReservedIds`: Helpers for sentinel ids such as `IdRoot`, `IdDefault`, and `IdUninitialized`.
 
 ## Grammar description
 #### Statements
@@ -175,8 +177,8 @@ The meta-grammar (the grammar that defines this syntax) is in `src/pmt/meta/gram
 - The default skeletons live under `skel/` in this repo
 - You can point the CLI at a different skeleton root with `--skel-dir /path/to/skel`.
 - You can override individual templates with:
-  - `--pika-tables-header-skel-file`
-  - `--pika-tables-source-skel-file`
+  - `--header-skel-file`
+  - `--source-skel-file`
   - `--id-strings-skel-file`
   - `--id-constants-skel-file`
   - `--terminal-graph-skel-file` 

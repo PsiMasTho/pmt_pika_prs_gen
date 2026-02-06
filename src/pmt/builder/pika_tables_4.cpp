@@ -17,11 +17,11 @@ void PikaTables::determine_seed_parents() {
   return;
  }
 
- std::vector<ClauseBase::IdType> stack;
+ std::vector<IdType> stack;
  stack.push_back(0);
 
  while (!stack.empty()) {
-  ClauseBase::IdType const clause_id = stack.back();
+  IdType const clause_id = stack.back();
   stack.pop_back();
 
   if (visited.exchange(clause_id, true)) {
@@ -33,12 +33,12 @@ void PikaTables::determine_seed_parents() {
   switch (clause.get_tag()) {
    case ClauseBase::Tag::Sequence: {
     if (clause.get_child_id_count() != 0) {
-     ClauseBase::IdType const first_child_id = clause.get_child_id_at(0);
+     IdType const first_child_id = clause.get_child_id_at(0);
      _clauses[first_child_id]._seed_parent_ids.push_back(clause_id);
     }
     for (size_t i = 0; i + 1 < clause.get_child_id_count(); ++i) {
      if (this->fetch_clause(clause.get_child_id_at(i)).can_match_zero()) {
-      ClauseBase::IdType const next_child_id = clause.get_child_id_at(i + 1);
+      IdType const next_child_id = clause.get_child_id_at(i + 1);
       _clauses[next_child_id]._seed_parent_ids.push_back(clause_id);
      } else {
       break;
@@ -50,7 +50,7 @@ void PikaTables::determine_seed_parents() {
    case ClauseBase::Tag::Choice:
    case ClauseBase::Tag::NegativeLookahead: {
     for (size_t i = 0; i < clause.get_child_id_count(); ++i) {
-     ClauseBase::IdType const child_id = clause.get_child_id_at(i);
+     IdType const child_id = clause.get_child_id_at(i);
      _clauses[child_id]._seed_parent_ids.push_back(clause_id);
     }
    } break;

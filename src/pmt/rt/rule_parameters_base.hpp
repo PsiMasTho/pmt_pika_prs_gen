@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pmt/ast/id.hpp"
+#include "pmt/rt/ast.hpp"
 
 #include <string_view>
 
@@ -17,7 +17,7 @@ public:
  // --$ Virtual $--
  [[nodiscard]] virtual auto get_display_name() const -> std::string_view = 0;
  [[nodiscard]] virtual auto get_id_string() const -> std::string_view = 0;
- [[nodiscard]] virtual auto get_id_value() const -> pmt::ast::IdType = 0;
+ [[nodiscard]] virtual auto get_id_value() const -> IdType = 0;
  [[nodiscard]] virtual auto get_merge() const -> bool = 0;
  [[nodiscard]] virtual auto get_unpack() const -> bool = 0;
  [[nodiscard]] virtual auto get_hide() const -> bool = 0;

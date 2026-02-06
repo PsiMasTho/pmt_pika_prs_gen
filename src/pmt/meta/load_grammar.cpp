@@ -10,7 +10,6 @@
 #include "pmt/rt/pika_parser.hpp"
 
 namespace pmt::meta {
-using namespace pmt::ast;
 using namespace pmt::rt;
 namespace {}
 

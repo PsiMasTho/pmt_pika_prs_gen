@@ -16,11 +16,11 @@ struct Locals {
  Bitset _solved;
  std::span<ExtendedClause> _clauses;
  std::span<RuleParameters> _rule_parameters;
- std::vector<ClauseBase::IdType> _closest_rule_ids;
+ std::vector<IdType> _closest_rule_ids;
  bool _changed;
 };
 
-void mark(Locals& locals_, ClauseBase::IdType clause_id_, bool can_match_zero_) {
+void mark(Locals& locals_, IdType clause_id_, bool can_match_zero_) {
  if (locals_._solved.get(clause_id_)) {
   return;
  }
@@ -29,14 +29,14 @@ void mark(Locals& locals_, ClauseBase::IdType clause_id_, bool can_match_zero_) 
  locals_._changed = true;
 }
 
-void handle_sequence(Locals& locals_, ClauseBase::IdType clause_id_) {
+void handle_sequence(Locals& locals_, IdType clause_id_) {
  if (locals_._clauses[clause_id_].get_child_id_count() == 0) {
   mark(locals_, clause_id_, true);
  }
  bool saw_unsolved = false;
  size_t j = 0;
  for (; j < locals_._clauses[clause_id_].get_child_id_count(); ++j) {
-  ClauseBase::IdType const child_id = locals_._clauses[clause_id_].get_child_id_at(j);
+  IdType const child_id = locals_._clauses[clause_id_].get_child_id_at(j);
   if (!locals_._solved.get(child_id)) {
    saw_unsolved = true;
    continue;
@@ -51,7 +51,7 @@ void handle_sequence(Locals& locals_, ClauseBase::IdType clause_id_) {
  }
 }
 
-void handle_choice(Locals& locals_, ClauseBase::IdType clause_id_) {
+void handle_choice(Locals& locals_, IdType clause_id_) {
  if (locals_._clauses[clause_id_].get_child_id_count() == 0) {
   mark(locals_, clause_id_, true);
  }
@@ -59,15 +59,15 @@ void handle_choice(Locals& locals_, ClauseBase::IdType clause_id_) {
  bool saw_unsolved = false;
  size_t j = 0;
  for (; j < locals_._clauses[clause_id_].get_child_id_count(); ++j) {
-  ClauseBase::IdType const child_id = locals_._clauses[clause_id_].get_child_id_at(j);
+  IdType const child_id = locals_._clauses[clause_id_].get_child_id_at(j);
   if (!locals_._solved.get(child_id)) {
    saw_unsolved = true;
    continue;
   }
   if (locals_._clauses[child_id].can_match_zero() && j + 1 < locals_._clauses[clause_id_].get_child_id_count()) {
    std::string msg = "Invalid grammar: Choice has a non final alternative that can match zero input";
-   ClauseBase::IdType const closest_rule_id = locals_._closest_rule_ids[clause_id_];
-   if (closest_rule_id != ClauseBase::IdInvalid) {
+   IdType const closest_rule_id = locals_._closest_rule_ids[clause_id_];
+   if (closest_rule_id != ReservedIds::IdInvalid) {
     msg += " in rule $" + locals_._rule_parameters[closest_rule_id]._display_name;
    }
    throw std::runtime_error(msg);
@@ -82,26 +82,26 @@ void handle_choice(Locals& locals_, ClauseBase::IdType clause_id_) {
  }
 }
 
-void handle_charset_literal(Locals& locals_, ClauseBase::IdType clause_id_) {
+void handle_charset_literal(Locals& locals_, IdType clause_id_) {
  mark(locals_, clause_id_, false);
 }
 
-void handle_identifier(Locals& locals_, ClauseBase::IdType clause_id_) {
+void handle_identifier(Locals& locals_, IdType clause_id_) {
  if (locals_._solved.get(locals_._clauses[clause_id_].get_child_id_at(0))) {
   mark(locals_, clause_id_, locals_._clauses[locals_._clauses[clause_id_].get_child_id_at(0)].can_match_zero());
  }
 }
 
-auto determine_closest_rule_ids(std::span<ExtendedClause const> clauses_) -> std::vector<ClauseBase::IdType> {
+auto determine_closest_rule_ids(std::span<ExtendedClause const> clauses_) -> std::vector<IdType> {
  struct PendingItem {
-  ClauseBase::IdType _cur_clause_id;
-  ClauseBase::IdType _closest_rule_id;
+  IdType _cur_clause_id;
+  IdType _closest_rule_id;
  };
 
- std::vector<ClauseBase::IdType> ret(clauses_.size(), ClauseBase::IdInvalid);
+ std::vector<IdType> ret(clauses_.size(), ReservedIds::IdInvalid);
  Bitset visited(clauses_.size(), false);
 
- std::vector<PendingItem> pending{PendingItem{._cur_clause_id = 0, ._closest_rule_id = ClauseBase::IdInvalid}};
+ std::vector<PendingItem> pending{PendingItem{._cur_clause_id = 0, ._closest_rule_id = ReservedIds::IdInvalid}};
 
  while (!pending.empty()) {
   auto [cur_clause_id, closest_rule_id] = pending.back();
@@ -114,7 +114,7 @@ auto determine_closest_rule_ids(std::span<ExtendedClause const> clauses_) -> std
   visited.set(cur_clause_id, true);
 
   for (size_t i = 0; i < cur_clause.get_child_id_count(); ++i) {
-   ClauseBase::IdType const child_id = cur_clause.get_child_id_at(i);
+   IdType const child_id = cur_clause.get_child_id_at(i);
    if (!visited.get(child_id)) {
     pending.emplace_back(child_id, closest_rule_id);
    }
@@ -134,8 +134,8 @@ auto generate_unsolved_error_msg(Locals const& locals_) -> std::string {
  while (unsolved.any()) {
   size_t const clause_id = (unsolved.size() - unsolved.countr(false) - 1);
   unsolved.resize(clause_id);
-  ClauseBase::IdType const closest_rule_id = locals_._closest_rule_ids[clause_id];
-  if (closest_rule_id == ClauseBase::IdInvalid) {
+  IdType const closest_rule_id = locals_._closest_rule_ids[clause_id];
+  if (closest_rule_id == ReservedIds::IdInvalid) {
    continue;
   }
   std::string const& rule_name = locals_._rule_parameters[closest_rule_id]._display_name;

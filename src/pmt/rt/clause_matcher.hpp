@@ -2,6 +2,8 @@
 
 #include "pmt/rt/memo_table.hpp"
 
+#include <string_view>
+
 namespace pmt::rt {
 
 class ClauseMatcher {

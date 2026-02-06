@@ -1,12 +1,10 @@
 #include "pmt/builder/terminal_dotfile_emitter.hpp"
 
 #include "pmt/util/timestamp.hpp"
+#include "pmt/util/uint_to_str.hpp"
 
 #include <algorithm>
-#include <cctype>
-#include <iomanip>
 #include <set>
-#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -20,9 +18,12 @@ namespace {
 constexpr std::string_view GRAPH_TITLE = "State Machine";
 
 auto rgb_to_string(uint8_t r_, uint8_t g_, uint8_t b_) -> std::string {
- std::stringstream ss;
- ss << R"("#)" << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(r_) << std::setw(2) << static_cast<int>(g_) << std::setw(2) << static_cast<int>(b_) << R"(")";
- return ss.str();
+ // clang-format off
+ return "\"#" +
+    pmt::util::uint_to_string(r_, 2, pmt::util::hex_alphabet_uppercase)
+  + pmt::util::uint_to_string(g_, 2, pmt::util::hex_alphabet_uppercase)
+  + pmt::util::uint_to_string(b_, 2, pmt::util::hex_alphabet_uppercase);
+ // clang-format on
 }
 
 auto is_symbol_printable(SymbolType symbol_) -> bool {
@@ -69,10 +70,10 @@ auto build_symbol_label(IntervalSet<SymbolType> const& symbol_intervals_) -> std
 }
 
 auto make_final_id_table_string(StateMachine const& state_machine_, TerminalDotfileEmitter::FinalIdToStringFn const& final_id_to_string_fn_) -> std::string {
- std::unordered_map<FinalIdType, std::set<StateNrType>> final_ids;
+ std::unordered_map<IdType, std::set<StateNrType>> final_ids;
  for (StateNrType const state_nr : state_machine_.get_state_nrs()) {
   State const& state = *state_machine_.get_state(state_nr);
-  state.get_final_ids().for_each_key([&](FinalIdType final_id_) { final_ids[final_id_].insert(state_nr); });
+  state.get_final_ids().for_each_key([&](IdType final_id_) { final_ids[final_id_].insert(state_nr); });
  }
 
  std::string table;
@@ -93,7 +94,7 @@ auto make_final_id_table_string(StateMachine const& state_machine_, TerminalDotf
 TerminalDotfileEmitter::TerminalDotfileEmitter(Args args_)
  : _args(std::move(args_)) {
  if (!_args._final_id_to_string_fn) {
-  _args._final_id_to_string_fn = [](FinalIdType final_id_) {
+  _args._final_id_to_string_fn = [](IdType final_id_) {
    return std::to_string(final_id_);
   };
  }

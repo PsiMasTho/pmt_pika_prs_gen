@@ -1,9 +1,9 @@
 #include "pmt/meta/extract_repetition_expressions.hpp"
 
-#include "pmt/ast/ast.hpp"
 #include "pmt/meta/ast_utils.hpp"
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/repetition_range.hpp"
+#include "pmt/rt/ast.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
 #include <optional>
@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace pmt::meta {
-using namespace pmt::ast;
+using namespace pmt::rt;
 namespace {
 auto gather_repetition_expressions(Ast& ast_) -> std::vector<AstPosition> {
  std::vector<AstPosition> ret;
@@ -186,7 +186,7 @@ auto expand_bounded_repetition(Ast const& body_, RepetitionRange const& range_) 
 
 }  // namespace
 
-void extract_repetition_expressions(pmt::ast::Ast& ast_) {
+void extract_repetition_expressions(pmt::rt::Ast& ast_) {
  std::vector<AstPosition> repetitions = gather_repetition_expressions(ast_);
 
  std::vector<Ast::UniqueHandle> repetition_bodies_orig;

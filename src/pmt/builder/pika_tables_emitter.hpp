@@ -19,8 +19,8 @@ public:
  public:
   PikaTables const& _program;
   std::string _header_include_path;
-  std::ofstream& _output_header;
-  std::ofstream& _output_source;
+  std::ostream* _output_header = nullptr;
+  std::ostream* _output_source = nullptr;
   std::string _header_skel;
   std::string _source_skel;
   std::string _class_name;

@@ -15,8 +15,9 @@ auto Singleton<T_>::instance() -> SharedHandle {
 
  std::scoped_lock l(mutex);
 
- if (!instance.expired())
+ if (!instance.expired()) {
   return instance.lock();
+ }
 
  SharedHandle ret = std::make_shared<T_>();
  instance = ret;

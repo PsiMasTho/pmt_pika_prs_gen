@@ -19,6 +19,13 @@ using namespace pmt::container;
 using namespace pmt::rt;
 namespace {
 
+auto make_header_include(std::string_view path_) -> std::string {
+ if (path_.empty()) {
+  return "";
+ }
+ return "#include \"" + std::string(path_) + "\"";
+}
+
 auto make_namespace_open(std::string_view ns_) -> std::string {
  if (ns_.empty()) {
   return "";
@@ -86,12 +93,6 @@ auto pick_unsigned_type(uint64_t max_value_) -> std::string {
  return "uint" + bits + "_t";
 }
 
-void set_bit(std::vector<uint64_t>& chunks_, size_t index_) {
- size_t const chunk_idx = index_ / Bitset::ChunkBit;
- size_t const bit_idx = index_ % Bitset::ChunkBit;
- chunks_[chunk_idx] |= (uint64_t(1) << bit_idx);
-}
-
 }  // namespace
 
 PikaTablesEmitter::PikaTablesEmitter(Args args_)
@@ -100,28 +101,33 @@ PikaTablesEmitter::PikaTablesEmitter(Args args_)
 
 void PikaTablesEmitter::emit() {
  std::string const timestamp = pmt::util::get_timestamp();
+ std::string const header_include = make_header_include(_args._header_include_path);
  std::string const ns_open = make_namespace_open(_args._namespace_name);
  std::string const ns_close = make_namespace_close(_args._namespace_name);
 
- replace_skeleton_label(_args._header_skel, "TIMESTAMP", timestamp);
- replace_skeleton_label(_args._header_skel, "NAMESPACE_OPEN", ns_open);
- replace_skeleton_label(_args._header_skel, "NAMESPACE_CLOSE", ns_close);
- replace_skeleton_label(_args._header_skel, "CLASS_NAME", _args._class_name);
+ if (_args._output_header != nullptr) {
+  replace_skeleton_label(_args._header_skel, "TIMESTAMP", timestamp);
+  replace_skeleton_label(_args._header_skel, "NAMESPACE_OPEN", ns_open);
+  replace_skeleton_label(_args._header_skel, "NAMESPACE_CLOSE", ns_close);
+  replace_skeleton_label(_args._header_skel, "CLASS_NAME", _args._class_name);
+  *_args._output_header << _args._header_skel;
+ }
 
- replace_skeleton_label(_args._source_skel, "TIMESTAMP", timestamp);
- replace_skeleton_label(_args._source_skel, "HEADER_INCLUDE_PATH", _args._header_include_path);
- replace_skeleton_label(_args._source_skel, "NAMESPACE_OPEN", ns_open);
- replace_skeleton_label(_args._source_skel, "NAMESPACE_CLOSE", ns_close);
- replace_skeleton_label(_args._source_skel, "CLASS_NAME", _args._class_name);
+ if (_args._output_source != nullptr) {
+  replace_skeleton_label(_args._source_skel, "TIMESTAMP", timestamp);
+  replace_skeleton_label(_args._source_skel, "HEADER_INCLUDE", header_include);
+  replace_skeleton_label(_args._source_skel, "NAMESPACE_OPEN", ns_open);
+  replace_skeleton_label(_args._source_skel, "NAMESPACE_CLOSE", ns_close);
+  replace_skeleton_label(_args._source_skel, "CLASS_NAME", _args._class_name);
 
- replace_skeleton_label(_args._source_skel, "BITSET_CHUNK_TYPE", "uint64_t");
+  replace_skeleton_label(_args._source_skel, "BITSET_CHUNK_TYPE", "uint64_t");
 
- replace_terminal_tables();
- replace_clauses();
- replace_rules();
+  replace_terminal_tables();
+  replace_clauses();
+  replace_rules();
 
- _args._output_header << _args._header_skel;
- _args._output_source << _args._source_skel;
+  *_args._output_source << _args._source_skel;
+ }
 }
 
 void PikaTablesEmitter::replace_terminal_tables() {
@@ -234,8 +240,8 @@ void PikaTablesEmitter::replace_rules() {
   StringTableDisplayNames = 0,
   StringTableIdStrings = 1,
  };
- std::map<std::string, std::pair<std::unordered_set<ClauseBase::IdType>, std::unordered_set<ClauseBase::IdType>>> string_table_map;
- std::map<pmt::ast::IdType, std::unordered_set<ClauseBase::IdType>> rule_id_table_map;
+ std::map<std::string, std::pair<std::unordered_set<IdType>, std::unordered_set<IdType>>> string_table_map;
+ std::map<pmt::rt::IdType, std::unordered_set<IdType>> rule_id_table_map;
  Bitset rule_parameter_booleans(rule_count * 3, false);
 
  for (size_t rule_id = 0; rule_id < rule_count; ++rule_id) {
@@ -255,7 +261,7 @@ void PikaTablesEmitter::replace_rules() {
   string_table.push_back(str);
  }
 
- std::vector<pmt::ast::IdType> rule_id_table;
+ std::vector<pmt::rt::IdType> rule_id_table;
  rule_id_table.reserve(rule_id_table_map.size());
  for (auto const& [id_value, _] : rule_id_table_map) {
   rule_id_table.push_back(id_value);
@@ -264,8 +270,8 @@ void PikaTablesEmitter::replace_rules() {
  std::vector<uint64_t> rule_id_indirect(rule_count);
  Bitset rule_ids_done(rule_count, false);
  for (size_t i = 0; i < rule_id_table.size(); ++i) {
-  std::unordered_set<ClauseBase::IdType> const& rule_id_set = rule_id_table_map[rule_id_table[i]];
-  for (ClauseBase::IdType const rule_id : rule_id_set) {
+  std::unordered_set<IdType> const& rule_id_set = rule_id_table_map[rule_id_table[i]];
+  for (IdType const rule_id : rule_id_set) {
    rule_id_indirect[rule_id] = i;
    rule_ids_done.set(rule_id, true);
   }
@@ -278,11 +284,11 @@ void PikaTablesEmitter::replace_rules() {
  Bitset rule_id_strings_done(rule_count, false);
  for (size_t i = 0; i < string_table.size(); ++i) {
   auto const& [display_name_set, id_string_set] = string_table_map[string_table[i]];
-  for (ClauseBase::IdType const rule_id : display_name_set) {
+  for (IdType const rule_id : display_name_set) {
    rule_parameter_display_names_indirect[rule_id] = i;
    rule_parameters_done.set(rule_id, true);
   }
-  for (ClauseBase::IdType const rule_id : id_string_set) {
+  for (IdType const rule_id : id_string_set) {
    rule_parameter_id_strings_indirect[rule_id] = i;
    rule_id_strings_done.set(rule_id, true);
   }

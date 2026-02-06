@@ -15,11 +15,11 @@ auto interval_is_range(Interval<SymbolType> interval_) -> bool {
  return interval_.get_lower() != interval_.get_upper();
 }
 
-auto symbol_set_is_single_character(Charset::SetType const& values_) -> bool {
+auto symbol_set_is_single_character(CharsetLiteral::SetType const& values_) -> bool {
  return values_.size() == 1 && !interval_is_range(values_.get_by_index(0));
 }
 
-auto symbol_set_is_single_quotable_character(Charset::SetType const& values_) -> bool {
+auto symbol_set_is_single_quotable_character(CharsetLiteral::SetType const& values_) -> bool {
  return symbol_set_is_single_character(values_) && get_string_body_characters().contains(values_.get_by_index(0).get_lower());
 }
 
@@ -55,7 +55,7 @@ auto interval_to_range_grammar_string(Interval<SymbolType> interval_) -> std::st
  return ret;
 }
 
-auto symbol_set_to_grammar_string(Charset::SetType const& charset_) -> std::string {
+auto symbol_set_to_grammar_string(CharsetLiteral::SetType const& charset_) -> std::string {
  std::string ret;
  if (symbol_set_is_single_character(charset_)) {  // Can be written as a character literal without braces
   ret += character_to_grammar_string(charset_.get_by_index(0).get_lower());

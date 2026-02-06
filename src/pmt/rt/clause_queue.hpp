@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include "pmt/rt/primitives.hpp"
+
 #include <queue>
 #include <vector>
 
@@ -9,10 +10,8 @@ class ClauseBase;
 
 class ClauseQueueItem {
 public:
- using PriorityType = uint32_t;
-
  ClauseBase const* _clause;
- PriorityType _priority;
+ IdType _priority;
 };
 
 class ClauseQueueCmp {

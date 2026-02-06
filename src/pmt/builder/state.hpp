@@ -11,7 +11,7 @@ private:
  // -$ Data $-
  pmt::container::IntervalMap<pmt::rt::SymbolType, pmt::rt::StateNrType> _symbol_transitions;
  pmt::container::IntervalSet<pmt::rt::StateNrType> _epsilon_transitions;
- pmt::container::IntervalSet<pmt::rt::FinalIdType> _final_ids;
+ pmt::container::IntervalSet<pmt::rt::IdType> _final_ids;
 
 public:
  // -$ Functions $-
@@ -35,15 +35,15 @@ public:
  void remove_epsilon_transition(pmt::rt::StateNrType state_nr_);
  auto get_epsilon_transitions() const -> pmt::container::IntervalSet<pmt::rt::StateNrType> const&;
 
- void add_final_id(pmt::rt::FinalIdType accept_);
- void add_final_ids(pmt::container::Interval<pmt::rt::FinalIdType> final_ids_interval_);
- void add_final_ids(pmt::container::IntervalSet<pmt::rt::FinalIdType> const& final_ids_interval_set_);
+ void add_final_id(pmt::rt::IdType accept_);
+ void add_final_ids(pmt::container::Interval<pmt::rt::IdType> final_ids_interval_);
+ void add_final_ids(pmt::container::IntervalSet<pmt::rt::IdType> const& final_ids_interval_set_);
 
- void remove_final_id(pmt::rt::FinalIdType accept_);
- void remove_final_ids(pmt::container::Interval<pmt::rt::FinalIdType> final_ids_interval_);
- void remove_final_ids(pmt::container::IntervalSet<pmt::rt::FinalIdType> const& final_ids_interval_set_);
+ void remove_final_id(pmt::rt::IdType accept_);
+ void remove_final_ids(pmt::container::Interval<pmt::rt::IdType> final_ids_interval_);
+ void remove_final_ids(pmt::container::IntervalSet<pmt::rt::IdType> const& final_ids_interval_set_);
 
- auto get_final_ids() const -> pmt::container::IntervalSet<pmt::rt::FinalIdType> const&;
+ auto get_final_ids() const -> pmt::container::IntervalSet<pmt::rt::IdType> const&;
 };
 
 }  // namespace pmt::builder

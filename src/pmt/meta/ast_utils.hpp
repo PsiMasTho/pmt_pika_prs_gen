@@ -4,12 +4,12 @@
 
 #include <cstddef>
 
-PMT_FW_DECL_NS_CLASS(pmt::ast, Ast)
+PMT_FW_DECL_NS_CLASS(pmt::rt, Ast);
 
 namespace pmt::meta {
 
 struct AstPosition {
- pmt::ast::Ast* _parent;
+ pmt::rt::Ast* _parent;
  size_t _child_idx;
 };
 
@@ -19,7 +19,7 @@ struct GatheringFrame {
 };
 
 struct AstNodeKey {
- pmt::ast::Ast const* _node;
+ pmt::rt::Ast const* _node;
 };
 
 struct AstNodeHash {

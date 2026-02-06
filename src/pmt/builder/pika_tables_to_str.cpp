@@ -11,7 +11,7 @@ using namespace pmt::container;
 
 namespace {
 
-auto clause_block_to_str(PikaTables const& program_, ClauseBase::IdType clause_id_) -> std::string {
+auto clause_block_to_str(PikaTables const& program_, IdType clause_id_) -> std::string {
  std::string ret;
 
  ClauseBase const& clause = program_.fetch_clause(clause_id_);
