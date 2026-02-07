@@ -32,7 +32,6 @@ cmake --build build
 cmake --build build --target install
 
 # Other useful targets
-cmake --build build --target make-example  # build the runnable example in ./example
 cmake --build build --target install-skel  # install only the skeleton templates from ./skel
 ```
 
