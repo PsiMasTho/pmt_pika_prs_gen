@@ -133,10 +133,20 @@ The meta-grammar (the grammar that defines this syntax) is in `src/pmt/meta/gram
 - The grammar is rewritten internally, but kept equivalent. Expressions are simplified to use a small set of basic operations: numbered repetitions are expanded, greedy repetitions become extra rules + recursion, positive lookahead is turned into nested negative lookahead, etc. (see `--output-grammar`).
 
 ## Grammar restrictions
-There is some checking done to ensure a grammar will not cause the parser to loop forever, in particular:
-- Only the final alternative in an ordered choice may match zero length input. ("a" | epsilon | "b" // NOT ALLOWED)
-- A greedily repeated expression not match zero length input. (("a" | epsilon)+ // NOT ALLOWED)
-- Less obvious cases can also trip this check such as: ($A = $A $B; $B = "a" | epsilon; // NOT ALLOWED)
+To prevent infinite loops, the grammar checker enforces:
+1. Only the final alternative in an ordered choice may match zero-length input. Example (NOT ALLOWED):
+```text
+"a" | epsilon | "b"
+```
+1. A greedy repetition must not match zero-length input. Example (NOT ALLOWED):
+```text
+("a" | epsilon)+
+```
+1. Indirect zero-length matches through recursion are also rejected. Example (NOT ALLOWED):
+```text
+$A = $A $B;
+$B = "a" | epsilon;
+```
 
 ## Skeleton files
 - Skeleton templates are used to generate the emitted C++.
