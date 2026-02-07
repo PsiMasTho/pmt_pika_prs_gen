@@ -1,6 +1,6 @@
 # C++ Pika Parser Generator
 
-This is an experimental pet project. I may change or break stuff whenever I feel like it. Don’t depend on it for production.
+This is an experimental pet project. I may change or break stuff whenever I feel like it. Don’t depend on it for anything serious.
 
 A **C++20 parser generator** implementing the **Pika parsing algorithm** described in the paper:  
 [Pika parsing: reformulating packrat parsing as a dynamic programming algorithm solves the left recursion and error recovery problems. Luke A. D. Hutchison, May 2020.](https://arxiv.org/abs/2005.06444)
@@ -130,11 +130,18 @@ The meta-grammar (the grammar that defines this syntax) is in `src/pmt/meta/gram
 - Parsing is considered to have succeeded if starting rule matches from position 0 to the end of input.
 
 ## Implementation notes
-- Parsing and AST construction are iterative (no recursion), so very deep ASTs/expressions are supported (subject to available memory).
-- As an optimization, a DFA is constructed from all terminals and emitted as compact transition tables (see `--output-dotfile`).
+- Parsing and AST construction/destruction are iterative (no recursion), so very deep ASTs/expressions are supported.
+- As an optimization, a deterministic finite-state machine is constructed from all terminals (see `--output-terminal-dotfile`).
+- The grammar is rewritten internally, but kept equivalent. Expressions are simplified to use a small set of basic operations: numbered repetitions are expanded, greedy repetitions become extra rules + recursion, positive lookahead is turned into nested negative lookahead, etc. (see `--output-grammar`).
+
+## Grammar restrictions
+There is some checking done to ensure a grammar will not cause the parser to loop forever, in particular:
+- Only the final alternative in an ordered choice may match zero length input. ("a" | epsilon | "b" // NOT ALLOWED)
+- A greedily repeated expression not match zero length input. (("a" | epsilon)+ // NOT ALLOWED)
+- Less obvious cases can also trip this check such as: ($A = $A $B; $B = "a" | epsilon; // NOT ALLOWED)
 
 ## Skeleton files
-- `pmt_pika_prs_gen_cli` uses skeleton templates to generate the emitted C++ (and optional debug outputs).
+- Skeleton templates are used to generate the emitted C++.
 - The default skeletons live under `skel/` in this repo
 - You can point the CLI at a different skeleton root with `--skel-dir /path/to/skel`.
 - You can override individual skel locations with the appropriate flags.
