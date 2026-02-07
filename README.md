@@ -94,6 +94,7 @@ Whitespace, newlines, and comments may appear between tokens:
 * `base#value` integer literal (base is decimal; value digits are `0-9`/`a-z` case-insensitive; base must be in the range `[2, 36]`)
 * `[ "a".."z", "Q", 16#5f ]` charset (comma-separated items; items are character literals like `"Q"` or integer literals; ranges use `..`)
 * `epsilon` succeeds without consuming input
+* `eof` succeeds only at end-of-input, does not consume input. It is optional and not required for successful parsing.
 
 Notes:
 - There are no escape sequences; anything that cannot appear inside a string must be written as an integer literal. Check the meta-grammar to see what is allowed inside a string.
