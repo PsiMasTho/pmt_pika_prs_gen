@@ -142,7 +142,7 @@ To prevent infinite loops, the grammar checker enforces:
 ```text
 ("a" | epsilon)+
 ```
-1. Indirect zero-length matches through recursion are also rejected. Example (NOT ALLOWED):
+1. Greedy zero-length matches through recursion are also rejected. Example (NOT ALLOWED):
 ```text
 $A = $A $B;
 $B = "a" | epsilon;
