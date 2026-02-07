@@ -1,11 +1,9 @@
-@start = $grammar;
-
 // - ANY -
 $any = [10#0..10#255];
 
 // - COMMENTS AND WHITESPACE -
 $newline = 16#A;
-$whitespace = " ";
+$whitespace = [" ", 10#9];
 $single_line_comment = "//" $single_line_comment_rhs;
 $single_line_comment_rhs = $newline | $any $single_line_comment_rhs | $any!;
 $multi_line_comment = "/*" $multi_line_comment_rhs;  
@@ -44,10 +42,6 @@ $boolean_literal<id   = "BooleanLiteral", merge = true>   = "true" | "false";
 $identifier_rhs                                           = "__"! ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*; 
 $identifier<id        = "Identifier", merge = true>       = ("$"~) $identifier_rhs;
 
-// - GRAMMAR PROPERTIES -
-$grammar_property_start<id = "GrammarPropertyStart", merge = true> = "@start";
-$grammar_property<id       = "GrammarProperty">                    = $grammar_property_start $blank "="~ $blank $identifier $blank ";"~;
-
 // - PARAMETERS -
 $parameter_id<id = "ParameterId", merge = true>                   = $kw_parameter_id           $blank "="~ $blank $id_string_literal;
 $parameter_displayname<id = "ParameterDisplayName", merge = true> = $kw_parameter_display_name $blank "="~ $blank $string_literal;
@@ -59,10 +53,7 @@ $parameter<unpack = true> = $parameter_id | $parameter_displayname | $parameter_
 $parameter_list<unpack = true> = $blank $parameter ($blank ","~ $blank $parameter)* $blank;
 
 // - GRAMMAR -
-$grammar<unpack = true> = $blank $statement ($blank $statement)* $blank;
-
-// - STATEMENT -
-$statement<unpack = true> = $production | $grammar_property;
+$grammar<unpack = true> = $blank $production ($blank $production)* $blank;
 
 // - PRODUCTION -
 $production<id = "Production"> = $identifier $blank "="~ $blank $definition $blank ";"~ |

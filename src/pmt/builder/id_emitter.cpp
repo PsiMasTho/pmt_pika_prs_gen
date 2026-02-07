@@ -3,8 +3,6 @@
 #include "pmt/util/timestamp.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
-#include <fstream>
-
 namespace pmt::builder {
 namespace {}  // namespace
 
@@ -13,8 +11,8 @@ IdEmitter::IdEmitter(Args args_)
 }
 
 void IdEmitter::emit() {
- bool const want_strings = _args._strings_output_file != nullptr;
- bool const want_constants = _args._constants_output_file != nullptr;
+ bool const want_strings = _args._output_id_strings != nullptr;
+ bool const want_constants = _args._output_id_constants != nullptr;
  if (!want_strings && !want_constants) {
   return;
  }
@@ -22,10 +20,10 @@ void IdEmitter::emit() {
  std::string const timestamp = pmt::util::get_timestamp();
 
  if (want_constants) {
-  replace_skeleton_label(_args._constants_skel, "TIMESTAMP", timestamp);
+  replace_skeleton_label(_args._id_constants_skel, "TIMESTAMP", timestamp);
  }
  if (want_strings) {
-  replace_skeleton_label(_args._strings_skel, "TIMESTAMP", timestamp);
+  replace_skeleton_label(_args._id_strings_skel, "TIMESTAMP", timestamp);
  }
 
  std::string id_constants;
@@ -53,12 +51,12 @@ void IdEmitter::emit() {
  });
 
  if (want_constants) {
-  replace_skeleton_label(_args._constants_skel, "ID_CONSTANTS", id_constants);
-  *_args._constants_output_file << _args._constants_skel;
+  replace_skeleton_label(_args._id_constants_skel, "ID_CONSTANTS", id_constants);
+  *_args._output_id_constants << _args._id_constants_skel;
  }
  if (want_strings) {
-  replace_skeleton_label(_args._strings_skel, "ID_STRINGS", id_strings);
-  *_args._strings_output_file << _args._strings_skel;
+  replace_skeleton_label(_args._id_strings_skel, "ID_STRINGS", id_strings);
+  *_args._output_id_strings << _args._id_strings_skel;
  }
 }
 

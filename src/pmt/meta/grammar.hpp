@@ -12,15 +12,15 @@ class Grammar {
  // -$ Data $-
  IdTable _id_table;
  std::unordered_map<std::string, Rule> _rules;  // name -> rule
- std::string _start_rule_name;
+ std::unordered_set<std::string> _start_rule_names;
 
 public:
  // -$ Functions $-
  // --$ Other $--
  auto get_start_expression() const -> RuleExpression::UniqueHandle;
 
- auto get_start_rule_name() const -> std::string const&;
- void set_start_rule_name(std::string name_);
+ auto get_start_rule_names() const -> std::unordered_set<std::string> const&;
+ void add_start_rule_name(std::string name_);
  auto get_rule_names() const -> std::unordered_set<std::string>;
 
  auto get_rule(std::string const& name_) -> Rule*;

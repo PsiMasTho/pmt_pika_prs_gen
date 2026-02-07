@@ -1,35 +1,43 @@
 #pragma once
 
-#include <optional>
+#include <iosfwd>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace pmt::builder::cli {
 
 class Args {
 public:
- Args(int argc_, char const* const* argv_);
+ // -$ Data $-
+ std::vector<std::string> _start_rules;
 
- std::string _input_grammar_file;
- std::string _input_test_file;
+ std::vector<std::string> _input_grammar;
+ std::string _input_test;
 
- std::string _header_include_filename;
- std::string _output_header_file;
- std::string _output_source_file;
- std::string _header_skel_file;
- std::string _source_skel_file;
+ std::unique_ptr<std::ostream> _output_header;
+ std::unique_ptr<std::ostream> _output_source;
+ std::unique_ptr<std::ostream> _output_test;
+ std::unique_ptr<std::ostream> _output_id_strings;
+ std::unique_ptr<std::ostream> _output_id_constants;
+ std::unique_ptr<std::ostream> _output_grammar;
+ std::unique_ptr<std::ostream> _output_clauses;
+ std::unique_ptr<std::ostream> _output_terminal_dotfile;
+
+ std::string _header_include_path;
+ std::string _id_constants_include_path;
  std::string _class_name;
  std::string _namespace_name;
 
- std::string _id_strings_output_file;
- std::string _id_strings_skel_file;
+ std::string _id_strings_skel;
+ std::string _id_constants_skel;
+ std::string _terminal_dotfile_skel;
+ std::string _header_skel;
+ std::string _source_skel;
 
- std::string _id_constants_output_file;
- std::string _id_constants_skel_file;
-
- std::optional<std::string> _output_grammar_file;
- std::optional<std::string> _output_clauses_file;
- std::optional<std::string> _terminal_graph_output_file;
- std::optional<std::string> _terminal_graph_skel_file;
+ // -$ Functions $-
+ // --$ Lifetime $--
+ Args(int argc_, char const* const* argv_);
 };
 
 }  // namespace pmt::builder::cli

@@ -23,9 +23,12 @@ auto is_plus_body_rule(std::string const& rule_name_) -> bool {
 auto get_inlineable_rules(Grammar& grammar_) -> std::unordered_set<std::string> {
  std::unordered_set<std::string> ret = grammar_.get_rule_names();
 
- std::string const& start_rule_name = grammar_.get_start_rule_name();
- std::vector<std::pair<RuleExpression const*, std::unordered_set<std::string>>> pending{{grammar_.get_rule(start_rule_name)->_definition.get(), {start_rule_name}}};
- std::unordered_set<std::string> visited{grammar_.get_start_rule_name()};
+ std::vector<std::pair<RuleExpression const*, std::unordered_set<std::string>>> pending;
+ std::unordered_set<std::string> visited = grammar_.get_start_rule_names();
+ pending.reserve(visited.size());
+ for (std::string const& start_rule_name : visited) {
+  pending.emplace_back(grammar_.get_rule(start_rule_name)->_definition.get(), std::unordered_set<std::string>{start_rule_name});
+ }
 
  while (!pending.empty()) {
   auto [expr_cur, visited_cur] = pending.back();
@@ -69,8 +72,12 @@ void inline_rules(Grammar& grammar_) {
  using Expression = std::variant<RuleExpression::UniqueHandle*, ExpressionPosition>;
 
  std::unordered_set<std::string> const unpackable_rule_names = get_inlineable_rules(grammar_);
- std::string const& start_rule_name = grammar_.get_start_rule_name();
- std::vector<std::pair<Expression, std::unordered_set<std::string>>> pending{{&grammar_.get_rule(start_rule_name)->_definition, {start_rule_name}}};
+
+ std::vector<std::pair<Expression, std::unordered_set<std::string>>> pending;
+ pending.reserve(grammar_.get_start_rule_names().size());
+ for (std::string const& start_rule_name : grammar_.get_start_rule_names()) {
+  pending.emplace_back(&grammar_.get_rule(start_rule_name)->_definition, std::unordered_set<std::string>{start_rule_name});
+ }
 
  while (!pending.empty()) {
   auto [expr_cur_variant, visited_cur] = pending.back();

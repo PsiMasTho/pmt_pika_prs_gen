@@ -17,9 +17,9 @@ public:
  class Args {
  public:
   FinalIdToStringFn _final_id_to_string_fn;
-  std::string _skel;
+  std::string _terminal_dotfile_skel;
   StateMachine const& _state_machine;
-  std::ostream& _os_graph;
+  std::ostream* _output_terminal_dotfile;
  };
 
 private:

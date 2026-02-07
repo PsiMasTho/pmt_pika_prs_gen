@@ -62,7 +62,6 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
     } break;
     case Ids::Identifier:
     case Ids::StringLiteral:
-    case Ids::GrammarProperty:
     case Ids::IntegerLiteral:
     case Ids::Charset:
     case Ids::Epsilon:

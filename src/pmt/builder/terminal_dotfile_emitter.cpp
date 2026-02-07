@@ -101,6 +101,9 @@ TerminalDotfileEmitter::TerminalDotfileEmitter(Args args_)
 }
 
 void TerminalDotfileEmitter::write_dot() {
+ if (!_args._output_terminal_dotfile) {
+  return;
+ }
  std::string accepting_nodes_replacement;
  {
   std::string delim;
@@ -135,20 +138,20 @@ void TerminalDotfileEmitter::write_dot() {
   }
  }
 
- replace_skeleton_label(_args._skel, "FINAL_ID_TABLE", make_final_id_table_string(_args._state_machine, _args._final_id_to_string_fn));
- replace_skeleton_label(_args._skel, "TIMESTAMP", pmt::util::get_timestamp());
- replace_skeleton_label(_args._skel, "LAYOUT_DIRECTION", "LR");
- replace_skeleton_label(_args._skel, "ACCEPTING_NODE_SHAPE", "doublecircle");
- replace_skeleton_label(_args._skel, "ACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 255));
- replace_skeleton_label(_args._skel, "ACCEPTING_NODES", accepting_nodes_replacement);
- replace_skeleton_label(_args._skel, "NONACCEPTING_NODE_SHAPE", "circle");
- replace_skeleton_label(_args._skel, "NONACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 0));
- replace_skeleton_label(_args._skel, "EPSILON_EDGE_COLOR", rgb_to_string(0, 255, 0));
- replace_skeleton_label(_args._skel, "EPSILON_EDGES", epsilon_edges_replacement);
- replace_skeleton_label(_args._skel, "SYMBOL_EDGES", symbol_edges_replacement);
- replace_skeleton_label(_args._skel, "GRAPH_TITLE", std::string(GRAPH_TITLE));
+ replace_skeleton_label(_args._terminal_dotfile_skel, "FINAL_ID_TABLE", make_final_id_table_string(_args._state_machine, _args._final_id_to_string_fn));
+ replace_skeleton_label(_args._terminal_dotfile_skel, "TIMESTAMP", pmt::util::get_timestamp());
+ replace_skeleton_label(_args._terminal_dotfile_skel, "LAYOUT_DIRECTION", "LR");
+ replace_skeleton_label(_args._terminal_dotfile_skel, "ACCEPTING_NODE_SHAPE", "doublecircle");
+ replace_skeleton_label(_args._terminal_dotfile_skel, "ACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 255));
+ replace_skeleton_label(_args._terminal_dotfile_skel, "ACCEPTING_NODES", accepting_nodes_replacement);
+ replace_skeleton_label(_args._terminal_dotfile_skel, "NONACCEPTING_NODE_SHAPE", "circle");
+ replace_skeleton_label(_args._terminal_dotfile_skel, "NONACCEPTING_NODE_COLOR", rgb_to_string(0, 0, 0));
+ replace_skeleton_label(_args._terminal_dotfile_skel, "EPSILON_EDGE_COLOR", rgb_to_string(0, 255, 0));
+ replace_skeleton_label(_args._terminal_dotfile_skel, "EPSILON_EDGES", epsilon_edges_replacement);
+ replace_skeleton_label(_args._terminal_dotfile_skel, "SYMBOL_EDGES", symbol_edges_replacement);
+ replace_skeleton_label(_args._terminal_dotfile_skel, "GRAPH_TITLE", std::string(GRAPH_TITLE));
 
- _args._os_graph << _args._skel;
+ *_args._output_terminal_dotfile << _args._terminal_dotfile_skel;
 }
 
 }  // namespace pmt::builder

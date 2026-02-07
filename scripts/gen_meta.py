@@ -11,20 +11,21 @@ def main() -> None:
 
     cmd = [
         "pmt_pika_prs_gen_cli",
-        "--input-grammar-file", str(meta_dir / "grammar.pika"),
-        "--header-include-filename", "pmt/meta/pika_tables.hpp",
-        "--output-header-file", str(meta_dir / "pika_tables.hpp"),
-        "--header-skel-file", str(repo_root / "skel" / "cpp" / "pika_tables-skel.hpp"),
-        "--output-source-file", str(meta_dir / "pika_tables.cpp"),
-        "--source-skel-file", str(repo_root / "skel" / "cpp" / "pika_tables-skel.cpp"),
+        "--start-rules", "grammar",
+        "--input-grammar", str(meta_dir / "grammar.pika"),
+        "--header-include-path", "pmt/meta/pika_tables.hpp",
+        "--id-constants-include-path", "pmt/meta/id_constants-inl.hpp",
+        "--output-header", str(meta_dir / "pika_tables.hpp"),
+        "--header-skel", str(repo_root / "skel" / "cpp" / "pika_tables-skel.hpp"),
+        "--output-source", str(meta_dir / "pika_tables.cpp"),
+        "--source-skel", str(repo_root / "skel" / "cpp" / "pika_tables-skel.cpp"),
         "--class-name", "PikaTables",
         "--namespace-name", "pmt::meta",
-        "--id-strings-output-file", str(meta_dir / "id_strings-inl.hpp"),
-        "--id-constants-output-file", str(meta_dir / "id_constants-inl.hpp"),
+        "--output-id-strings", str(meta_dir / "id_strings-inl.hpp"),
+        "--output-id-constants", str(meta_dir / "id_constants-inl.hpp"),
     ]
 
     subprocess.run(cmd, check=True)
-
 
 if __name__ == "__main__":
     main()

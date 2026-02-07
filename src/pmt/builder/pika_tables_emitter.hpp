@@ -17,8 +17,9 @@ public:
  // -$ Types / Constants $-
  class Args {
  public:
-  PikaTables const& _program;
+  PikaTables const& _pika_tables;
   std::string _header_include_path;
+  std::string _id_constants_include_path;
   std::ostream* _output_header = nullptr;
   std::ostream* _output_source = nullptr;
   std::string _header_skel;
@@ -46,6 +47,7 @@ private:
  void replace_rules();
  void replace_numeric_list(std::string& dest_, std::string_view label_typename_, std::string_view label_list_, std::span<uint64_t const> values_, bool padded_digits_);
  void replace_tag_list(std::string& dest_, std::string_view label_list_, std::span<pmt::rt::ClauseBase::Tag const> values_);
+ void replace_numeric_enum_list(std::string& dest_, std::string_view label_list_, std::span<std::string const> values_);
  void replace_string_list(std::string& dest_, std::string_view label_list_, std::span<std::string const> values_, bool add_quotes_);
  void replace_number(std::string& dest_, std::string_view label_typename_, std::string_view label_value_, uint64_t value_);
  void replace_bitset(std::string& dest_, std::string_view label_typename_, std::string_view label_chunk_count_, std::string_view label_value_, pmt::container::Bitset const& value_);

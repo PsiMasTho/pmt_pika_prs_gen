@@ -1,6 +1,6 @@
-/* Generated on: /* $replace TIMESTAMP */ */
+/* Generated on: 2026-02-06 23:17:27 */
 // clang-format off
-/* $replace HEADER_INCLUDE */
+#include "round_tables.hpp"
 
 #include <pmt/rt/primitives.hpp>
 #include <pmt/rt/reserved_ids.hpp>
@@ -15,52 +15,52 @@
 #include <cstdint>
 #include <span>
 
-/* $replace NAMESPACE_OPEN */
+namespace example {
 using namespace pmt::rt;
 
 namespace {
 
 enum IdConstants : IdType {
-/* $replace ID_CONSTANTS_INCLUDE */
+#include "shared_id_constants-inl.hpp"
 };
 
-using TerminalTransitionsType = /* $replace TERMINAL_TRANSITIONS_TYPE */;
-using TerminalTransitionsOffsetsType = /* $replace TERMINAL_TRANSITIONS_OFFSETS_TYPE */;
-using TerminalFinalIdsType = /* $replace TERMINAL_FINAL_IDS_TYPE */;
-using TerminalFinalIdsOffsetsType = /* $replace TERMINAL_FINAL_IDS_OFFSETS_TYPE */;
-using ClauseChildIdsOffsetsType = /* $replace CLAUSE_CHILD_IDS_OFFSETS_TYPE */;
-using ClauseChildIdsType = /* $replace CLAUSE_CHILD_IDS_TYPE */;
-using ClauseSeedParentIdsOffsetsType = /* $replace CLAUSE_SEED_PARENT_IDS_OFFSETS_TYPE */;
-using ClauseSeedParentIdsType = /* $replace CLAUSE_SEED_PARENT_IDS_TYPE */;
-using ClauseSpecialIdType = /* $replace CLAUSE_SPECIAL_ID_TYPE */;
-using RuleParameterDisplayNameIndirectType = /* $replace RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE */;
-using RuleParameterIdStringIndirectType = /* $replace RULE_PARAMETER_ID_STRING_INDIRECT_TYPE */;
-using RuleParameterIdTableType = /* $replace RULE_PARAMETER_ID_TABLE_TYPE */;
-using RuleParameterIdIndirectType = /* $replace RULE_PARAMETER_ID_INDIRECT_TYPE */;
-using ClauseClassIdType = /* $replace CLAUSE_CLASS_ID_TYPE */;
-using ClauseCanMatchZeroType = /* $replace CLAUSE_CAN_MATCH_ZERO_TYPE */;
-using RuleParameterClassIdType = /* $replace RULE_PARAMETER_CLASS_ID_TYPE */;
-using RuleParameterBooleansType = /* $replace RULE_PARAMETER_BOOLEANS_TYPE */;
+using TerminalTransitionsType = uint8_t;
+using TerminalTransitionsOffsetsType = uint8_t;
+using TerminalFinalIdsType = uint8_t;
+using TerminalFinalIdsOffsetsType = uint8_t;
+using ClauseChildIdsOffsetsType = uint8_t;
+using ClauseChildIdsType = uint8_t;
+using ClauseSeedParentIdsOffsetsType = uint8_t;
+using ClauseSeedParentIdsType = uint8_t;
+using ClauseSpecialIdType = uint8_t;
+using RuleParameterDisplayNameIndirectType = uint8_t;
+using RuleParameterIdStringIndirectType = uint8_t;
+using RuleParameterIdTableType = uint64_t;
+using RuleParameterIdIndirectType = uint8_t;
+using ClauseClassIdType = uint8_t;
+using ClauseCanMatchZeroType = uint64_t;
+using RuleParameterClassIdType = uint8_t;
+using RuleParameterBooleansType = uint64_t;
 
 enum : size_t {
- StringTableSize = /* $replace STRING_TABLE_SIZE */,
- TerminalStateCount = /* $replace TERMINAL_STATE_COUNT */,
- TerminalTransitionsSize = /* $replace TERMINAL_TRANSITIONS_SIZE */,
+ StringTableSize = 0xF,
+ TerminalStateCount = 0x7,
+ TerminalTransitionsSize = 0x15,
  TerminalTransitionsOffsetsSize = TerminalStateCount + 1,
- TerminalFinalIdsSize = /* $replace TERMINAL_FINAL_IDS_SIZE */,
+ TerminalFinalIdsSize = 0x6,
  TerminalFinalIdsOffsetsSize = TerminalStateCount + 1,
- ClauseCount = /* $replace CLAUSE_COUNT */,
- ClauseChildIdsSize = /* $replace CLAUSE_CHILD_IDS_SIZE */,
+ ClauseCount = 0x2D,
+ ClauseChildIdsSize = 0x3D,
  ClauseChildIdsOffsetsSize = ClauseCount + 1,
- ClauseSeedParentIdsSize = /* $replace CLAUSE_SEED_PARENT_IDS_SIZE */,
+ ClauseSeedParentIdsSize = 0x31,
  ClauseSeedParentIdsOffsetsSize = ClauseCount + 1,
- ClauseCanMatchZeroSize = /* $replace CLAUSE_CAN_MATCH_ZERO_SIZE */,
- RuleParameterCount = /* $replace RULE_PARAMETER_COUNT */,
+ ClauseCanMatchZeroSize = 0x1,
+ RuleParameterCount = 0x18,
  RuleParameterMergeOffset = 0,
  RuleParameterUnpackOffset = 1,
  RuleParameterHideOffset = 2,
- RuleParameterBooleansSize = /* $replace RULE_PARAMETER_BOOLEANS_SIZE */,
- RuleParameterIdTableSize = /* $replace RULE_PARAMETER_ID_TABLE_SIZE */,
+ RuleParameterBooleansSize = 0x2,
+ RuleParameterIdTableSize = 0x3,
 };
 
 template <std::integral CHUNK_T_>
@@ -72,35 +72,58 @@ auto get_bit(CHUNK_T_ const* chunks_, size_t idx_) -> bool {
 }
 
 std::array<char const* const, StringTableSize> const STRING_TABLE = {
-/* $replace STRING_TABLE */
+ "IdDefault", "IdLeaf", "IdRound", "__hidden_0", "__hidden_3", "__hidden_4", "__plus_0", "__plus_2", "__plus_body_0", 
+ "__plus_body_2", "blank", "leaf", "newline", "round", "whitespace"
 };
 
 std::array<ClauseBase::Tag const, ClauseCount> const CLAUSE_TAGS = {
-/* $replace CLAUSE_TAGS */
+ ClauseBase::Tag::Identifier, ClauseBase::Tag::Sequence, ClauseBase::Tag::Identifier, ClauseBase::Tag::Choice, 
+ ClauseBase::Tag::Identifier, ClauseBase::Tag::Choice, ClauseBase::Tag::Sequence, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::Choice, ClauseBase::Tag::Identifier, ClauseBase::Tag::CharsetLiteral, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::CharsetLiteral, ClauseBase::Tag::Identifier, ClauseBase::Tag::Identifier, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::CharsetLiteral, ClauseBase::Tag::Identifier, ClauseBase::Tag::Choice, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::Sequence, ClauseBase::Tag::CharsetLiteral, ClauseBase::Tag::Choice, ClauseBase::Tag::Sequence, 
+ ClauseBase::Tag::Identifier, ClauseBase::Tag::Choice, ClauseBase::Tag::Identifier, ClauseBase::Tag::Choice, 
+ ClauseBase::Tag::Sequence, ClauseBase::Tag::Identifier, ClauseBase::Tag::Sequence, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::Identifier, ClauseBase::Tag::CharsetLiteral, ClauseBase::Tag::Identifier, ClauseBase::Tag::Choice, 
+ ClauseBase::Tag::Identifier, ClauseBase::Tag::Identifier, ClauseBase::Tag::Identifier, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::Identifier, ClauseBase::Tag::Identifier, ClauseBase::Tag::CharsetLiteral, ClauseBase::Tag::Identifier, 
+ ClauseBase::Tag::Epsilon
 };
 
 std::array<ClauseChildIdsType const, ClauseChildIdsSize> const CLAUSE_CHILD_IDS = {
-/* $replace CLAUSE_CHILD_IDS */
+ 0x01, 0x02, 0x0F, 0x11, 0x12, 0x19, 0x28, 0x29, 0x2B, 0x03, 0x04, 0x2C, 0x05, 0x06, 0x0E, 0x07, 0x0D, 0x08, 0x09, 0x0B, 
+ 0x0A, 0x0C, 0x05, 0x08, 0x10, 0x03, 0x13, 0x18, 0x14, 0x15, 0x16, 0x17, 0x15, 0x2C, 0x15, 0x15, 0x01, 0x1A, 0x2C, 0x1B, 
+ 0x1C, 0x27, 0x1D, 0x26, 0x1E, 0x1F, 0x20, 0x22, 0x23, 0x03, 0x21, 0x03, 0x24, 0x25, 0x14, 0x01, 0x1B, 0x1E, 0x03, 0x2A, 
+ 0x03
 };
 
 std::array<ClauseChildIdsOffsetsType const, ClauseChildIdsOffsetsSize> const CLAUSE_CHILD_IDS_OFFSETS = {
-/* $replace CLAUSE_CHILD_IDS_OFFSETS */
+ 0x00, 0x01, 0x09, 0x0A, 0x0C, 0x0D, 0x0F, 0x11, 0x12, 0x14, 0x15, 0x15, 0x16, 0x16, 0x17, 0x18, 0x19, 0x19, 0x1A, 0x1C, 
+ 0x1D, 0x1F, 0x1F, 0x22, 0x24, 0x25, 0x27, 0x28, 0x2A, 0x2C, 0x2D, 0x31, 0x32, 0x33, 0x33, 0x34, 0x36, 0x37, 0x38, 0x39, 
+ 0x3A, 0x3B, 0x3C, 0x3C, 0x3D, 0x3D
 };
 
 std::array<ClauseSeedParentIdsType const, ClauseSeedParentIdsSize> const CLAUSE_SEED_PARENT_IDS = {
-/* $replace CLAUSE_SEED_PARENT_IDS */
+ 0x00, 0x18, 0x25, 0x01, 0x02, 0x11, 0x1F, 0x22, 0x28, 0x2B, 0x03, 0x04, 0x0D, 0x05, 0x06, 0x07, 0x0E, 0x08, 0x09, 0x08, 
+ 0x0B, 0x05, 0x01, 0x0F, 0x12, 0x13, 0x24, 0x14, 0x16, 0x17, 0x16, 0x12, 0x19, 0x1A, 0x26, 0x1B, 0x1C, 0x1D, 0x27, 0x1E, 
+ 0x1E, 0x20, 0x23, 0x23, 0x1B, 0x29, 0x03, 0x16, 0x19
 };
 
 std::array<ClauseSeedParentIdsOffsetsType const, ClauseSeedParentIdsOffsetsSize> const CLAUSE_SEED_PARENT_IDS_OFFSETS = {
-/* $replace CLAUSE_SEED_PARENT_IDS_OFFSETS */
+ 0x00, 0x00, 0x03, 0x04, 0x0A, 0x0B, 0x0D, 0x0E, 0x0F, 0x11, 0x12, 0x13, 0x14, 0x15, 0x15, 0x16, 0x17, 0x18, 0x18, 0x18, 
+ 0x19, 0x1B, 0x1E, 0x1E, 0x1F, 0x20, 0x20, 0x21, 0x23, 0x24, 0x25, 0x27, 0x28, 0x29, 0x2A, 0x2A, 0x2A, 0x2B, 0x2C, 0x2C, 
+ 0x2D, 0x2D, 0x2D, 0x2E, 0x2E, 0x31
 };
 
 std::array<ClauseSpecialIdType const, ClauseCount> const CLAUSE_SPECIAL_IDS = {
-/* $replace CLAUSE_SPECIAL_IDS */
+ 0x17, 0x00, 0x06, 0x00, 0x05, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x04, 0x07, 0x02, 0x08, 0x00, 0x09, 
+ 0x00, 0x03, 0x00, 0x00, 0x0A, 0x00, 0x13, 0x00, 0x00, 0x10, 0x00, 0x0B, 0x0C, 0x04, 0x0D, 0x00, 0x0E, 0x0F, 0x11, 0x12, 
+ 0x14, 0x15, 0x05, 0x16, 0x00
 };
 
 std::array<ClauseCanMatchZeroType const, ClauseCanMatchZeroSize> const CLAUSE_CAN_MATCH_ZERO = {
-/* $replace CLAUSE_CAN_MATCH_ZERO */
+ 0x19048242000C
 };
 
 class Clause : public ClauseBase {
@@ -156,19 +179,20 @@ public:
 };
 
 std::array<TerminalTransitionsType const, TerminalTransitionsSize> const TERMINAL_TRANSITIONS = {
-/* $replace TERMINAL_TRANSITIONS */
+ 0x09, 0x0A, 0x20, 0x28, 0x29, 0x2C, 0x30, 0x09, 0x0A, 0x20, 0x28, 0x29, 0x2C, 0x39, 0x01, 0x02, 0x01, 0x03, 0x04, 0x05, 
+ 0x06
 };
 
 std::array<TerminalTransitionsOffsetsType const, TerminalTransitionsOffsetsSize> const TERMINAL_TRANSITIONS_OFFSETS = {
-/* $replace TERMINAL_TRANSITIONS_OFFSETS */
+ 0x0, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7
 };
 
 std::array<TerminalFinalIdsType const, TerminalFinalIdsSize> const TERMINAL_FINAL_IDS = {
-/* $replace TERMINAL_FINAL_IDS */
+ 0xA, 0xC, 0x10, 0x2A, 0x21, 0x15
 };
 
 std::array<TerminalFinalIdsOffsetsType const, TerminalFinalIdsOffsetsSize> const TERMINAL_FINAL_IDS_OFFSETS = {
-/* $replace TERMINAL_FINAL_IDS_OFFSETS */
+ 0x0, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6
 };
 
 class TerminalTables : public StateMachineTablesBase {
@@ -223,23 +247,23 @@ public:
 };
 
 std::array<RuleParameterDisplayNameIndirectType const, RuleParameterCount> const RULE_PARAMETER_DISPLAY_NAMES_INDIRECT = {
-/* $replace RULE_PARAMETER_DISPLAY_NAMES_INDIRECT */
+ 0xE, 0xC, 0x8, 0x6, 0x8, 0x6, 0xA, 0x4, 0xA, 0xB, 0xD, 0xA, 0x3, 0xA, 0xB, 0xD, 0x9, 0x7, 0x9, 0x7, 0xA, 0x5, 0xA, 0xD
 };
 
 std::array<RuleParameterIdStringIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_STRINGS_INDIRECT = {
-/* $replace RULE_PARAMETER_ID_STRINGS_INDIRECT */
+ 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x2, 0x0, 0x0, 0x0, 0x1, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2
 };
 
 std::array<RuleParameterIdTableType const, RuleParameterIdTableSize> const RULE_PARAMETER_ID_TABLE = {
-/* $replace RULE_PARAMETER_ID_TABLE */
+ IdConstants::IdRound, IdConstants::IdLeaf, ReservedIds::IdDefault
 };
 
 std::array<RuleParameterIdIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_TABLE_INDIRECT = {
-/* $replace RULE_PARAMETER_ID_INDIRECT */
+ 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x1, 0x0, 0x2, 0x2, 0x2, 0x1, 0x0, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x0
 };
 
 std::array<RuleParameterBooleansType const, RuleParameterBooleansSize> const RULE_PARAMETER_BOOLEANS = {
-/* $replace RULE_PARAMETER_BOOLEANS */
+ 0x39C00F003C004200, 0x70
 };
 
 class RuleParameters : public RuleParametersBase {
@@ -281,7 +305,7 @@ public:
 
 } // namespace
 
-auto /* $replace CLASS_NAME */::fetch_clause(IdType clause_id_) const -> ClauseBase const& {
+auto RoundTables::fetch_clause(IdType clause_id_) const -> ClauseBase const& {
  static auto const clauses = []() {
   std::array<Clause, ClauseCount> ret{};
   for (size_t i = 0; i < ClauseCount; ++i) {
@@ -293,11 +317,11 @@ auto /* $replace CLASS_NAME */::fetch_clause(IdType clause_id_) const -> ClauseB
  return clauses[clause_id_];
 }
 
-auto /* $replace CLASS_NAME */::get_clause_count() const -> size_t {
+auto RoundTables::get_clause_count() const -> size_t {
  return ClauseCount;
 }
 
-auto /* $replace CLASS_NAME */::fetch_rule_parameters(IdType rule_id_) const -> RuleParametersBase const& {
+auto RoundTables::fetch_rule_parameters(IdType rule_id_) const -> RuleParametersBase const& {
  static auto const rule_parameters = []() {
   std::array<RuleParameters, RuleParameterCount> ret{};
   for (size_t i = 0; i < RuleParameterCount; ++i) {
@@ -309,14 +333,14 @@ auto /* $replace CLASS_NAME */::fetch_rule_parameters(IdType rule_id_) const -> 
  return rule_parameters[rule_id_];
 }
 
-auto /* $replace CLASS_NAME */::get_rule_count() const -> size_t {
+auto RoundTables::get_rule_count() const -> size_t {
  return RuleParameterCount;
 }
 
-auto /* $replace CLASS_NAME */::get_terminal_state_machine_tables() const -> StateMachineTablesBase const& {
+auto RoundTables::get_terminal_state_machine_tables() const -> StateMachineTablesBase const& {
  static TerminalTables const tables;
  return tables;
 }
 
-/* $replace NAMESPACE_CLOSE */
+} // namespace example
 // clang-format on

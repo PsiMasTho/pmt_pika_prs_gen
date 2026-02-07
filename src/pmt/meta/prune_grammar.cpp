@@ -55,7 +55,9 @@ void prune_grammar(Grammar& grammar_) {
   return ret;
  };
 
- push_and_visit(grammar_.get_start_rule_name());
+ for (std::string const& start_rule_name : grammar_.get_start_rule_names()) {
+  push_and_visit(start_rule_name);
+ }
 
  while (!pending.empty()) {
   std::string const cur_rule_name = take();

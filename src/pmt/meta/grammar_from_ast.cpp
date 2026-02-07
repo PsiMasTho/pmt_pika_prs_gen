@@ -81,45 +81,6 @@ public:
  bool _keep_current_frame;
 };
 
-auto make_plus_rule_name(size_t number_, size_t digits_needed_) -> std::string {
- return "__plus_" + pmt::util::uint_to_string(number_, digits_needed_, pmt::util::hex_alphabet_uppercase);
-}
-
-void construct_plus_production(pmt::rt::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
- Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
- Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
- identifier->set_string(rule_name_);
- Ast::UniqueHandle parameter_unpack = Ast::construct(Ast::Tag::String, Ids::ParameterUnpack);
- parameter_unpack->set_string("true");
- Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
- definition->give_child_at_back(Ast::clone(*expr_->get_child_at_front()));
-
- production->give_child_at_back(std::move(identifier));
- production->give_child_at_back(std::move(parameter_unpack));
- production->give_child_at_back(std::move(definition));
-
- ast_root_.give_child_at_back(std::move(production));
-}
-
-void caching_traversal_handle_grammar_property_start(Locals& locals_, Ast const& ast_) {
- assert(ast_.get_id() == Ids::Identifier);
- locals_._ret.set_start_rule_name(ast_.get_string());
-}
-
-void caching_traversal_handle_grammar_property(Locals& locals_, Ast const& ast_) {
- Ast const& property_name = *ast_.get_child_at(0);
- Ast const& property_value = *ast_.get_child_at(1);
-
- switch (property_name.get_id()) {
-  case Ids::GrammarPropertyStart:
-   caching_traversal_handle_grammar_property_start(locals_, property_value);
-   break;
-   break;
-  default:
-   pmt::unreachable();
- }
-}
-
 void caching_traversal_handle_production(Locals& locals_, Ast const& ast_) {
  std::string rule_name = ast_.get_child_at(0)->get_string();
  std::string rule_display_name = rule_name;
@@ -173,9 +134,6 @@ void caching_traversal(Locals& locals_, Ast const& ast_) {
  for (size_t i = 0; i < ast_.get_children_size(); ++i) {
   Ast const& child = *ast_.get_child_at(i);
   switch (child.get_id()) {
-   case Ids::GrammarProperty:
-    caching_traversal_handle_grammar_property(locals_, *ast_.get_child_at(i));
-    break;
    case Ids::Production:
     caching_traversal_handle_production(locals_, *ast_.get_child_at(i));
     break;
@@ -203,36 +161,6 @@ void report_duplicate_rules(std::set<std::string> const& duplicate_rules_) {
  }
 
  throw std::runtime_error(msg);
-}
-
-void check_start_rule_exists(Locals& locals_) {  // -$ Todo $- need to factor out the lev distance stuff
- if (!locals_._rules.contains(locals_._ret.get_start_rule_name())) {
-  static constexpr size_t const max_lev_distance_to_report = 3;
-  std::map<size_t, std::set<std::string>> lev_distances;
-  pmt::util::Levenshtein lev;
-  for (auto const& [rule_name, _] : locals_._rules) {
-   lev_distances[lev.distance(locals_._ret.get_start_rule_name(), rule_name)].insert(rule_name);
-  }
-
-  std::string error_msg = "Start rule not found: \"$" + locals_._ret.get_start_rule_name() + "\"";
-  if (!lev_distances.empty() && lev_distances.begin()->first <= max_lev_distance_to_report) {
-   static constexpr size_t const max_names_to_report = 3;
-
-   std::string delim;
-   error_msg += ", did you mean: ";
-   for (size_t i = 0; std::string const& rule_name : lev_distances.begin()->second) {
-    if (i >= max_names_to_report) {
-     error_msg += ", ...";
-     break;
-    } else {
-     error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
-    }
-    ++i;
-   }
-  }
-
-  throw std::runtime_error(error_msg);
- }
 }
 
 auto construct_frame(Ast const* ast_cur_) -> Frame {
@@ -483,7 +411,6 @@ auto grammar_from_ast(Ast::UniqueHandle const& ast_) -> Grammar {
  Locals locals;
  caching_traversal(locals, *ast_);
  report_duplicate_rules(locals._duplicate_rules);
- check_start_rule_exists(locals);
  construct_definitions(locals);
  return std::move(locals._ret);
 }

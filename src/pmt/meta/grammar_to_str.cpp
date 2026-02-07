@@ -176,10 +176,6 @@ auto rule_rhs_to_str(Locals& locals_, Rule const& rule_) -> std::string {
  return ret;
 }
 
-auto start_rule_to_str(std::string const& rule_name_) -> std::string {
- return "@start = " + (rule_name_.empty() ? "/* missing identifier */" : "$" + rule_name_) + ";\n";
-}
-
 auto rule_to_str(Grammar const& grammar_, Locals& locals_, std::string const& rule_name_) -> std::string {
  Rule const* rule = grammar_.get_rule(rule_name_);
  assert(rule != nullptr);
@@ -196,7 +192,7 @@ auto grammar_to_string(Grammar const& grammar_) -> std::string {
   return std::set<std::string>(unsorted.begin(), unsorted.end());
  }();
 
- std::string ret = "/* Generated on: " + pmt::util::get_timestamp() + " */\n" + start_rule_to_str(grammar_.get_start_rule_name());
+ std::string ret = "/* Generated on: " + pmt::util::get_timestamp() + " */\n";
 
  std::string delim;
  for (auto const& rule_name : rule_names) {

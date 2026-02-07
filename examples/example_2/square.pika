@@ -1,0 +1,3 @@
+$square<id = "IdSquare"> = $blank "["~ $square_body "]"~ $blank;
+$square_body<unpack = true> = $blank $square_item ($blank ","~ $blank $square_item)* $blank;
+$square_item<unpack = true> = $leaf | $square;

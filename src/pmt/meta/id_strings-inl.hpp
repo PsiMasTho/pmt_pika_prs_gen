@@ -1,4 +1,4 @@
-/* Generated on: 2026-02-06 02:49:48 */
+/* Generated on: 2026-02-06 22:31:31 */
 // clang-format off
 "IntegerLiteral",
 "ParameterHide",
@@ -7,10 +7,10 @@
 "BooleanLiteral",
 "Question",
 "ParameterId",
-"GrammarPropertyStart",
 "Repetition",
 "Star",
 "Comma",
+"ParameterDisplayName",
 "Definition",
 "StringLiteral",
 "ParameterUnpack",
@@ -19,8 +19,6 @@
 "Production",
 "Epsilon",
 "IdStringLiteral",
-"ParameterDisplayName",
-"GrammarProperty",
 "Identifier",
 "Choices",
 "Sequence",

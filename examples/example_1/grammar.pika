@@ -1,5 +1,3 @@
-@start = $S;
-
 $S<unpack = true> = $A_Flat $B_L_Recursive $C_R_Recursive;
 
 $A_Flat<id = "Holder"> = $A*;

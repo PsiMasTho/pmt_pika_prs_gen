@@ -10,7 +10,7 @@ class SkeletonPaths {
 
 public:
  void set_root_override(std::string root_);
- auto get_path(std::string_view relative_) const -> std::string;
+ auto resolve(std::string_view relative_) const -> std::string;
 
 private:
  auto get_root() const -> std::string;

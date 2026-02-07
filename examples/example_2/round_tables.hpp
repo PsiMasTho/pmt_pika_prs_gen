@@ -1,4 +1,4 @@
-/* Generated on: 2026-02-06 02:49:42 */
+/* Generated on: 2026-02-06 23:17:27 */
 // clang-format off
 #pragma once
 
@@ -6,7 +6,7 @@
 
 namespace example {
 
-class ExampleTables : public pmt::rt::PikaTablesBase {
+class RoundTables : public pmt::rt::PikaTablesBase {
  public:
   // -$ Functions $-
   // --$ Inherited: pmt::rt::PikaTablesBase $--

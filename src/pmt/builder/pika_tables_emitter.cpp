@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <fstream>
 #include <limits>
 #include <map>
 #include <string_view>
@@ -102,6 +101,7 @@ PikaTablesEmitter::PikaTablesEmitter(Args args_)
 void PikaTablesEmitter::emit() {
  std::string const timestamp = pmt::util::get_timestamp();
  std::string const header_include = make_header_include(_args._header_include_path);
+ std::string const id_constants_include = make_header_include(_args._id_constants_include_path);
  std::string const ns_open = make_namespace_open(_args._namespace_name);
  std::string const ns_close = make_namespace_close(_args._namespace_name);
 
@@ -116,6 +116,7 @@ void PikaTablesEmitter::emit() {
  if (_args._output_source != nullptr) {
   replace_skeleton_label(_args._source_skel, "TIMESTAMP", timestamp);
   replace_skeleton_label(_args._source_skel, "HEADER_INCLUDE", header_include);
+  replace_skeleton_label(_args._source_skel, "ID_CONSTANTS_INCLUDE", id_constants_include);
   replace_skeleton_label(_args._source_skel, "NAMESPACE_OPEN", ns_open);
   replace_skeleton_label(_args._source_skel, "NAMESPACE_CLOSE", ns_close);
   replace_skeleton_label(_args._source_skel, "CLASS_NAME", _args._class_name);
@@ -131,7 +132,7 @@ void PikaTablesEmitter::emit() {
 }
 
 void PikaTablesEmitter::replace_terminal_tables() {
- StateMachineTables const& terminal_tables = _args._program.get_terminal_state_machine_tables_full();
+ StateMachineTables const& terminal_tables = _args._pika_tables.get_terminal_state_machine_tables_full();
  StateMachine const& state_machine = terminal_tables.get_state_machine();
  size_t const state_count = state_machine.get_state_count();
  replace_number(_args._source_skel, "", "TERMINAL_STATE_COUNT", state_count);
@@ -179,7 +180,7 @@ void PikaTablesEmitter::replace_terminal_tables() {
 }
 
 void PikaTablesEmitter::replace_clauses() {
- size_t const clause_count = _args._program.get_clause_count();
+ size_t const clause_count = _args._pika_tables.get_clause_count();
  replace_number(_args._source_skel, "", "CLAUSE_COUNT", clause_count);
  replace_skeleton_label(_args._source_skel, "CLAUSE_CLASS_ID_TYPE", pick_unsigned_type(clause_count - 1));
  std::vector<ClauseBase::Tag> clause_tags;
@@ -196,7 +197,7 @@ void PikaTablesEmitter::replace_clauses() {
  clause_special_ids.reserve(clause_count);
 
  for (size_t clause_id = 0; clause_id < clause_count; ++clause_id) {
-  ClauseBase const& clause = _args._program.fetch_clause(clause_id);
+  ClauseBase const& clause = _args._pika_tables.fetch_clause(clause_id);
   ClauseBase::Tag const tag = clause.get_tag();
   clause_tags.push_back(tag);
 
@@ -235,7 +236,7 @@ void PikaTablesEmitter::replace_clauses() {
 }
 
 void PikaTablesEmitter::replace_rules() {
- size_t const rule_count = _args._program.get_rule_count();
+ size_t const rule_count = _args._pika_tables.get_rule_count();
  enum : size_t {
   StringTableDisplayNames = 0,
   StringTableIdStrings = 1,
@@ -245,7 +246,7 @@ void PikaTablesEmitter::replace_rules() {
  Bitset rule_parameter_booleans(rule_count * 3, false);
 
  for (size_t rule_id = 0; rule_id < rule_count; ++rule_id) {
-  pmt::rt::RuleParametersBase const& params = _args._program.fetch_rule_parameters(rule_id);
+  pmt::rt::RuleParametersBase const& params = _args._pika_tables.fetch_rule_parameters(rule_id);
   std::get<StringTableDisplayNames>(string_table_map[std::string(params.get_display_name())]).insert(rule_id);
   std::get<StringTableIdStrings>(string_table_map[std::string(params.get_id_string())]).insert(rule_id);
   rule_id_table_map[params.get_id_value()].insert(rule_id);
@@ -276,6 +277,17 @@ void PikaTablesEmitter::replace_rules() {
    rule_ids_done.set(rule_id, true);
   }
  }
+
+ std::vector<std::string> rule_id_table_enum_strings;
+ rule_id_table_enum_strings.reserve(rule_id_table.size());
+ for (pmt::rt::IdType const id : rule_id_table) {
+  if (ReservedIds::is_reserved_id(id)) {
+   rule_id_table_enum_strings.push_back("ReservedIds::" + ReservedIds::id_to_string(id));
+  } else {
+   rule_id_table_enum_strings.push_back("IdConstants::" + _args._pika_tables.get_id_table().id_to_string(id));
+  }
+ }
+
  assert(rule_ids_done.all());
 
  std::vector<uint64_t> rule_parameter_display_names_indirect(rule_count);
@@ -301,11 +313,12 @@ void PikaTablesEmitter::replace_rules() {
  replace_number(_args._source_skel, "", "STRING_TABLE_SIZE", string_table.size());
  replace_number(_args._source_skel, "", "RULE_PARAMETER_ID_TABLE_SIZE", rule_id_table.size());
  replace_skeleton_label(_args._source_skel, "RULE_PARAMETER_CLASS_ID_TYPE", pick_unsigned_type(rule_count - 1));
+ replace_skeleton_label(_args._source_skel, "RULE_PARAMETER_ID_TABLE_TYPE", pick_unsigned_type(find_max_value(rule_id_table)));
  replace_string_list(_args._source_skel, "STRING_TABLE", string_table, true);
  replace_numeric_list(_args._source_skel, "RULE_PARAMETER_ID_INDIRECT_TYPE", "RULE_PARAMETER_ID_INDIRECT", rule_id_indirect, true);
  replace_numeric_list(_args._source_skel, "RULE_PARAMETER_ID_STRING_INDIRECT_TYPE", "RULE_PARAMETER_ID_STRINGS_INDIRECT", rule_parameter_id_strings_indirect, true);
  replace_numeric_list(_args._source_skel, "RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE", "RULE_PARAMETER_DISPLAY_NAMES_INDIRECT", rule_parameter_display_names_indirect, true);
- replace_numeric_list(_args._source_skel, "RULE_PARAMETER_ID_TABLE_TYPE", "RULE_PARAMETER_ID_TABLE", rule_id_table, false);
+ replace_numeric_enum_list(_args._source_skel, "RULE_PARAMETER_ID_TABLE", rule_id_table_enum_strings);
  replace_bitset(_args._source_skel, "RULE_PARAMETER_BOOLEANS_TYPE", "RULE_PARAMETER_BOOLEANS_SIZE", "RULE_PARAMETER_BOOLEANS", rule_parameter_booleans);
 }
 
@@ -321,6 +334,10 @@ void PikaTablesEmitter::replace_numeric_list(std::string& dest_, std::string_vie
 
 void PikaTablesEmitter::replace_tag_list(std::string& dest_, std::string_view label_list_, std::span<pmt::rt::ClauseBase::Tag const> values_) {
  replace_skeleton_label(dest_, label_list_, format_list(values_, _args._ch_per_line_max));
+}
+
+void PikaTablesEmitter::replace_numeric_enum_list(std::string& dest_, std::string_view label_list_, std::span<std::string const> values_) {
+ replace_skeleton_label(dest_, label_list_, format_list(values_, _args._ch_per_line_max, false));
 }
 
 void PikaTablesEmitter::replace_string_list(std::string& dest_, std::string_view label_list_, std::span<std::string const> values_, bool add_quotes_) {

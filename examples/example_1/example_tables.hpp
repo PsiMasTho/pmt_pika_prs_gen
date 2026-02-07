@@ -1,12 +1,12 @@
-/* Generated on: 2026-02-06 22:31:31 */
+/* Generated on: 2026-02-06 22:32:13 */
 // clang-format off
 #pragma once
 
 #include <pmt/rt/pika_tables_base.hpp>
 
-namespace pmt::meta {
+namespace example {
 
-class PikaTables : public pmt::rt::PikaTablesBase {
+class ExampleTables : public pmt::rt::PikaTablesBase {
  public:
   // -$ Functions $-
   // --$ Inherited: pmt::rt::PikaTablesBase $--
@@ -19,5 +19,5 @@ class PikaTables : public pmt::rt::PikaTablesBase {
  auto get_terminal_state_machine_tables() const -> pmt::rt::StateMachineTablesBase const& override;
 };
 
-} // namespace pmt::meta
+} // namespace example
 // clang-format on

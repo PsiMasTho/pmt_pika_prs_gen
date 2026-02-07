@@ -1,5 +1,7 @@
 #include "pmt/meta/id_table.hpp"
 
+#include "pmt/rt/reserved_ids.hpp"
+
 #include <stdexcept>
 
 namespace pmt::meta {

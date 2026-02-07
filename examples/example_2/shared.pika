@@ -1,0 +1,4 @@
+$newline = 16#A;
+$whitespace = [" ", 10#9]; // Space or tab
+$blank<hide = true> = ($whitespace | $newline)*;
+$leaf<id = "IdLeaf", merge = true> = ["0".."9"]{10#1, 10#3}; // One to three digits long number

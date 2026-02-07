@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 # Configurable parameters
-DIRECTORIES = ["src", "example"]
+DIRECTORIES = ["src", "examples"]
 EXTENSIONS = {".cpp", ".hpp"}
 DEFAULT_CLANG_FORMAT = "clang-format-16"
 

@@ -1,19 +1,32 @@
 #include "pmt/meta/grammar.hpp"
 
+#include <cassert>
+
 namespace pmt::meta {
 
 auto Grammar::get_start_expression() const -> RuleExpression::UniqueHandle {
- RuleExpression::UniqueHandle ret = RuleExpression::construct(pmt::rt::ClauseBase::Tag::Identifier);
- ret->set_identifier(_start_rule_name);
+ if (_start_rule_names.size() == 1) {
+  RuleExpression::UniqueHandle ret = RuleExpression::construct(pmt::rt::ClauseBase::Tag::Identifier);
+  ret->set_identifier(*_start_rule_names.begin());
+  return ret;
+ }
+
+ RuleExpression::UniqueHandle ret = RuleExpression::construct(pmt::rt::ClauseBase::Tag::Sequence);
+ for (std::string const& start_rule_name : _start_rule_names) {
+  RuleExpression::UniqueHandle ident = RuleExpression::construct(pmt::rt::ClauseBase::Tag::Identifier);
+  ident->set_identifier(start_rule_name);
+  ret->give_child_at_back(std::move(ident));
+ }
+
  return ret;
 }
 
-auto Grammar::get_start_rule_name() const -> std::string const& {
- return _start_rule_name;
+auto Grammar::get_start_rule_names() const -> std::unordered_set<std::string> const& {
+ return _start_rule_names;
 }
 
-void Grammar::set_start_rule_name(std::string name_) {
- _start_rule_name = std::move(name_);
+void Grammar::add_start_rule_name(std::string name_) {
+ _start_rule_names.emplace(std::move(name_));
 }
 
 auto Grammar::get_rule_names() const -> std::unordered_set<std::string> {
