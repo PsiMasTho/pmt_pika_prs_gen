@@ -1,9 +1,9 @@
-# C++ Pika Parser Generator
-
-This is an experimental hobby project. I may change or break things at any time. Don’t rely on it for anything serious.
+# pmt_pika_prs_gen
 
 A **C++20 parser generator** implementing the **Pika parsing algorithm** described in the paper:  
 [Pika parsing: reformulating packrat parsing as a dynamic programming algorithm solves the left recursion and error recovery problems. Luke A. D. Hutchison, May 2020.](https://arxiv.org/abs/2005.06444)
+
+Warning: This is an experimental hobby project. I may change or break things at any time. Don’t rely on it for anything serious.
 
 ---
 
