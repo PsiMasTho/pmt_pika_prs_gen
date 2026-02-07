@@ -3,6 +3,7 @@
 #include "pmt/meta/ast_utils.hpp"
 #include "pmt/meta/ids.hpp"
 #include "pmt/meta/repetition_range.hpp"
+#include "pmt/meta/rule_parameters.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/util/uint_to_str.hpp"
 
@@ -73,14 +74,6 @@ auto make_epsilon() -> Ast::UniqueHandle {
  return epsilon;
 }
 
-auto make_sequence() -> Ast::UniqueHandle {
- return Ast::construct(Ast::Tag::Parent, Ids::Sequence);
-}
-
-auto make_choices() -> Ast::UniqueHandle {
- return Ast::construct(Ast::Tag::Parent, Ids::Choices);
-}
-
 void append_body_clones(Ast& sequence_, Ast const& body_, size_t count_) {
  for (size_t i = 0; i < count_; ++i) {
   sequence_.give_child_at_back(Ast::clone(body_));
@@ -88,79 +81,59 @@ void append_body_clones(Ast& sequence_, Ast const& body_, size_t count_) {
 }
 
 auto make_sequence_with_body_clones(Ast const& body_, size_t count_) -> Ast::UniqueHandle {
- Ast::UniqueHandle sequence = make_sequence();
+ Ast::UniqueHandle sequence = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
  append_body_clones(*sequence, body_, count_);
  return sequence;
 }
 
 auto make_optional_tail_choices(Ast const& body_, size_t count_) -> Ast::UniqueHandle {
- Ast::UniqueHandle choices = make_choices();
+ Ast::UniqueHandle choices = Ast::construct(Ast::Tag::Parent, Ids::Choices);
  for (size_t i = count_; i != 0; --i) {
   choices->give_child_at_back(make_sequence_with_body_clones(body_, i));
  }
- Ast::UniqueHandle seq_epsilon = make_sequence();
+ Ast::UniqueHandle seq_epsilon = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
  seq_epsilon->give_child_at_back(make_epsilon());
  choices->give_child_at_back(std::move(seq_epsilon));
  return choices;
 }
 
-void construct_plus_body_production(Ast& ast_root_, Ast const& body_, std::string const& rule_name_) {
- Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
- Ast::UniqueHandle identifier = make_identifier(rule_name_);
- Ast::UniqueHandle parameter_unpack = Ast::construct(Ast::Tag::String, Ids::ParameterUnpack);
- parameter_unpack->set_string("true");
+void add_plus_rule(Ast& ast_dest_root_, std::string const& body_rule_name_, std::string const& plus_rule_name_) {
  Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
- definition->give_child_at_back(Ast::clone(body_));
-
- production->give_child_at_back(std::move(identifier));
- production->give_child_at_back(std::move(parameter_unpack));
- production->give_child_at_back(std::move(definition));
-
- ast_root_.give_child_at_back(std::move(production));
-}
-
-void construct_plus_production(Ast& ast_root_, std::string const& body_rule_name_, std::string const& rule_name_) {
- Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
- Ast::UniqueHandle identifier = make_identifier(rule_name_);
- Ast::UniqueHandle parameter_unpack = Ast::construct(Ast::Tag::String, Ids::ParameterUnpack);
- parameter_unpack->set_string("true");
- Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
-
- Ast::UniqueHandle choices = make_choices();
-
- Ast::UniqueHandle seq_recursive = make_sequence();
+ Ast::UniqueHandle choices = Ast::construct(Ast::Tag::Parent, Ids::Choices);
+ Ast::UniqueHandle seq_recursive = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
  seq_recursive->give_child_at_back(make_identifier(body_rule_name_));
- seq_recursive->give_child_at_back(make_identifier(rule_name_));
+ seq_recursive->give_child_at_back(make_identifier(plus_rule_name_));
  choices->give_child_at_back(std::move(seq_recursive));
 
- Ast::UniqueHandle seq_base = make_sequence();
+ Ast::UniqueHandle seq_base = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
  seq_base->give_child_at_back(make_identifier(body_rule_name_));
  choices->give_child_at_back(std::move(seq_base));
 
  definition->give_child_at_back(std::move(choices));
- production->give_child_at_back(std::move(identifier));
- production->give_child_at_back(std::move(parameter_unpack));
- production->give_child_at_back(std::move(definition));
 
- ast_root_.give_child_at_back(std::move(production));
+ RuleParameters rule_parameters;
+ rule_parameters._unpack = true;
+ rule_parameters._display_name = plus_rule_name_;
+
+ add_rule(ast_dest_root_, plus_rule_name_, rule_parameters, *definition);
 }
 
 auto expand_unbounded_repetition(size_t lower_, PlusRuleNames const& rule_names_) -> Ast::UniqueHandle {
  Ast::UniqueHandle plus_identifier = make_identifier(rule_names_._plus_rule_name);
 
  if (lower_ == 0) {
-  Ast::UniqueHandle choices = make_choices();
-  Ast::UniqueHandle seq_plus = make_sequence();
+  Ast::UniqueHandle choices = Ast::construct(Ast::Tag::Parent, Ids::Choices);
+  Ast::UniqueHandle seq_plus = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
   seq_plus->give_child_at_back(std::move(plus_identifier));
   choices->give_child_at_back(std::move(seq_plus));
 
-  Ast::UniqueHandle seq_epsilon = make_sequence();
+  Ast::UniqueHandle seq_epsilon = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
   seq_epsilon->give_child_at_back(make_epsilon());
   choices->give_child_at_back(std::move(seq_epsilon));
   return choices;
  }
 
- Ast::UniqueHandle sequence = make_sequence();
+ Ast::UniqueHandle sequence = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
  for (size_t i = 0; i < lower_ - 1; ++i) {
   sequence->give_child_at_back(make_identifier(rule_names_._body_rule_name));
  }
@@ -173,7 +146,7 @@ auto expand_bounded_repetition(Ast const& body_, RepetitionRange const& range_) 
  size_t const upper = static_cast<size_t>(*range_.get_upper());
 
  if (lower != 0) {
-  Ast::UniqueHandle sequence = make_sequence();
+  Ast::UniqueHandle sequence = Ast::construct(Ast::Tag::Parent, Ids::Sequence);
   append_body_clones(*sequence, body_, lower);
   if (lower != upper) {
    sequence->give_child_at_back(make_optional_tail_choices(body_, upper - lower));
@@ -228,8 +201,12 @@ void extract_repetition_expressions(pmt::rt::Ast& ast_) {
    if (itr == plus_rules_by_body.end()) {
     size_t const plus_rule_number = plus_rule_idx++;
     PlusRuleNames names{make_plus_body_rule_name(plus_rule_number, digits_needed), make_plus_rule_name(plus_rule_number, digits_needed)};
-    construct_plus_body_production(ast_, body, names._body_rule_name);
-    construct_plus_production(ast_, names._body_rule_name, names._plus_rule_name);
+
+    RuleParameters rp_body;
+    rp_body._unpack = true;
+    rp_body._display_name = names._body_rule_name;
+    add_rule(ast_, names._body_rule_name, rp_body, body);
+    add_plus_rule(ast_, names._body_rule_name, names._plus_rule_name);
     itr = plus_rules_by_body.emplace(key, std::move(names)).first;
    }
    replacement = expand_unbounded_repetition(static_cast<size_t>(range.get_lower()), itr->second);

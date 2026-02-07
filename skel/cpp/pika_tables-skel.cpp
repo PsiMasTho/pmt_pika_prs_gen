@@ -34,7 +34,6 @@ using ClauseSeedParentIdsOffsetsType = /* $replace CLAUSE_SEED_PARENT_IDS_OFFSET
 using ClauseSeedParentIdsType = /* $replace CLAUSE_SEED_PARENT_IDS_TYPE */;
 using ClauseSpecialIdType = /* $replace CLAUSE_SPECIAL_ID_TYPE */;
 using RuleParameterDisplayNameIndirectType = /* $replace RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE */;
-using RuleParameterIdStringIndirectType = /* $replace RULE_PARAMETER_ID_STRING_INDIRECT_TYPE */;
 using RuleParameterIdTableType = /* $replace RULE_PARAMETER_ID_TABLE_TYPE */;
 using RuleParameterIdIndirectType = /* $replace RULE_PARAMETER_ID_INDIRECT_TYPE */;
 using ClauseClassIdType = /* $replace CLAUSE_CLASS_ID_TYPE */;
@@ -226,10 +225,6 @@ std::array<RuleParameterDisplayNameIndirectType const, RuleParameterCount> const
 /* $replace RULE_PARAMETER_DISPLAY_NAMES_INDIRECT */
 };
 
-std::array<RuleParameterIdStringIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_STRINGS_INDIRECT = {
-/* $replace RULE_PARAMETER_ID_STRINGS_INDIRECT */
-};
-
 std::array<RuleParameterIdTableType const, RuleParameterIdTableSize> const RULE_PARAMETER_ID_TABLE = {
 /* $replace RULE_PARAMETER_ID_TABLE */
 };
@@ -251,10 +246,6 @@ public:
  // --$ Inherited: pmt::rt::RuleParametersBase $--
  auto get_display_name() const -> std::string_view override {
   return STRING_TABLE[RULE_PARAMETER_DISPLAY_NAMES_INDIRECT[_rule_id]];
- }
-
- auto get_id_string() const -> std::string_view override {
-  return STRING_TABLE[RULE_PARAMETER_ID_STRINGS_INDIRECT[_rule_id]];
  }
 
  auto get_id_value() const -> IdType override {

@@ -237,18 +237,13 @@ void PikaTablesEmitter::replace_clauses() {
 
 void PikaTablesEmitter::replace_rules() {
  size_t const rule_count = _args._pika_tables.get_rule_count();
- enum : size_t {
-  StringTableDisplayNames = 0,
-  StringTableIdStrings = 1,
- };
- std::map<std::string, std::pair<std::unordered_set<IdType>, std::unordered_set<IdType>>> string_table_map;
+ std::map<std::string, std::unordered_set<IdType>> string_table_map;
  std::map<pmt::rt::IdType, std::unordered_set<IdType>> rule_id_table_map;
  Bitset rule_parameter_booleans(rule_count * 3, false);
 
  for (size_t rule_id = 0; rule_id < rule_count; ++rule_id) {
   pmt::rt::RuleParametersBase const& params = _args._pika_tables.fetch_rule_parameters(rule_id);
-  std::get<StringTableDisplayNames>(string_table_map[std::string(params.get_display_name())]).insert(rule_id);
-  std::get<StringTableIdStrings>(string_table_map[std::string(params.get_id_string())]).insert(rule_id);
+  string_table_map[std::string(params.get_display_name())].insert(rule_id);
   rule_id_table_map[params.get_id_value()].insert(rule_id);
 
   rule_parameter_booleans.set(rule_id, params.get_merge());
@@ -292,22 +287,15 @@ void PikaTablesEmitter::replace_rules() {
 
  std::vector<uint64_t> rule_parameter_display_names_indirect(rule_count);
  Bitset rule_parameters_done(rule_count, false);
- std::vector<uint64_t> rule_parameter_id_strings_indirect(rule_count);
- Bitset rule_id_strings_done(rule_count, false);
  for (size_t i = 0; i < string_table.size(); ++i) {
-  auto const& [display_name_set, id_string_set] = string_table_map[string_table[i]];
+  auto const& display_name_set = string_table_map[string_table[i]];
   for (IdType const rule_id : display_name_set) {
    rule_parameter_display_names_indirect[rule_id] = i;
    rule_parameters_done.set(rule_id, true);
   }
-  for (IdType const rule_id : id_string_set) {
-   rule_parameter_id_strings_indirect[rule_id] = i;
-   rule_id_strings_done.set(rule_id, true);
-  }
  }
 
  assert(rule_parameters_done.all());
- assert(rule_id_strings_done.all());
 
  replace_number(_args._source_skel, "", "RULE_PARAMETER_COUNT", rule_count);
  replace_number(_args._source_skel, "", "STRING_TABLE_SIZE", string_table.size());
@@ -316,7 +304,6 @@ void PikaTablesEmitter::replace_rules() {
  replace_skeleton_label(_args._source_skel, "RULE_PARAMETER_ID_TABLE_TYPE", pick_unsigned_type(find_max_value(rule_id_table)));
  replace_string_list(_args._source_skel, "STRING_TABLE", string_table, true);
  replace_numeric_list(_args._source_skel, "RULE_PARAMETER_ID_INDIRECT_TYPE", "RULE_PARAMETER_ID_INDIRECT", rule_id_indirect, true);
- replace_numeric_list(_args._source_skel, "RULE_PARAMETER_ID_STRING_INDIRECT_TYPE", "RULE_PARAMETER_ID_STRINGS_INDIRECT", rule_parameter_id_strings_indirect, true);
  replace_numeric_list(_args._source_skel, "RULE_PARAMETER_DISPLAY_NAME_INDIRECT_TYPE", "RULE_PARAMETER_DISPLAY_NAMES_INDIRECT", rule_parameter_display_names_indirect, true);
  replace_numeric_enum_list(_args._source_skel, "RULE_PARAMETER_ID_TABLE", rule_id_table_enum_strings);
  replace_bitset(_args._source_skel, "RULE_PARAMETER_BOOLEANS_TYPE", "RULE_PARAMETER_BOOLEANS_SIZE", "RULE_PARAMETER_BOOLEANS", rule_parameter_booleans);

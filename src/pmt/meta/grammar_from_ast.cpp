@@ -6,8 +6,7 @@
 #include "pmt/meta/repetition_range.hpp"
 #include "pmt/meta/rule.hpp"
 #include "pmt/unreachable.hpp"
-#include "pmt/util/levenshtein.hpp"
-#include "pmt/util/uint_to_str.hpp"
+#include "pmt/util/closest_strings.hpp"
 
 #include <map>
 #include <set>
@@ -15,6 +14,12 @@
 namespace pmt::meta {
 using namespace pmt::container;
 using namespace pmt::rt;
+
+enum : size_t {
+ MaxLevDistanceToReport = 3,
+ MaxNotFoundNamesToReport = 3,
+ MaxDuplicateNamesToReport = 3,
+};
 
 namespace {
 class FrameBase {
@@ -39,35 +44,23 @@ public:
  size_t _idx = 0;
 };
 
-class StringLiteralFrame : public FrameBase {
-public:
-};
+class StringLiteralFrame : public FrameBase {};
 
-class IntegerLiteralFrame : public FrameBase {
-public:
-};
+class IntegerLiteralFrame : public FrameBase {};
 
-class CharsetFrame : public FrameBase {
-public:
-};
+class CharsetFrame : public FrameBase {};
 
-class IdentifierFrame : public FrameBase {
-public:
-};
+class IdentifierFrame : public FrameBase {};
 
-class NegativeLookaheadFrame : public FrameBase {
-public:
-};
+class NegativeLookaheadFrame : public FrameBase {};
 
-class PositiveLookaheadFrame : public FrameBase {
-public:
-};
+class PositiveLookaheadFrame : public FrameBase {};
 
-class EpsilonFrame : public FrameBase {
-public:
-};
+class EpsilonFrame : public FrameBase {};
 
-using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame>;
+class EofFrame : public FrameBase {};
+
+using Frame = std::variant<PassthroughFrame, SequenceFrame, ChoicesFrame, StringLiteralFrame, IntegerLiteralFrame, CharsetFrame, IdentifierFrame, NegativeLookaheadFrame, PositiveLookaheadFrame, EpsilonFrame, EofFrame>;
 
 class Locals {
 public:
@@ -141,19 +134,34 @@ void caching_traversal(Locals& locals_, Ast const& ast_) {
  }
 }
 
+[[noreturn]] void throw_rule_not_found_exception(pmt::util::ClosestStrings const& closest_) {
+ std::string error_msg = "Rule not found: \"$" + closest_.query() + "\"";
+
+ if (!closest_.candidates().empty()) {
+  std::string delim;
+  error_msg += ", did you mean: ";
+  for (std::string const& rule_name : closest_.candidates()) {
+   error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
+  }
+  if (closest_.truncated()) {
+   error_msg += ", ...";
+  }
+ }
+
+ throw std::runtime_error(error_msg);
+}
+
 void report_duplicate_rules(std::set<std::string> const& duplicate_rules_) {
  if (duplicate_rules_.empty()) {
   return;
  }
-
- static constexpr size_t const max_names_to_report = 8;
 
  std::string msg = "Duplicate rule name";
  msg += (duplicate_rules_.size() > 1 ? "s: " : ": ");
 
  std::string delim;
  for (size_t i = 0; std::string const& rule_name : duplicate_rules_) {
-  if (i++ == max_names_to_report) {
+  if (i++ == MaxDuplicateNamesToReport) {
    msg += ", ...";
    break;
   }
@@ -197,6 +205,9 @@ auto construct_frame(Ast const* ast_cur_) -> Frame {
   } break;
   case Ids::Epsilon: {
    return EpsilonFrame{frame_base};
+  } break;
+  case Ids::Eof: {
+   return EofFrame{frame_base};
   } break;
   default:
    pmt::unreachable();
@@ -282,31 +293,11 @@ void process_frame_00(Locals& locals_, IdentifierFrame& frame_) {
 
  // Check against rule names to see if it exists
  if (!locals_._rules.contains(identifier)) {
-  static constexpr size_t const max_lev_distance_to_report = 3;
-  std::map<size_t, std::set<std::string>> lev_distances;
-  pmt::util::Levenshtein lev;
+  pmt::util::ClosestStrings closest(identifier, MaxLevDistanceToReport, MaxNotFoundNamesToReport);
   for (auto const& [rule_name, _] : locals_._rules) {
-   lev_distances[lev.distance(identifier, rule_name)].insert(rule_name);
+   closest.push(rule_name);
   }
-
-  std::string error_msg = "Rule not found: \"$" + identifier + "\"";
-  if (!lev_distances.empty() && lev_distances.begin()->first <= max_lev_distance_to_report) {
-   static constexpr size_t const max_closest_to_report = 3;
-
-   std::string delim;
-   error_msg += ", did you mean: ";
-   for (size_t i = 0; std::string const& rule_name : lev_distances.begin()->second) {
-    if (i >= max_closest_to_report) {
-     error_msg += ", ...";
-     break;
-    } else {
-     error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
-    }
-    ++i;
-   }
-  }
-
-  throw std::runtime_error(error_msg);
+  throw_rule_not_found_exception(closest);
  }
 }
 
@@ -339,6 +330,13 @@ void process_frame_01(Locals& locals_, PositiveLookaheadFrame& frame_) {
 
 void process_frame_00(Locals& locals_, EpsilonFrame& frame_) {
  locals_._ret_part = RuleExpression::construct(ClauseBase::Tag::Epsilon);
+}
+
+void process_frame_00(Locals& locals_, EofFrame& frame_) {
+ RuleExpression::UniqueHandle outer = RuleExpression::construct(ClauseBase::Tag::NegativeLookahead);
+ outer->give_child_at_back(RuleExpression::construct(ClauseBase::Tag::CharsetLiteral));
+ outer->get_child_at_back()->get_charset_literal().push_back(CharsetLiteral::IntervalType(0, std::numeric_limits<SymbolType>::max()));
+ locals_._ret_part = std::move(outer);
 }
 
 void dispatch(Locals& locals_, Frame& frame_) {

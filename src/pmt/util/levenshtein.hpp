@@ -6,11 +6,13 @@
 namespace pmt::util {
 
 class Levenshtein {
-public:
- [[nodiscard]] auto distance(std::string_view lhs_, std::string_view rhs_) -> size_t;
-
-private:
+ // -$ Data $-
  std::vector<size_t> _matrix;
+
+public:
+ // -$ Functions $-
+ // --$ Other $--
+ [[nodiscard]] auto distance(std::string_view lhs_, std::string_view rhs_) -> size_t;
 };
 
 }  // namespace pmt::util

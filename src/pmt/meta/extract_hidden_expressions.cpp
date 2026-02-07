@@ -2,6 +2,7 @@
 
 #include "pmt/meta/ast_utils.hpp"
 #include "pmt/meta/ids.hpp"
+#include "pmt/meta/rule_parameters.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/unreachable.hpp"
 #include "pmt/util/uint_to_str.hpp"
@@ -64,6 +65,7 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
     case Ids::StringLiteral:
     case Ids::IntegerLiteral:
     case Ids::Charset:
+    case Ids::Eof:
     case Ids::Epsilon:
     case Ids::Hidden:  // We only care about the topmost Hidden, so don't expand further
      break;
@@ -80,22 +82,6 @@ auto gather_hidden_expressions(Ast& ast_) -> std::vector<AstPosition> {
 
 auto make_hidden_rule_name(size_t number_, size_t digits_needed_) -> std::string {
  return "__hidden_" + pmt::util::uint_to_string(number_, digits_needed_, pmt::util::hex_alphabet_uppercase);
-}
-
-void construct_hidden_production(pmt::rt::Ast& ast_root_, Ast const* expr_, std::string const& rule_name_) {
- Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
- Ast::UniqueHandle identifier = Ast::construct(Ast::Tag::String, Ids::Identifier);
- identifier->set_string(rule_name_);
- Ast::UniqueHandle parameter_hide = Ast::construct(Ast::Tag::String, Ids::ParameterHide);
- parameter_hide->set_string("true");
- Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
- definition->give_child_at_back(Ast::clone(*expr_->get_child_at_front()));
-
- production->give_child_at_back(std::move(identifier));
- production->give_child_at_back(std::move(parameter_hide));
- production->give_child_at_back(std::move(definition));
-
- ast_root_.give_child_at_back(std::move(production));
 }
 
 auto count_unique_hidden_expressions(std::span<AstPosition const> hidden_expressions_) -> size_t {
@@ -129,7 +115,10 @@ void extract_hidden_expressions(pmt::rt::Ast& ast_) {
    size_t const unique_idx = hidden_expression_to_rule_name.size();
    std::string const rule_name = make_hidden_rule_name(unique_idx, digits_needed);
    hidden_expression_to_rule_name.emplace(pos_deep, rule_name);
-   construct_hidden_production(ast_, pos._parent->get_child_at(pos._child_idx), rule_name);
+   RuleParameters params;
+   params._hide = true;
+   params._display_name = rule_name;
+   add_rule(ast_, rule_name, params, *pos._parent->get_child_at(pos._child_idx)->get_child_at_front());
   }
 
   auto const itr = hidden_expression_to_rule_name.find(pos_deep);

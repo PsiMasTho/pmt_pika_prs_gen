@@ -3,8 +3,10 @@
 #include "pmt/fw_decl.hpp"
 
 #include <cstddef>
+#include <string>
 
 PMT_FW_DECL_NS_CLASS(pmt::rt, Ast);
+PMT_FW_DECL_NS_CLASS(pmt::rt, RuleParametersBase);
 
 namespace pmt::meta {
 
@@ -29,5 +31,7 @@ struct AstNodeHash {
 struct AstNodeEq {
  auto operator()(AstNodeKey const& lhs_, AstNodeKey const& rhs_) const -> bool;
 };
+
+void add_rule(pmt::rt::Ast& ast_dest_root_, std::string const& rule_name_, pmt::rt::RuleParametersBase const& rule_parameters_, pmt::rt::Ast const& expr_);
 
 }  // namespace pmt::meta

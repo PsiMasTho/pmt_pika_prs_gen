@@ -8,10 +8,7 @@
 #include "pmt/meta/prune_grammar.hpp"
 #include "pmt/meta/shrink_grammar.hpp"
 #include "pmt/rt/pika_parser.hpp"
-#include "pmt/util/levenshtein.hpp"
-
-#include <map>
-#include <set>
+#include "pmt/util/closest_strings.hpp"
 
 namespace pmt::meta {
 using namespace pmt::rt;
@@ -21,6 +18,23 @@ enum : size_t {
  MaxNamesToReport = 3,
 };
 
+[[noreturn]] void throw_start_rule_not_found_exception(pmt::util::ClosestStrings const& closest_) {
+ std::string error_msg = "Start rule not found: \"$" + closest_.query() + "\"";
+
+ if (!closest_.candidates().empty()) {
+  std::string delim;
+  error_msg += ", did you mean: ";
+  for (std::string const& rule_name : closest_.candidates()) {
+   error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
+  }
+  if (closest_.truncated()) {
+   error_msg += ", ...";
+  }
+ }
+
+ throw std::runtime_error(error_msg);
+}
+
 void add_and_check_start_rules(Grammar& dest_, std::unordered_set<std::string> const& start_rule_names_) {
  std::unordered_set<std::string> const rule_names = dest_.get_rule_names();
 
@@ -29,27 +43,11 @@ void add_and_check_start_rules(Grammar& dest_, std::unordered_set<std::string> c
    dest_.add_start_rule_name(start_rule_name);
    continue;
   }
-  std::map<size_t, std::set<std::string>> lev_distances;
-  pmt::util::Levenshtein lev;
+  pmt::util::ClosestStrings closest(start_rule_name, MaxLevDistanceToReport, MaxNamesToReport);
   for (std::string const& rule_name : rule_names) {
-   lev_distances[lev.distance(start_rule_name, rule_name)].insert(rule_name);
+   closest.push(rule_name);
   }
-  std::string error_msg = "Start rule not found: \"$" + start_rule_name + "\"";
-  if (!lev_distances.empty() && lev_distances.begin()->first <= MaxLevDistanceToReport) {
-   std::string delim;
-   error_msg += ", did you mean: ";
-   for (size_t i = 0; std::string const& rule_name : lev_distances.begin()->second) {
-    if (i >= MaxNamesToReport) {
-     error_msg += ", ...";
-     break;
-    } else {
-     error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
-    }
-    ++i;
-   }
-  }
-
-  throw std::runtime_error(error_msg);
+  throw_start_rule_not_found_exception(closest);
  }
 }
 
