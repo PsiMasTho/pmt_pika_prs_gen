@@ -1,6 +1,6 @@
 # C++ Pika Parser Generator
 
-This is an experimental pet project. I may change or break stuff whenever I feel like it. Don’t depend on it for anything serious.
+This is an experimental hobby project. I may change or break things at any time. Don’t rely on it for anything serious.
 
 A **C++20 parser generator** implementing the **Pika parsing algorithm** described in the paper:  
 [Pika parsing: reformulating packrat parsing as a dynamic programming algorithm solves the left recursion and error recovery problems. Luke A. D. Hutchison, May 2020.](https://arxiv.org/abs/2005.06444)
@@ -13,7 +13,7 @@ A **C++20 parser generator** implementing the **Pika parsing algorithm** describ
 - CMake ≥ 3.9
 ### The generated parsers
 - C++20 compiler
-- `pmt_pika_prs_gen_rt` (library + headers, includes the `pmt::rt` AST runtime)
+- `pmt_pika_rt` (library + headers)
 
 ## Building
 This project is built with CMake.
@@ -58,10 +58,8 @@ See the list of supported arguments and their description by running `pmt_pika_p
 ## Usage
 To parse with your generated tables:
 1. Compile the generated tables `.cpp` and include the generated headers where needed.
-2. Link against `pmt_pika_prs_gen_rt`.
+2. Link against `pmt_pika_rt`.
 3. Use `pmt::rt::PikaParser` with an instance of your generated `PikaTablesBase` implementation.
-
-The runtime library also includes am Ast class that supports arbitrarily deep trees.
 
 - `pmt::rt::Ast`: Core tree node type. Construct via `Ast::construct` and manage through `Ast::UniqueHandle` (stack allocation or manual `new`/`delete` is invalid). Use `give_child_at*` / `take_child_at*` to insert or remove nodes from a parent.
 - `Ast::merge`: Replaces the current node with a `String` node whose contents are the depth-first concatenation of all string leaves in its subtree, preserving the original node id.
