@@ -17,6 +17,8 @@ public:
  bool _hide : 1 = pmt::rt::RuleParametersBase::HIDE_DEFAULT;
 
  // -$ Functions $-
+ // --$ Lifetime $--
+ virtual ~RuleParameters() = default;
  // --$ Inherited : pmt::rt::RuleParametersBase $--
  auto get_display_name() const -> std::string_view override;
  auto get_id_value() const -> pmt::rt::IdType override;

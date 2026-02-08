@@ -5,8 +5,6 @@
 #include "pmt/builder/skeleton_paths.hpp"
 #include "pmt/util/read_file.hpp"
 
-#include <fstream>
-
 namespace pmt::builder::cli {
 namespace {
 void setup_argument_parser(argparse::ArgumentParser& cmdl_) {
@@ -45,10 +43,18 @@ void assign_from_arg(std::string_view arg_name_, std::string& dest_, argparse::A
  dest_ = cmdl_.present<std::string>(arg_name_).value_or(std::string(default_value_));
 }
 
-void read_file_from_arg(std::string_view arg_name_, std::string& dest_, argparse::ArgumentParser const& cmdl_) {
- std::string path;
- assign_from_arg(arg_name_, path, cmdl_);
- dest_ = path.empty() ? "" : pmt::util::read_file(path);
+void assign_optional_from_arg(std::string_view arg_name_, std::optional<std::string>& dest_, argparse::ArgumentParser const& cmdl_) {
+ dest_ = cmdl_.present(arg_name_);
+}
+
+void read_optional_file_from_arg(std::string_view arg_name_, std::optional<std::string>& dest_, argparse::ArgumentParser const& cmdl_) {
+ std::optional<std::string> path;
+ assign_optional_from_arg(arg_name_, path, cmdl_);
+ if (path.has_value()) {
+  dest_ = pmt::util::read_file(*path);
+ } else {
+  dest_.reset();
+ }
 }
 
 void read_files_from_arg(std::string_view arg_name_, std::vector<std::string>& dest_, argparse::ArgumentParser const& cmdl_) {
@@ -64,34 +70,28 @@ void read_files_from_arg(std::string_view arg_name_, std::vector<std::string>& d
  }
 }
 
-void open_ofstream_from_arg(std::string_view arg_name_, std::unique_ptr<std::ostream>& dest_, argparse::ArgumentParser const& cmdl_) {
- std::string path;
- assign_from_arg(arg_name_, path, cmdl_);
- dest_ = path.empty() ? nullptr : std::make_unique<std::ofstream>(path);
-}
-
 void handle_start_rules_args(Args& args_, argparse::ArgumentParser const& cmdl_) {
  assign_from_args("--start-rules", args_._start_rules, cmdl_);
 }
 
 void handle_input_args(Args& args_, argparse::ArgumentParser& cmdl_) {
  read_files_from_arg("--input-grammar", args_._input_grammar, cmdl_);
- read_file_from_arg("--input-test", args_._input_test, cmdl_);
+ read_optional_file_from_arg("--input-test", args_._input_test, cmdl_);
 }
 
 void handle_output_args(Args& args_, argparse::ArgumentParser& cmdl_) {
- open_ofstream_from_arg("--output-header", args_._output_header, cmdl_);
- open_ofstream_from_arg("--output-source", args_._output_source, cmdl_);
+ assign_optional_from_arg("--output-header", args_._output_header_path, cmdl_);
+ assign_optional_from_arg("--output-source", args_._output_source_path, cmdl_);
 
- if (!args_._input_test.empty()) {
-  open_ofstream_from_arg("--output-test", args_._output_test, cmdl_);
+ if (args_._input_test.has_value()) {
+  assign_optional_from_arg("--output-test", args_._output_test_path, cmdl_);
  }
 
- open_ofstream_from_arg("--output-id-strings", args_._output_id_strings, cmdl_);
- open_ofstream_from_arg("--output-id-constants", args_._output_id_constants, cmdl_);
- open_ofstream_from_arg("--output-grammar", args_._output_grammar, cmdl_);
- open_ofstream_from_arg("--output-clauses", args_._output_clauses, cmdl_);
- open_ofstream_from_arg("--output-terminal-dotfile", args_._output_terminal_dotfile, cmdl_);
+ assign_optional_from_arg("--output-id-strings", args_._output_id_strings_path, cmdl_);
+ assign_optional_from_arg("--output-id-constants", args_._output_id_constants_path, cmdl_);
+ assign_optional_from_arg("--output-grammar", args_._output_grammar_path, cmdl_);
+ assign_optional_from_arg("--output-clauses", args_._output_clauses_path, cmdl_);
+ assign_optional_from_arg("--output-terminal-dotfile", args_._output_terminal_dotfile_path, cmdl_);
 }
 
 void handle_substitution_args(Args& args_, argparse::ArgumentParser& cmdl_) {
@@ -106,19 +106,19 @@ void handle_skel_args(Args& args_, argparse::ArgumentParser& cmdl_) {
  if (std::string skel_dir = cmdl_.present("--skel-dir").value_or(""); !skel_dir.empty()) {
   skeleton_paths.set_root_override(skel_dir);
  }
- if (args_._output_id_strings) {
+ if (args_._output_id_strings_path.has_value()) {
   args_._id_strings_skel = pmt::util::read_file(cmdl_.present("--id-strings-skel").value_or(skeleton_paths.resolve("cpp/id_strings-skel.hpp")));
  }
- if (args_._output_id_constants) {
+ if (args_._output_id_constants_path.has_value()) {
   args_._id_constants_skel = pmt::util::read_file(cmdl_.present("--id-constants-skel").value_or(skeleton_paths.resolve("cpp/id_constants-skel.hpp")));
  }
- if (args_._output_terminal_dotfile) {
+ if (args_._output_terminal_dotfile_path.has_value()) {
   args_._terminal_dotfile_skel = pmt::util::read_file(cmdl_.present("--terminal-dotfile-skel").value_or(skeleton_paths.resolve("dot/state_machine-skel.hpp")));
  }
- if (args_._output_header) {
+ if (args_._output_header_path.has_value()) {
   args_._header_skel = pmt::util::read_file(cmdl_.present("--header-skel").value_or(skeleton_paths.resolve("cpp/pika_tables-skel.hpp")));
  }
- if (args_._output_source) {
+ if (args_._output_source_path.has_value()) {
   args_._source_skel = pmt::util::read_file(cmdl_.present("--source-skel").value_or(skeleton_paths.resolve("cpp/pika_tables-skel.cpp")));
  }
 }
@@ -129,10 +129,10 @@ void check_multiple_start_rule_validity(Args const& args_) {
   return;  // No restrictions
  }
 
- if (args_._output_source) {
+ if (args_._output_source_path.has_value()) {
   throw std::runtime_error("Only exactly one start rule allowed with --output-source");
  }
- if (!args_._input_test.empty()) {
+ if (!args_._input_test.has_value()) {
   throw std::runtime_error("Only exactly one start rule allowed with --input-test");
  }
 }

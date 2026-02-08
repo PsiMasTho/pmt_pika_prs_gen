@@ -3,5 +3,5 @@
 #include <string>
 
 namespace pmt::util {
-auto get_timestamp() -> std::string;
+auto get_timestamp_str() -> std::string;
 }

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <iosfwd>
-#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -13,16 +12,16 @@ public:
  std::vector<std::string> _start_rules;
 
  std::vector<std::string> _input_grammar;
- std::string _input_test;
+ std::optional<std::string> _input_test;
 
- std::unique_ptr<std::ostream> _output_header;
- std::unique_ptr<std::ostream> _output_source;
- std::unique_ptr<std::ostream> _output_test;
- std::unique_ptr<std::ostream> _output_id_strings;
- std::unique_ptr<std::ostream> _output_id_constants;
- std::unique_ptr<std::ostream> _output_grammar;
- std::unique_ptr<std::ostream> _output_clauses;
- std::unique_ptr<std::ostream> _output_terminal_dotfile;
+ std::optional<std::string> _output_header_path;
+ std::optional<std::string> _output_source_path;
+ std::optional<std::string> _output_test_path;
+ std::optional<std::string> _output_id_strings_path;
+ std::optional<std::string> _output_id_constants_path;
+ std::optional<std::string> _output_grammar_path;
+ std::optional<std::string> _output_clauses_path;
+ std::optional<std::string> _output_terminal_dotfile_path;
 
  std::string _header_include_path;
  std::string _id_constants_include_path;

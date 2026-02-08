@@ -24,6 +24,7 @@ public:
  bool _can_match_zero : 1 = false;
 
  ExtendedClause(Tag tag_, pmt::rt::IdType id_);
+ virtual ~ExtendedClause() = default;
 
  [[nodiscard]] auto get_tag() const -> Tag override;
  [[nodiscard]] auto get_id() const -> pmt::rt::IdType override;

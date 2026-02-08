@@ -1,11 +1,11 @@
-#include "pmt/meta/grammar_to_str.hpp"
+#include "pmt/meta/grammar_to_pika_str.hpp"
 
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/literal_to_str.hpp"
 #include "pmt/meta/rule.hpp"
 #include "pmt/rt/clause_base.hpp"
+#include "pmt/util/get_timestamp_str.hpp"
 #include "pmt/util/overloaded.hpp"
-#include "pmt/util/timestamp.hpp"
 
 #include <cassert>
 #include <set>
@@ -184,7 +184,7 @@ auto rule_to_str(Grammar const& grammar_, Locals& locals_, std::string const& ru
 
 }  // namespace
 
-auto grammar_to_string(Grammar const& grammar_) -> std::string {
+auto grammar_to_pika_str(Grammar const& grammar_) -> std::string {
  Locals locals;
 
  std::set<std::string> const rule_names = [&] {
@@ -192,7 +192,7 @@ auto grammar_to_string(Grammar const& grammar_) -> std::string {
   return std::set<std::string>(unsorted.begin(), unsorted.end());
  }();
 
- std::string ret = "/* Generated on: " + pmt::util::get_timestamp() + " */\n";
+ std::string ret = "/* Generated on: " + pmt::util::get_timestamp_str() + " */\n";
 
  std::string delim;
  for (auto const& rule_name : rule_names) {

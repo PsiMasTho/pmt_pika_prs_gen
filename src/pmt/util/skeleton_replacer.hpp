@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 namespace pmt::util {
-class SkeletonReplacerBase {
+class SkeletonReplacer {
 private:
  // -$ Types / Constants $-
  struct HeterogeneousHasher {
@@ -20,6 +20,6 @@ private:
 public:
  // -$ Functions $-
  // --$ Other $--
- void replace_skeleton_label(std::string& dest_, std::string_view label_, std::string const& replacement_);
+ void replace_label(std::string& dest_, std::string_view label_, std::string const& replacement_);
 };
 }  // namespace pmt::util

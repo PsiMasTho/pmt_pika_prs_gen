@@ -1,4 +1,4 @@
-#include "pmt/builder/pika_tables_to_str.hpp"
+#include "pmt/builder/pika_tables_to_txt_str.hpp"
 
 #include "pmt/builder/pika_tables.hpp"
 #include "pmt/meta/literal_to_str.hpp"
@@ -54,7 +54,7 @@ auto clause_block_to_str(PikaTables const& program_, IdType clause_id_) -> std::
 
 }  // namespace
 
-auto pika_tables_to_string(PikaTables const& program_) -> std::string {
+auto pika_tables_to_txt_str(PikaTables const& program_) -> std::string {
  std::string ret;
  for (size_t i = 0; i < program_.get_clause_count(); ++i) {
   ret += clause_block_to_str(program_, i);
