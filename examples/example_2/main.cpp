@@ -2,7 +2,7 @@
 #include "square_tables.hpp"  // <- generated
 
 #include <pmt/rt/ast_to_string.hpp>  // <- pmt_ast, should be installed
-#include <pmt/rt/pika_parser.hpp>    // <- pmt_pika_prs_gen_rt, should be installed
+#include <pmt/rt/pika_parser.hpp>    // <- pmt_pika_rt, should be installed
 
 #include <cstring>
 #include <fstream>
