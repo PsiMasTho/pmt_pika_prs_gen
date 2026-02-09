@@ -113,7 +113,7 @@ void handle_skel_args(Args& args_, argparse::ArgumentParser& cmdl_) {
   args_._id_constants_skel = pmt::util::read_file(cmdl_.present("--id-constants-skel").value_or(skeleton_paths.resolve("cpp/id_constants-skel.hpp")));
  }
  if (args_._output_terminal_dotfile_path.has_value()) {
-  args_._terminal_dotfile_skel = pmt::util::read_file(cmdl_.present("--terminal-dotfile-skel").value_or(skeleton_paths.resolve("dot/state_machine-skel.hpp")));
+  args_._terminal_dotfile_skel = pmt::util::read_file(cmdl_.present("--terminal-dotfile-skel").value_or(skeleton_paths.resolve("dot/state_machine-skel.dot")));
  }
  if (args_._output_header_path.has_value()) {
   args_._header_skel = pmt::util::read_file(cmdl_.present("--header-skel").value_or(skeleton_paths.resolve("cpp/pika_tables-skel.hpp")));
