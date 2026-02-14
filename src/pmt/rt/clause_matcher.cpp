@@ -4,6 +4,7 @@
 #include "pmt/rt/pika_tables_base.hpp"
 
 #include <cassert>
+#include <exception>
 
 namespace pmt::rt {
 namespace {
@@ -75,7 +76,7 @@ auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std
    return match_identifier(memo_table_, key_, input_, pika_tables_);
   case ClauseBase::Tag::CharsetLiteral:
   default:
-   assert(false && "UNREACHABLE");
+   std::terminate();  // unreachable
  }
 }
 }  // namespace pmt::rt
