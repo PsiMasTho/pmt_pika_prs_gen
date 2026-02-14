@@ -109,7 +109,7 @@ class Clause : public ClauseBase {
 
 public:
  // -$ Functions $-
- // --$ Inherited: pmt::rt::ClauseBase $--
+ // --$ Inherited: ClauseBase $--
  auto get_tag() const -> ClauseBase::Tag override {
   return CLAUSE_TAGS[_id];
  }
@@ -174,6 +174,14 @@ class TerminalTables : public StateMachineTablesBase {
 public:
  // -$ Functions $-
  // --$ Inherited: pmt::rt::StateMachineTablesBase $--
+ auto get_state_nr_start() const -> StateNrType override {
+  return /* $replace STATE_NR_START */;
+ }
+
+ auto get_state_nr_invalid() const -> StateNrType override {
+  return /* $replace STATE_NR_INVALID */;
+ }
+
  auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType override {
   size_t const start = TERMINAL_TRANSITIONS_OFFSETS[state_nr_];
   size_t const end = TERMINAL_TRANSITIONS_OFFSETS[state_nr_ + 1];
@@ -191,19 +199,19 @@ public:
 
   if (idx == lowers.size()) {
    if (idx == 0 || symbol_ > uppers[idx - 1]) {
-    return StateNrInvalid;
+    return get_state_nr_invalid();
    }
    return values[idx - 1];
   }
 
   if (symbol_ < lowers[idx]) {
    if (idx == 0) {
-    return StateNrInvalid;
+    return get_state_nr_invalid();
    }
    if (symbol_ <= uppers[idx - 1]) {
     return values[idx - 1];
    }
-   return StateNrInvalid;
+   return get_state_nr_invalid();
   }
 
   return values[idx];
@@ -243,7 +251,7 @@ class RuleParameters : public RuleParametersBase {
 
 public:
  // -$ Functions $-
- // --$ Inherited: pmt::rt::RuleParametersBase $--
+ // --$ Inherited: RuleParametersBase $--
  auto get_display_name() const -> std::string_view override {
   return STRING_TABLE[RULE_PARAMETER_DISPLAY_NAMES_INDIRECT[_rule_id]];
  }

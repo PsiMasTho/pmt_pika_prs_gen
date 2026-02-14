@@ -4,7 +4,8 @@
 #include "pmt/rt/pika_tables_base.hpp"
 #include "pmt/rt/reserved_ids.hpp"
 #include "pmt/rt/rule_parameters_base.hpp"
-#include "pmt/unreachable.hpp"
+
+#include <cassert>
 
 namespace pmt::rt {
 
@@ -88,7 +89,7 @@ void process_and_add_child(pmt::rt::Ast& parent_, pmt::rt::Ast::UniqueHandle chi
   case ClauseBase::Tag::Epsilon:
    break;
   default:
-   pmt::unreachable();
+   assert(false && "UNREACHABLE");
  }
 }
 
@@ -145,7 +146,7 @@ auto build_ast(MemoTable::IndexType const& root_match_index_, MemoTable const& m
   } else if (child_tag == ClauseBase::Tag::CharsetLiteral) {
    process_and_add_child(*frame._ast_node, make_string_node(input_, *child._key, *child._match), *child._key, pika_tables_);
   } else if (!is_ignored_tag(child_tag)) {
-   pmt::unreachable();
+   assert(false && "UNREACHABLE");
   }
  }
 

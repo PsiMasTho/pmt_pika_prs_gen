@@ -1,6 +1,6 @@
 #include "pmt/rt/clause_base.hpp"
 
-#include "pmt/unreachable.hpp"
+#include <cassert>
 
 namespace pmt::rt {
 
@@ -27,7 +27,7 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
   case Tag::Epsilon:
    return "Epsilon";
   default:
-   pmt::unreachable();
+   assert(false && "UNREACHABLE");
  }
 }
 

@@ -1,7 +1,5 @@
 #include "pmt/rt/ast.hpp"
 
-#include "pmt/unreachable.hpp"
-
 #include <cassert>
 #include <iterator>
 #include <vector>
@@ -20,7 +18,7 @@ Ast::Ast(Tag tag_, IdType id_)
    case Tag::Parent:
     return ParentType{};
    default:
-    pmt::unreachable();
+    assert(false && "UNREACHABLE");
   }
  }()}
  , _id(id_) {

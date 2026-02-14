@@ -156,7 +156,7 @@ void replace_terminal_tables(PikaTables const& pika_tables_, std::string& source
  auto skeleton_replacer = Singleton<SkeletonReplacer>::instance();
 
  StateMachineTables const& terminal_tables = pika_tables_.get_terminal_state_machine_tables_full();
- StateMachine const& state_machine = terminal_tables.get_state_machine();
+ pmt::sm::StateMachine const& state_machine = terminal_tables.get_state_machine();
  size_t const state_count = state_machine.get_state_count();
  replace_number(source_skel_, "", "TERMINAL_STATE_COUNT", state_count);
 
@@ -171,10 +171,10 @@ void replace_terminal_tables(PikaTables const& pika_tables_, std::string& source
  final_ids_offsets.reserve(state_count + 1);
 
  for (size_t state_nr = 0; state_nr < state_count; ++state_nr) {
-  State const* state = state_machine.get_state(state_nr);
+  pmt::sm::State const* state = state_machine.get_state(state_nr);
   assert(state != nullptr);
 
-  state->get_symbol_transitions().for_each_interval([&](StateNrType const& state_nr_next_, Interval<SymbolType> interval_) {
+  state->get_symbol_transitions().for_each_interval([&](StateNrType const& state_nr_next_, Interval<pmt::sm::SymbolType> interval_) {
    transitions_lowers.push_back(interval_.get_lower());
    transitions_uppers.push_back(interval_.get_upper());
    transitions_values.push_back(state_nr_next_);
@@ -200,6 +200,8 @@ void replace_terminal_tables(PikaTables const& pika_tables_, std::string& source
  replace_numeric_list(source_skel_, "TERMINAL_FINAL_IDS_OFFSETS_TYPE", "TERMINAL_FINAL_IDS_OFFSETS", final_ids_offsets, true);
  replace_number(source_skel_, "", "TERMINAL_FINAL_IDS_SIZE", final_ids.size());
  replace_number(source_skel_, "", "TERMINAL_TRANSITIONS_SIZE", transitions.size());
+ replace_number(source_skel_, "", "STATE_NR_START", terminal_tables.get_state_nr_start());
+ replace_number(source_skel_, "", "STATE_NR_INVALID", terminal_tables.get_state_nr_invalid());
 }
 
 void replace_clauses(PikaTables const& pika_tables_, std::string& source_skel_) {

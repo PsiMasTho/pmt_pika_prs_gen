@@ -11,6 +11,7 @@ Warning: This is an experimental hobby project. I may change or break things at 
 ### This repository:
 - C++20 compiler
 - CMake ≥ 3.9
+- libpmt (https://github.com/PsiMasTho/pmt)
 ### The generated parsers
 - C++20 compiler
 - `pmt_pika_rt` (library + headers)

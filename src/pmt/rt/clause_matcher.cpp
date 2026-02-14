@@ -2,7 +2,8 @@
 
 #include "pmt/rt/clause_base.hpp"
 #include "pmt/rt/pika_tables_base.hpp"
-#include "pmt/unreachable.hpp"
+
+#include <cassert>
 
 namespace pmt::rt {
 namespace {
@@ -74,7 +75,7 @@ auto ClauseMatcher::match(MemoTable const& memo_table_, MemoTable::Key key_, std
    return match_identifier(memo_table_, key_, input_, pika_tables_);
   case ClauseBase::Tag::CharsetLiteral:
   default:
-   pmt::unreachable();
+   assert(false && "UNREACHABLE");
  }
 }
 }  // namespace pmt::rt

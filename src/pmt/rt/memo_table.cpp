@@ -1,6 +1,5 @@
 #include "pmt/rt/memo_table.hpp"
 
-#include "pmt/hash.hpp"
 #include "pmt/rt/clause_base.hpp"
 #include "pmt/rt/pika_tables_base.hpp"
 
@@ -8,14 +7,20 @@
 
 namespace pmt::rt {
 
+namespace {
+enum : size_t {
+ Phi = 0x9E3779B97f4A7C15U,
+};
+}  // namespace
+
 MemoTable::KeyHashIndirect::KeyHashIndirect(std::vector<MemoTable::Key> const& keys_)
  : _keys(keys_) {
 }
 
 auto MemoTable::KeyHashIndirect::operator()(Key const& key_) const -> size_t {
- size_t seed = Hash::Phi64;
- Hash::combine(key_._clause, seed);
- Hash::combine(key_._position, seed);
+ size_t seed = Phi;
+ seed ^= (static_cast<size_t>(key_._clause->get_id()) + Phi + (seed << 6) + (seed >> 2));
+ seed ^= (static_cast<size_t>(key_._position) + Phi + (seed << 6) + (seed >> 2));
  return seed;
 }
 

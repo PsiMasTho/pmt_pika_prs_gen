@@ -1,7 +1,7 @@
 #include "pmt/builder/terminal_fsm_to_dot_str.hpp"
 
-#include "pmt/builder/state_machine.hpp"
 #include "pmt/container/interval_set.hpp"
+#include "pmt/sm/state_machine.hpp"
 #include "pmt/util/get_timestamp_str.hpp"
 #include "pmt/util/singleton.hpp"
 #include "pmt/util/skeleton_replacer.hpp"
@@ -66,10 +66,10 @@ auto build_symbol_label(IntervalSet<SymbolType> const& symbol_intervals_) -> std
  return label;
 }
 
-auto make_final_id_table_string(StateMachine const& state_machine_, FinalIdToStringFn const& final_id_to_str_) -> std::string {
+auto make_final_id_table_string(pmt::sm::StateMachine const& state_machine_, FinalIdToStringFn const& final_id_to_str_) -> std::string {
  std::unordered_map<IdType, std::set<StateNrType>> final_ids;
  for (StateNrType const state_nr : state_machine_.get_state_nrs()) {
-  State const& state = *state_machine_.get_state(state_nr);
+  pmt::sm::State const& state = *state_machine_.get_state(state_nr);
   state.get_final_ids().for_each_key([&](IdType final_id_) { final_ids[final_id_].insert(state_nr); });
  }
 
@@ -88,7 +88,7 @@ auto make_final_id_table_string(StateMachine const& state_machine_, FinalIdToStr
 
 }  // namespace
 
-auto terminal_fsm_to_dot_str(StateMachine const& state_machine_, FinalIdToStringFn const& final_id_to_str_, std::string terminal_dotfile_skel_) -> std::string {
+auto terminal_fsm_to_dot_str(pmt::sm::StateMachine const& state_machine_, FinalIdToStringFn const& final_id_to_str_, std::string terminal_dotfile_skel_) -> std::string {
  auto skeleton_replacer = Singleton<SkeletonReplacer>::instance();
 
  std::string accepting_nodes_replacement;
@@ -114,7 +114,7 @@ auto terminal_fsm_to_dot_str(StateMachine const& state_machine_, FinalIdToString
   std::string space;
   symbol_edges_replacement += std::exchange(space, " ") + "edge [color=" + rgb_to_str(0, 0, 0) + ", style=solid]\n";
   for (StateNrType const state_nr : state_machine_.get_state_nrs()) {
-   State const& state = *state_machine_.get_state(state_nr);
+   pmt::sm::State const& state = *state_machine_.get_state(state_nr);
    std::unordered_map<StateNrType, IntervalSet<SymbolType>> symbol_intervals_per_state_nr_next;
    state.get_symbols().for_each_key([&](SymbolType symbol_) { symbol_intervals_per_state_nr_next[state.get_symbol_transition(symbol_)].insert(Interval(symbol_)); });
 

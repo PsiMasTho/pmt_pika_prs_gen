@@ -1,5 +1,3 @@
 add_subdirectory(builder)
-add_subdirectory(container)
 add_subdirectory(meta)
 add_subdirectory(rt)
-add_subdirectory(util)

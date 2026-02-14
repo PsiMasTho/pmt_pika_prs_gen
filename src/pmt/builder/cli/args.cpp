@@ -132,7 +132,7 @@ void check_multiple_start_rule_validity(Args const& args_) {
  if (args_._output_source_path.has_value()) {
   throw std::runtime_error("Only exactly one start rule allowed with --output-source");
  }
- if (!args_._input_test.has_value()) {
+ if (args_._input_test.has_value()) {
   throw std::runtime_error("Only exactly one start rule allowed with --input-test");
  }
 }

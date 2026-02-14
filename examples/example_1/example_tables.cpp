@@ -1,4 +1,4 @@
-/* Generated on: 2026-02-06 22:32:13 */
+/* Generated on: 2026-02-14 17:24:53 */
 // clang-format off
 #include "example_tables.hpp"
 
@@ -34,7 +34,6 @@ using ClauseSeedParentIdsOffsetsType = uint8_t;
 using ClauseSeedParentIdsType = uint8_t;
 using ClauseSpecialIdType = uint8_t;
 using RuleParameterDisplayNameIndirectType = uint8_t;
-using RuleParameterIdStringIndirectType = uint8_t;
 using RuleParameterIdTableType = uint64_t;
 using RuleParameterIdIndirectType = uint8_t;
 using ClauseClassIdType = uint8_t;
@@ -43,7 +42,7 @@ using RuleParameterClassIdType = uint8_t;
 using RuleParameterBooleansType = uint64_t;
 
 enum : size_t {
- StringTableSize = 0xB,
+ StringTableSize = 0x9,
  TerminalStateCount = 0x4,
  TerminalTransitionsSize = 0x12,
  TerminalTransitionsOffsetsSize = TerminalStateCount + 1,
@@ -72,7 +71,7 @@ auto get_bit(CHUNK_T_ const* chunks_, size_t idx_) -> bool {
 }
 
 std::array<char const* const, StringTableSize> const STRING_TABLE = {
- "A", "A_Flat", "B", "B_L_Recursive", "C", "C_R_Recursive", "Holder", "IdDefault", "S", "__plus_0", "__plus_body_0"
+ "A", "A_Flat", "B", "B_L_Recursive", "C", "C_R_Recursive", "S", "__plus_0", "__plus_body_0"
 };
 
 std::array<ClauseBase::Tag const, ClauseCount> const CLAUSE_TAGS = {
@@ -121,7 +120,7 @@ class Clause : public ClauseBase {
 
 public:
  // -$ Functions $-
- // --$ Inherited: pmt::rt::ClauseBase $--
+ // --$ Inherited: ClauseBase $--
  auto get_tag() const -> ClauseBase::Tag override {
   return CLAUSE_TAGS[_id];
  }
@@ -186,6 +185,14 @@ class TerminalTables : public StateMachineTablesBase {
 public:
  // -$ Functions $-
  // --$ Inherited: pmt::rt::StateMachineTablesBase $--
+ auto get_state_nr_start() const -> StateNrType override {
+  return 0x0;
+ }
+
+ auto get_state_nr_invalid() const -> StateNrType override {
+  return 0xFFFFFFFF;
+ }
+
  auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType override {
   size_t const start = TERMINAL_TRANSITIONS_OFFSETS[state_nr_];
   size_t const end = TERMINAL_TRANSITIONS_OFFSETS[state_nr_ + 1];
@@ -203,19 +210,19 @@ public:
 
   if (idx == lowers.size()) {
    if (idx == 0 || symbol_ > uppers[idx - 1]) {
-    return StateNrInvalid;
+    return get_state_nr_invalid();
    }
    return values[idx - 1];
   }
 
   if (symbol_ < lowers[idx]) {
    if (idx == 0) {
-    return StateNrInvalid;
+    return get_state_nr_invalid();
    }
    if (symbol_ <= uppers[idx - 1]) {
     return values[idx - 1];
    }
-   return StateNrInvalid;
+   return get_state_nr_invalid();
   }
 
   return values[idx];
@@ -234,11 +241,7 @@ public:
 };
 
 std::array<RuleParameterDisplayNameIndirectType const, RuleParameterCount> const RULE_PARAMETER_DISPLAY_NAMES_INDIRECT = {
- 0x0, 0xA, 0x9, 0xA, 0x9, 0x1, 0x3, 0x2, 0x3, 0x4, 0x5, 0x5, 0x8
-};
-
-std::array<RuleParameterIdStringIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_STRINGS_INDIRECT = {
- 0x0, 0x7, 0x7, 0x7, 0x7, 0x6, 0x6, 0x2, 0x6, 0x4, 0x6, 0x6, 0x7
+ 0x0, 0x8, 0x7, 0x8, 0x7, 0x1, 0x3, 0x2, 0x3, 0x4, 0x5, 0x5, 0x6
 };
 
 std::array<RuleParameterIdTableType const, RuleParameterIdTableSize> const RULE_PARAMETER_ID_TABLE = {
@@ -259,13 +262,9 @@ class RuleParameters : public RuleParametersBase {
 
 public:
  // -$ Functions $-
- // --$ Inherited: pmt::rt::RuleParametersBase $--
+ // --$ Inherited: RuleParametersBase $--
  auto get_display_name() const -> std::string_view override {
   return STRING_TABLE[RULE_PARAMETER_DISPLAY_NAMES_INDIRECT[_rule_id]];
- }
-
- auto get_id_string() const -> std::string_view override {
-  return STRING_TABLE[RULE_PARAMETER_ID_STRINGS_INDIRECT[_rule_id]];
  }
 
  auto get_id_value() const -> IdType override {

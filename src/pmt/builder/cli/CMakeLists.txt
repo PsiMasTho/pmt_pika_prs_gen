@@ -1,7 +1,13 @@
 file(GLOB SOURCES "*.cpp")
 
+find_package(pmt CONFIG REQUIRED)
+
 add_executable(pmt_pika_prs_gen_cli ${SOURCES})
-target_link_libraries(pmt_pika_prs_gen_cli ${PROJECT_NAME}_builder)
+target_link_libraries(pmt_pika_prs_gen_cli
+  ${PROJECT_NAME}_builder
+  ${PROJECT_NAME}_meta
+  pmt
+)
 
 target_include_directories(pmt_pika_prs_gen_cli PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)

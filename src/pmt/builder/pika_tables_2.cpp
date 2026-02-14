@@ -1,9 +1,9 @@
 #include "pmt/builder/pika_tables.hpp"
 
-#include "pmt/builder/state_machine.hpp"
-#include "pmt/builder/state_machine_determinizer.hpp"
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/rule_expression.hpp"
+#include "pmt/sm/state_machine.hpp"
+#include "pmt/sm/state_machine_determinizer.hpp"
 #include "pmt/unreachable.hpp"
 #include "pmt/util/unique_rac_builder.hpp"
 
@@ -13,19 +13,19 @@ using namespace pmt::rt;
 using namespace pmt::container;
 
 namespace {
-auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_literals_, std::span<IdType const> charset_literal_clause_unique_ids_) -> StateMachine {
- StateMachine ret;
+auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_literals_, std::span<IdType const> charset_literal_clause_unique_ids_) -> pmt::sm::StateMachine {
+ pmt::sm::StateMachine ret;
  ret.create_new_state();  // StateNrStart
 
  for (size_t idx = 0; CharsetLiteral const& charset_literal : charset_literals_) {
   StateNrType state_nr_prev = ret.create_new_state();
-  ret.get_state(StateNrStart)->add_epsilon_transition(state_nr_prev);
+  ret.get_state(pmt::sm::StateNrStart)->add_epsilon_transition(state_nr_prev);
 
   for (size_t i = 1; i < charset_literal.size() + 1; ++i) {
    StateNrType state_nr_cur = ret.create_new_state();
 
    if (!charset_literal.get_symbol_set_at(i - 1).empty()) {
-    charset_literal.get_symbol_set_at(i - 1).for_each_interval([&](Interval<SymbolType> interval_) { ret.get_state(state_nr_prev)->add_symbol_transitions(interval_, state_nr_cur); });
+    charset_literal.get_symbol_set_at(i - 1).for_each_interval([&](Interval<SymbolType> interval_) { ret.get_state(state_nr_prev)->add_symbol_transitions(Interval<pmt::sm::SymbolType>(interval_.get_lower(), interval_.get_upper()), state_nr_cur); });
    } else {
     ret.get_state(state_nr_prev)->add_epsilon_transition(state_nr_cur);
    }
@@ -36,7 +36,7 @@ auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_l
   ret.get_state(state_nr_prev)->add_final_id(charset_literal_clause_unique_ids_[idx++]);
  }
 
- return StateMachineDeterminizer::determinize(ret, StateNrStart);
+ return pmt::sm::StateMachineDeterminizer::determinize(ret, pmt::sm::StateNrStart);
 }
 
 }  // namespace
