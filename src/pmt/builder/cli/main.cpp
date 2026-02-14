@@ -3,12 +3,12 @@
 #include "pmt/builder/pika_tables.hpp"
 #include "pmt/builder/pika_tables_to_cpp_str.hpp"
 #include "pmt/builder/pika_tables_to_txt_str.hpp"
-#include "pmt/sm/sm_to_dot_str.hpp"
 #include "pmt/meta/grammar_loader.hpp"
 #include "pmt/meta/grammar_to_pika_str.hpp"
 #include "pmt/rt/ast.hpp"
 #include "pmt/rt/ast_to_string.hpp"
 #include "pmt/rt/pika_parser.hpp"
+#include "pmt/sm/sm_to_dot_str.hpp"
 #include "pmt/util/singleton.hpp"
 #include "pmt/util/skeleton_replacer.hpp"
 

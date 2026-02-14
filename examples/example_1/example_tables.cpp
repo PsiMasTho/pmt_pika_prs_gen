@@ -1,4 +1,4 @@
-/* Generated on: 2026-02-14 17:24:53 */
+/* Generated on: 2026-02-14 22:07:59 */
 // clang-format off
 #include "example_tables.hpp"
 
@@ -185,14 +185,6 @@ class TerminalTables : public StateMachineTablesBase {
 public:
  // -$ Functions $-
  // --$ Inherited: pmt::rt::StateMachineTablesBase $--
- auto get_state_nr_start() const -> StateNrType override {
-  return 0x0;
- }
-
- auto get_state_nr_invalid() const -> StateNrType override {
-  return 0xFFFFFFFF;
- }
-
  auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType override {
   size_t const start = TERMINAL_TRANSITIONS_OFFSETS[state_nr_];
   size_t const end = TERMINAL_TRANSITIONS_OFFSETS[state_nr_ + 1];
@@ -210,19 +202,19 @@ public:
 
   if (idx == lowers.size()) {
    if (idx == 0 || symbol_ > uppers[idx - 1]) {
-    return get_state_nr_invalid();
+    return StateNrInvalid;
    }
    return values[idx - 1];
   }
 
   if (symbol_ < lowers[idx]) {
    if (idx == 0) {
-    return get_state_nr_invalid();
+    return StateNrInvalid;
    }
    if (symbol_ <= uppers[idx - 1]) {
     return values[idx - 1];
    }
-   return get_state_nr_invalid();
+   return StateNrInvalid;
   }
 
   return values[idx];

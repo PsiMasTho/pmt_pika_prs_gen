@@ -174,14 +174,6 @@ class TerminalTables : public StateMachineTablesBase {
 public:
  // -$ Functions $-
  // --$ Inherited: pmt::rt::StateMachineTablesBase $--
- auto get_state_nr_start() const -> StateNrType override {
-  return /* $replace STATE_NR_START */;
- }
-
- auto get_state_nr_invalid() const -> StateNrType override {
-  return /* $replace STATE_NR_INVALID */;
- }
-
  auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType override {
   size_t const start = TERMINAL_TRANSITIONS_OFFSETS[state_nr_];
   size_t const end = TERMINAL_TRANSITIONS_OFFSETS[state_nr_ + 1];
@@ -199,19 +191,19 @@ public:
 
   if (idx == lowers.size()) {
    if (idx == 0 || symbol_ > uppers[idx - 1]) {
-    return get_state_nr_invalid();
+    return StateNrInvalid;
    }
    return values[idx - 1];
   }
 
   if (symbol_ < lowers[idx]) {
    if (idx == 0) {
-    return get_state_nr_invalid();
+    return StateNrInvalid;
    }
    if (symbol_ <= uppers[idx - 1]) {
     return values[idx - 1];
    }
-   return get_state_nr_invalid();
+   return StateNrInvalid;
   }
 
   return values[idx];

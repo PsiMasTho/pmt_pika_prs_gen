@@ -200,8 +200,6 @@ void replace_terminal_tables(PikaTables const& pika_tables_, std::string& source
  replace_numeric_list(source_skel_, "TERMINAL_FINAL_IDS_OFFSETS_TYPE", "TERMINAL_FINAL_IDS_OFFSETS", final_ids_offsets, true);
  replace_number(source_skel_, "", "TERMINAL_FINAL_IDS_SIZE", final_ids.size());
  replace_number(source_skel_, "", "TERMINAL_TRANSITIONS_SIZE", transitions.size());
- replace_number(source_skel_, "", "STATE_NR_START", terminal_tables.get_state_nr_start());
- replace_number(source_skel_, "", "STATE_NR_INVALID", terminal_tables.get_state_nr_invalid());
 }
 
 void replace_clauses(PikaTables const& pika_tables_, std::string& source_skel_) {

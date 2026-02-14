@@ -2,8 +2,8 @@
 
 #include "pmt/meta/grammar.hpp"
 #include "pmt/meta/rule_expression.hpp"
+#include "pmt/sm/sm_determinize.hpp"
 #include "pmt/sm/state_machine.hpp"
-#include "pmt/sm/state_machine_determinizer.hpp"
 #include "pmt/unreachable.hpp"
 #include "pmt/util/unique_rac_builder.hpp"
 
@@ -19,7 +19,7 @@ auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_l
 
  for (size_t idx = 0; CharsetLiteral const& charset_literal : charset_literals_) {
   StateNrType state_nr_prev = ret.create_new_state();
-  ret.get_state(pmt::sm::StateNrStart)->add_epsilon_transition(state_nr_prev);
+  ret.get_state(pmt::rt::StateNrStart)->add_epsilon_transition(state_nr_prev);
 
   for (size_t i = 1; i < charset_literal.size() + 1; ++i) {
    StateNrType state_nr_cur = ret.create_new_state();
@@ -36,7 +36,7 @@ auto charset_literals_to_state_machine(std::span<CharsetLiteral const> charset_l
   ret.get_state(state_nr_prev)->add_final_id(charset_literal_clause_unique_ids_[idx++]);
  }
 
- return pmt::sm::StateMachineDeterminizer::determinize(ret, pmt::sm::StateNrStart);
+ return pmt::sm::sm_determinize(ret, StateNrStart);
 }
 
 }  // namespace

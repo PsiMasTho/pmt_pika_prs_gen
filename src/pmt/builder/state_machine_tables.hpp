@@ -19,9 +19,6 @@ public:
  explicit StateMachineTables(pmt::sm::StateMachine state_machine_ = {});
 
  // --$ Inherited: pmt::util::sm::StateMachineTablesBase $--
- auto get_state_nr_start() const -> pmt::rt::StateNrType override;
- auto get_state_nr_invalid() const -> pmt::rt::StateNrType override;
-
  auto get_state_nr_next(pmt::rt::StateNrType state_nr_, pmt::rt::SymbolType symbol_) const -> pmt::rt::StateNrType override;
 
  auto get_state_final_id_count(pmt::rt::StateNrType state_nr_) const -> size_t override;

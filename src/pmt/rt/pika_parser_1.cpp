@@ -11,9 +11,9 @@ namespace {
 
 void scan_terminals(StateMachineTablesBase const& terminal_state_machine_tables_, size_t cursor_, MemoTable& memo_table_, ClauseQueue& clause_queue_, std::string_view input_, PikaTablesBase const& pika_tables_) {
  size_t const cursor_start = cursor_;
- StateNrType state_nr_cur = terminal_state_machine_tables_.get_state_nr_start();
+ StateNrType state_nr_cur = StateNrStart;
 
- for (; cursor_ < input_.size() + 1 && state_nr_cur != terminal_state_machine_tables_.get_state_nr_invalid(); ++cursor_) {
+ for (; cursor_ < input_.size() + 1 && state_nr_cur != StateNrInvalid; ++cursor_) {
   if (size_t const accept_count = terminal_state_machine_tables_.get_state_final_id_count(state_nr_cur); accept_count > 0) {
    for (size_t i = 0; i < accept_count; ++i) {
     IdType const accept_ = terminal_state_machine_tables_.get_state_final_id(state_nr_cur, i);

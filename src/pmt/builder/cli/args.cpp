@@ -2,11 +2,11 @@
 
 #include "argparse/argparse.hpp"
 
-#include "pmt/builder/skeleton_paths.hpp"
-#include "pmt/util/read_file.hpp"
-#include "pmt/sm/sm_to_dot_str.hpp"
-#include "pmt/builder/pika_tables_to_cpp_str.hpp"
 #include "pmt/builder/id_table_to_cpp_str.hpp"
+#include "pmt/builder/pika_tables_to_cpp_str.hpp"
+#include "pmt/builder/skeleton_paths.hpp"
+#include "pmt/sm/sm_to_dot_str.hpp"
+#include "pmt/util/read_file.hpp"
 
 namespace pmt::builder::cli {
 namespace {

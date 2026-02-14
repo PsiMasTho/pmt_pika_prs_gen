@@ -1,9 +1,8 @@
 #include "pmt/builder/state_machine_tables.hpp"
 
-#include "pmt/sm/primitives.hpp"
+#include "pmt/rt/primitives.hpp"
 
 #include <cassert>
-#include <limits>
 
 namespace pmt::builder {
 using namespace pmt::rt;
@@ -16,17 +15,9 @@ StateMachineTables::StateMachineTables(pmt::sm::StateMachine state_machine_)
  init_cache();
 }
 
-auto StateMachineTables::get_state_nr_start() const -> pmt::rt::StateNrType {
- return pmt::sm::StateNrStart;
-}
-
-auto StateMachineTables::get_state_nr_invalid() const -> pmt::rt::StateNrType {
- return std::numeric_limits<StateNrType>::max();
-}
-
 auto StateMachineTables::get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType {
  pmt::sm::State const* state = _state_machine.get_state(state_nr_);
- return state ? state->get_symbol_transition(symbol_) : get_state_nr_invalid();
+ return state ? state->get_symbol_transition(symbol_).value_or(StateNrInvalid) : StateNrInvalid;
 }
 
 auto StateMachineTables::get_state_final_id_count(StateNrType state_nr_) const -> size_t {
