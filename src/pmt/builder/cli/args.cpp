@@ -4,6 +4,9 @@
 
 #include "pmt/builder/skeleton_paths.hpp"
 #include "pmt/util/read_file.hpp"
+#include "pmt/sm/sm_to_dot_str.hpp"
+#include "pmt/builder/pika_tables_to_cpp_str.hpp"
+#include "pmt/builder/id_table_to_cpp_str.hpp"
 
 namespace pmt::builder::cli {
 namespace {
@@ -107,19 +110,19 @@ void handle_skel_args(Args& args_, argparse::ArgumentParser& cmdl_) {
   skeleton_paths.set_root_override(skel_dir);
  }
  if (args_._output_id_strings_path.has_value()) {
-  args_._id_strings_skel = pmt::util::read_file(cmdl_.present("--id-strings-skel").value_or(skeleton_paths.resolve("cpp/id_strings-skel.hpp")));
+  args_._id_strings_skel = pmt::util::read_file(cmdl_.present("--id-strings-skel").value_or(skeleton_paths.resolve(id_strings_skel_path_rel)));
  }
  if (args_._output_id_constants_path.has_value()) {
-  args_._id_constants_skel = pmt::util::read_file(cmdl_.present("--id-constants-skel").value_or(skeleton_paths.resolve("cpp/id_constants-skel.hpp")));
+  args_._id_constants_skel = pmt::util::read_file(cmdl_.present("--id-constants-skel").value_or(skeleton_paths.resolve(id_constants_skel_path_rel)));
  }
  if (args_._output_terminal_dotfile_path.has_value()) {
-  args_._terminal_dotfile_skel = pmt::util::read_file(cmdl_.present("--terminal-dotfile-skel").value_or(skeleton_paths.resolve("dot/state_machine-skel.dot")));
+  args_._terminal_dotfile_skel = pmt::util::read_file(cmdl_.present("--terminal-dotfile-skel").value_or(skeleton_paths.resolve(pmt::sm::state_machine_dotfile_skel_path_rel)));
  }
  if (args_._output_header_path.has_value()) {
-  args_._header_skel = pmt::util::read_file(cmdl_.present("--header-skel").value_or(skeleton_paths.resolve("cpp/pika_tables-skel.hpp")));
+  args_._header_skel = pmt::util::read_file(cmdl_.present("--header-skel").value_or(skeleton_paths.resolve(pika_tables_hdr_skel_path_rel)));
  }
  if (args_._output_source_path.has_value()) {
-  args_._source_skel = pmt::util::read_file(cmdl_.present("--source-skel").value_or(skeleton_paths.resolve("cpp/pika_tables-skel.cpp")));
+  args_._source_skel = pmt::util::read_file(cmdl_.present("--source-skel").value_or(skeleton_paths.resolve(pika_tables_src_skel_path_rel)));
  }
 }
 

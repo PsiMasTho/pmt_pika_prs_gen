@@ -3,7 +3,7 @@
 #include "pmt/builder/pika_tables.hpp"
 #include "pmt/builder/pika_tables_to_cpp_str.hpp"
 #include "pmt/builder/pika_tables_to_txt_str.hpp"
-#include "pmt/builder/terminal_fsm_to_dot_str.hpp"
+#include "pmt/sm/sm_to_dot_str.hpp"
 #include "pmt/meta/grammar_loader.hpp"
 #include "pmt/meta/grammar_to_pika_str.hpp"
 #include "pmt/rt/ast.hpp"
@@ -72,8 +72,8 @@ auto main(int argc_, char const* const* argv_) -> int try {
  }
 
  if (args._output_terminal_dotfile_path.has_value()) {
-  std::ofstream(*args._output_terminal_dotfile_path) << pmt::builder::terminal_fsm_to_dot_str(
-   pika_tables.get_terminal_state_machine_tables_full().get_state_machine(), [&](pmt::rt::IdType idx_) { return std::to_string(idx_); }, args._terminal_dotfile_skel);
+  std::ofstream(*args._output_terminal_dotfile_path) << pmt::sm::sm_to_dot_str(
+   pika_tables.get_terminal_state_machine_tables_full().get_state_machine(), [&](pmt::sm::FinalIdType id_) { return std::to_string(id_); }, args._terminal_dotfile_skel);
  }
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';
