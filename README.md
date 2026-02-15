@@ -86,19 +86,20 @@ Whitespace, newlines, and comments may appear between tokens:
 * `merge = true | false`
 * `hide = true | false`
 * `unpack = true | false`
-* `id = "IdString"` (identifier-like string, will become a C++ enum constant in the generated code; e.g. `"MyNode_01"`)
+* `id = "IdString"` (identifier-like string, will become a C++ enum constant in the generated code e.g. `"MyNode_01"`)
 * `display_name = "SomeName"`
 
 #### Atoms (terminals and nonterminals)
 * `$identifier` nonterminal reference
 * `"text"` string literal
-* `base#value` integer literal (base is decimal; value digits are `0-9`/`a-z` case-insensitive; base must be in the range `[2, 36]`)
-* `[ "a".."z", "Q", 16#5f ]` charset (comma-separated items; items are character literals like `"Q"` or integer literals; ranges use `..`)
+* `base#value` integer literal (base is decimal. Value digits are `0-9`/`a-z` case-insensitive. Base must be in the range `[2, 36]`)
+* `[ "a".."z", "Q", 16#5f ]` charset (comma-separated items. Items are character literals like `"Q"` or integer literals. Ranges use `..`)
 * `epsilon` succeeds without consuming input
-* `eof` succeeds only at end-of-input, does not consume input. It is optional and not required for successful parsing.
+* `any` equivalent to `[10#0..10#255]`
+* `eof` equivalent to `any!`. Only succeeds only at end-of-input. It is optional and not required for successful parsing.
 
 Notes:
-- There are no escape sequences; anything that cannot appear inside a string must be written as an integer literal. Check the meta-grammar to see what is allowed inside a string.
+- There are no escape sequences. Anything that cannot appear inside a string must be written as an integer literal. Check the meta-grammar to see what is allowed inside a string.
 - Character values are bytes. Any integer literal used as a character value (e.g. in a charset item/range) must be in the `uint8_t` range `[0, 255]`.
 
 #### Expressions
@@ -109,16 +110,16 @@ Notes:
 #### Postfix operators
 These apply to a single atom or a parenthesized group:
 * `e~` hide: suppress `e` in the AST (useful for delimiters/whitespace/comments)
-* `e!` negative lookahead: succeeds if `e` fails; consumes no input
-* `e&` positive lookahead: succeeds if `e` succeeds; consumes no input
-* `e?` optional (same as `e | epsilon`)
+* `e!` negative lookahead: succeeds if `e` fails, consumes no input
+* `e&` positive lookahead: succeeds if `e` succeeds, consumes no input
+* `e?` equivalent to `e | epsilon`
 * `e*` zero-or-more (greedy)
 * `e+` one-or-more (greedy)
 * `e{I}` exactly `I` repetitions
 * `e{I,}` at least `I` repetitions (greedy)
 * `e{,J}` at most `J` repetitions
 * `e{I,J}` between `I` and `J` repetitions (`I <= J`)
-* `e{,}` same as `e*`
+* `e{,}` equivalent to `e*`
 
 `I`/`J` are integer literals (e.g. `10#2`).
 
