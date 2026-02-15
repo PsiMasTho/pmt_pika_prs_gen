@@ -24,10 +24,7 @@
         {
           "name": "string.quoted.double.pika",
           "begin": "\"",
-          "end": "\"",
-          "patterns": [
-            { "match": "\\\\.", "name": "constant.character.escape.pika" }
-          ]
+          "end": "\""
         }
       ]
     },
