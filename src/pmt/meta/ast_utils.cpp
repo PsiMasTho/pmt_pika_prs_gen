@@ -46,10 +46,11 @@ void add_parameters(pmt::rt::Ast& ast_dest_production_, RuleParametersBase const
  }
 }
 
-void add_definition(pmt::rt::Ast& ast_dest_production_, pmt::rt::Ast const& expr_) {
+auto add_definition(pmt::rt::Ast& ast_dest_production_, pmt::rt::Ast const& expr_) -> Ast* {
  Ast::UniqueHandle definition = Ast::construct(Ast::Tag::Parent, Ids::Definition);
  definition->give_child_at_back(Ast::clone(expr_));
  ast_dest_production_.give_child_at_back(std::move(definition));
+ return ast_dest_production_.get_child_at_back();
 }
 
 }  // namespace
@@ -109,12 +110,13 @@ auto AstNodeEq::operator()(AstNodeKey const& lhs_, AstNodeKey const& rhs_) const
  return true;
 }
 
-void add_rule(pmt::rt::Ast& ast_dest_root_, std::string const& rule_name_, RuleParametersBase const& rule_parameters_, pmt::rt::Ast const& expr_) {
+auto add_rule(pmt::rt::Ast& ast_dest_root_, std::string const& rule_name_, RuleParametersBase const& rule_parameters_, pmt::rt::Ast const& expr_) -> Ast* {
  Ast::UniqueHandle production = Ast::construct(Ast::Tag::Parent, Ids::Production);
  add_identifier(*production, rule_name_);
  add_parameters(*production, rule_parameters_, rule_name_);
- add_definition(*production, expr_);
+ Ast* definition = add_definition(*production, expr_);
  ast_dest_root_.give_child_at_back(std::move(production));
+ return definition;
 }
 
 }  // namespace pmt::meta

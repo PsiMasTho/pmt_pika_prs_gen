@@ -2,10 +2,10 @@
 
 #include "pmt/fw_decl.hpp"
 
-PMT_FW_DECL_NS_CLASS(pmt::rt, Ast)
+PMT_FW_DECL_NS_CLASS(pmt::meta, Grammar)
 
 namespace pmt::meta {
 
-void extract_hidden_expressions(pmt::rt::Ast& ast_);
+void normalize_grammar(Grammar& grammar_);
 
 }  // namespace pmt::meta

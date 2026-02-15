@@ -1,12 +1,10 @@
 #include "pmt/meta/grammar_loader.hpp"
 
-#include "pmt/meta/extract_hidden_expressions.hpp"
-#include "pmt/meta/extract_repetition_expressions.hpp"
 #include "pmt/meta/grammar_from_ast.hpp"
 #include "pmt/meta/inline_rules.hpp"
+#include "pmt/meta/normalize_grammar.hpp"
 #include "pmt/meta/pika_tables.hpp"
 #include "pmt/meta/prune_grammar.hpp"
-#include "pmt/meta/shrink_grammar.hpp"
 #include "pmt/rt/pika_parser.hpp"
 #include "pmt/util/closest_strings.hpp"
 
@@ -77,13 +75,11 @@ auto GrammarLoader::load_grammar() -> Grammar {
   ast_root->unpack(ast_root->get_children_size() - 1);
  }
 
- extract_hidden_expressions(*ast_root);
- extract_repetition_expressions(*ast_root);
- Grammar grammar = grammar_from_ast(ast_root);
+ Grammar grammar = grammar_from_ast(std::move(ast_root));
  add_and_check_start_rules(grammar, _start_rule_names);
  prune_grammar(grammar);
  inline_rules(grammar);
- shrink_grammar(grammar);
+ normalize_grammar(grammar);
 
  return grammar;
 }

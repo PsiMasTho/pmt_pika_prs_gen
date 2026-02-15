@@ -1,4 +1,4 @@
-/* Generated on: 2026-02-14 22:07:59 */
+/* Generated on: 2026-02-15 20:23:33 */
 // clang-format off
 #include "example_tables.hpp"
 
@@ -237,11 +237,11 @@ std::array<RuleParameterDisplayNameIndirectType const, RuleParameterCount> const
 };
 
 std::array<RuleParameterIdTableType const, RuleParameterIdTableSize> const RULE_PARAMETER_ID_TABLE = {
- IdConstants::B, IdConstants::C, IdConstants::A, IdConstants::Holder, ReservedIds::IdDefault
+ IdConstants::Holder, IdConstants::A, IdConstants::C, IdConstants::B, ReservedIds::IdDefault
 };
 
 std::array<RuleParameterIdIndirectType const, RuleParameterCount> const RULE_PARAMETER_ID_TABLE_INDIRECT = {
- 0x2, 0x4, 0x4, 0x4, 0x4, 0x3, 0x3, 0x0, 0x3, 0x1, 0x3, 0x3, 0x4
+ 0x1, 0x4, 0x4, 0x4, 0x4, 0x0, 0x0, 0x3, 0x0, 0x2, 0x0, 0x0, 0x4
 };
 
 std::array<RuleParameterBooleansType const, RuleParameterBooleansSize> const RULE_PARAMETER_BOOLEANS = {

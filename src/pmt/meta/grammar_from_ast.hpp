@@ -5,6 +5,6 @@
 
 namespace pmt::meta {
 
-auto grammar_from_ast(pmt::rt::Ast::UniqueHandle const& ast_) -> Grammar;
+auto grammar_from_ast(pmt::rt::Ast::UniqueHandle ast_) -> Grammar;
 
 }  // namespace pmt::meta

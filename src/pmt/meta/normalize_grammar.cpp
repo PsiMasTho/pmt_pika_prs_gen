@@ -1,4 +1,4 @@
-#include "pmt/meta/shrink_grammar.hpp"
+#include "pmt/meta/normalize_grammar.hpp"
 
 #include "pmt/meta/grammar.hpp"
 
@@ -133,7 +133,7 @@ void flatten_expression(RuleExpression::UniqueHandle& rule_expression_) {
 }
 }  // namespace
 
-void shrink_grammar(Grammar& grammar_) {
+void normalize_grammar(Grammar& grammar_) {
  for (std::string const& rule_name : grammar_.get_rule_names()) {
   Rule* const rule = grammar_.get_rule(rule_name);
   assert(rule != nullptr && rule->_definition != nullptr);

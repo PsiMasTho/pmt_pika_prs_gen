@@ -1,7 +1,7 @@
-/* Generated on: 2026-02-14 22:07:59 */
+/* Generated on: 2026-02-15 20:23:33 */
 // clang-format off
-B = 0x0,
-C = 0x1,
-A = 0x2,
-Holder = 0x3,
+Holder = 0x0,
+A = 0x1,
+C = 0x2,
+B = 0x3,
 // clang-format on 

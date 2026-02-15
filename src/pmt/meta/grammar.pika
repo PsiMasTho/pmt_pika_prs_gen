@@ -1,17 +1,15 @@
-// - ANY -
-$any = [10#0..10#255];
-
 // - COMMENTS AND WHITESPACE -
 $newline = 16#A;
 $whitespace = [" ", 10#9];
 $single_line_comment = "//" $single_line_comment_rhs;
-$single_line_comment_rhs = $newline | $any $single_line_comment_rhs | $any!;
+$single_line_comment_rhs = $newline | any $single_line_comment_rhs | eof;
 $multi_line_comment = "/*" $multi_line_comment_rhs;  
-$multi_line_comment_rhs = "*/" | $any $multi_line_comment_rhs;  
+$multi_line_comment_rhs = "*/" | any $multi_line_comment_rhs;  
 $comment = $single_line_comment | $multi_line_comment;
 $blank<hide = true> = ($comment | $whitespace | $newline)*;
 
 // - KEYWORDS -
+$kw_any<id                    = "Any">                               = "any";
 $kw_eof<id                    = "Eof">                               = "eof";
 $kw_epsilon<id                = "Epsilon">                           = "epsilon";
 $kw_parameter_unpack<id       = "ParameterUnpack", hide = true>      = "unpack";
@@ -70,56 +68,30 @@ $choices<id = "Choices"> = $sequence ($blank "|"~ $blank $sequence)* $blank;
 $sequence<id = "Sequence"> = $expression ($blank $expression)*;
 
 // - EXPRESSION -
-$expression<unpack = true> = $hidden             |
-                             $repetition         |
-                             $negative_lookahead |
-                             $positive_lookahead |
-                             $plain;
+$expression<unpack = true> = $hidden_expression             |
+                             $repetition_expression         |
+                             $negative_lookahead_expression |
+                             $positive_lookahead_expression |
+                             $plain_expression;
 
-// - HIDDEN -
-$hidden<id = "Hidden"> = $identifier $tilde               |
-                         $string_literal $tilde           |
-                         $integer_literal $tilde          |
-                         $charset  $tilde                 |
-                         "("~ $blank $choices ")"~ $tilde |
-                         $kw_epsilon $tilde               |
-                         $kw_eof $tilde;
+$hidden_expression<id = "Hidden"> = $expression_body $tilde; 
 
-// - NEGATIVE_LOOKAHEAD -
-$negative_lookahead<id = "NegativeLookahead"> = $identifier $exclamation               |
-                                                $string_literal $exclamation           |
-                                                $integer_literal $exclamation          |
-                                                $charset  $exclamation                 |
-                                                "("~ $blank $choices ")"~ $exclamation |
-                                                $kw_epsilon $exclamation               |
-                                                $kw_eof $exclamation;
+$repetition_expression<id = "Repetition"> = $expression_body $repetition_postfix;
 
-// - POSITIVE_LOOKAHEAD -
-$positive_lookahead<id = "PositiveLookahead"> = $identifier $ampersand               |
-                                                $string_literal $ampersand           |
-                                                $integer_literal $ampersand          |
-                                                $charset  $ampersand                 |
-                                                "("~ $blank $choices ")"~ $ampersand |
-                                                $kw_epsilon $ampersand               |
-                                                $kw_eof $ampersand;
+$negative_lookahead_expression<id = "NegativeLookahead"> = $expression_body $exclamation;
 
-// - REPETITION -
-$repetition<id = "Repetition"> = $identifier $repetition_postfix               |
-                                 $string_literal $repetition_postfix           |
-                                 $integer_literal $repetition_postfix          |
-                                 $charset  $repetition_postfix                 |
-                                 "("~ $blank $choices ")"~ $repetition_postfix |
-                                 $kw_epsilon $repetition_postfix |
-                                 $kw_eof $repetition_postfix;
+$positive_lookahead_expression<id = "PositiveLookahead"> = $expression_body $ampersand;
 
-// - PLAIN -
-$plain<unpack = true > = $identifier               |
-                         $string_literal           |
-                         $integer_literal          |
-                         $charset                  |
-                         "("~ $blank $choices ")"~ |
-                         $kw_epsilon               |
-                         $kw_eof;
+$plain_expression<unpack = true> = $expression_body;
+
+$expression_body<unpack = true > = $identifier               |
+                                   $string_literal           |
+                                   $integer_literal          |
+                                   $charset                  |
+                                   "("~ $blank $choices ")"~ |
+                                   $kw_epsilon               |
+                                   $kw_eof                   |
+                                   $kw_any;
 
 // - REPETITION_POSTFIX -
 $repetition_postfix<unpack = true> = $question |
