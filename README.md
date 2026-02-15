@@ -42,7 +42,7 @@ See the list of supported arguments and their description by running `pmt_pika_p
 
 ### Generated files:
 - **Pika tables header** (`--output-header-file`)
-  - Declares a class derived from `pmt::rt::PikaTablesBase`.
+  - Declares a class derived from `pmt::pika::rt::PikaTablesBase`.
   - The class name/namespace can be overridden via `--class-name` and `--namespace-name`.
 - **Pika tables source** (`--output-source-file`)
   - Defines the table data and implements the `PikaTablesBase` interface.
@@ -59,14 +59,14 @@ See the list of supported arguments and their description by running `pmt_pika_p
 To parse with your generated tables:
 1. Compile the generated tables `.cpp` and include the generated headers where needed.
 2. Link against `pmt_pika_rt`.
-3. Use `pmt::rt::PikaParser` with an instance of your generated `PikaTablesBase` implementation.
+3. Use `pmt::pika::rt::PikaParser` with an instance of your generated `PikaTablesBase` implementation.
 
-- `pmt::rt::Ast`: Core tree node type. Construct via `Ast::construct` and manage through `Ast::UniqueHandle` (stack allocation or manual `new`/`delete` is invalid). Use `give_child_at*` / `take_child_at*` to insert or remove nodes from a parent.
+- `pmt::pika::rt::Ast`: Core tree node type. Construct via `Ast::construct` and manage through `Ast::UniqueHandle` (stack allocation or manual `new`/`delete` is invalid). Use `give_child_at*` / `take_child_at*` to insert or remove nodes from a parent.
 - `Ast::merge`: Replaces the current node with a `String` node whose contents are the depth-first concatenation of all string leaves in its subtree, preserving the original node id.
 - `Ast::unpack`: If the child at a given index is a parent, removes that child and splices its children into the current node at the same position.
-- `pmt::rt::Path`: Index path used with `resolve` to locate nodes in a tree, avoiding raw pointers that may be invalidated by tree edits.
-- `pmt::rt::AstToString`: Pretty-prints a tree with indentation and a customizable id-to-string mapping.
-- `pmt::rt::ReservedIds`: Helpers for sentinel ids such as `IdRoot`, `IdDefault`, and `IdUninitialized`.
+- `pmt::pika::rt::Path`: Index path used with `resolve` to locate nodes in a tree, avoiding raw pointers that may be invalidated by tree edits.
+- `pmt::pika::rt::AstToString`: Pretty-prints a tree with indentation and a customizable id-to-string mapping.
+- `pmt::pika::rt::ReservedIds`: Helpers for sentinel ids such as `IdRoot`, `IdDefault`, and `IdUninitialized`.
 
 ## Grammar description
 #### Statements

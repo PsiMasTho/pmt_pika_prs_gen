@@ -1,12 +1,12 @@
-/* Generated on: 2026-02-15 20:23:33 */
+/* Generated on: 2026-02-15 20:42:59 */
 // clang-format off
 #include "example_tables.hpp"
 
-#include <pmt/rt/primitives.hpp>
-#include <pmt/rt/reserved_ids.hpp>
-#include <pmt/rt/clause_base.hpp>
-#include <pmt/rt/rule_parameters_base.hpp>
-#include <pmt/rt/state_machine_tables_base.hpp>
+#include <pmt/pika/rt/primitives.hpp>
+#include <pmt/pika/rt/reserved_ids.hpp>
+#include <pmt/pika/rt/clause_base.hpp>
+#include <pmt/pika/rt/rule_parameters_base.hpp>
+#include <pmt/pika/rt/state_machine_tables_base.hpp>
 
 #include <algorithm>
 #include <array>
@@ -16,7 +16,7 @@
 #include <span>
 
 namespace example {
-using namespace pmt::rt;
+using namespace pmt::pika::rt;
 
 namespace {
 
@@ -184,7 +184,7 @@ std::array<TerminalFinalIdsOffsetsType const, TerminalFinalIdsOffsetsSize> const
 class TerminalTables : public StateMachineTablesBase {
 public:
  // -$ Functions $-
- // --$ Inherited: pmt::rt::StateMachineTablesBase $--
+ // --$ Inherited: pmt::pika::rt::StateMachineTablesBase $--
  auto get_state_nr_next(StateNrType state_nr_, SymbolType symbol_) const -> StateNrType override {
   size_t const start = TERMINAL_TRANSITIONS_OFFSETS[state_nr_];
   size_t const end = TERMINAL_TRANSITIONS_OFFSETS[state_nr_ + 1];

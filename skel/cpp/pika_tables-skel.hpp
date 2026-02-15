@@ -2,21 +2,21 @@
 // clang-format off
 #pragma once
 
-#include <pmt/rt/pika_tables_base.hpp>
+#include <pmt/pika/rt/pika_tables_base.hpp>
 
 /* $replace NAMESPACE_OPEN */
 
-class /* $replace CLASS_NAME */ : public pmt::rt::PikaTablesBase {
+class /* $replace CLASS_NAME */ : public pmt::pika::rt::PikaTablesBase {
  public:
   // -$ Functions $-
-  // --$ Inherited: pmt::rt::PikaTablesBase $--
- auto fetch_clause(pmt::rt::IdType clause_id_) const -> pmt::rt::ClauseBase const& override;
+  // --$ Inherited: pmt::pika::rt::PikaTablesBase $--
+ auto fetch_clause(pmt::pika::rt::IdType clause_id_) const -> pmt::pika::rt::ClauseBase const& override;
  auto get_clause_count() const -> size_t override;
 
- auto fetch_rule_parameters(pmt::rt::IdType rule_id_) const -> pmt::rt::RuleParametersBase const& override;
+ auto fetch_rule_parameters(pmt::pika::rt::IdType rule_id_) const -> pmt::pika::rt::RuleParametersBase const& override;
  auto get_rule_count() const -> size_t override;
 
- auto get_terminal_state_machine_tables() const -> pmt::rt::StateMachineTablesBase const& override;
+ auto get_terminal_state_machine_tables() const -> pmt::pika::rt::StateMachineTablesBase const& override;
 };
 
 /* $replace NAMESPACE_CLOSE */

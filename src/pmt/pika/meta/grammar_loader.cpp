@@ -1,0 +1,87 @@
+#include "pmt/pika/meta/grammar_loader.hpp"
+
+#include "pmt/pika/meta/grammar_from_ast.hpp"
+#include "pmt/pika/meta/inline_rules.hpp"
+#include "pmt/pika/meta/normalize_grammar.hpp"
+#include "pmt/pika/meta/pika_tables.hpp"
+#include "pmt/pika/meta/prune_grammar.hpp"
+#include "pmt/pika/rt/pika_parser.hpp"
+#include "pmt/util/closest_strings.hpp"
+
+namespace pmt::pika::meta {
+using namespace pmt::pika::rt;
+namespace {
+enum : size_t {
+ MaxLevDistanceToReport = 3,
+ MaxNamesToReport = 3,
+};
+
+[[noreturn]] void throw_start_rule_not_found_exception(pmt::util::ClosestStrings const& closest_) {
+ std::string error_msg = "Start rule not found: \"$" + closest_.query() + "\"";
+
+ if (!closest_.candidates().empty()) {
+  std::string delim;
+  error_msg += ", did you mean: ";
+  for (std::string const& rule_name : closest_.candidates()) {
+   error_msg += std::exchange(delim, " OR ") + "\"$" + rule_name + "\"";
+  }
+  if (closest_.truncated()) {
+   error_msg += ", ...";
+  }
+ }
+
+ throw std::runtime_error(error_msg);
+}
+
+void add_and_check_start_rules(Grammar& dest_, std::unordered_set<std::string> const& start_rule_names_) {
+ std::unordered_set<std::string> const rule_names = dest_.get_rule_names();
+
+ for (std::string const& start_rule_name : start_rule_names_) {
+  if (rule_names.contains(start_rule_name)) {
+   dest_.add_start_rule_name(start_rule_name);
+   continue;
+  }
+  pmt::util::ClosestStrings closest(start_rule_name, MaxLevDistanceToReport, MaxNamesToReport);
+  for (std::string const& rule_name : rule_names) {
+   closest.push(rule_name);
+  }
+  throw_start_rule_not_found_exception(closest);
+ }
+}
+
+}  // namespace
+
+void GrammarLoader::push_start_rule(std::string start_rule_name_) {
+ _start_rule_names.emplace(std::move(start_rule_name_));
+}
+
+void GrammarLoader::push_input(std::string_view input_) {
+ _inputs.push_back(input_);
+}
+
+auto GrammarLoader::load_grammar() -> Grammar {
+ assert(!_inputs.empty());
+
+ pmt::pika::meta::PikaTables const pika_tables;
+
+ Ast::UniqueHandle ast_root = Ast::construct(Ast::Tag::Parent, ReservedIds::IdRoot);
+
+ for (std::string_view const& input_cur : _inputs) {
+  Ast::UniqueHandle ast_cur = PikaParser::memo_table_to_ast(PikaParser::populate_memo_table(input_cur, pika_tables), input_cur, pika_tables);
+  if (!ast_cur) {
+   throw std::runtime_error("Failed to parse grammar input.");
+  }
+  ast_root->give_child_at_back(std::move(ast_cur));
+  ast_root->unpack(ast_root->get_children_size() - 1);
+ }
+
+ Grammar grammar = grammar_from_ast(std::move(ast_root));
+ add_and_check_start_rules(grammar, _start_rule_names);
+ prune_grammar(grammar);
+ inline_rules(grammar);
+ normalize_grammar(grammar);
+
+ return grammar;
+}
+
+}  // namespace pmt::pika::meta

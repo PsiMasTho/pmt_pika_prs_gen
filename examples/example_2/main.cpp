@@ -1,8 +1,8 @@
 #include "round_tables.hpp"   // <- generated
 #include "square_tables.hpp"  // <- generated
 
-#include <pmt/rt/ast_to_string.hpp>  // <- pmt_ast, should be installed
-#include <pmt/rt/pika_parser.hpp>    // <- pmt_pika_rt, should be installed
+#include <pmt/pika/rt/ast_to_string.hpp>  // <- pmt_ast, should be installed
+#include <pmt/pika/rt/pika_parser.hpp>    // <- pmt_pika_rt, should be installed
 
 #include <cstring>
 #include <fstream>
@@ -13,11 +13,11 @@
 namespace example {
 
 struct SharedIds {
- enum : pmt::rt::IdType {
+ enum : pmt::pika::rt::IdType {
 #include "shared_id_constants-inl.hpp"  // <- generated, has Ids used by RoundTables and SquareTables
  };
 
- static auto id_to_string(pmt::rt::IdType id_) -> std::string {
+ static auto id_to_string(pmt::pika::rt::IdType id_) -> std::string {
   static char const* const IdStrings[] = {
 #include "shared_id_strings-inl.hpp"  // <- generated
   };
@@ -34,15 +34,15 @@ auto read_file(std::string const& file_path_) -> std::string {
  return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 }
 
-auto parse_and_print(std::string_view input_, pmt::rt::PikaTablesBase const& tables_) -> int {
- pmt::rt::Ast::UniqueHandle const ast = pmt::rt::PikaParser::memo_table_to_ast(pmt::rt::PikaParser::populate_memo_table(input_, tables_), input_, tables_);
+auto parse_and_print(std::string_view input_, pmt::pika::rt::PikaTablesBase const& tables_) -> int {
+ pmt::pika::rt::Ast::UniqueHandle const ast = pmt::pika::rt::PikaParser::memo_table_to_ast(pmt::pika::rt::PikaParser::populate_memo_table(input_, tables_), input_, tables_);
 
  if (!ast) {
   std::cerr << "Parse failed." << std::endl;
   return EXIT_FAILURE;
  }
 
- pmt::rt::AstToString const ast_to_string(example::SharedIds::id_to_string, 2);
+ pmt::pika::rt::AstToString const ast_to_string(example::SharedIds::id_to_string, 2);
  std::cout << ast_to_string.to_string(*ast);
  return EXIT_SUCCESS;
 }

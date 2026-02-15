@@ -1,7 +1,7 @@
 #include "example_tables.hpp"  // <- generated
 
-#include <pmt/rt/ast_to_string.hpp>  // <- pmt_ast, should be installed
-#include <pmt/rt/pika_parser.hpp>    // <- pmt_pika_rt, should be installed
+#include <pmt/pika/rt/ast_to_string.hpp>  // <- pmt_ast, should be installed
+#include <pmt/pika/rt/pika_parser.hpp>    // <- pmt_pika_rt, should be installed
 
 #include <iostream>
 #include <string>
@@ -10,11 +10,11 @@
 namespace example {
 
 struct Ids {
- enum : pmt::rt::IdType {
+ enum : pmt::pika::rt::IdType {
 #include "id_constants-inl.hpp"  // <- generated
  };
 
- static auto id_to_string(pmt::rt::IdType id_) -> std::string {
+ static auto id_to_string(pmt::pika::rt::IdType id_) -> std::string {
   static char const* const IdStrings[] = {
 #include "id_strings-inl.hpp"  // <- generated
   };
@@ -46,10 +46,10 @@ auto main(int argc, char** argv) -> int {
  example::ExampleTables const tables;
 
  // Actual parsing happens here
- pmt::rt::MemoTable const memo = pmt::rt::PikaParser::populate_memo_table(input, tables);
+ pmt::pika::rt::MemoTable const memo = pmt::pika::rt::PikaParser::populate_memo_table(input, tables);
 
  // Construct the AST
- pmt::rt::Ast::UniqueHandle const ast = pmt::rt::PikaParser::memo_table_to_ast(memo, input, tables);
+ pmt::pika::rt::Ast::UniqueHandle const ast = pmt::pika::rt::PikaParser::memo_table_to_ast(memo, input, tables);
 
  if (!ast) {
   std::cerr << "Parse failed." << std::endl;
@@ -61,9 +61,9 @@ auto main(int argc, char** argv) -> int {
  size_t b_tally = 0;
  size_t c_tally = 0;
 
- std::vector<pmt::rt::Ast const*> pending{ast.get()};
+ std::vector<pmt::pika::rt::Ast const*> pending{ast.get()};
  while (!pending.empty()) {
-  pmt::rt::Ast const& cur = *pending.back();
+  pmt::pika::rt::Ast const& cur = *pending.back();
   pending.pop_back();
 
   switch (cur.get_id()) {
@@ -80,7 +80,7 @@ auto main(int argc, char** argv) -> int {
     break;
   };
 
-  if (cur.get_tag() == pmt::rt::Ast::Tag::Parent) {
+  if (cur.get_tag() == pmt::pika::rt::Ast::Tag::Parent) {
    for (size_t i = 0; i < cur.get_children_size(); ++i) {
     pending.push_back(cur.get_child_at(i));
    }
@@ -94,11 +94,11 @@ auto main(int argc, char** argv) -> int {
  std::cout << "-------------------" << std::endl;
 
  // Print the whole ast
- pmt::rt::AstToString const ast_to_string(example::Ids::id_to_string, 2);
+ pmt::pika::rt::AstToString const ast_to_string(example::Ids::id_to_string, 2);
  std::cout << ast_to_string.to_string(*ast);
 }
 
 // Notes:
-//  - The lifetime of pmt::rt::Ast objects should only ever be managed through a UniqueHandle.
-//    That means don't manually heap allocate any pmt::rt::Ast or even put them on the stack. Instead, use the pmt::rt::Ast::construct function to get a UniqueHandle
+//  - The lifetime of pmt::pika::rt::Ast objects should only ever be managed through a UniqueHandle.
+//    That means don't manually heap allocate any pmt::pika::rt::Ast or even put them on the stack. Instead, use the pmt::pika::rt::Ast::construct function to get a UniqueHandle
 //    and treat it as you would a std::unique_ptr.
