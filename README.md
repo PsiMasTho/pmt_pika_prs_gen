@@ -50,10 +50,10 @@ See the list of supported arguments and their description by running `pmt_pika_p
   - Includes the id constants using `--id-constants-include-path`.
 - **ID constants include** (`--id-constants-output-file`)
   - A C++ include fragment containing enum entries (not a standalone header).
-  - Intended to be included inside an `enum` (see how its used in `src/pmt/meta/ids.hpp` or any `examples/`).
+  - Intended to be included inside an `enum` (see how its used in `src/pmt/pika/meta/ids.hpp` or any `examples/`).
 - **ID strings include** (`--id-strings-output-file`)
   - A C++ include fragment containing the ID constants as string literals (not a standalone header).
-  - Intended to be included inside a string table (see `src/pmt/meta/ids.cpp` or any `examples/`).
+  - Intended to be included inside a string table (see `src/pmt/pika/meta/ids.cpp` or any `examples/`).
 
 ## Usage
 To parse with your generated tables:
@@ -122,7 +122,7 @@ These apply to a single atom or a parenthesized group:
 
 `I`/`J` are integer literals (e.g. `10#2`).
 
-The meta-grammar (the grammar that defines this syntax) is in `src/pmt/meta/grammar.pika`.
+The meta-grammar (the grammar that defines this syntax) is in `src/pmt/pika/meta/grammar.pika`.
 
 ## Parse success
 - Parsing is considered to have succeeded if starting rule matches from position 0 to the end of input.
