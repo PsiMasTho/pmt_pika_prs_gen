@@ -92,10 +92,10 @@ Whitespace, newlines, and comments may appear between tokens:
 #### Atoms (terminals and nonterminals)
 * `$identifier` nonterminal reference
 * `"text"` string literal
-* `base#value` integer literal (base is decimal. Value digits are `0..9`/`a..z` case-insensitive. Base must be in the range `[2, 36]`)
-* `[ "a".."z", "Q", 16#5f ]` charset (comma-separated items. Items are character literals like `"Q"` or integer literals. Ranges use `..`)
+* `base#value` integer literal (base is decimal. Value digits are `0-9`/`a-z` case-insensitive. Base must be in the range `[2, 36]`)
+* `[ "a"-"z", "Q", 16#5f ]` charset (comma-separated items. Items are character literals like `"Q"` or integer literals. Ranges use `-`)
 * `epsilon` succeeds without consuming input
-* `any` equivalent to `[10#0..10#255]`
+* `any` equivalent to `[10#0-10#255]`
 * `eof` equivalent to `any!`. Only succeeds only at end-of-input. It is optional and not required for successful parsing.
 
 Notes:

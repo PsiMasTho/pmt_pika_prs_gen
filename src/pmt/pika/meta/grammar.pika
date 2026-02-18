@@ -28,17 +28,17 @@ $exclamation<hide = true>                = "!";
 $ampersand<hide = true>                  = "&";
 
 // - LITERALS -
-$string_middle = [10#32, 10#33, 10#35..10#126];
+$string_middle = [10#32, 10#33, 10#35-10#126];
 
 $string_literal<id = "StringLiteral", merge = true>       = 10#34~ $string_middle* 10#34~;
 $character_literal<id = "CharacterLiteral", merge = true> = 10#34~ $string_middle 10#34~;
-$integer_literal_lhs                                      = ["0".."9"]+;
-$integer_literal_rhs                                      = ["A".."Z", "a".."z", "0".."9"]+;
+$integer_literal_lhs                                      = ["0"-"9"]+;
+$integer_literal_rhs                                      = ["A"-"Z", "a"-"z", "0"-"9"]+;
 $integer_literal<id   = "IntegerLiteral", merge = true>   = $integer_literal_lhs "#" $integer_literal_rhs;
-$id_string_middle                                         = ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*;
+$id_string_middle                                         = ["A"-"Z", "a"-"z", "_"] ["A"-"Z", "a"-"z", "0"-"9", "_"]*;
 $id_string_literal<id = "IdStringLiteral", merge = true>  = 10#34~ $id_string_middle 10#34~;
 $boolean_literal<id   = "BooleanLiteral", merge = true>   = "true" | "false";
-$identifier_rhs                                           = "__"! ["A".."Z", "a".."z", "_"] ["A".."Z", "a".."z", "0".."9", "_"]*; 
+$identifier_rhs                                           = "__"! ["A"-"Z", "a"-"z", "_"] ["A"-"Z", "a"-"z", "0"-"9", "_"]*; 
 $identifier<id        = "Identifier", merge = true>       = ("$"~) $identifier_rhs;
 
 // - PARAMETERS -
@@ -108,7 +108,7 @@ $charset<id = "Charset"> = "["~ $blank $charset_item ($blank ","~ $blank $charse
 $charset_item<unpack = true> = $charset_range |
                                $charset_literal;
 
-$charset_range<id = "CharsetRange"> = $charset_literal $blank ".."~ $blank $charset_literal;
+$charset_range<id = "CharsetRange"> = $charset_literal $blank "-"~ $blank $charset_literal;
 
 $charset_literal<unpack = true> = $character_literal |
                                   $integer_literal;

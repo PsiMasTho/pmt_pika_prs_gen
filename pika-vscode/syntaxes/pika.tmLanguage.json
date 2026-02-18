@@ -80,7 +80,7 @@
           "patterns": [
             { "include": "#strings" },
             { "include": "#numbers" },
-            { "name": "punctuation.separator.range.pika", "match": "\\.\\." },
+            { "name": "punctuation.separator.range.pika", "match": "-" },
             { "name": "punctuation.separator.comma.pika", "match": "," }
           ]
         }
