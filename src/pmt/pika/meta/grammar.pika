@@ -12,11 +12,9 @@ $blank<hide = true> = ($comment | $whitespace | $newline)*;
 $kw_any<id = "Any">         = "any";
 $kw_eof<id = "Eof">         = "eof";
 $kw_epsilon<id = "Epsilon"> = "epsilon";
-
 $kw_parameter_merge<hide = true>         = "merge";
 $kw_parameter_unpack<hide = true>        = "unpack";
 $kw_parameter_hide<hide = true>          = "hide";
-$kw_parameter_hide_if_empty<hide = true> = "hide_if_empty";
 $kw_parameter_id<hide = true>            = "id";
 $kw_parameter_display_name<hide = true>  = "display_name";
 
@@ -49,9 +47,8 @@ $parameter_displayname<id = "ParameterDisplayName", merge = true>   = $kw_parame
 $parameter_merge<id = "ParameterMerge", merge = true>               = $kw_parameter_merge                 $blank "="~ $blank $boolean_literal;
 $parameter_unpack<id = "ParameterUnpack", merge = true>             = $kw_parameter_unpack                $blank "="~ $blank $boolean_literal;
 $parameter_hide<id = "ParameterHide", merge = true>                 = $kw_parameter_hide                  $blank "="~ $blank $boolean_literal;
-$parameter_hide_if_empty<id = "ParameterHideIfEmpty", merge = true> = $kw_parameter_hide_if_empty         $blank "="~ $blank $boolean_literal;
 
-$parameter<unpack = true> = $parameter_id | $parameter_displayname | $parameter_merge | $parameter_unpack | $parameter_hide | $parameter_hide_if_empty;
+$parameter<unpack = true> = $parameter_id | $parameter_displayname | $parameter_merge | $parameter_unpack | $parameter_hide;
 $parameter_list<unpack = true> = $blank $parameter ($blank ","~ $blank $parameter)* $blank;
 
 // - GRAMMAR -

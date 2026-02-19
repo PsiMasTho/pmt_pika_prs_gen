@@ -8,7 +8,7 @@ from pathlib import Path
 # Configurable parameters
 DIRECTORIES = ["src", "examples"]
 EXTENSIONS = {".cpp", ".hpp"}
-DEFAULT_CLANG_FORMAT = "clang-format-16"
+DEFAULT_CLANG_FORMAT = "clang-format-19"
 
 def find_project_root():
     return Path(__file__).resolve().parent.parent
