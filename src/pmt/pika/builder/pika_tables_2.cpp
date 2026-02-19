@@ -142,8 +142,6 @@ void PikaTables::initialize(Grammar const& grammar_) {
       break;
      case ClauseBase::Tag::CharsetLiteral:
      case ClauseBase::Tag::Epsilon:
-      pmt::unreachable();
-      break;
      default:
       pmt::unreachable();
     }
@@ -184,21 +182,28 @@ void PikaTables::initialize(Grammar const& grammar_) {
  }
 
  // Replace temporary epsilon children with a single shared epsilon clause
+ std::optional<IdType> epsilon_clause_id;
  if (!clauses_with_tmp_children.empty()) {
-  IdType const epsilon_clause_id = _clauses.size();
-  _clauses.emplace_back(ClauseBase::Tag::Epsilon, epsilon_clause_id);
+  epsilon_clause_id = _clauses.size();
+  _clauses.emplace_back(ClauseBase::Tag::Epsilon, *epsilon_clause_id);
   clauses_with_tmp_children.for_each_key([&](IdType clause_id_) {
    ExtendedClause& clause = _clauses[clause_id_];
    for (IdType& child_id : clause._child_ids) {
     if (child_id == ReservedIds::IdTmpEpsilon) {
-     child_id = epsilon_clause_id;
+     child_id = *epsilon_clause_id;
     }
    }
   });
  }
 
  // Build the terminal state machine from the charset literals
- _terminal_state_machine_tables = StateMachineTables(charset_literals_to_state_machine(_literals, charset_literal_clause_ids));
+ pmt::sm::StateMachine state_machine = charset_literals_to_state_machine(_literals, charset_literal_clause_ids);
+
+ if (epsilon_clause_id.has_value()) {
+  state_machine.get_state(StateNrStart)->add_final_id(*epsilon_clause_id);
+ }
+
+ _terminal_state_machine_tables = StateMachineTables(std::move(state_machine));
 }
 
 }  // namespace pmt::pika::builder

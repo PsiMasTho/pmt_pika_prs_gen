@@ -2,6 +2,7 @@
 
 #include "pmt/pika/rt/clause_base.hpp"
 #include "pmt/pika/rt/pika_tables_base.hpp"
+#include "pmt/pika/rt/rule_parameters_base.hpp"
 
 #include <cassert>
 
@@ -60,7 +61,8 @@ auto MemoTable::find(Key const& key_, PikaTablesBase const& pika_tables_) const 
 
 void MemoTable::insert(MemoTable::Key key_, std::optional<MemoTable::Match> new_match_, ClauseQueue& parse_queue_, PikaTablesBase const& pika_tables_) {
  bool match_updated = false;
- if (new_match_.has_value()) {
+
+ if (new_match_.has_value() && (new_match_->_length != 0 || (key_._clause->has_rule_id() && !pika_tables_.fetch_rule_parameters(key_._clause->get_rule_id()).get_hide()))) {
   if (auto const itr_old_match = _table.find(key_); itr_old_match == _table.end() || new_match_->_length > get_match_length_by_index(itr_old_match->second)) {
    _keys.push_back(key_);
    _matches.push_back(std::move(*new_match_));

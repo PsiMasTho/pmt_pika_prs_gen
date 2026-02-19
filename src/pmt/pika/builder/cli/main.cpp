@@ -47,11 +47,13 @@ auto main(int argc_, char const* const* argv_) -> int try {
   if (ast_testfile != nullptr) {
    pmt::pika::rt::AstToString const ast_to_string([&](pmt::pika::rt::IdType id_) { return pika_tables.get_id_table().id_to_string(id_); }, 2);
    std::cout << "Successfully parsed test input.\n";
+   std::cout << "Final memo table size: " << memo_table.get_match_count() << '\n';
    if (args._output_test_path.has_value()) {
     std::ofstream(*args._output_test_path) << ast_to_string.to_string(*ast_testfile);
    }
   } else {
    std::cout << "Failed to parse test input.\n";
+   return EXIT_FAILURE;
   }
  }
 
@@ -72,8 +74,7 @@ auto main(int argc_, char const* const* argv_) -> int try {
  }
 
  if (args._output_terminal_dotfile_path.has_value()) {
-  std::ofstream(*args._output_terminal_dotfile_path) << pmt::sm::sm_to_dot_str(
-   pika_tables.get_terminal_state_machine_tables_full().get_state_machine(), [&](pmt::sm::FinalIdType id_) { return std::to_string(id_); }, args._terminal_dotfile_skel);
+  std::ofstream(*args._output_terminal_dotfile_path) << pmt::sm::sm_to_dot_str(pika_tables.get_terminal_state_machine_tables_full().get_state_machine(), [&](pmt::sm::FinalIdType id_) { return std::to_string(id_); }, args._terminal_dotfile_skel);
  }
 } catch (std::exception const& e) {
  std::cerr << std::string(e.what()) << '\n';

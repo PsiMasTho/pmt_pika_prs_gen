@@ -331,32 +331,29 @@ auto make_ast_expanded_bounded_repetition(Ast const& body_, RepetitionRange cons
 
 void caching_traversal_handle_production(Locals& locals_, Ast& ast_) {
  std::string rule_name = ast_.get_child_at(0)->get_string();
- std::string rule_display_name = rule_name;
 
- std::string rule_id_string = ReservedIds::id_to_string(ReservedIds::IdDefault);
- bool rule_merge = RuleParametersBase::MERGE_DEFAULT;
- bool rule_unpack = RuleParametersBase::UNPACK_DEFAULT;
- bool rule_hide = RuleParametersBase::HIDE_DEFAULT;
-
+ RuleParameters rp;
+ rp._id_string = ReservedIds::id_to_string(ReservedIds::IdDefault);
+ rp._display_name = rule_name;
  Ast* rule_definition = nullptr;
 
  for (size_t i = 1; i < ast_.get_children_size(); ++i) {
   Ast& child = *ast_.get_child_at(i);
   switch (child.get_id()) {
    case Ids::ParameterId: {
-    rule_id_string = child.get_string();
+    rp._id_string = child.get_string();
    } break;
    case Ids::ParameterDisplayName: {
-    rule_display_name = child.get_string();
+    rp._display_name = child.get_string();
    } break;
    case Ids::ParameterMerge: {
-    rule_merge = child.get_string() == "true";
+    rp._merge = child.get_string() == "true";
    } break;
    case Ids::ParameterUnpack: {
-    rule_unpack = child.get_string() == "true";
+    rp._unpack = child.get_string() == "true";
    } break;
    case Ids::ParameterHide: {
-    rule_hide = child.get_string() == "true";
+    rp._hide = child.get_string() == "true";
    } break;
    case Ids::Definition: {
     rule_definition = child.get_child_at(0);
@@ -364,18 +361,11 @@ void caching_traversal_handle_production(Locals& locals_, Ast& ast_) {
   }
  }
 
- RuleParameters rule_parameters;
- rule_parameters._display_name = rule_display_name;
- rule_parameters._id_string = rule_id_string;
- rule_parameters._merge = rule_merge;
- rule_parameters._unpack = rule_unpack;
- rule_parameters._hide = rule_hide;
-
  if (locals_._rules.contains(rule_name)) {
   locals_._duplicate_rules.insert(rule_name);
  }
 
- locals_._rules[rule_name] = std::make_pair(std::move(rule_parameters), rule_definition);
+ locals_._rules[rule_name] = std::make_pair(std::move(rp), rule_definition);
 }
 
 void caching_traversal(Locals& locals_) {

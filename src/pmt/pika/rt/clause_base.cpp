@@ -27,9 +27,9 @@ auto ClauseBase::tag_to_string(Tag tag_) -> std::string {
    return "NegativeLookahead";
   case Tag::Epsilon:
    return "Epsilon";
-  default:
-   std::terminate();  // unreachable
  }
+
+ std::terminate();  // unreachable
 }
 
 }  // namespace pmt::pika::rt

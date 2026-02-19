@@ -9,14 +9,16 @@ $comment = $single_line_comment | $multi_line_comment;
 $blank<hide = true> = ($comment | $whitespace | $newline)*;
 
 // - KEYWORDS -
-$kw_any<id                    = "Any">                               = "any";
-$kw_eof<id                    = "Eof">                               = "eof";
-$kw_epsilon<id                = "Epsilon">                           = "epsilon";
-$kw_parameter_unpack<id       = "ParameterUnpack", hide = true>      = "unpack";
-$kw_parameter_hide<id         = "ParameterHide", hide = true>        = "hide";
-$kw_parameter_merge<id        = "ParameterMerge", hide = true>       = "merge";
-$kw_parameter_id<id           = "ParameterId", hide = true>          = "id";
-$kw_parameter_display_name<id = "ParameterDisplayName", hide = true> = "display_name";
+$kw_any<id = "Any">         = "any";
+$kw_eof<id = "Eof">         = "eof";
+$kw_epsilon<id = "Epsilon"> = "epsilon";
+
+$kw_parameter_merge<hide = true>         = "merge";
+$kw_parameter_unpack<hide = true>        = "unpack";
+$kw_parameter_hide<hide = true>          = "hide";
+$kw_parameter_hide_if_empty<hide = true> = "hide_if_empty";
+$kw_parameter_id<hide = true>            = "id";
+$kw_parameter_display_name<hide = true>  = "display_name";
 
 // - SYMBOLS -
 $comma<id    = "Comma", merge = true>    = ",";
@@ -42,13 +44,14 @@ $identifier_rhs                                           = "__"! ["A"-"Z", "a"-
 $identifier<id        = "Identifier", merge = true>       = ("$"~) $identifier_rhs;
 
 // - PARAMETERS -
-$parameter_id<id = "ParameterId", merge = true>                   = $kw_parameter_id           $blank "="~ $blank $id_string_literal;
-$parameter_displayname<id = "ParameterDisplayName", merge = true> = $kw_parameter_display_name $blank "="~ $blank $string_literal;
-$parameter_unpack<id = "ParameterUnpack", merge = true>           = $kw_parameter_unpack       $blank "="~ $blank $boolean_literal;
-$parameter_hide<id = "ParameterHide", merge = true>               = $kw_parameter_hide         $blank "="~ $blank $boolean_literal;
-$parameter_merge<id = "ParameterMerge", merge = true>             = $kw_parameter_merge        $blank "="~ $blank $boolean_literal;
+$parameter_id<id = "ParameterId", merge = true>                     = $kw_parameter_id                    $blank "="~ $blank $id_string_literal;
+$parameter_displayname<id = "ParameterDisplayName", merge = true>   = $kw_parameter_display_name          $blank "="~ $blank $string_literal;
+$parameter_merge<id = "ParameterMerge", merge = true>               = $kw_parameter_merge                 $blank "="~ $blank $boolean_literal;
+$parameter_unpack<id = "ParameterUnpack", merge = true>             = $kw_parameter_unpack                $blank "="~ $blank $boolean_literal;
+$parameter_hide<id = "ParameterHide", merge = true>                 = $kw_parameter_hide                  $blank "="~ $blank $boolean_literal;
+$parameter_hide_if_empty<id = "ParameterHideIfEmpty", merge = true> = $kw_parameter_hide_if_empty         $blank "="~ $blank $boolean_literal;
 
-$parameter<unpack = true> = $parameter_id | $parameter_displayname | $parameter_unpack | $parameter_hide | $parameter_merge;
+$parameter<unpack = true> = $parameter_id | $parameter_displayname | $parameter_merge | $parameter_unpack | $parameter_hide | $parameter_hide_if_empty;
 $parameter_list<unpack = true> = $blank $parameter ($blank ","~ $blank $parameter)* $blank;
 
 // - GRAMMAR -
